@@ -516,6 +516,9 @@ for fpath in files:
     with open(fpath, 'r', encoding='utf-8') as f:
         content = f.read()
     assert '::new(' not in content, f'Trovato ::new() in {fpath}'
+    assert (chr(92) + chr(34)) not in content, f'Trovato backslash-quote problematico per PS2.0 in {fpath}'
+    assert '-o\"' not in content, f'Trovata sintassi 7-zip con virgoletta aperta in {fpath}'
+    assert '✓' not in content, f'Trovato carattere non-ASCII Unicode in {fpath}'
     if 'GUI.ps1' in fpath:
         m = re.search(r'@\"\s*\n(<Window.*?</Window>)\s*\n\"@', content, re.DOTALL)
         assert m, 'XAML non trovato'
@@ -523,7 +526,7 @@ for fpath in files:
 
 print('Windows Installer scripts validated')
 " >/dev/null 2>&1; then
-    log_pass "Windows Installer: Compatibilita PowerShell v2.0 / Windows 7 SP1 (.NET 3.5), XAML e assenza costruttori incompatibili validata"
+    log_pass "Windows Installer: Compatibilita PowerShell v2.0 / Windows 7 SP1 (.NET 3.5), XAML, assenza backslash-quote ed escape validata"
 else
     log_fail "Windows Installer: Errore nella validazione degli script PowerShell per Windows"
 fi

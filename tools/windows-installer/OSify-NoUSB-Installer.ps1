@@ -106,7 +106,7 @@ if ($IsoPath -eq "" -or -not (Test-Path $IsoPath)) {
                 $wc = New-Object System.Net.WebClient
                 $wc.DownloadFile($url, $destIso)
                 $IsoPath = $destIso
-                Write-Host "[✓] Download completato con successo!" -ForegroundColor Green
+                Write-Host "[OK] Download completato con successo!" -ForegroundColor Green
             } catch {
                 Write-Host "[!] Download automatico non riuscito: $($_.Exception.Message)" -ForegroundColor Red
                 Write-Host "[i] Apertura pagina delle release nel browser..." -ForegroundColor Yellow
@@ -133,7 +133,7 @@ if ($IsoPath -eq "" -or -not (Test-Path $IsoPath)) {
     }
 }
 
-Write-Host "[✓] Immagine ISO selezionata: $IsoPath" -ForegroundColor Green
+Write-Host "[OK] Immagine ISO selezionata: $IsoPath" -ForegroundColor Green
 Write-Host ""
 
 # 5. Creazione Partizione Temporanea di Boot con DiskPart
@@ -159,12 +159,12 @@ $procDp = [System.Diagnostics.Process]::Start($pInfo)
 $procDp.WaitForExit()
 Remove-Item $dpFile -Force -ErrorAction SilentlyContinue
 
-if (-not (Test-Path "O:\")) {
-    Write-Host "[ERRORE] Impossibile creare l'unita O:\ per l'avvio temporaneo." -ForegroundColor Red
+if (-not (Test-Path 'O:\')) {
+    Write-Host "[ERRORE] Impossibile creare l'unita (O:) per l'avvio temporaneo." -ForegroundColor Red
     Write-Host "Verifica di avere almeno 5 GB liberi su C: per consentire il restringimento." -ForegroundColor Yellow
     exit 1
 }
-Write-Host "[✓] Partizione di avvio O:\ creata e formattata con successo." -ForegroundColor Green
+Write-Host "[OK] Partizione di avvio (O:) creata e formattata con successo." -ForegroundColor Green
 
 # 6. Estrazione File da ISO verso l'unità O:\
 Write-Host "[+] Estrazione dei file del sistema operativo su unita O:\..." -ForegroundColor Cyan
@@ -178,11 +178,11 @@ if (Get-Command "Mount-DiskImage" -ErrorAction SilentlyContinue) {
         $mount = Mount-DiskImage -ImagePath $IsoPath -PassThru
         $isoVol = $mount | Get-Volume
         if ($isoVol -and $isoVol.DriveLetter) {
-            $isoDrive = $isoVol.DriveLetter + ":\"
-            Copy-Item -Path "$isoDrive*" -Destination "O:\" -Recurse -Force
+            $isoDrive = $isoVol.DriveLetter + ':\'
+            Copy-Item -Path "$isoDrive*" -Destination 'O:\' -Recurse -Force
             Dismount-DiskImage -ImagePath $IsoPath | Out-Null
             $extracted = $true
-            Write-Host "[✓] File estratti tramite montaggio nativo." -ForegroundColor Green
+            Write-Host "[OK] File estratti tramite montaggio nativo." -ForegroundColor Green
         }
     } catch {
         Write-Host "[!] Montaggio nativo fallito, passaggio ai metodi compatibili Windows 7..." -ForegroundColor Yellow
@@ -200,10 +200,10 @@ if (-not $extracted) {
     foreach ($exe in $7zPaths) {
         if (Test-Path $exe) {
             Write-Host "[i] Estrazione ISO in corso tramite 7-Zip ($exe)..." -ForegroundColor Cyan
-            & $exe x $IsoPath -o"O:\" -y | Out-Null
-            if (Test-Path "O:\boot" -or (Test-Path "O:\EFI") -or (Test-Path "O:\arch")) {
+            & $exe x $IsoPath -oO:\ -y | Out-Null
+            if ((Test-Path 'O:\boot') -or (Test-Path 'O:\EFI') -or (Test-Path 'O:\arch')) {
                 $extracted = $true
-                Write-Host "[✓] File estratti con successo tramite 7-Zip!" -ForegroundColor Green
+                Write-Host "[OK] File estratti con successo tramite 7-Zip!" -ForegroundColor Green
                 break
             }
         }
@@ -213,6 +213,7 @@ if (-not $extracted) {
 # Metodo C: Download automatico mini estrattore 7za se su Windows 7 puro senza 7-Zip
 if (-not $extracted) {
     Write-Host "[i] Download mini-estrattore portatile per Windows 7..." -ForegroundColor Yellow
+    try { [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072 } catch {}
     $7zaUrl = "https://www.7-zip.org/a/7za920.zip"
     $7zaZip = Join-Path $env:TEMP "7za.zip"
     $7zaDir = Join-Path $env:TEMP "7za"
@@ -229,9 +230,9 @@ if (-not $extracted) {
         $standalone7z = Join-Path $7zaDir "7za.exe"
         if (Test-Path $standalone7z) {
             Write-Host "[+] Estrazione ISO in corso con 7za..." -ForegroundColor Cyan
-            & $standalone7z x $IsoPath -o"O:\" -y | Out-Null
+            & $standalone7z x $IsoPath -oO:\ -y | Out-Null
             $extracted = $true
-            Write-Host "[✓] File estratti con successo su O:\!" -ForegroundColor Green
+            Write-Host "[OK] File estratti con successo su O:\." -ForegroundColor Green
         }
     } catch {
         Write-Host "[!] Estrazione automatica non riuscita." -ForegroundColor Yellow
@@ -239,8 +240,8 @@ if (-not $extracted) {
 }
 
 if (-not $extracted) {
-    Write-Host "[ERRORE] Impossibile estrarre automaticamente la ISO sull'unita O:\" -ForegroundColor Red
-    Write-Host "Puoi estrarre manualmente i file contenuti in $IsoPath all'interno del disco O:\ e rieseguire lo script." -ForegroundColor Yellow
+    Write-Host "[ERRORE] Impossibile estrarre automaticamente la ISO sull'unita (O:)." -ForegroundColor Red
+    Write-Host "Puoi estrarre manualmente i file contenuti in $IsoPath all'interno del disco (O:) e rieseguire lo script." -ForegroundColor Yellow
     exit 1
 }
 
@@ -252,7 +253,7 @@ if ($env:firmware_type -eq "UEFI" -or (Test-Path "HKLM:\System\CurrentControlSet
     $isUefi = $true
 }
 
-if ($isUefi -and (Test-Path "O:\EFI\BOOT\BOOTX64.EFI")) {
+if ($isUefi -and (Test-Path 'O:\EFI\BOOT\BOOTX64.EFI')) {
     Write-Host "[i] Sistema UEFI rilevato: creazione entry BCD per BOOTX64.EFI..." -ForegroundColor Yellow
     try {
         $bcdOut = bcdedit /create /d "Installa OSify (Senza USB)" /application bootapp
@@ -260,10 +261,10 @@ if ($isUefi -and (Test-Path "O:\EFI\BOOT\BOOTX64.EFI")) {
         if ($guidMatch.Success) {
             $guid = $guidMatch.Value
             bcdedit /set $guid device partition=O:
-            bcdedit /set $guid path "\EFI\BOOT\BOOTX64.EFI"
+            bcdedit /set $guid path '\EFI\BOOT\BOOTX64.EFI'
             bcdedit /displayorder $guid /addlast
             bcdedit /bootsequence $guid
-            Write-Host "[✓] Voce di boot UEFI registrata con successo: $guid" -ForegroundColor Green
+            Write-Host "[OK] Voce di boot UEFI registrata con successo: $guid" -ForegroundColor Green
         } else {
             Write-Host "[!] Nota: GUID non trovato in output bcdedit, avvio tramite partizione attiva." -ForegroundColor Yellow
         }
@@ -272,16 +273,16 @@ if ($isUefi -and (Test-Path "O:\EFI\BOOT\BOOTX64.EFI")) {
     }
 } else {
     Write-Host "[i] Sistema Legacy BIOS (MBR) rilevato (es. Toshiba Netbook)." -ForegroundColor Yellow
-    Write-Host "[✓] La partizione O:\ e stata contrassegnata come 'Attiva' per il boot diretto." -ForegroundColor Green
+    Write-Host "[OK] La partizione (O:) e stata contrassegnata come 'Attiva' per il boot diretto." -ForegroundColor Green
 }
 
 Write-Host ""
 Write-Host "=========================================================" -ForegroundColor Green
-Write-Host " [✓] CONFIGURAZIONE COMPLETATA CON SUCCESSO! " -ForegroundColor Green
+Write-Host " [OK] CONFIGURAZIONE COMPLETATA CON SUCCESSO! " -ForegroundColor Green
 Write-Host "=========================================================" -ForegroundColor Green
-Write-Host "I file di installazione di OSify sono pronti sull'unita O:\."
+Write-Host "I file di installazione di OSify sono pronti sull'unita (O:)."
 Write-Host "Al riavvio del computer partira automaticamente l'installer di OSify."
-Write-Host "Terminata l'installazione, la partizione O:\ verra rimossa automaticamente."
+Write-Host "Terminata l'installazione, la partizione (O:) verra rimossa automaticamente."
 Write-Host ""
 $reboot = Read-Host "Desideri riavviare il computer adesso? (S/N)"
 if ($reboot -match '^[sSyY]') {

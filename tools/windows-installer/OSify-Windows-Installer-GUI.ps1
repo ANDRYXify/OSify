@@ -412,12 +412,12 @@ $btnInstall.Add_Click({
     $p.WaitForExit()
     Remove-Item $dpFile -Force -ErrorAction SilentlyContinue
 
-    if (-not (Test-Path "O:\")) {
-        Append-Log "[ERRORE] Impossibile creare l'unita O:\. Verifica lo spazio libero."
+    if (-not (Test-Path 'O:\')) {
+        Append-Log "[ERRORE] Impossibile creare l'unita (O:). Verifica lo spazio libero."
         $btnInstall.IsEnabled = $true
         return
     }
-    Append-Log "[OK] Partizione O:\ creata e pronta."
+    Append-Log "[OK] Partizione (O:) creata e pronta."
 
     # FASE 2: Estrazione File ISO
     $progBar.Value = 45
@@ -430,8 +430,8 @@ $btnInstall.Add_Click({
             $mount = Mount-DiskImage -ImagePath $global:SelectedIso -PassThru
             $isoVol = $mount | Get-Volume
             if ($isoVol -and $isoVol.DriveLetter) {
-                $src = $isoVol.DriveLetter + ":\"
-                Copy-Item -Path "$src*" -Destination "O:\" -Recurse -Force
+                $src = $isoVol.DriveLetter + ':\'
+                Copy-Item -Path "$src*" -Destination 'O:\' -Recurse -Force
                 Dismount-DiskImage -ImagePath $global:SelectedIso | Out-Null
                 $extracted = $true
             }
@@ -449,7 +449,7 @@ $btnInstall.Add_Click({
         foreach ($c7z in $candidates7z) {
             if ($c7z -and (Test-Path $c7z)) {
                 Append-Log "[i] Estrazione tramite 7-Zip ($c7z)..."
-                & $c7z x $global:SelectedIso -o"O:\" -y | Out-Null
+                & $c7z x $global:SelectedIso -oO:\ -y | Out-Null
                 $extracted = $true
                 break
             }
@@ -470,7 +470,7 @@ $btnInstall.Add_Click({
             $shell.NameSpace($dest).CopyHere($shell.NameSpace($zip).Items(), 16)
             $exe = Join-Path $dest "7za.exe"
             if (Test-Path $exe) {
-                & $exe x $global:SelectedIso -o"O:\" -y | Out-Null
+                & $exe x $global:SelectedIso -oO:\ -y | Out-Null
                 $extracted = $true
             }
         } catch {}
@@ -483,14 +483,14 @@ $btnInstall.Add_Click({
     $txtStepInfo.Text = "[3/4] Configurazione voce di avvio nel Boot Manager..."
     $isUefi = ($env:firmware_type -eq "UEFI") -or (Test-Path "HKLM:\System\CurrentControlSet\Control\SecureBoot\State")
 
-    if ($isUefi -and (Test-Path "O:\EFI\BOOT\BOOTX64.EFI")) {
+    if ($isUefi -and (Test-Path 'O:\EFI\BOOT\BOOTX64.EFI')) {
         try {
             $bcdOut = bcdedit /create /d "Installa OSify (Senza USB)" /application bootapp
             $guidMatch = [System.Text.RegularExpressions.Regex]::Match($bcdOut, '\{([0-9a-fA-F-]+)\}')
             if ($guidMatch.Success) {
                 $guid = $guidMatch.Value
                 bcdedit /set $guid device partition=O:
-                bcdedit /set $guid path "\EFI\BOOT\BOOTX64.EFI"
+                bcdedit /set $guid path '\EFI\BOOT\BOOTX64.EFI'
                 bcdedit /displayorder $guid /addlast
                 bcdedit /bootsequence $guid
                 Append-Log "[OK] Voce UEFI BOOTX64.EFI configurata: $guid"
@@ -508,9 +508,9 @@ $btnInstall.Add_Click({
     $progBar.Value = 100
     $txtStepInfo.Text = "[OK] Configurazione completata con successo! Pronto al riavvio."
     Append-Log "========================================================="
-    Append-Log "[OK] INSTALLAZIONE PRONTA SULL'UNITA O:\"
+    Append-Log "[OK] INSTALLAZIONE PRONTA SULL'UNITA (O:)"
     Append-Log "Al riavvio il PC si avviera direttamente in OSify."
-    Append-Log "Terminata l'installazione, la partizione O:\ verra rimossa."
+    Append-Log "Terminata l'installazione, la partizione (O:) verra rimossa."
     Append-Log "========================================================="
 
     $reboot = [System.Windows.MessageBox]::Show("La partizione di avvio di OSify e' pronta!`n`nVuoi riavviare il computer adesso per iniziare l'installazione di OSify?", "Installazione Pronta", [System.Windows.MessageBoxButton]::YesNo, [System.Windows.MessageBoxImage]::Information)
