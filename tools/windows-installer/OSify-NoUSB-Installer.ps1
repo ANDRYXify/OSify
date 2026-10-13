@@ -28,6 +28,27 @@ if (-not $isAdmin) {
     exit 1
 }
 
+# 2. Diagnostica Architettura Hardware (32-bit vs 64-bit)
+$proc = Get-WmiObject Win32_Processor | Select-Object -First 1
+$is64BitCapable = ($proc.AddressWidth -eq 64) -or [Environment]::Is64BitOperatingSystem
+$cpuName = $proc.Name
+
+Write-Host "[+] CPU Rilevata: $cpuName" -ForegroundColor Cyan
+if (-not $is64BitCapable) {
+    Write-Host "=========================================================" -ForegroundColor Red
+    Write-Host " [ATTENZIONE CRITICA ARCHITETTURA 32-BIT (i686)]         " -ForegroundColor Red
+    Write-Host "=========================================================" -ForegroundColor Red
+    Write-Host "Il processore di questo PC ($cpuName) e' puramente a 32-bit (i686, es. Intel Atom N270/N280)!" -ForegroundColor Yellow
+    Write-Host "Le immagini standard di OSify a 64-bit (x86_64) NON possono avviarsi su questa CPU." -ForegroundColor Yellow
+    Write-Host "Per questo computer e' necessaria la variante 'OSify 32-Bit Micro-Edition'." -ForegroundColor Yellow
+    $force = Read-Host "Vuoi forzare comunque l'operazione? (S/N)"
+    if ($force -notmatch "^[sSyY]") {
+        Write-Host "[!] Installazione annullata per prevenire errori di avvio." -ForegroundColor Green
+        exit 0
+    }
+}
+
+
 # 2. Ricerca ISO di OSify se non specificata
 if ($IsoPath -eq "" -or -not (Test-Path $IsoPath)) {
     $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
