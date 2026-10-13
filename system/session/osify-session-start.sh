@@ -41,7 +41,17 @@ if [[ -x "$REPO_ROOT/audio/osify-sound-manager.sh" ]]; then
     "$REPO_ROOT/audio/osify-sound-manager.sh" set 75 >/dev/null 2>&1 || true
 fi
 
-# 5. Avvio Shell Grafica (OSify Deck Shell)
+# 5. Sicurezza, AdShield DNS & Gateway Autenticazione Smartphone
+if [[ -x "$REPO_ROOT/security/adblock/osify-adblock.sh" ]]; then
+    log "Attivazione protezione DNS AdShield OS-wide..."
+    "$REPO_ROOT/security/adblock/osify-adblock.sh" enable >/dev/null 2>&1 || true
+fi
+if [[ -x "$REPO_ROOT/security/auth/osify-auth-gateway.py" ]]; then
+    log "Avvio Gateway Autenticazione Biometrica Mobile (WebAuthn)..."
+    python3 "$REPO_ROOT/security/auth/osify-auth-gateway.py" start >/dev/null 2>&1 || true
+fi
+
+# 6. Avvio Shell Grafica (OSify Deck Shell & KDE Plasma Window Manager)
 log "Lancio OSify Deck Shell (SteamOS & KDE Plasma Dual Experience)..."
 export DISPLAY="${DISPLAY:-:0}"
 export XDG_CURRENT_DESKTOP="SteamOS:KDE"

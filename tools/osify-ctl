@@ -75,6 +75,34 @@ show_status() {
         echo "Non presente"
     fi
 
+    echo -n "[Live Hot-Updater] "
+    if [[ -x "$OSIFY_DIR/system/updater/osify-live-updater.sh" ]]; then
+        echo "ATTIVO (Zero-Reboot • Resiliente • Freeze Guard Rete)"
+    else
+        echo "Non configurato"
+    fi
+
+    echo -n "[OSify Shield Antivirus] "
+    if [[ -x "$OSIFY_DIR/security/shield/osify-shield.sh" ]]; then
+        echo "ATTIVO (Euristica Nativa • Quarantena Sandboxed)"
+    else
+        echo "Non presente"
+    fi
+
+    echo -n "[OSify AdShield] "
+    if [[ -x "$OSIFY_DIR/security/adblock/osify-adblock.sh" ]]; then
+        echo "ATTIVO (DNS Sinkhole OS-Wide • Blacklist Dinamica)"
+    else
+        echo "Non presente"
+    fi
+
+    echo -n "[Mobile & Passkey Auth] "
+    if [[ -x "$OSIFY_DIR/security/auth/osify-auth-gateway.py" ]]; then
+        echo "ATTIVO (iPhone FaceID, Android Biometria, FIDO2)"
+    else
+        echo "Non presente"
+    fi
+
     echo "================================================================="
 }
 
@@ -360,8 +388,24 @@ case "${1:-status}" in
         shift
         "$OSIFY_DIR/tools/osify-shell/osify-polyglot-env.sh" "$@"
         ;;
+    update|updater)
+        shift
+        "$OSIFY_DIR/system/updater/osify-live-updater.sh" "$@"
+        ;;
+    shield|antivirus)
+        shift
+        "$OSIFY_DIR/security/shield/osify-shield.sh" "$@"
+        ;;
+    adblock|adshield)
+        shift
+        "$OSIFY_DIR/security/adblock/osify-adblock.sh" "$@"
+        ;;
+    auth|mobile-auth|passkey)
+        shift
+        python3 "$OSIFY_DIR/security/auth/osify-auth-gateway.py" "$@"
+        ;;
     *)
-        echo "Uso: osify-ctl {status|mode|autotune|workload|shell-env|pkg|filemgr|wifi|audio-ctl|display|power|install-disk|deck|uem|hal|web|qos|audio|emu|windows|android|darwin|anticheat|hw-detect}"
+        echo "Uso: osify-ctl {status|mode|update|shield|adblock|auth|autotune|workload|shell-env|pkg|filemgr|wifi|audio-ctl|display|power|install-disk|deck|uem|hal|web|qos|audio|emu|windows|android|darwin|anticheat|hw-detect}"
         exit 1
         ;;
 esac

@@ -151,3 +151,8 @@ jdk-openjdk
 fuse2
 qemu-user-static
 qemu-user-static-binfmt
+python
+tk
+python-pillow
+bind-tools
+jq

@@ -201,6 +201,40 @@ def create_vector_icon(icon_type, size=32, color="#94a3b8", scale=4):
         pts = [(cx - int(s * 0.7), cy - s), (cx + s, cy), (cx - int(s * 0.7), cy + s)]
         d.polygon(pts, fill=color)
 
+    elif icon_type == "shield":
+        # Sagoma scudo poligonale di sicurezza
+        cx = hi_size // 2
+        top_y = pad
+        mid_y = pad + int(h * 0.5)
+        bot_y = hi_size - pad
+        pts = [
+            (cx, top_y),
+            (hi_size - pad, top_y + int(h * 0.1)),
+            (hi_size - pad - int(w * 0.08), mid_y),
+            (cx, bot_y),
+            (pad + int(w * 0.08), mid_y),
+            (pad, top_y + int(h * 0.1))
+        ]
+        d.polygon(pts, outline=color, width=lw)
+        # Segno centrale verticale o spunta interna
+        d.line([(cx, top_y + int(scale * 3)), (cx, bot_y - int(scale * 3))], fill=color, width=lw)
+
+    elif icon_type == "refresh":
+        # Freccia circolare di aggiornamento
+        cx, cy = hi_size // 2, hi_size // 2
+        r = int(w * 0.38)
+        d.arc([cx - r, cy - r, cx + r, cy + r], start=45, end=315, fill=color, width=lw)
+        # Punta della freccia
+        d.polygon([(cx + r - int(scale * 4), cy - int(scale * 2)), (cx + r + int(scale * 4), cy - int(scale * 2)), (cx + r, cy - int(scale * 7))], fill=color)
+
+    elif icon_type == "globe":
+        # Globo terrestre per adblocker e rete
+        cx, cy = hi_size // 2, hi_size // 2
+        r = int(w * 0.40)
+        d.ellipse([cx - r, cy - r, cx + r, cy + r], outline=color, width=lw)
+        d.line([(cx - r, cy), (cx + r, cy)], fill=color, width=lw)
+        d.ellipse([cx - int(r * 0.45), cy - r, cx + int(r * 0.45), cy + r], outline=color, width=lw)
+
     # Downsampling di alta qualità per perfetto anti-aliasing
     return im.resize((size, size), Image.Resampling.LANCZOS)
 

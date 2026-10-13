@@ -43,12 +43,19 @@ build_variant() {
     cp "$REPO_ROOT/tools/windows-installer/ISTRUZIONI-INSTALLAZIONE.txt" "$variant_dir/tools/windows-installer/"
     cp "$REPO_ROOT/tools/windows-installer/OSify-Setup.bat" "$variant_dir/OSify-Setup.bat"
 
-    # Copia moduli e branding OSify
+    # Copia moduli e branding OSify completi
     cp -r "$REPO_ROOT/kernel" "$variant_dir/osify/"
     cp -r "$REPO_ROOT/network" "$variant_dir/osify/"
     cp -r "$REPO_ROOT/audio" "$variant_dir/osify/"
     cp -r "$REPO_ROOT/desktop" "$variant_dir/osify/"
     cp -r "$REPO_ROOT/tools" "$variant_dir/osify/"
+    cp -r "$REPO_ROOT/security" "$variant_dir/osify/"
+    cp -r "$REPO_ROOT/system" "$variant_dir/osify/"
+    cp -r "$REPO_ROOT/uem" "$variant_dir/osify/"
+    cp -r "$REPO_ROOT/runtimes" "$variant_dir/osify/"
+    cp -r "$REPO_ROOT/emulation" "$variant_dir/osify/"
+    cp -r "$REPO_ROOT/streaming" "$variant_dir/osify/"
+    cp -r "$REPO_ROOT/services" "$variant_dir/osify/"
     cp "$REPO_ROOT/OSify.png" "$variant_dir/osify/branding/"
 
     # File descrittivo e manifesto di versione

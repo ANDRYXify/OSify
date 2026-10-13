@@ -26,34 +26,145 @@ check_dependencies() {
 }
 
 prepare_profile() {
-    echo "[Build] Preparazione directory di profilo..."
+    echo "[Build] Preparazione directory di profilo per sistema operativo autonomo..."
     mkdir -p "$PROFILE_DIR/airootfs/etc/sysctl.d"
     mkdir -p "$PROFILE_DIR/airootfs/etc/udev/rules.d"
     mkdir -p "$PROFILE_DIR/airootfs/etc/pipewire/pipewire.conf.d"
+    mkdir -p "$PROFILE_DIR/airootfs/etc/modprobe.d"
+    mkdir -p "$PROFILE_DIR/airootfs/etc/systemd/system/multi-user.target.wants"
+    mkdir -p "$PROFILE_DIR/airootfs/etc/profile.d"
+    mkdir -p "$PROFILE_DIR/airootfs/etc/skel"
     mkdir -p "$PROFILE_DIR/airootfs/usr/local/bin"
+    mkdir -p "$PROFILE_DIR/airootfs/usr/share/applications"
+    mkdir -p "$PROFILE_DIR/airootfs/opt/osify"
     mkdir -p "$OUT_DIR"
 
-    mkdir -p "$PROFILE_DIR/airootfs/etc/modprobe.d"
-    
-    # Copia delle configurazioni OSify direttamente nella root del sistema live
+    # Copia delle configurazioni kernel OSify
     cp "$SCRIPT_DIR/../kernel/osify-sysctl.conf" "$PROFILE_DIR/airootfs/etc/sysctl.d/99-osify.conf"
     cp "$SCRIPT_DIR/../kernel/udev/99-osify-controllers.rules" "$PROFILE_DIR/airootfs/etc/udev/rules.d/"
     cp "$SCRIPT_DIR/../kernel/udev/99-osify-storage.rules" "$PROFILE_DIR/airootfs/etc/udev/rules.d/"
     cp "$SCRIPT_DIR/../kernel/legacy/99-osify-legacy-gpu.conf" "$PROFILE_DIR/airootfs/etc/modprobe.d/"
     cp "$SCRIPT_DIR/../audio/pipewire.conf.d/99-osify-proaudio.conf" "$PROFILE_DIR/airootfs/etc/pipewire/pipewire.conf.d/"
-    
-    # Copia toolchain CLI & Hardware Intelligence
-    cp "$SCRIPT_DIR/../tools/osify-ctl" "$PROFILE_DIR/airootfs/usr/local/bin/"
+
+    # Copia dell'intero albero di sistema OSify in /opt/osify
+    for d in audio desktop emulation etc kernel network presentation runtimes security services streaming system tools uem; do
+        if [[ -d "$SCRIPT_DIR/../$d" ]]; then
+            cp -r "$SCRIPT_DIR/../$d" "$PROFILE_DIR/airootfs/opt/osify/"
+        fi
+    done
+    cp "$SCRIPT_DIR/../OSify.png" "$PROFILE_DIR/airootfs/opt/osify/" 2>/dev/null || true
+
+    # Toolchain CLI & Binari di Sistema in /usr/local/bin
+    cp "$SCRIPT_DIR/../tools/osify-ctl" "$PROFILE_DIR/airootfs/usr/local/bin/osify-ctl"
     cp "$SCRIPT_DIR/../network/osify-qos.sh" "$PROFILE_DIR/airootfs/usr/local/bin/osify-qos"
     cp "$SCRIPT_DIR/../audio/osify-audio-setup.sh" "$PROFILE_DIR/airootfs/usr/local/bin/osify-audio"
     cp "$SCRIPT_DIR/../kernel/legacy/osify-hardware-detect.sh" "$PROFILE_DIR/airootfs/usr/local/bin/osify-hwdetect"
+    
+    # Wrapper veloci per i comandi di sistema OSify
+    cat << 'EOF' > "$PROFILE_DIR/airootfs/usr/local/bin/osify-session"
+#!/usr/bin/env bash
+exec /opt/osify/system/session/osify-session-start.sh "$@"
+EOF
+
+    cat << 'EOF' > "$PROFILE_DIR/airootfs/usr/local/bin/osify-update"
+#!/usr/bin/env bash
+exec /opt/osify/system/updater/osify-live-updater.sh "$@"
+EOF
+
+    cat << 'EOF' > "$PROFILE_DIR/airootfs/usr/local/bin/osify-shield"
+#!/usr/bin/env bash
+exec /opt/osify/security/shield/osify-shield.sh "$@"
+EOF
+
+    cat << 'EOF' > "$PROFILE_DIR/airootfs/usr/local/bin/osify-adblock"
+#!/usr/bin/env bash
+exec /opt/osify/security/adblock/osify-adblock.sh "$@"
+EOF
+
+    cat << 'EOF' > "$PROFILE_DIR/airootfs/usr/local/bin/osify-auth"
+#!/usr/bin/env bash
+exec python3 /opt/osify/security/auth/osify-auth-gateway.py "$@"
+EOF
+
+    cat << 'EOF' > "$PROFILE_DIR/airootfs/usr/local/bin/osify-tune"
+#!/usr/bin/env bash
+exec /opt/osify/system/autotune/osify-autotune.sh "$@"
+EOF
+
+    cat << 'EOF' > "$PROFILE_DIR/airootfs/usr/local/bin/osify-install"
+#!/usr/bin/env bash
+exec /opt/osify/system/installer/osify-disk-installer.sh "$@"
+EOF
 
     chmod +x "$PROFILE_DIR/airootfs/usr/local/bin/"*
+
+    # Configurazione Systemd: Timer Live Updater & Servizi Sicurezza
+    cat << 'EOF' > "$PROFILE_DIR/airootfs/etc/systemd/system/osify-live-updater.service"
+[Unit]
+Description=OSify Live Zero-Reboot Git Hot-Updater
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/osify/system/updater/osify-live-updater.sh check-update
+EOF
+
+    cat << 'EOF' > "$PROFILE_DIR/airootfs/etc/systemd/system/osify-live-updater.timer"
+[Unit]
+Description=Timer per Aggiornamenti Live Git OSify
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=15min
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF
+
+    cat << 'EOF' > "$PROFILE_DIR/airootfs/etc/systemd/system/osify-adblock.service"
+[Unit]
+Description=OSify AdShield DNS Sinkhole Service
+After=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/opt/osify/security/adblock/osify-adblock.sh enable
+ExecStop=/opt/osify/security/adblock/osify-adblock.sh disable
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    cat << 'EOF' > "$PROFILE_DIR/airootfs/etc/systemd/system/osify-auth-gateway.service"
+[Unit]
+Description=OSify Smartphone WebAuthn & Passkey Authentication Gateway
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/osify/security/auth/osify-auth-gateway.py start
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    # Polyglot Shell Hook per tutte le shell del sistema
+    cat << 'EOF' > "$PROFILE_DIR/airootfs/etc/profile.d/osify-polyglot.sh"
+if [ -f /opt/osify/tools/osify-shell/osify-polyglot-env.sh ]; then
+    . /opt/osify/tools/osify-shell/osify-polyglot-env.sh
+fi
+EOF
+    chmod +x "$PROFILE_DIR/airootfs/etc/profile.d/osify-polyglot.sh"
 
     # Copia pacchetti
     cp "$SCRIPT_DIR/packages.x86_64" "$PROFILE_DIR/packages.x86_64"
 
-    echo "[✓] Profilo ISO assemblato e pronto per la compilazione."
+    echo "[✓] Profilo ISO autonomo OSify assemblato con successo."
 }
 
 build_iso() {
