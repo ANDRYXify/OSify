@@ -16,16 +16,16 @@
     <img src="https://img.shields.io/badge/Download_Installer-Windows_Senza_USB-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Download Windows No-USB Installer"/>
   </a>
   &nbsp;&nbsp;
-  <a href="https://github.com/ANDRYXify/OSify/releases">
-    <img src="https://img.shields.io/badge/Release_ISO-Tutte_le_Versioni-9333EA?style=for-the-badge&logo=archlinux&logoColor=white" alt="Release Ufficiali & ISO"/>
+  <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-x86_64-v3.iso">
+    <img src="https://img.shields.io/badge/Download_ISO-x86--64--v3_(Gaming)-9333EA?style=for-the-badge&logo=archlinux&logoColor=white" alt="Download ISO x86_64"/>
   </a>
   &nbsp;&nbsp;
-  <a href="https://github.com/ANDRYXify/OSify/actions">
-    <img src="https://img.shields.io/badge/CI%2FCD-Build_Pipeline-10B981?style=for-the-badge&logo=githubactions&logoColor=white" alt="Build Pipeline"/>
+  <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-Vintage-i686.iso">
+    <img src="https://img.shields.io/badge/Download_ISO-Vintage_32--Bit_(Netbook)-F59E0B?style=for-the-badge&logo=linux&logoColor=white" alt="Download ISO Vintage 32-Bit"/>
   </a>
   &nbsp;&nbsp;
-  <a href="https://github.com/ANDRYXify/OSify">
-    <img src="https://img.shields.io/badge/Test_Suite-36%2F36_Passati-brightgreen?style=for-the-badge&logo=checkmarx&logoColor=white" alt="Test Suite"/>
+  <a href="https://github.com/ANDRYXify/OSify/releases/tag/v1.0.0">
+    <img src="https://img.shields.io/badge/Release-v1.0.0_Official-10B981?style=for-the-badge&logo=github&logoColor=white" alt="Official Release"/>
   </a>
 </p>
 
