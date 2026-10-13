@@ -23,6 +23,7 @@ find_iso_for_profile() {
     if [[ "$profile" =~ ^(2|nb200|toshiba|3|stress|extreme)$ ]]; then
         # Profilo Vintage 32-bit: desktop grafico pronto all'uso
         for candidate in \
+            "$SCRIPT_DIR/OSify-Vintage-Live.iso" \
             "$SCRIPT_DIR/osify-vintage-desktop.iso" \
             "$SCRIPT_DIR/osify-vintage-base.iso" \
             "$REPO_ROOT/build/out/release/OSify-Vintage-i686.iso" \
@@ -131,6 +132,11 @@ start_vm() {
     echo "[+] Risoluzione    : $RESOLUTION"
     echo "[+] Disco Target   : $DISK_IMAGE"
 
+    local DISPLAY_OPT="default,show-cursor=on"
+    if [[ "$(uname)" == "Darwin" ]]; then
+        DISPLAY_OPT="cocoa,show-cursor=on"
+    fi
+
     # Parametri base QEMU
     QEMU_ARGS=(
         -m "$MEM"
@@ -139,9 +145,9 @@ start_vm() {
         -drive file="$DISK_IMAGE",format=qcow2,if=virtio
         -net nic,model=virtio -net user,hostfwd=tcp::2222-:22
         -vga std
-        -display default,show-cursor=on
+        -display "$DISPLAY_OPT"
         -usb -device usb-tablet
-        -virtfs "local,path=$REPO_ROOT,mount_tag=osify,security_model=none"
+        -qmp unix:/tmp/osify-qmp.sock,server,nowait
     )
 
     # Accelerazione hardware solo se l'architettura host coincide
@@ -151,7 +157,19 @@ start_vm() {
         QEMU_ARGS+=(-enable-kvm)
     fi
 
-    if [[ -n "$ISO_IMAGE" && -f "$ISO_IMAGE" ]]; then
+    local KERNEL_BIN="$SCRIPT_DIR/live-kernel/bzImage"
+    local INITRD_BIN="$SCRIPT_DIR/live-kernel/osify-initrd.gz"
+
+    if [[ -f "$KERNEL_BIN" && -f "$INITRD_BIN" ]]; then
+        echo "[+] Avvio Diretto Kernel OSify (Zero Wait Boot):"
+        echo "    • Kernel : bzImage"
+        echo "    • Initrd : osify-initrd.gz (Live RootFS)"
+        QEMU_ARGS+=(
+            -kernel "$KERNEL_BIN"
+            -initrd "$INITRD_BIN"
+            -append "root=/dev/null video=-32 autologin lang=it_IT kmap=it rw quiet"
+        )
+    elif [[ -n "$ISO_IMAGE" && -f "$ISO_IMAGE" ]]; then
         echo "[+] Immagine ISO collegata: $(basename "$ISO_IMAGE")"
         QEMU_ARGS+=(-cdrom "$ISO_IMAGE" -boot d)
     else
