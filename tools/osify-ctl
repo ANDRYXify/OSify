@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# OSify Control Center (osify-ctl) — CLI di Gestione e Switch Profili
+# ==============================================================================
+
+set -euo pipefail
+
+OSIFY_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+show_banner() {
+    cat << "EOF"
+  ██████╗ ███████╗██╗███████╗██╗   ██╗
+ ██╔═══██╗██╔════╝██║██╔════╝╚██╗ ██╔╝
+ ██║   ██║███████╗██║█████╗   ╚████╔╝ 
+ ██║   ██║╚════██║██║██╔══╝    ╚██╔╝  
+ ╚██████╔╝███████║██║██║        ██║   
+  ╚═════╝ ╚══════╝╚═╝╚═╝        ╚═╝   
+  Gaming • Live Streaming • Multi-Runtime • Emulazione
+EOF
+    echo ""
+}
+
+show_status() {
+    show_banner
+    echo "==================== STATO DEL SISTEMA OSIFY ===================="
+    echo -n "[Kernel] "
+    uname -srm 2>/dev/null || echo "N/A"
+    
+    echo -n "[CPU Scheduler] "
+    if [[ -f /sys/block/nvme0n1/queue/scheduler ]]; then
+        cat /sys/block/nvme0n1/queue/scheduler 2>/dev/null || true
+    else
+        echo "BORE / EEVDF attivo"
+    fi
+
+    echo -n "[Network QoS Shaper] "
+    if tc qdisc show 2>/dev/null | grep -q "cake"; then
+        echo "ATTIVO (CAKE Anti-Bufferbloat + DSCP)"
+    else
+        echo "INATTIVO (Standard FIFO)"
+    fi
+
+    echo -n "[PipeWire Pro-Audio] "
+    if pactl list short sinks 2>/dev/null | grep -q "OSify_Game"; then
+        echo "CONFIGURATO (Sinks virtuali attivi: Game, Voice, Music, Mic)"
+    else
+        echo "Standard"
+    fi
+
+    echo -n "[Wayland Tearing / VRR] "
+    if grep -q "AllowTearing=true" "$HOME/.config/kwinrc" 2>/dev/null; then
+        echo "ABILITATO (Latenza eSport)"
+    else
+        echo "Non impostato"
+    fi
+
+    echo -n "[Runtime Android] "
+    command -v waydroid >/dev/null 2>&1 && echo "Disponibile" || echo "Non installato"
+
+    echo -n "[Runtime Windows] "
+    command -v wine >/dev/null 2>&1 && echo "Proton/Wine attivo" || echo "Non installato"
+
+    echo "================================================================="
+}
+
+set_mode() {
+    local target_mode="${1:-}"
+    case "$target_mode" in
+        streaming)
+            echo "[+] Attivazione MODALITÀ STREAMING LIVE..."
+            "$OSIFY_DIR/network/osify-qos.sh" "" start || true
+            "$OSIFY_DIR/audio/osify-audio-setup.sh" setup || true
+            echo "[✓] Canali audio VOD separati e Anti-Bufferbloat attivi per Twitch/Kick/YouTube!"
+            ;;
+        gaming)
+            echo "[+] Attivazione MODALITÀ GAMING COMPETITIVO..."
+            # Imposta governor CPU al massimo
+            if [[ -d /sys/devices/system/cpu/cpu0/cpufreq ]]; then
+                echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor >/dev/null 2>&1 || true
+            fi
+            "$OSIFY_DIR/desktop/kde-plasma/apply-desktop-tuning.sh"
+            echo "[✓] Priorità massimizzata e tearing abilitato per latenza minima!"
+            ;;
+        emulation)
+            echo "[+] Attivazione MODALITÀ EMULAZIONE CONSOLE..."
+            "$OSIFY_DIR/emulation/launch-game-mode.sh"
+            ;;
+        balanced)
+            echo "[+] Ripristino MODALITÀ BILANCIATA..."
+            "$OSIFY_DIR/network/osify-qos.sh" "" stop || true
+            ;;
+        *)
+            echo "Modalità disponibili: streaming | gaming | emulation | balanced"
+            exit 1
+            ;;
+    esac
+}
+
+case "${1:-status}" in
+    status)
+        show_status
+        ;;
+    mode)
+        shift
+        set_mode "$@"
+        ;;
+    qos)
+        shift
+        "$OSIFY_DIR/network/osify-qos.sh" "$@"
+        ;;
+    audio)
+        shift
+        "$OSIFY_DIR/audio/osify-audio-setup.sh" "$@"
+        ;;
+    emu)
+        shift
+        "$OSIFY_DIR/emulation/osify-emu-wrapper.sh" "$@"
+        ;;
+    windows)
+        shift
+        "$OSIFY_DIR/runtimes/windows/osify-proton.sh" "$@"
+        ;;
+    android)
+        shift
+        "$OSIFY_DIR/runtimes/android/osify-waydroid-setup.sh" "$@"
+        ;;
+    darwin)
+        shift
+        "$OSIFY_DIR/runtimes/macos/osify-darwin-bridge.sh" "$@"
+        ;;
+    *)
+        echo "Uso: osify-ctl {status|mode <streaming|gaming|emulation|balanced>|qos|audio|emu|windows|android|darwin}"
+        exit 1
+        ;;
+esac

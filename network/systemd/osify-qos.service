@@ -1,0 +1,15 @@
+[Unit]
+Description=OSify Network QoS & Anti-Bufferbloat Engine (CAKE + DSCP)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/osify-qos default start
+ExecStop=/usr/local/bin/osify-qos default stop
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

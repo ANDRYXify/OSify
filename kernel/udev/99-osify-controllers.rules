@@ -1,0 +1,54 @@
+# OSify - Regole Udev per Controller Console & Dispositivi Gaming
+# Posizione target su sistema: /etc/udev/rules.d/99-osify-controllers.rules
+# Assicura accesso diretto a latenza zero senza root per emulatori e giochi (TAG+="uaccess")
+
+# ------------------------------------------------------------------------------
+# Sony PlayStation (DualSense, DualSense Edge, DualShock 4)
+# ------------------------------------------------------------------------------
+# Sony DualSense Wireless Controller (USB e Bluetooth)
+KERNEL=="hidraw*", ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0ce6", MODE="0660", TAG+="uaccess"
+# Sony DualSense Edge Wireless Controller
+KERNEL=="hidraw*", ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0df2", MODE="0660", TAG+="uaccess"
+# Sony DualShock 4 (v1 e v2)
+KERNEL=="hidraw*", ATTRS{idVendor}=="054c", ATTRS{idProduct}=="05c4", MODE="0660", TAG+="uaccess"
+KERNEL=="hidraw*", ATTRS{idVendor}=="054c", ATTRS{idProduct}=="09cc", MODE="0660", TAG+="uaccess"
+KERNEL=="hidraw*", ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0ba0", MODE="0660", TAG+="uaccess"
+
+# ------------------------------------------------------------------------------
+# Microsoft Xbox (Series X/S, One, Elite, Wireless Adapter xone)
+# ------------------------------------------------------------------------------
+# Controller Xbox One / Series cablati e wireless
+KERNEL=="hidraw*", ATTRS{idVendor}=="045e", ATTRS{idProduct}=="02ea", MODE="0660", TAG+="uaccess"
+KERNEL=="hidraw*", ATTRS{idVendor}=="045e", ATTRS{idProduct}=="02fd", MODE="0660", TAG+="uaccess"
+KERNEL=="hidraw*", ATTRS{idVendor}=="045e", ATTRS{idProduct}=="0b12", MODE="0660", TAG+="uaccess"
+KERNEL=="hidraw*", ATTRS{idVendor}=="045e", ATTRS{idProduct}=="0b13", MODE="0660", TAG+="uaccess"
+KERNEL=="hidraw*", ATTRS{idVendor}=="045e", ATTRS{idProduct}=="02d1", MODE="0660", TAG+="uaccess"
+KERNEL=="hidraw*", ATTRS{idVendor}=="045e", ATTRS{idProduct}=="0b00", MODE="0660", TAG+="uaccess"
+KERNEL=="hidraw*", ATTRS{idVendor}=="045e", ATTRS{idProduct}=="0b05", MODE="0660", TAG+="uaccess"
+# Xbox Wireless Dongle Adapter
+KERNEL=="hidraw*", ATTRS{idVendor}=="045e", ATTRS{idProduct}=="02fe", MODE="0660", TAG+="uaccess"
+
+# ------------------------------------------------------------------------------
+# Nintendo Switch (Pro Controller, Joy-Cons)
+# ------------------------------------------------------------------------------
+# Switch Pro Controller (USB & BT)
+KERNEL=="hidraw*", ATTRS{idVendor}=="057e", ATTRS{idProduct}=="2009", MODE="0660", TAG+="uaccess"
+# Joy-Con L / R
+KERNEL=="hidraw*", ATTRS{idVendor}=="057e", ATTRS{idProduct}=="2006", MODE="0660", TAG+="uaccess"
+KERNEL=="hidraw*", ATTRS{idVendor}=="057e", ATTRS{idProduct}=="2007", MODE="0660", TAG+="uaccess"
+# Switch SNES/N64/Genesis Controllers
+KERNEL=="hidraw*", ATTRS{idVendor}=="057e", ATTRS{idProduct}=="2017", MODE="0660", TAG+="uaccess"
+KERNEL=="hidraw*", ATTRS{idVendor}=="057e", ATTRS{idProduct}=="2019", MODE="0660", TAG+="uaccess"
+
+# ------------------------------------------------------------------------------
+# Valve (Steam Controller, Steam Deck Controller)
+# ------------------------------------------------------------------------------
+KERNEL=="uinput", MODE="0660", GROUP="input", TAG+="uaccess"
+KERNEL=="hidraw*", ATTRS{idVendor}=="28de", MODE="0660", TAG+="uaccess"
+
+# ------------------------------------------------------------------------------
+# 8BitDo & Produttori Terzi (Arcade Sticks, Mayflash)
+# ------------------------------------------------------------------------------
+KERNEL=="hidraw*", ATTRS{idVendor}=="2dc8", MODE="0660", TAG+="uaccess"
+KERNEL=="hidraw*", ATTRS{idVendor}=="0e6f", MODE="0660", TAG+="uaccess"
+KERNEL=="hidraw*", ATTRS{idVendor}=="1532", MODE="0660", TAG+="uaccess"

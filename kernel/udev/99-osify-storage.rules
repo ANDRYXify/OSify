@@ -1,0 +1,12 @@
+# OSify - Regole Udev per I/O Scheduler Storage
+# Posizione target su sistema: /etc/udev/rules.d/99-osify-storage.rules
+
+# NVMe Drives: la gestione delle code multiple è gestita in hardware dal controller PCIe NVMe.
+# Impostiamo 'none' per azzerare il sovraccarico CPU del kernel e minimizzare i tempi di caricamento dei giochi.
+ACTION=="add|change", KERNEL=="nvme[0-9]*n[0-9]*", ATTR{queue/scheduler}="none"
+
+# SSD SATA / Dischi a stato solido: 'kyber' o 'mq-deadline' offrono la latenza di lettura più bassa
+ACTION=="add|change", KERNEL=="sd[a-z]|mmcblk[0-9]*", ATTR{queue/rotational}=="0", ATTR{queue/scheduler}="kyber"
+
+# Dischi rigidi meccanici (HDD): 'bfq' garantisce responsività del desktop anche sotto carichi I/O pesanti
+ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="1", ATTR{queue/scheduler}="bfq"

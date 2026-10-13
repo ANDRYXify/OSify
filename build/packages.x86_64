@@ -1,0 +1,113 @@
+# OSify - Elenco Pacchetti per la Build ISO (Target x86-64-v3)
+
+# ------------------------------------------------------------------------------
+# CORE DI SISTEMA & KERNEL BORE
+# ------------------------------------------------------------------------------
+base
+base-devel
+linux-cachyos-bore
+linux-cachyos-bore-headers
+linux-firmware
+btrfs-progs
+zram-generator
+snapper
+efibootmgr
+grub
+systemd-boot
+networkmanager
+git
+curl
+wget
+zsh
+htop
+
+# ------------------------------------------------------------------------------
+# DRIVER GRAFICI & VULKAN A BASSO LIVELLO
+# ------------------------------------------------------------------------------
+mesa
+vulkan-radeon
+vulkan-intel
+nvidia-dkms
+nvidia-utils
+lib32-mesa
+lib32-vulkan-radeon
+lib32-vulkan-intel
+lib32-nvidia-utils
+vulkan-tools
+libva-mesa-driver
+intel-media-driver
+
+# ------------------------------------------------------------------------------
+# DESKTOP ENVIRONMENT: KDE PLASMA 6 WAYLAND
+# ------------------------------------------------------------------------------
+plasma-desktop
+plasma-wayland-session
+kwin
+kscreen
+dolphin
+konsole
+plasma-nm
+plasma-pa
+power-profiles-daemon
+ark
+
+# ------------------------------------------------------------------------------
+# AUDIO PROFESSIONALE (PIPEWIRE PRO-AUDIO)
+# ------------------------------------------------------------------------------
+pipewire
+pipewire-audio
+pipewire-alsa
+pipewire-pulse
+pipewire-jack
+wireplumber
+qjackctl
+pavucontrol
+rnnoise
+lsp-plugins
+
+# ------------------------------------------------------------------------------
+# RETE, TRAFFIC SHAPER & QoS
+# ------------------------------------------------------------------------------
+iproute2
+nftables
+ethtool
+bind
+tcpdump
+
+# ------------------------------------------------------------------------------
+# GAMING ENGINE & RUNTIMES
+# ------------------------------------------------------------------------------
+gamescope
+gamemode
+lib32-gamemode
+mimalloc
+mangohud
+steam
+lutris
+bottles
+wine-ge-custom
+winetricks
+
+# ------------------------------------------------------------------------------
+# ANDROID & DARWIN RUNTIMES
+# ------------------------------------------------------------------------------
+waydroid
+lxc
+dnsmasq
+qemu-full
+virt-manager
+ovmf
+
+# ------------------------------------------------------------------------------
+# STREAMING SUITE (TWITCH / KICK / YOUTUBE)
+# ------------------------------------------------------------------------------
+obs-studio
+ffmpeg
+
+# ------------------------------------------------------------------------------
+# EMULAZIONE CONSOLE
+# ------------------------------------------------------------------------------
+rpcs3
+dolphin-emu
+pcsx2
+retroarch
