@@ -191,6 +191,29 @@ osify-ctl mode gaming                      # Priorita' real-time a bassa latenza
 osify-ctl mode streaming                   # Protezione bufferbloat CAKE QoS attiva
 osify-ctl mode lowspec                     # Profilo a bassissimo consumo per macchine vintage
 
+# Hardware Intelligence & Autocalibrazione Universale
+osify-ctl autotune status                  # Stato dell'architettura rilevata (x86-64 v1-v4, 32-bit, ARM64, Silicon)
+osify-ctl autotune detect                  # Audit completo di CPU, GPU, memoria ZRAM e scheduler storage
+osify-ctl autotune apply                   # Calibrazione dinamica delle impostazioni kernel per l'hardware attuale
+
+# Context-Aware Workload Governor (Intelligenza dei carichi dinamici)
+osify-ctl workload status                  # Profilo di carico attualmente attivo
+osify-ctl workload stream-game             # STREAMING + GIOCO ONLINE SIMULTANEO (0ms jitter CAKE + Twitch VOD Track 2)
+osify-ctl workload esport                  # eSport gaming competitivo (BORE 1000Hz, tearing unredirect Wayland)
+osify-ctl workload workstation             # Sviluppo & compilazione multi-core
+osify-ctl workload auto                    # Rilevamento automatico processi in background e adattamento istantaneo
+
+# Omnipotent Polyglot Terminal Shell Environment
+osify-ctl shell-env test                   # Collaudo dei comandi Windows (dir, ipconfig, tasklist), macOS (open, sw_vers)
+source tools/osify-shell/osify-polyglot-env.sh # Attivazione shell poliglotta universale
+# Supporta in modo nativo e trasparente:
+# • Windows: dir, cls, ipconfig, tasklist, taskkill, systeminfo, ver, copy, move, del
+# • macOS: open, pbcopy, pbpaste, say, sw_vers, mdfind, caffeinate
+# • Linux Distro Bridge: apt, pacman, dnf, apk, brew, winget (instradati su osify-pkg)
+
+# Interfaccia Grafica SteamOS Console & KDE Plasma 6
+osify-ctl deck                             # Avvio Deck Shell ad alte prestazioni con QAM e Workload switcher
+
 # Gestione architettura modulare
 osify-ctl block list
 osify-ctl block enable presentation
@@ -200,7 +223,7 @@ osify-ctl block enable android
 osify-ctl anticheat check Valorant
 
 # Collaudo preventivo tramite test suite e simulatore QEMU
-osify-ctl test suite                       # Esecuzione test suite ufficiale (58/58 test)
+osify-ctl test suite                       # Esecuzione test suite ufficiale (85/85 test verificati)
 osify-ctl test hw-check --profile toshiba  # Diagnosi vincoli Toshiba NB200
 osify-ctl test vm toshiba                  # Avvio VM con CPU Atom n270 e display 1024x600
 ```

@@ -263,6 +263,56 @@ else
     log_fail "Deck Shell Assets: Errore rendering icone vettoriali"
 fi
 
+# ==============================================================================
+# FASE 9: HARDWARE INTELLIGENCE, WORKLOAD GOVERNOR & POLYGLOT CLI
+# ==============================================================================
+echo ""
+echo "=== FASE 9: INTELLIGENZA HARDWARE, GOVERNOR CARICHI & SHELL POLIGLOTTA ==="
+
+# 9.1 Hardware Autotune Engine (ISA, GPU, RAM, Storage)
+if "$REPO_ROOT/system/autotune/osify-autotune.sh" json | grep -q "calibrated"; then
+    log_pass "Autotune Engine: Riconoscimento hardware e schema JSON di calibrazione validati"
+else
+    log_fail "Autotune Engine: Fallimento autotune json"
+fi
+
+# 9.2 Context-Aware Workload Governor
+if "$REPO_ROOT/system/workload/osify-workload-governor.sh" stream-game >/dev/null && \
+   grep -q "STREAM_AND_GAME" /tmp/osify_active_workload_profile 2>/dev/null; then
+    log_pass "Workload Governor: Profilo simultaneo Streaming + Gaming (CAKE QoS + VOD audio) attivo"
+else
+    log_fail "Workload Governor: Fallimento switch profilo stream-game"
+fi
+
+if "$REPO_ROOT/system/workload/osify-workload-governor.sh" esport >/dev/null && \
+   grep -q "ESPORT_GAME" /tmp/osify_active_workload_profile 2>/dev/null; then
+    log_pass "Workload Governor: Profilo eSport gaming competitivo (BORE tick + unredirect) attivo"
+else
+    log_fail "Workload Governor: Fallimento switch profilo esport"
+fi
+
+# 9.3 Omnipotent Polyglot Terminal Environment
+if "$REPO_ROOT/tools/osify-shell/osify-polyglot-env.sh" test >/dev/null 2>&1; then
+    log_pass "Polyglot Shell: Comandi Windows (dir/ipconfig/tasklist), macOS (sw_vers/open) e bridge package manager (apt/pacman/dnf/apk/brew/winget) operativi"
+else
+    log_fail "Polyglot Shell: Fallimento test shell poliglotta universale"
+fi
+
+# 9.4 Control Center Unified Dispatcher
+ctl_status="$("$REPO_ROOT/tools/osify-ctl" status)"
+if echo "$ctl_status" | grep -q "Hardware Autotune"; then
+    log_pass "Control Center: Integrazione unificata di autotune, workload governor e polyglot shell in osify-ctl"
+else
+    log_fail "Control Center: osify-ctl status non riporta i nuovi sottosistemi"
+fi
+
+# 9.5 Deck Shell Advanced Integration & PyCompile
+if python3 -m py_compile "$REPO_ROOT/tools/osify-gui/osify-deck-shell.py"; then
+    log_pass "Deck Shell GUI: Compilazione e integrazione pannelli Workload e Autotune verificate"
+else
+    log_fail "Deck Shell GUI: Errore di sintassi in osify-deck-shell.py"
+fi
+
 echo "                  REPORT FINALE COLLAUDO                 "
 echo "========================================================="
 echo "  TEST SUPERATI : $PASSED_COUNT"

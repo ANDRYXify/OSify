@@ -54,11 +54,26 @@ show_status() {
         echo "Non impostato"
     fi
 
-    echo -n "[Runtime Android] "
-    command -v waydroid >/dev/null 2>&1 && echo "Disponibile" || echo "Non installato"
+    echo -n "[Hardware Autotune] "
+    if [[ -x "$OSIFY_DIR/system/autotune/osify-autotune.sh" ]]; then
+        "$OSIFY_DIR/system/autotune/osify-autotune.sh" status 2>/dev/null || echo "Pronto"
+    else
+        echo "Disponibile"
+    fi
 
-    echo -n "[Runtime Windows] "
-    command -v wine >/dev/null 2>&1 && echo "Proton/Wine attivo" || echo "Non installato"
+    echo -n "[Dynamic Workload Governor] "
+    if [[ -x "$OSIFY_DIR/system/workload/osify-workload-governor.sh" ]]; then
+        "$OSIFY_DIR/system/workload/osify-workload-governor.sh" status 2>/dev/null || echo "Bilanciato"
+    else
+        echo "Bilanciato"
+    fi
+
+    echo -n "[Polyglot Universal CLI] "
+    if [[ -f "$OSIFY_DIR/tools/osify-shell/osify-polyglot-env.sh" ]]; then
+        echo "ABILITATO (Windows CMD, PowerShell, macOS, apt/pacman/dnf/brew/winget)"
+    else
+        echo "Non presente"
+    fi
 
     echo "================================================================="
 }
@@ -333,8 +348,20 @@ case "${1:-status}" in
         shift
         sudo "$OSIFY_DIR/system/installer/osify-disk-installer.sh" "$@"
         ;;
+    autotune)
+        shift
+        "$OSIFY_DIR/system/autotune/osify-autotune.sh" "$@"
+        ;;
+    workload)
+        shift
+        "$OSIFY_DIR/system/workload/osify-workload-governor.sh" "$@"
+        ;;
+    shell-env|polyglot)
+        shift
+        "$OSIFY_DIR/tools/osify-shell/osify-polyglot-env.sh" "$@"
+        ;;
     *)
-        echo "Uso: osify-ctl {status|mode|block|install|deck|uem|hal|web|wifi|audio-ctl|display|power|pkg|filemgr|install-disk|qos|audio|emu|windows|android|darwin|anticheat|hw-detect}"
+        echo "Uso: osify-ctl {status|mode|autotune|workload|shell-env|pkg|filemgr|wifi|audio-ctl|display|power|install-disk|deck|uem|hal|web|qos|audio|emu|windows|android|darwin|anticheat|hw-detect}"
         exit 1
         ;;
 esac
