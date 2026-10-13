@@ -126,7 +126,7 @@ LABEL safe
     r4_work = os.path.join(work_dir, "rootfs4")
     os.makedirs(r4_work)
     r4_gz = os.path.join(iso_root, "boot/rootfs4.gz")
-    run(f"lzma -dc '{r4_gz}' | (cd '{r4_work}' && cpio -idmv > /dev/null 2>&1)")
+    run(f"python3 -c \"import lzma, sys; sys.stdout.buffer.write(lzma.decompress(open('{r4_gz}', 'rb').read()))\" | (cd '{r4_work}' && cpio -idmv > /dev/null 2>&1)")
 
     img_dir = os.path.join(r4_work, "usr/share/images")
     os.makedirs(img_dir, exist_ok=True)
@@ -242,7 +242,7 @@ EndSection
         f.write(desktop_welcome_entry)
 
     os.remove(r4_gz)
-    run(f"(cd '{r4_work}' && find . -print0 | cpio --null -ov -H newc) | lzma > '{r4_gz}'")
+    run(f"(cd '{r4_work}' && find . -print0 | cpio --null -ov -H newc) | python3 -c \"import lzma, sys; sys.stdout.buffer.write(lzma.compress(sys.stdin.buffer.read(), format=lzma.FORMAT_ALONE))\" > '{r4_gz}'")
 
     # Iniezione Windows Installer e albero OSify
     inject_windows_installer(iso_root)
