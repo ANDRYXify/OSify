@@ -3,6 +3,8 @@ import os
 import shutil
 import subprocess
 import sys
+import lzma
+import hashlib
 from PIL import Image
 
 LANCZOS_FILTER = getattr(getattr(Image, 'Resampling', None), 'LANCZOS', getattr(Image, 'LANCZOS', getattr(Image, 'ANTIALIAS', 1)))
