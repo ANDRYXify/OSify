@@ -5,6 +5,8 @@ import subprocess
 import sys
 from PIL import Image
 
+LANCZOS_FILTER = getattr(getattr(Image, 'Resampling', None), 'LANCZOS', getattr(Image, 'LANCZOS', getattr(Image, 'ANTIALIAS', 1)))
+
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 CACHE_I686 = os.path.join(REPO_ROOT, "build/cache/osify-base-i686.iso")
 CACHE_X86_64 = os.path.join(REPO_ROOT, "build/cache/osify-base-x86_64.iso")
@@ -83,9 +85,9 @@ def build_vintage_i686():
         src_png = os.path.join(REPO_ROOT, "OSify.png")
     img = Image.open(src_png).convert("RGB")
     wallpaper_jpg = os.path.join(work_dir, "osify-wallpaper.jpg")
-    img.resize((1024, 600), Image.Resampling.LANCZOS).save(wallpaper_jpg, "JPEG", quality=95)
+    img.resize((1024, 600), LANCZOS_FILTER).save(wallpaper_jpg, "JPEG", quality=95)
     splash_jpg = os.path.join(work_dir, "osify-splash.jpg")
-    img.resize((640, 480), Image.Resampling.LANCZOS).save(splash_jpg, "JPEG", quality=90)
+    img.resize((640, 480), LANCZOS_FILTER).save(splash_jpg, "JPEG", quality=90)
 
     # Bootloader ISOLINUX / SYSLINUX config
     isolinux_dir = os.path.join(iso_root, "boot/isolinux")
@@ -130,7 +132,7 @@ LABEL safe
     os.makedirs(img_dir, exist_ok=True)
     shutil.copy2(wallpaper_jpg, os.path.join(img_dir, "slitaz-background.jpg"))
     shutil.copy2(wallpaper_jpg, os.path.join(img_dir, "slitaz-background_2.jpg"))
-    img.resize((300, 100), Image.Resampling.LANCZOS).save(os.path.join(img_dir, "slitaz-banner.png"), "PNG")
+    img.resize((300, 100), LANCZOS_FILTER).save(os.path.join(img_dir, "slitaz-banner.png"), "PNG")
 
     # Iniezione GNU Bash statico 32-bit (i386) per esecuzione garantita di tutti gli script
     print("[i] Iniezione binario GNU Bash statico 32-bit (i386)...")

@@ -54,8 +54,8 @@ def generate_clean_wallpaper(width, height, filename):
         # Proporzione bilanciata: 48% dell'altezza dello schermo
         logo_target_h = int(height * 0.48)
         logo_aspect = logo.width / logo.height
-        logo_target_w = int(logo_target_h * logo_aspect)
-        logo_resized = logo.resize((logo_target_w, logo_target_h), Image.Resampling.LANCZOS)
+        resample_filter = getattr(getattr(Image, 'Resampling', None), 'LANCZOS', getattr(Image, 'LANCZOS', getattr(Image, 'ANTIALIAS', 1)))
+        logo_resized = logo.resize((logo_target_w, logo_target_h), resample_filter)
         
         logo_x = (width - logo_target_w) // 2
         logo_y = (height - logo_target_h) // 2
