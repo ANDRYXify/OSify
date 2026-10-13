@@ -31,7 +31,9 @@ rm -f "$ZIP_PATH"
     cd "$WIN_INSTALLER_DIR"
     zip -q -r "$ZIP_PATH" \
         "OSify-Setup.bat" \
+        "OSify-Windows-Installer-GUI.ps1" \
         "OSify-NoUSB-Installer.ps1" \
+        "logo.png" \
         "ISTRUZIONI-INSTALLAZIONE.txt"
 )
 echo "[✓] Creato: $ZIP_PATH"

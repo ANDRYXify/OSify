@@ -2,7 +2,7 @@
 :: ==============================================================================
 :: OSify Windows No-USB Installer Launcher (by Andryx)
 :: ==============================================================================
-:: Avvia l'installer di OSify con elevazione automatica dei privilegi di amministratore
+:: Avvia l'installer grafico di OSify con elevazione automatica dei privilegi
 :: e sblocco della ExecutionPolicy di PowerShell.
 :: ==============================================================================
 
@@ -24,23 +24,15 @@ if %errorLevel% neq 0 (
 
 cd /d "%~dp0"
 
-:: 2. Controllo rapido presenza ISO nella cartella
-echo [i] Controllo file immagine nella cartella corrente...
-set ISO_FOUND=0
-for %%f in (*osify*.iso *.iso) do (
-    if exist "%%f" (
-        echo [✓] Rilevata immagine di sistema: %%f
-        set ISO_FOUND=1
-    )
+:: 2. Avvio Interfaccia Grafica Moderna (WPF Cyberpunk Theme)
+echo [i] Avvio interfaccia grafica di installazione OSify in corso...
+if exist "%~dp0OSify-Windows-Installer-GUI.ps1" (
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File "%~dp0OSify-Windows-Installer-GUI.ps1"
+    if %errorLevel% equ 0 exit /b
 )
-if %ISO_FOUND% equ 0 (
-    echo [i] Nessuna ISO presente in questa cartella.
-    echo     L'installer ti permettera' di scaricarla automaticamente da GitHub
-    echo     oppure di indicare il percorso se l'hai gia' scaricata altrove.
-)
-echo.
 
-:: 3. Esecuzione dello script PowerShell con policy bypassata
+:: 3. Fallback Modalita Testuale se la GUI non e disponibile
+echo [i] Avvio modalita guidata da riga di comando...
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0OSify-NoUSB-Installer.ps1"
 
 echo.

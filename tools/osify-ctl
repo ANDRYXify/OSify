@@ -222,8 +222,11 @@ case "${1:-status}" in
                 ;;
         esac
         ;;
+    install)
+        python3 "$OSIFY_DIR/tools/osify-gui/osify-live-installer.py"
+        ;;
     *)
-        echo "Uso: osify-ctl {status|mode|block|presentation|touch|macos-gestures|test|qos|audio|emu|windows|android|darwin|anticheat|hw-detect}"
+        echo "Uso: osify-ctl {status|mode|block|install|presentation|touch|macos-gestures|test|qos|audio|emu|windows|android|darwin|anticheat|hw-detect}"
         exit 1
         ;;
 esac
