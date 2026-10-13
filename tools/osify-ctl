@@ -290,7 +290,7 @@ case "${1:-status}" in
             run)
                 shift
                 target_file="${1:-}"
-                if [[ -z "$target_file" || (! -f "$target_file" && ! -d "$target_file") ]]; then
+                if [ -z "$target_file" ] || { [ ! -f "$target_file" ] && [ ! -d "$target_file" ]; }; then
                     echo "Uso: osify-ctl uem run <file-o-bundle> [argomenti...]"
                     exit 1
                 fi
@@ -299,7 +299,7 @@ case "${1:-status}" in
             inspect)
                 shift
                 target_file="${1:-}"
-                if [[ -z "$target_file" || (! -f "$target_file" && ! -d "$target_file") ]]; then
+                if [ -z "$target_file" ] || { [ ! -f "$target_file" ] && [ ! -d "$target_file" ]; }; then
                     echo "Uso: osify-ctl uem inspect <file-o-bundle>"
                     exit 1
                 fi

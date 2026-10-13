@@ -13,19 +13,19 @@
 
 <p align="center">
   <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-NoUSB-Windows-Installer.zip">
-    <img src="https://img.shields.io/badge/Installer_Windows-Senza_USB_(v1.1.0)-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Installer Windows Senza USB"/>
+    <img src="https://img.shields.io/badge/Installer_Windows-Senza_USB_(v1.2.0)-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Installer Windows Senza USB"/>
   </a>
   &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-x86_64-v3.iso">
-    <img src="https://img.shields.io/badge/ISO_Standard-x86--64--v3_(v1.1.0)-7C3AED?style=for-the-badge&logo=linux&logoColor=white" alt="ISO Standard x86_64-v3"/>
+    <img src="https://img.shields.io/badge/ISO_Standard-x86--64--v3_(v1.2.0)-7C3AED?style=for-the-badge&logo=linux&logoColor=white" alt="ISO Standard x86_64-v3"/>
   </a>
   &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-Vintage-i686.iso">
-    <img src="https://img.shields.io/badge/ISO_Vintage-32--bit_i686_(v1.1.0)-10B981?style=for-the-badge&logo=linux&logoColor=white" alt="ISO Vintage 32-bit i686"/>
+    <img src="https://img.shields.io/badge/ISO_Vintage-32--bit_i686_(v1.2.0)-10B981?style=for-the-badge&logo=linux&logoColor=white" alt="ISO Vintage 32-bit i686"/>
   </a>
   &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/releases/latest">
-    <img src="https://img.shields.io/badge/Release-v1.1.0_Latest-22C55E?style=for-the-badge&logo=github&logoColor=white" alt="Official Release"/>
+    <img src="https://img.shields.io/badge/Release-v1.2.0_Latest-22C55E?style=for-the-badge&logo=github&logoColor=white" alt="Official Release"/>
   </a>
 </p>
 

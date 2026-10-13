@@ -106,7 +106,10 @@ get_ram_info() {
 
 cmd_status() {
     load_policy
-    read -r total_mb avail_mb free_mb <<< "$(get_ram_info)"
+    ram_in="$(get_ram_info)"
+    total_mb="$(echo "$ram_in" | awk '{print $1}')"
+    avail_mb="$(echo "$ram_in" | awk '{print $2}')"
+    free_mb="$(echo "$ram_in" | awk '{print $3}')"
     
     local used_mb=$(( total_mb - avail_mb ))
     local used_pct=0

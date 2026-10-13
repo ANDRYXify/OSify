@@ -111,7 +111,10 @@ detect_hardware_inputs() {
 
 cmd_apply() {
     load_input_config
-    read -r has_touch has_pad is_vintage <<< "$(detect_hardware_inputs)"
+    hw_in="$(detect_hardware_inputs)"
+    has_touch="$(echo "$hw_in" | awk '{print $1}')"
+    has_pad="$(echo "$hw_in" | awk '{print $2}')"
+    is_vintage="$(echo "$hw_in" | awk '{print $3}')"
 
     echo "[OSify-Input] Applicazione calibrazione e profili input..."
 

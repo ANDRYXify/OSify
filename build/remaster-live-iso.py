@@ -132,6 +132,18 @@ LABEL safe
     shutil.copy2(wallpaper_jpg, os.path.join(img_dir, "slitaz-background_2.jpg"))
     img.resize((300, 100), Image.Resampling.LANCZOS).save(os.path.join(img_dir, "slitaz-banner.png"), "PNG")
 
+    # Iniezione GNU Bash statico 32-bit (i386) per esecuzione garantita di tutti gli script
+    print("[i] Iniezione binario GNU Bash statico 32-bit (i386)...")
+    docker_bash_cmd = (
+        f"docker run --rm -v '{r4_work}':/r4 ubuntu:20.04 bash -c '"
+        f"dpkg --add-architecture i386 && apt-get update -qq && "
+        f"apt-get install -y -qq bash-static:i386 > /dev/null && "
+        f"mkdir -p /r4/bin /r4/usr/bin && "
+        f"cp /bin/bash-static /r4/bin/bash && chmod 755 /r4/bin/bash && "
+        f"ln -sf /bin/bash /r4/usr/bin/bash'"
+    )
+    run(docker_bash_cmd)
+
     bin_dir = os.path.join(r4_work, "usr/bin")
     os.makedirs(bin_dir, exist_ok=True)
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-ctl"), os.path.join(bin_dir, "osify-ctl"))
@@ -140,32 +152,74 @@ LABEL safe
     shutil.copy2(os.path.join(REPO_ROOT, "system/installer/osify-disk-installer.sh"), os.path.join(bin_dir, "osify-install"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/autotune/osify-autotune.sh"), os.path.join(bin_dir, "osify-autotune"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/storage/osify-memory-cleaner.sh"), os.path.join(bin_dir, "osify-cleanmem"))
-    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-welcome-wizard.py"), os.path.join(bin_dir, "osify-welcome"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-welcome.sh"), os.path.join(bin_dir, "osify-welcome"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-welcome-wizard.py"), os.path.join(bin_dir, "osify-welcome-wizard.py"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/input/osify-input-manager.sh"), os.path.join(bin_dir, "osify-input"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/autotune/osify-hw-probe.sh"), os.path.join(bin_dir, "osify-hw-probe"))
     run(f"chmod +x '{bin_dir}'/osify-*")
+
+    # Inizializzazione Hardware Autonoma in /etc/init.d/local.sh
+    local_sh = os.path.join(r4_work, "etc/init.d/local.sh")
+    with open(local_sh, "a") as f:
+        f.write("""
+# OSify Universal Autonomous Hardware Engine
+/usr/bin/osify-hw-probe >/var/log/osify-hw-probe.log 2>&1 &
+""")
+
+    # Configurazione Touchpad Synaptics/Alps (Tap-to-click e Scorrimento Bordo)
+    syn_dir = os.path.join(r4_work, "etc/X11/xorg.conf.d")
+    os.makedirs(syn_dir, exist_ok=True)
+    with open(os.path.join(syn_dir, "50-synaptics.conf"), "w") as f:
+        f.write("""Section "InputClass"
+    Identifier "touchpad catchall"
+    Driver "synaptics"
+    MatchIsTouchpad "on"
+    Option "TapButton1" "1"
+    Option "TapButton2" "3"
+    Option "TapButton3" "2"
+    Option "VertEdgeScroll" "on"
+    Option "HorizEdgeScroll" "on"
+    Option "CoastingSpeed" "20"
+EndSection
+""")
+
+    # Iniezione hook autostart in .xinitrc (utente tux e root)
+    hook_str = (
+        "\\n# Avvio Wizard di Primo Avvio e Configurazione Touchpad OSify\\n"
+        "(sleep 2 && /usr/bin/osify-welcome) &\\n"
+        "(sleep 1 && synclient TapButton1=1 TapButton2=3 TapButton3=2 VertEdgeScroll=1 HorizEdgeScroll=1) 2>/dev/null &\\n"
+    )
+    for rc in [os.path.join(r4_work, "etc/skel/.xinitrc"), os.path.join(r4_work, "root/.xinitrc")]:
+        if os.path.exists(rc):
+            with open(rc, "r") as f:
+                content = f.read()
+            if "case \"$WINDOW_MANAGER\" in" in content:
+                content = content.replace("case \"$WINDOW_MANAGER\" in", f"{hook_str}\ncase \"$WINDOW_MANAGER\" in")
+                with open(rc, "w") as f:
+                    f.write(content)
 
     with open(os.path.join(r4_work, "etc/issue"), "w") as f:
         f.write("OSify Vintage Edition (Intel Atom N280 / GMA 950 Profile)\\n\\l\n")
 
-    # Launcher Desktop per Installazione
+    # Launcher Desktop per Installazione (apre in terminale con geometria WSVGA 1024x600 ottimale)
     desktop_inst_entry = (
         "[Desktop Entry]\n"
         "Type=Application\n"
         "Name=Installa OSify su Disco\n"
         "Comment=Configurazione e Installazione OSify per Netbook\n"
-        "Exec=xterm -geometry 95x28+40+40 -T 'OSify Installer' -e /usr/bin/osify-install\n"
+        "Exec=terminal -geometry 95x26+30+30 -T 'OSify Installer' -e /usr/bin/osify-install\n"
         "Icon=system-software-install\n"
         "Terminal=false\n"
         "Categories=System;\n"
     )
 
-    # Launcher Desktop per Benvenuto e Diagnostica
+    # Launcher Desktop per Benvenuto e Diagnostica (esegue lo script nativo GTK2/YAD)
     desktop_welcome_entry = (
         "[Desktop Entry]\n"
         "Type=Application\n"
         "Name=Benvenuto in OSify\n"
-        "Comment=Esperienza di Primo Avvio e Configurazione Guidata\n"
-        "Exec=python3 /usr/bin/osify-welcome\n"
+        "Comment=Esperienza di Primo Avvio e Configurazione Guidata per Netbook\n"
+        "Exec=/usr/bin/osify-welcome\n"
         "Icon=preferences-desktop\n"
         "Terminal=false\n"
         "Categories=System;\n"
@@ -179,7 +233,7 @@ LABEL safe
         with open(os.path.join(full_d, "osify-welcome.desktop"), "w") as f:
             f.write(desktop_welcome_entry)
 
-    # Autostart automatico del Wizard di Benvenuto all'accesso
+    # Autostart automatico XDG
     autostart_dir = os.path.join(r4_work, "etc/xdg/autostart")
     os.makedirs(autostart_dir, exist_ok=True)
     with open(os.path.join(autostart_dir, "osify-welcome.desktop"), "w") as f:

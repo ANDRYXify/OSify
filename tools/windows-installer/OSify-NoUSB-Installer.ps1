@@ -175,25 +175,31 @@ if (Test-Path 'O:\') {
         $procDp.WaitForExit()
         Remove-Item $dpActFile -Force -ErrorAction SilentlyContinue
     } else {
-        Write-Host "[i] Partizione (O:) rilevata. Formattazione rapida per installazione..." -ForegroundColor Yellow
-        $dpCleanFile = Join-Path $env:TEMP "osify_clean_dp.txt"
-        $dpCleanCommands = @(
-            "select volume O",
-            "format fs=fat32 quick label=OSIFY_BOOT",
-            "active"
-        )
-        [System.IO.File]::WriteAllLines($dpCleanFile, $dpCleanCommands)
-        $pInfo = New-Object System.Diagnostics.ProcessStartInfo
-        $pInfo.FileName = "diskpart.exe"
-        $pInfo.Arguments = "/s `"$dpCleanFile`""
-        $pInfo.UseShellExecute = $false
-        $pInfo.CreateNoWindow = $true
-        $procDp = [System.Diagnostics.Process]::Start($pInfo)
-        $procDp.WaitForExit()
-        Remove-Item $dpCleanFile -Force -ErrorAction SilentlyContinue
-        if (Test-Path 'O:\') {
+        $existingItems = Get-ChildItem 'O:\' -Force -ErrorAction SilentlyContinue
+        if ($existingItems -and $existingItems.Count -gt 0) {
+            Write-Host "[i] Partizione (O:) contiene gia' file o estrazioni precedenti ($($existingItems.Count) elementi). Preservazione..." -ForegroundColor Green
             $partitionReady = $true
-            Write-Host "[OK] Unita (O:) pronta all'uso." -ForegroundColor Green
+        } else {
+            Write-Host "[i] Partizione (O:) vuota. Formattazione rapida FAT32 per installazione..." -ForegroundColor Yellow
+            $dpCleanFile = Join-Path $env:TEMP "osify_clean_dp.txt"
+            $dpCleanCommands = @(
+                "select volume O",
+                "format fs=fat32 quick label=OSIFY_BOOT",
+                "active"
+            )
+            [System.IO.File]::WriteAllLines($dpCleanFile, $dpCleanCommands)
+            $pInfo = New-Object System.Diagnostics.ProcessStartInfo
+            $pInfo.FileName = "diskpart.exe"
+            $pInfo.Arguments = "/s `"$dpCleanFile`""
+            $pInfo.UseShellExecute = $false
+            $pInfo.CreateNoWindow = $true
+            $procDp = [System.Diagnostics.Process]::Start($pInfo)
+            $procDp.WaitForExit()
+            Remove-Item $dpCleanFile -Force -ErrorAction SilentlyContinue
+            if (Test-Path 'O:\') {
+                $partitionReady = $true
+                Write-Host "[OK] Unita (O:) pronta all'uso." -ForegroundColor Green
+            }
         }
     }
 }

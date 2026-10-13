@@ -1,16 +1,24 @@
 #!/usr/bin/env python3
 """
-OSify Wallpaper Generator Engine (by Andryx)
 =============================================================================
-Compone sfondi desktop all'avanguardia con gradiente dark obsidian,
-glow radiale cibernetico, logo ufficiale OSify e tipografia professionale.
-Genera sia la versione standard Full HD (1920x1080) sia la versione WSVGA (1024x600)
-calibrata al millimetro per lo schermo del Toshiba NB200.
+OSify Wallpaper Generator Engine — Clean Minimal Edition (by Andryx)
+=============================================================================
+Genera sfondi puri, minimalisti ed eleganti privi di sottotitoli o scritte:
+- Solo artwork ufficiale: base dark obsidian, alone radiale cyberpunk viola/ciano,
+  logo OSify centrale in alta fedeltà.
+- Risoluzioni multiple:
+  • 1024x600 (WSVGA Netbook / Toshiba NB200)
+  • 1024x768 (Vintage 4:3 CRT / Monitor Legacy)
+  • 1280x800 (Steam Deck / Handheld 16:10)
+  • 1920x1080 (Full HD 16:9)
+  • 2560x1440 (2K QHD 16:9)
+  • 3840x2160 (4K UHD 16:9)
 =============================================================================
 """
 
 import os
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
+import sys
+from PIL import Image, ImageDraw, ImageFilter
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, "../.."))
@@ -18,60 +26,59 @@ LOGO_SRC = os.path.join(REPO_ROOT, "OSify.png")
 OUT_DIR = os.path.join(REPO_ROOT, "desktop/branding/wallpapers")
 os.makedirs(OUT_DIR, exist_ok=True)
 
-def generate_wallpaper(width, height, filename):
-    print(f"[+] Generazione sfondo OSify: {width}x{height} -> {filename}...")
+def generate_clean_wallpaper(width, height, filename):
+    print(f"[+] Generazione sfondo clean (solo immagine, zero testo): {width}x{height} -> {filename}...")
     
-    # 1. Base Dark Cyberpunk con Gradiente Radiale
-    base = Image.new("RGBA", (width, height), (13, 13, 20, 255))
-    draw = ImageDraw.Draw(base)
-
-    # Disegna alone di luce viola centrale (#7C3AED con trasparenza)
-    glow_size = int(min(width, height) * 0.85)
+    # 1. Base Dark Obsidian
+    base = Image.new("RGBA", (width, height), (10, 12, 18, 255))
+    
+    # 2. Alone di luce radiale cyberpunk centrale (#7C3AED e sfumatura profonda)
+    glow_size = int(min(width, height) * 0.95)
     glow = Image.new("RGBA", (glow_size, glow_size), (0, 0, 0, 0))
     glow_draw = ImageDraw.Draw(glow)
     
-    for r in range(glow_size // 2, 0, -2):
-        alpha = int(45 * (1 - (r / (glow_size // 2))))
+    radius = glow_size // 2
+    for r in range(radius, 0, -2):
+        alpha = int(40 * (1 - (r / radius)))
         glow_draw.ellipse(
-            [glow_size // 2 - r, glow_size // 2 - r, glow_size // 2 + r, glow_size // 2 + r],
+            [radius - r, radius - r, radius + r, radius + r],
             fill=(124, 58, 237, alpha)
         )
-    glow = glow.filter(ImageFilter.GaussianBlur(radius=25))
-    glow_pos = ((width - glow_size) // 2, (height - glow_size) // 2 - 20)
+    glow = glow.filter(ImageFilter.GaussianBlur(radius=int(min(width, height) * 0.05)))
+    glow_pos = ((width - glow_size) // 2, (height - glow_size) // 2)
     base.paste(glow, glow_pos, glow)
 
-    # 2. Caricamento e Sovrapposizione Logo OSify
+    # 3. Logo OSify perfettamente centrato
     if os.path.exists(LOGO_SRC):
         logo = Image.open(LOGO_SRC).convert("RGBA")
-        logo_target_h = int(height * 0.46)
+        # Proporzione bilanciata: 48% dell'altezza dello schermo
+        logo_target_h = int(height * 0.48)
         logo_aspect = logo.width / logo.height
         logo_target_w = int(logo_target_h * logo_aspect)
         logo_resized = logo.resize((logo_target_w, logo_target_h), Image.Resampling.LANCZOS)
         
         logo_x = (width - logo_target_w) // 2
-        logo_y = (height - logo_target_h) // 2 - 30
+        logo_y = (height - logo_target_h) // 2
         base.paste(logo_resized, (logo_x, logo_y), logo_resized)
 
-    # 3. Tipografia e Firma Elegante
-    draw = ImageDraw.Draw(base)
-    text_sub = "OSify - Sistema Operativo ad Alte Prestazioni | Ingegnerizzato da Andrea Taliento"
-    text_spec = f"Micro-Engine Edition • {width}x{height}" if height <= 600 else "Next-Gen Gaming & Multi-Runtime OS"
-    
-    # Calcolo coordinate centrate
-    bbox_sub = draw.textbbox((0, 0), text_sub)
-    sub_w = bbox_sub[2] - bbox_sub[0]
-    
-    bbox_spec = draw.textbbox((0, 0), text_spec)
-    spec_w = bbox_spec[2] - bbox_spec[0]
-
-    y_start = (height // 2) + int(height * 0.22)
-    draw.text(((width - sub_w) // 2, y_start), text_sub, fill=(226, 232, 240, 230))
-    draw.text(((width - spec_w) // 2, y_start + 24), text_spec, fill=(16, 185, 129, 210))
-
+    # 4. Salvataggio in PNG RGB alta qualità
     out_path = os.path.join(OUT_DIR, filename)
     base.convert("RGB").save(out_path, quality=95)
-    print(f"[✓] Salvato con successo: {out_path}")
+    print(f"[✓] Salvato sfondo clean: {out_path}")
+
+def main():
+    resolutions = [
+        (1024, 600, "osify-netbook-1024x600.png"),
+        (1024, 600, "osify-clean-1024x600.png"),
+        (1024, 768, "osify-clean-1024x768.png"),
+        (1280, 800, "osify-clean-1280x800.png"),
+        (1920, 1080, "osify-dark-1920x1080.png"),
+        (1920, 1080, "osify-clean-1920x1080.png"),
+        (2560, 1440, "osify-clean-2560x1440.png"),
+        (3840, 2160, "osify-clean-3840x2160.png"),
+    ]
+    for w, h, fname in resolutions:
+        generate_clean_wallpaper(w, h, fname)
 
 if __name__ == "__main__":
-    generate_wallpaper(1920, 1080, "osify-dark-1920x1080.png")
-    generate_wallpaper(1024, 600, "osify-netbook-1024x600.png")
+    main()
