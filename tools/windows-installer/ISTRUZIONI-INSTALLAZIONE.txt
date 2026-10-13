@@ -1,0 +1,31 @@
+================================================================================
+                    OSify — Installer per Windows Senza USB
+                          Ingegnerizzato da Andryx
+================================================================================
+
+Questo pacchetto permette di installare OSify direttamente dal tuo computer Windows
+senza bisogno di avere o masterizzare una chiavetta USB!
+
+COME FUNZIONA:
+1. Fai doppio click con il tasto destro su "OSify-Setup.bat" e seleziona
+   "Esegui come amministratore".
+2. Lo script cercherà l'immagine ISO di OSify nella stessa cartella:
+   - Se l'hai già scaricata, la userà automaticamente.
+   - Se non l'hai scaricata, ti chiederà se vuoi scaricarla direttamente da GitHub!
+3. Lo script ridurrà temporaneamente il tuo disco C: di 5 GB e creerà una partizione
+   di avvio temporanea (OSIFY_BOOT).
+4. Configurerà il menu di avvio di Windows per fare un riavvio ONE-TIME dentro l'installer.
+5. Al riavvio del PC, partirà direttamente l'ambiente di installazione di OSify.
+6. Dopo l'installazione, la partizione temporanea da 5 GB viene automaticamente
+   eliminata e riassorbita dal disco principale. ZERO SPAZIO SPRECATO!
+
+REQUISITI MINIMI:
+- Almeno 5 GB liberi su disco C: per la partizione temporanea dell'installer.
+- Windows 7, 8, 8.1, 10 o 11 (sia modalità UEFI che Legacy BIOS).
+- Per la versione standard è richiesta una CPU a 64-bit (x86_64).
+  (Se usi un netbook come il Toshiba NB200 con Atom N280 a 32-bit, l'installer ti
+  avviserà e richiederà la variante 32-bit Micro-Edition).
+
+Link Progetto & Supporto:
+https://github.com/ANDRYXify/OSify
+================================================================================

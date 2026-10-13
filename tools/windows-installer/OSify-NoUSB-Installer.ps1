@@ -49,22 +49,42 @@ if (-not $is64BitCapable) {
 }
 
 
-# 2. Ricerca ISO di OSify se non specificata
+# 3. Ricerca o Download Automatico ISO di OSify
 if ($IsoPath -eq "" -or -not (Test-Path $IsoPath)) {
     $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
     $candidate = Get-ChildItem -Path "$scriptDir", "$PWD" -Filter "osify*.iso" | Select-Object -First 1
     if ($candidate) {
         $IsoPath = $candidate.FullName
-        Write-Host "[+] Trovata immagine ISO: $IsoPath" -ForegroundColor Green
+        Write-Host "[+] Trovata immagine ISO locale: $IsoPath" -ForegroundColor Green
     } else {
-        Write-Host "[!] Inserisci il percorso completo dell'immagine ISO di OSify:" -ForegroundColor Yellow
-        $IsoPath = Read-Host "Percorso file ISO"
+        Write-Host "[!] Nessuna immagine ISO trovata nella cartella corrente." -ForegroundColor Yellow
+        $downloadChoice = Read-Host "Vuoi scaricare l'ultima release ufficiale di OSify da GitHub adesso? (S/N)"
+        if ($downloadChoice -match "^[sSyY]") {
+            $destIso = Join-Path $scriptDir "osify-latest.iso"
+            $downloadUrl = "https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-x86_64-v3.iso"
+            Write-Host "[+] Download in corso da GitHub: $downloadUrl ..." -ForegroundColor Cyan
+            Write-Host "[i] Destinazione: $destIso" -ForegroundColor Gray
+            try {
+                [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+                Invoke-WebRequest -Uri $downloadUrl -OutFile $destIso -UseBasicParsing
+                $IsoPath = $destIso
+                Write-Host "[✓] Download completato con successo!" -ForegroundColor Green
+            } catch {
+                Write-Warning "[!] Download diretto non riuscito: $_"
+                Write-Host "[i] Inserisci manualmente il percorso dell'immagine ISO:" -ForegroundColor Yellow
+                $IsoPath = Read-Host "Percorso file ISO"
+            }
+        } else {
+            $IsoPath = Read-Host "Inserisci il percorso del file ISO"
+        }
+
         if (-not (Test-Path $IsoPath)) {
-            Write-Error "[ERRORE] File ISO non trovato."
+            Write-Error "[ERRORE] File ISO non trovato o non specificato."
             exit 1
         }
     }
 }
+
 
 # 3. Creazione Partizione Temporanea con DiskPart
 Write-Host "[+] Preparazione partizione temporanea per l'installazione (5 GB)..." -ForegroundColor Cyan

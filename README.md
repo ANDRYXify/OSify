@@ -11,6 +11,19 @@
 
 ---
 
+<p align="center">
+  <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-NoUSB-Windows-Installer.zip">
+    <img src="https://img.shields.io/badge/Download_Installer-Windows_Senza_USB_(ZIP)-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Download Windows No-USB Installer"/>
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-x86_64-v3.iso">
+    <img src="https://img.shields.io/badge/Download_ISO-OSify_x86--64--v3_(Live)-9333EA?style=for-the-badge&logo=linux&logoColor=white" alt="Download OSify ISO"/>
+  </a>
+</p>
+
+---
+
+
 
 ## 🏛️ Pilastri Architetturali
 
