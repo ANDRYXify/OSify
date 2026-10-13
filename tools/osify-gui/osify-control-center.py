@@ -169,6 +169,12 @@ class OSifyControlCenter(QMainWindow):
         btn_bal.clicked.connect(lambda: self.run_osify_cmd(["mode", "balanced"]))
         grid.addWidget(btn_bal, 1, 1)
 
+        # 5. Bottone Vintage Low-Spec (Macchine Vecchie / 2-4GB RAM)
+        btn_low = QPushButton("💻 MODALITÀ VINTAGE LOW-SPEC (PC DATATI)\n(Resurrezione 2-4GB RAM • ZRAM zstd • Footprint ~400MB)")
+        btn_low.setStyleSheet("background: #312e81; border-color: #6366f1; color: white; padding: 14px;")
+        btn_low.clicked.connect(lambda: self.run_osify_cmd(["mode", "lowspec"]))
+        grid.addWidget(btn_low, 2, 0, 1, 2)
+
         layout.addLayout(grid)
         layout.addStretch()
         return tab

@@ -89,8 +89,14 @@ set_mode() {
             echo "[+] Ripristino MODALITÀ BILANCIATA..."
             "$OSIFY_DIR/network/osify-qos.sh" "" stop || true
             ;;
+        lowspec)
+            echo "[+] Attivazione MODALITÀ VINTAGE LOW-SPEC..."
+            "$OSIFY_DIR/desktop/profiles/osify-lowspec-kde.sh"
+            "$OSIFY_DIR/kernel/legacy/osify-hardware-detect.sh" --apply || true
+            echo "[✓] Profilo PC Vintage attivo: footprint memoria ridotto a ~400MB e fluidità massimizzata!"
+            ;;
         *)
-            echo "Modalità disponibili: streaming | gaming | emulation | balanced"
+            echo "Modalità disponibili: streaming | gaming | emulation | balanced | lowspec"
             exit 1
             ;;
     esac
@@ -145,8 +151,12 @@ case "${1:-status}" in
                 ;;
         esac
         ;;
+    hw-detect)
+        shift
+        "$OSIFY_DIR/kernel/legacy/osify-hardware-detect.sh" "$@"
+        ;;
     *)
-        echo "Uso: osify-ctl {status|mode <streaming|gaming|emulation|balanced>|qos|audio|emu|windows|android|darwin|anticheat}"
+        echo "Uso: osify-ctl {status|mode <streaming|gaming|emulation|balanced|lowspec>|qos|audio|emu|windows|android|darwin|anticheat|hw-detect}"
         exit 1
         ;;
 esac

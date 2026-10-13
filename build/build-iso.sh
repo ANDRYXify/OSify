@@ -33,16 +33,20 @@ prepare_profile() {
     mkdir -p "$PROFILE_DIR/airootfs/usr/local/bin"
     mkdir -p "$OUT_DIR"
 
+    mkdir -p "$PROFILE_DIR/airootfs/etc/modprobe.d"
+    
     # Copia delle configurazioni OSify direttamente nella root del sistema live
     cp "$SCRIPT_DIR/../kernel/osify-sysctl.conf" "$PROFILE_DIR/airootfs/etc/sysctl.d/99-osify.conf"
     cp "$SCRIPT_DIR/../kernel/udev/99-osify-controllers.rules" "$PROFILE_DIR/airootfs/etc/udev/rules.d/"
     cp "$SCRIPT_DIR/../kernel/udev/99-osify-storage.rules" "$PROFILE_DIR/airootfs/etc/udev/rules.d/"
+    cp "$SCRIPT_DIR/../kernel/legacy/99-osify-legacy-gpu.conf" "$PROFILE_DIR/airootfs/etc/modprobe.d/"
     cp "$SCRIPT_DIR/../audio/pipewire.conf.d/99-osify-proaudio.conf" "$PROFILE_DIR/airootfs/etc/pipewire/pipewire.conf.d/"
     
-    # Copia toolchain CLI
+    # Copia toolchain CLI & Hardware Intelligence
     cp "$SCRIPT_DIR/../tools/osify-ctl" "$PROFILE_DIR/airootfs/usr/local/bin/"
     cp "$SCRIPT_DIR/../network/osify-qos.sh" "$PROFILE_DIR/airootfs/usr/local/bin/osify-qos"
     cp "$SCRIPT_DIR/../audio/osify-audio-setup.sh" "$PROFILE_DIR/airootfs/usr/local/bin/osify-audio"
+    cp "$SCRIPT_DIR/../kernel/legacy/osify-hardware-detect.sh" "$PROFILE_DIR/airootfs/usr/local/bin/osify-hwdetect"
 
     chmod +x "$PROFILE_DIR/airootfs/usr/local/bin/"*
 

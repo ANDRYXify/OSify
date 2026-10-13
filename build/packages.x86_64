@@ -111,3 +111,19 @@ rpcs3
 dolphin-emu
 pcsx2
 retroarch
+
+# ------------------------------------------------------------------------------
+# SUPPORTO HARDWARE VINTAGE & BOOT LEGACY (BIOS MBR / DRIVER COMPATIBILI)
+# ------------------------------------------------------------------------------
+syslinux
+mtools
+dosfstools
+xf86-video-nouveau
+xf86-video-intel
+xf86-video-amdgpu
+xf86-video-ati
+b43-fwcutter
+wireless-regdb
+wpa_supplicant
+crda
+

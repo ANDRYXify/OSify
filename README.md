@@ -64,6 +64,14 @@ Stack ottimizzato per emulatori vettoriali:
 * Rileva istantaneamente l'avvio di giochi ed emulatori, forza il governor CPU su `performance`, attiva il quantum PipeWire a 64 campioni e scala la priorità interattiva via BORE.
 * Ripristina la modalità powersave alla chiusura della sessione.
 
+### 10. Resurrezione PC Vintage & Compatibilità Hardware Universale (dal 2003 ad oggi)
+* **Compatibilità CPU Universale**: Grazie al supporto `glibc-hwcaps`, il sistema si avvia su qualsiasi processore a 64-bit dal 2003 (Core 2 Duo, Athlon 64, Nehalem), abilitando dinamicamente le librerie vettoriali `v3`/`v4` solo quando l'hardware lo supporta.
+* **Supporto Boot Ibrido**: Immagine ISO compatibile sia con **UEFI moderno** sia con **Legacy BIOS (MBR)** per schede madri storiche.
+* **GPU Legacy Sbloccate su Vulkan**: Modulo [`kernel/legacy/99-osify-legacy-gpu.conf`](file:///Users/andryxify/OSify/kernel/legacy/99-osify-legacy-gpu.conf) che forza il driver moderno `amdgpu` sulle schede AMD GCN 1.0/2.0 (serie HD 7000, R7, R9), regalando supporto Vulkan e DXVK a schede grafiche di oltre 12 anni fa.
+* **Low-Spec Mode per 2GB-4GB di RAM**: Attivabile via `osify-ctl mode lowspec`, configura ZRAM compressa in `zstd` (espandendo virtualmente la memoria senza usurare dischi HDD meccanici) e imposta KDE Plasma 6 in modalità alleggerita con footprint a soli **~400MB di RAM**.
+* **Hardware Probe Automatico**: [`kernel/legacy/osify-hardware-detect.sh`](file:///Users/andryxify/OSify/kernel/legacy/osify-hardware-detect.sh) scansiona l'hardware e tara il sistema in tempo reale.
+
+
 ---
 
 ## 📁 Struttura del Progetto
