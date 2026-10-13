@@ -404,8 +404,20 @@ case "${1:-status}" in
         shift
         python3 "$OSIFY_DIR/security/auth/osify-auth-gateway.py" "$@"
         ;;
+    welcome|first-setup)
+        shift
+        python3 "$OSIFY_DIR/tools/osify-gui/osify-welcome-wizard.py" "$@"
+        ;;
+    memory|cleanmem)
+        shift
+        "$OSIFY_DIR/system/storage/osify-memory-cleaner.sh" "$@"
+        ;;
+    input)
+        shift
+        "$OSIFY_DIR/system/input/osify-input-manager.sh" "$@"
+        ;;
     *)
-        echo "Uso: osify-ctl {status|mode|update|shield|adblock|auth|autotune|workload|shell-env|pkg|filemgr|wifi|audio-ctl|display|power|install-disk|deck|uem|hal|web|qos|audio|emu|windows|android|darwin|anticheat|hw-detect}"
+        echo "Uso: osify-ctl {status|welcome|install-disk|mode|memory|input|update|shield|adblock|auth|autotune|workload|shell-env|pkg|filemgr|wifi|audio-ctl|display|power|deck|uem|hal|web|qos|audio|emu|windows|android|darwin|anticheat|hw-detect}"
         exit 1
         ;;
 esac

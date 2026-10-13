@@ -140,12 +140,15 @@ LABEL safe
     shutil.copy2(os.path.join(REPO_ROOT, "system/installer/osify-disk-installer.sh"), os.path.join(bin_dir, "osify-install"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/autotune/osify-autotune.sh"), os.path.join(bin_dir, "osify-autotune"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/storage/osify-memory-cleaner.sh"), os.path.join(bin_dir, "osify-cleanmem"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-welcome-wizard.py"), os.path.join(bin_dir, "osify-welcome"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/input/osify-input-manager.sh"), os.path.join(bin_dir, "osify-input"))
     run(f"chmod +x '{bin_dir}'/osify-*")
 
     with open(os.path.join(r4_work, "etc/issue"), "w") as f:
         f.write("OSify Vintage Edition (Intel Atom N280 / GMA 950 Profile)\\n\\l\n")
 
-    desktop_entry = (
+    # Launcher Desktop per Installazione
+    desktop_inst_entry = (
         "[Desktop Entry]\n"
         "Type=Application\n"
         "Name=Installa OSify su Disco\n"
@@ -155,17 +158,32 @@ LABEL safe
         "Terminal=false\n"
         "Categories=System;\n"
     )
+
+    # Launcher Desktop per Benvenuto e Diagnostica
+    desktop_welcome_entry = (
+        "[Desktop Entry]\n"
+        "Type=Application\n"
+        "Name=Benvenuto in OSify\n"
+        "Comment=Esperienza di Primo Avvio e Configurazione Guidata\n"
+        "Exec=python3 /usr/bin/osify-welcome\n"
+        "Icon=preferences-desktop\n"
+        "Terminal=false\n"
+        "Categories=System;\n"
+    )
+
     for dpath in ["root/Desktop", "home/tux/Desktop", "etc/skel/Desktop"]:
         full_d = os.path.join(r4_work, dpath)
         os.makedirs(full_d, exist_ok=True)
         with open(os.path.join(full_d, "osify-install.desktop"), "w") as f:
-            f.write(desktop_entry)
+            f.write(desktop_inst_entry)
+        with open(os.path.join(full_d, "osify-welcome.desktop"), "w") as f:
+            f.write(desktop_welcome_entry)
 
-    # Autostart automatico dell'installer di OSify all'accesso grafico
+    # Autostart automatico del Wizard di Benvenuto all'accesso
     autostart_dir = os.path.join(r4_work, "etc/xdg/autostart")
     os.makedirs(autostart_dir, exist_ok=True)
     with open(os.path.join(autostart_dir, "osify-welcome.desktop"), "w") as f:
-        f.write(desktop_entry)
+        f.write(desktop_welcome_entry)
 
     os.remove(r4_gz)
     run(f"(cd '{r4_work}' && find . -print0 | cpio --null -ov -H newc) | lzma > '{r4_gz}'")
@@ -234,8 +252,18 @@ menuentry "OSify Live System (x86-64-v3 Gaming & Streaming)" {
     initrd /boot/initramfs-lts
 }
 
+menuentry "Installa OSify su Disco Fisso" {
+    linux /boot/vmlinuz-lts osify.install=1 quiet splash rw
+    initrd /boot/initramfs-lts
+}
+
 menuentry "OSify Safe Mode (Nomodeset)" {
     linux /boot/vmlinuz-lts nomodeset rw
+    initrd /boot/initramfs-lts
+}
+
+menuentry "OSify RAM Rescue Mode" {
+    linux /boot/vmlinuz-lts copytoram rw
     initrd /boot/initramfs-lts
 }
 """
@@ -254,11 +282,23 @@ LABEL osify
     INITRD /boot/initramfs-lts
     APPEND quiet splash rw
 
+LABEL install
+    MENU LABEL Installa OSify su Disco Fisso
+    LINUX /boot/vmlinuz-lts
+    INITRD /boot/initramfs-lts
+    APPEND osify.install=1 quiet splash rw
+
 LABEL safe
     MENU LABEL OSify Safe Mode (Nomodeset)
     LINUX /boot/vmlinuz-lts
     INITRD /boot/initramfs-lts
     APPEND nomodeset rw
+
+LABEL rescue
+    MENU LABEL OSify RAM Rescue Mode
+    LINUX /boot/vmlinuz-lts
+    INITRD /boot/initramfs-lts
+    APPEND copytoram rw
 """
     syslinux_path = os.path.join(iso_root, "boot/syslinux/syslinux.cfg")
     os.makedirs(os.path.dirname(syslinux_path), exist_ok=True)

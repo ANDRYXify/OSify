@@ -266,30 +266,144 @@ cleanup_mounts() {
     rmdir "$MOUNT_POINT" 2>/dev/null || true
 }
 
-main() {
-    echo "================================================================="
-    echo "       OSify Standalone Bare-Metal Disk Installer                "
-    echo "       Ingegnerizzato da Andrea Taliento (ANDRYXify)             "
-    echo "================================================================="
+FS_TYPE="${3:-auto}"  # auto | btrfs | ext4
 
-    if [[ -z "$TARGET_DISK" ]]; then
-        echo "Uso: sudo $0 <dispositivo_disco> [auto|uefi|bios]"
-        echo "Esempio: sudo $0 /dev/sda"
-        echo ""
-        list_available_disks
+interactive_wizard() {
+    clear
+    echo -e "\e[1;36m"
+    cat << "EOF"
+  ██████╗ ███████╗██╗███████╗██╗   ██╗   ██╗███╗   ██╗███████╗████████╗
+ ██╔═══██╗██╔════╝██║██╔════╝╚██╗ ██╔╝   ██║████╗  ██║██╔════╝╚══██╔══╝
+ ██║   ██║███████╗██║█████╗   ╚████╔╝    ██║██╔██╗ ██║███████╗   ██║   
+ ██║   ██║╚════██║██║██╔══╝    ╚██╔╝     ██║██║╚██╗██║╚════██║   ██║   
+ ╚██████╔╝███████║██║██║        ██║      ██║██║ ╚████║███████║   ██║   
+  ╚═════╝ ╚══════╝╚═╝╚═╝        ╚═╝      ╚═╝╚═╝  ╚═══╝╚══════╝   ╚═╝   
+EOF
+    echo -e "\e[0m"
+    echo -e "\e[1;37m=================================================================\e[0m"
+    echo -e "\e[1;32m      OSify Bare-Metal System Installer — Procedura Guidata       \e[0m"
+    echo -e "\e[1;34m      Ingegnerizzato da Andrea Taliento (ANDRYXify)              \e[0m"
+    echo -e "\e[1;37m=================================================================\e[0m"
+    echo ""
+
+    local fw
+    fw="$(detect_firmware_mode)"
+    echo -e "• Firmware Rilevato : \e[1;33m${fw^^}\e[0m ($(uname -m))"
+    echo -e "• Kernel Attivo     : $(uname -srm)"
+    echo -e "• Memoria RAM       : $(awk '/MemTotal/ {print int($2/1024)" MB"}' /proc/meminfo 2>/dev/null || echo 'N/A')"
+    echo ""
+
+    echo -e "\e[1;37m[1/3] Rilevamento dischi rigidi disponibili per l'installazione:\e[0m"
+    echo "-----------------------------------------------------------------"
+    
+    local disks=()
+    local idx=1
+    while IFS= read -r line; do
+        if [[ -n "$line" ]]; then
+            local dname dsize dmodel dtran
+            dname="$(echo "$line" | awk '{print $1}')"
+            dsize="$(echo "$line" | awk '{print $2}')"
+            dmodel="$(echo "$line" | cut -d' ' -f3-)"
+            disks+=("/dev/$dname")
+            echo -e "  \e[1;32m[$idx]\e[0m \e[1m/dev/$dname\e[0m  —  Dimensione: \e[1;33m$dsize\e[0m  (Modello: $dmodel)"
+            ((idx++))
+        fi
+    done < <(lsblk -d -n -o NAME,SIZE,MODEL,TRAN,TYPE 2>/dev/null | grep -E "disk" | grep -v "loop" || true)
+
+    if [[ ${#disks[@]} -eq 0 ]]; then
+        err "Nessun disco fisso o drive d'installazione rilevato nel sistema."
+        echo "Controlla le connessioni disco o lo stato dei driver SATA/NVMe."
         exit 1
     fi
 
+    echo ""
+    echo -e "  \e[1;31m[0]\e[0m Annulla ed esci dall'installer"
+    echo ""
+    read -rp "Seleziona il numero del disco su cui installare OSify [1-${#disks[@]}]: " choice
+
+    if [[ "$choice" == "0" || -z "$choice" ]]; then
+        echo "Installazione annullata dall'utente."
+        exit 0
+    fi
+
+    if ! [[ "$choice" =~ ^[0-9]+$ ]] || [[ "$choice" -lt 1 || "$choice" -gt ${#disks[@]} ]]; then
+        err "Selezione non valida."
+        exit 1
+    fi
+
+    TARGET_DISK="${disks[$((choice-1))]}"
+    log "Hai selezionato il disco: \e[1;33m$TARGET_DISK\e[0m"
+    echo ""
+
+    echo -e "\e[1;37m[2/3] Scelta del profilo Filesystem e Ottimizzazione Storage:\e[0m"
+    echo "-----------------------------------------------------------------"
+    if [[ "$fw" == "bios" || "$(uname -m)" == "i686" ]]; then
+        echo -e "  \e[1;32m[1]\e[0m \e[1mExt4 Ultra-Fast (Raccomandato per Netbook/Atom/HDD 5400rpm)\e[0m"
+        echo "      Minimo overhead di I/O, noatime, fluido e resistente."
+        echo -e "  \e[1;32m[2]\e[0m Btrfs con compressione trasparente zstd"
+        read -rp "Scelta [Predefinito: 1]: " fs_choice
+        if [[ "$fs_choice" == "2" ]]; then
+            FS_TYPE="btrfs"
+        else
+            FS_TYPE="ext4"
+        fi
+    else
+        echo -e "  \e[1;32m[1]\e[0m \e[1mBtrfs Modern con compressione zstd (Raccomandato per SSD/NVMe)\e[0m"
+        echo "      Istantanee subvolumi CoW, risparmio spazio e massima integrità."
+        echo -e "  \e[1;32m[2]\e[0m Ext4 Standard"
+        read -rp "Scelta [Predefinito: 1]: " fs_choice
+        if [[ "$fs_choice" == "2" ]]; then
+            FS_TYPE="ext4"
+        else
+            FS_TYPE="btrfs"
+        fi
+    fi
+    log "Profilo Filesystem selezionato: \e[1;32m$FS_TYPE\e[0m"
+    echo ""
+
+    echo -e "\e[1;31m=================================================================\e[0m"
+    echo -e "\e[1;31m                      AVVISO IRREVERSIBILE                      \e[0m"
+    echo -e "\e[1;31m=================================================================\e[0m"
+    echo -e "L'installazione cancellerà TUTTE le partizioni e i dati presenti su:"
+    echo -e "  Disco bersaglio : \e[1;33m$TARGET_DISK\e[0m"
+    echo -e "  Filesystem      : \e[1;33m$FS_TYPE\e[0m"
+    echo -e "  Modalità Boot   : \e[1;33m$fw\e[0m"
+    echo ""
+    read -rp "Per confermare e avviare la scrittura digita 'OSIFY' in maiuscolo: " confirm
+
+    if [[ "$confirm" != "OSIFY" ]]; then
+        echo "Conferma non valida ('$confirm'). Operazione interrotta per sicurezza."
+        exit 0
+    fi
+
+    echo ""
+    log "Conferma ricevuta. Inizio installazione autonoma..."
+}
+
+format_and_mount_ext4() {
+    local p1="$1"
+    log "Formattazione Partizione Root Ext4 Ultra-Fast su $p1..."
+    mkfs.ext4 -F -L "OSIFY_ROOT" -O dir_index,sparse_super "$p1"
+    mkdir -p "$MOUNT_POINT"
+    mount -o noatime,nodiratime,commit=60 "$p1" "$MOUNT_POINT"
+    mkdir -p "$MOUNT_POINT/home" "$MOUNT_POINT/boot" "$MOUNT_POINT/opt/osify-games"
+}
+
+main() {
     check_privileges
 
-    if [[ ! -b "$TARGET_DISK" ]]; then
-        err "Il target '$TARGET_DISK' non è un dispositivo a blocchi valido."
-        exit 1
+    if [[ -z "$TARGET_DISK" ]]; then
+        interactive_wizard
+    else
+        if [[ ! -b "$TARGET_DISK" ]]; then
+            err "Il target '$TARGET_DISK' non è un dispositivo a blocchi valido."
+            exit 1
+        fi
     fi
 
     local fw
     fw="$(detect_firmware_mode)"
-    log "Rilevata modalità firmware: \e[1;33m$fw\e[0m"
+    log "Avvio installazione su: \e[1;33m$TARGET_DISK\e[0m (Modalità: $fw, Filesystem: $FS_TYPE)"
 
     if [[ "$fw" == "uefi" ]]; then
         partition_disk_uefi "$TARGET_DISK"
@@ -297,15 +411,37 @@ main() {
         partition_disk_bios "$TARGET_DISK"
     fi
 
-    format_and_mount "$TARGET_DISK" "$fw"
+    local p1 p2
+    if [[ "$TARGET_DISK" =~ [0-9]$ ]]; then
+        p1="${TARGET_DISK}p1"
+        p2="${TARGET_DISK}p2"
+    else
+        p1="${TARGET_DISK}1"
+        p2="${TARGET_DISK}2"
+    fi
+
+    if [[ "$FS_TYPE" == "ext4" && "$fw" == "bios" ]]; then
+        format_and_mount_ext4 "$p1"
+    else
+        format_and_mount "$TARGET_DISK" "$fw"
+    fi
+
     install_system_files
     configure_bootloader "$TARGET_DISK" "$fw"
     cleanup_mounts
 
-    echo "================================================================="
-    ok "Installazione di OSify completata con successo sul disco: $TARGET_DISK"
-    echo "Il computer è ora pronto per essere riavviato e utilizzato al 100% con OSify!"
-    echo "================================================================="
+    echo ""
+    echo -e "\e[1;32m=================================================================\e[0m"
+    ok "INSTALLAZIONE DI OSIFY COMPLETATA CON SUCCESSO SUL DISCO: $TARGET_DISK"
+    echo -e "\e[1;32m=================================================================\e[0m"
+    echo "Il sistema operativo OSify è ora installato e configurato permanentemente."
+    echo "Puoi rimuovere la chiavetta USB o il supporto di installazione e riavviare."
+    echo ""
+    read -rp "Desideri riavviare il computer adesso? [S/n]: " do_reboot
+    if [[ "$do_reboot" =~ ^[SsYy] || -z "$do_reboot" ]]; then
+        log "Riavvio del computer in corso..."
+        reboot || true
+    fi
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
