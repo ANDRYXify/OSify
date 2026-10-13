@@ -43,6 +43,21 @@ Stack ottimizzato per emulatori vettoriali:
 * **Tearing Protocol** sbloccato per latenza minima negli esport competitivi.
 * Profilo grafico ad altissimo contrasto e zero compositing lag in modalità fullscreen.
 
+### 7. Filesystem Btrfs con Snapshot Atomici & No-CoW per Gaming
+* **Subvolumi dedicati**: `@` (sistema protetto), `@home` (dati utente indipendenti), `@games_wine` e `@waydroid`.
+* **Attributo `nodatacow` (`chattr +C`)**: disabilita il Copy-on-Write sui file enormi dei giochi e sulle macchine virtuali, azzerando la frammentazione del disco e garantendo I/O costante.
+* **Rollback in 5 secondi**: Snapshot automatici prima di ogni aggiornamento con Snapper, avviabili direttamente dal bootloader in caso di regressione dei driver.
+
+### 8. Relay Multi-Broadcast Zero-Overhead (Twitch + Kick + YouTube)
+* Modulo [`streaming/relay/osify-stream-relay.py`](file:///Users/andryxify/OSify/streaming/relay/osify-stream-relay.py):
+* OBS trasmette **una sola volta** in locale (`rtmp://127.0.0.1:1935/live/stream`) con il proprio encoder preferito.
+* Il demuxer duplica il bitstream in parallelo a livello socket verso Twitch, Kick e YouTube con **0% di carico aggiuntivo su CPU/GPU**.
+
+### 9. Demone Intelligente di Performance (osify-daemon)
+* Servizio in background [`services/osify-daemon.py`](file:///Users/andryxify/OSify/services/osify-daemon.py):
+* Rileva istantaneamente l'avvio di giochi ed emulatori, forza il governor CPU su `performance`, attiva il quantum PipeWire a 64 campioni e scala la priorità interattiva via BORE.
+* Ripristina la modalità powersave alla chiusura della sessione.
+
 ---
 
 ## 📁 Struttura del Progetto
@@ -50,12 +65,47 @@ Stack ottimizzato per emulatori vettoriali:
 ```
 OSify/
 ├── build/                # Strumenti di generazione ISO (Archiso x86-64-v3 profile)
+│   └── docker/           # Builder Docker per compilare la ISO da macOS o Linux
 ├── kernel/               # Sysctl, udev rules per controller e storage, moduli
 ├── network/              # QoS Traffic Shaper (CAKE, BBRv3, nftables DSCP)
 ├── audio/                # Profili PipeWire Pro-Audio & virtual sinks
 ├── emulation/            # Launcher ad alte prestazioni con mimalloc & shader cache
 ├── runtimes/             # Moduli Windows (Proton), Android (Waydroid), macOS (Darling/KVM)
-├── streaming/            # Profili OBS Studio & Multi-RTMP broadcast engine
+├── streaming/            # Profili OBS Studio & Multi-RTMP relay zero-overhead
+│   └── relay/            # Relay simultaneo Twitch + Kick + YouTube
+├── services/             # Demone di rilevamento e ottimizzazione automatica
+├── system/storage/       # Layout Btrfs, subvolumi, No-CoW e configurazioni Snapper
 ├── desktop/              # Configurazioni KDE Plasma 6 Wayland (HDR, VRR, Tearing)
-└── tools/                # 'osify-ctl' CLI per gestione profili istantanei
+└── tools/                # CLI ('osify-ctl') e Control Center GUI per KDE Plasma 6
+    └── osify-gui/        # Dashboard grafica moderna in PyQt6 per KDE Plasma
 ```
+
+---
+
+## 🚀 Utilizzo Rapido
+
+### 1. Control Center Grafico (KDE Plasma 6)
+```bash
+python3 tools/osify-gui/osify-control-center.py
+```
+
+### 2. Gestione Profili da Terminale (CLI)
+```bash
+# Verifica diagnostica di sistema
+osify-ctl status
+
+# Attivazione profilo live streaming con protezione ping
+osify-ctl mode streaming
+
+# Attivazione profilo gaming eSport
+osify-ctl mode gaming
+
+# Avvio frontend console TV con Gamescope
+osify-ctl mode emulation
+```
+
+### 3. Compilazione Immagine ISO (da Mac o Linux via Docker)
+```bash
+cd build/docker && ./run-build.sh
+```
+
