@@ -28,7 +28,7 @@ def inject_windows_installer(dest_iso_root):
     os.makedirs(tools_win, exist_ok=True)
     win_src = os.path.join(REPO_ROOT, "tools/windows-installer")
     for item in ["OSify-Setup.bat", "OSify-Windows-Installer-GUI.ps1", "OSify-NoUSB-Installer.ps1", 
-                 "7z.exe", "7z.dll", "logo.png", "ISTRUZIONI-INSTALLAZIONE.txt"]:
+                 "7z.exe", "7z.dll", "syslinux.exe", "logo.png", "ISTRUZIONI-INSTALLAZIONE.txt"]:
         sp = os.path.join(win_src, item)
         if os.path.exists(sp):
             shutil.copy2(sp, tools_win)
@@ -94,17 +94,17 @@ def build_vintage_i686():
         os.remove(os.path.join(isolinux_dir, "boot.cat"))
     shutil.copy2(splash_jpg, os.path.join(isolinux_dir, "splash.jpg"))
 
-    clean_cfg = """DEFAULT core
-PROMPT 1
-TIMEOUT 20
+    clean_cfg = """DEFAULT osify
+PROMPT 0
+TIMEOUT 50
 
-LABEL core
-    MENU LABEL OSify Vintage Desktop (Toshiba NB200)
+LABEL osify
+    MENU LABEL OSify Vintage Live Desktop (Intel Atom N280)
     KERNEL /boot/bzImage
     INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
-    APPEND root=/dev/null video=-32 autologin lang=it_IT kmap=it rw quiet
+    APPEND root=/dev/null autologin lang=it_IT kmap=it rw quiet
 
-LABEL lowspec
+LABEL safe
     MENU LABEL OSify Safe Mode (Nomodeset)
     KERNEL /boot/bzImage
     INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
@@ -145,10 +145,27 @@ LABEL lowspec
     with open(os.path.join(r4_work, "etc/issue"), "w") as f:
         f.write("OSify Vintage Edition (Intel Atom N280 / GMA 950 Profile)\\n\\l\n")
 
-    desktop_dir = os.path.join(r4_work, "root/Desktop")
-    os.makedirs(desktop_dir, exist_ok=True)
-    with open(os.path.join(desktop_dir, "osify-install.desktop"), "w") as f:
-        f.write("[Desktop Entry]\nType=Application\nName=Installa OSify su Disco\nExec=xterm -hold -e /usr/bin/osify-install\nIcon=system-software-install\nTerminal=true\n")
+    desktop_entry = (
+        "[Desktop Entry]\n"
+        "Type=Application\n"
+        "Name=Installa OSify su Disco\n"
+        "Comment=Configurazione e Installazione OSify per Netbook\n"
+        "Exec=xterm -geometry 95x28+40+40 -T 'OSify Installer' -e /usr/bin/osify-install\n"
+        "Icon=system-software-install\n"
+        "Terminal=false\n"
+        "Categories=System;\n"
+    )
+    for dpath in ["root/Desktop", "home/tux/Desktop", "etc/skel/Desktop"]:
+        full_d = os.path.join(r4_work, dpath)
+        os.makedirs(full_d, exist_ok=True)
+        with open(os.path.join(full_d, "osify-install.desktop"), "w") as f:
+            f.write(desktop_entry)
+
+    # Autostart automatico dell'installer di OSify all'accesso grafico
+    autostart_dir = os.path.join(r4_work, "etc/xdg/autostart")
+    os.makedirs(autostart_dir, exist_ok=True)
+    with open(os.path.join(autostart_dir, "osify-welcome.desktop"), "w") as f:
+        f.write(desktop_entry)
 
     os.remove(r4_gz)
     run(f"(cd '{r4_work}' && find . -print0 | cpio --null -ov -H newc) | lzma > '{r4_gz}'")
@@ -160,11 +177,11 @@ LABEL lowspec
     with open(os.path.join(iso_root, "OSify-Version.txt"), "w") as f:
         f.write("OSify Live System (32-bit Vintage Edition)\nTarget: Intel Atom N280/N270\n")
 
-    print("[i] Masterizzazione immagine avviabile con Docker genisoimage...")
+    print("[i] Masterizzazione immagine ibrida avviabile (isohybrid MBR)...")
     os.makedirs(OUT_RELEASE_DIR, exist_ok=True)
     docker_cmd = (
-        f"docker run --rm -v '{work_dir}':/work debian:bullseye-slim bash -c '"
-        f"apt-get update -qq && apt-get install -y -qq genisoimage isolinux syslinux-common > /dev/null && "
+        f"docker run --rm -v '{work_dir}':/work ubuntu:20.04 bash -c '"
+        f"apt-get update -qq && apt-get install -y -qq genisoimage isolinux syslinux-common syslinux-utils > /dev/null && "
         f"cp /usr/lib/ISOLINUX/isolinux.bin /work/iso_root/boot/isolinux/isolinux.bin && "
         f"cp /usr/lib/syslinux/modules/bios/ldlinux.c32 /work/iso_root/boot/isolinux/ldlinux.c32 && "
         f"cp /usr/lib/syslinux/modules/bios/libutil.c32 /work/iso_root/boot/isolinux/libutil.c32 && "
@@ -173,12 +190,13 @@ LABEL lowspec
         f"cp /usr/lib/syslinux/modules/bios/vesamenu.c32 /work/iso_root/boot/isolinux/vesamenu.c32 && "
         f"genisoimage -R -J -l -b boot/isolinux/isolinux.bin -c boot/isolinux/boot.cat "
         f"-no-emul-boot -boot-load-size 4 -boot-info-table -V \"OSIFY_VINTAGE\" "
-        f"-o /work/OSify-Vintage-i686.iso /work/iso_root > /dev/null'"
+        f"-o /work/OSify-Vintage-i686.iso /work/iso_root > /dev/null && "
+        f"isohybrid /work/OSify-Vintage-i686.iso'"
     )
     run(docker_cmd)
     shutil.copy2(os.path.join(work_dir, "OSify-Vintage-i686.iso"), DEST_VINTAGE_ISO)
     shutil.copy2(DEST_VINTAGE_ISO, DEST_SANDBOX_VINTAGE)
-    print(f"[✓] OSify Vintage 32-bit creata: {DEST_VINTAGE_ISO} ({os.path.getsize(DEST_VINTAGE_ISO)/(1024*1024):.1f} MB)")
+    print(f"[✓] OSify Vintage 32-bit Ibrida creata: {DEST_VINTAGE_ISO} ({os.path.getsize(DEST_VINTAGE_ISO)/(1024*1024):.1f} MB)")
 
 def build_modern_x86_64():
     print("=========================================================")

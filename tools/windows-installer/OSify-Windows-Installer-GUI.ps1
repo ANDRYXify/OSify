@@ -725,7 +725,36 @@ $btnInstall.Add_Click({
             Append-Log "[!] Configurazione BCD facoltativa: $($_.Exception.Message)"
         }
     } else {
-        Append-Log "[OK] Sistema Legacy BIOS (MBR): partizione O:\ contrassegnata come attiva per l'avvio diretto."
+        Append-Log "[+] Sistema Legacy BIOS (MBR): installazione settore di avvio Syslinux su (O:)..."
+        $syslinuxTool = Join-Path $scriptDir "syslinux.exe"
+        if (-not (Test-Path $syslinuxTool)) { $syslinuxTool = "O:\tools\windows-installer\syslinux.exe" }
+        if (-not (Test-Path $syslinuxTool)) { $syslinuxTool = "O:\boot\syslinux\syslinux.exe" }
+
+        $syslinuxApplied = $false
+        if (Test-Path $syslinuxTool) {
+            if (-not (Test-Path 'O:\boot\syslinux') -and (Test-Path 'O:\boot\isolinux')) {
+                New-Item -ItemType Directory -Force -Path 'O:\boot\syslinux' | Out-Null
+                Copy-Item 'O:\boot\isolinux\*' 'O:\boot\syslinux\' -Force -Recurse -ErrorAction SilentlyContinue
+                if (Test-Path 'O:\boot\syslinux\isolinux.cfg') {
+                    Copy-Item 'O:\boot\syslinux\isolinux.cfg' 'O:\boot\syslinux\syslinux.cfg' -Force
+                }
+            }
+
+            if (Test-Path 'O:\boot\syslinux') {
+                $code = Run-ToolWithOutput $syslinuxTool "-ma -f -d /boot/syslinux O:" "Installazione bootsector Syslinux su (O:)"
+            } else {
+                $code = Run-ToolWithOutput $syslinuxTool "-ma -f O:" "Installazione bootsector Syslinux su (O:)"
+            }
+
+            if ($code -eq 0 -or (Test-Path 'O:\ldlinux.sys') -or (Test-Path 'O:\boot\syslinux\ldlinux.sys')) {
+                $syslinuxApplied = $true
+                Append-Log "[OK] Settore di avvio Syslinux (VBR) configurato con successo su (O:)!"
+            }
+        }
+
+        if (-not $syslinuxApplied) {
+            Append-Log "[!] Settore di avvio: partizione O:\ impostata attiva su MBR."
+        }
     }
 
     # FASE 4: Completato!

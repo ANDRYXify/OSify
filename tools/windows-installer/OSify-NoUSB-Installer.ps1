@@ -333,7 +333,36 @@ if ($isUefi -and (Test-Path 'O:\EFI\BOOT\BOOTX64.EFI')) {
     }
 } else {
     Write-Host "[i] Sistema Legacy BIOS (MBR) rilevato (es. Toshiba Netbook)." -ForegroundColor Yellow
-    Write-Host "[OK] La partizione (O:) e stata contrassegnata come 'Attiva' per il boot diretto." -ForegroundColor Green
+    $syslinuxTool = Join-Path $scriptDir "syslinux.exe"
+    if (-not (Test-Path $syslinuxTool)) { $syslinuxTool = "O:\tools\windows-installer\syslinux.exe" }
+    if (-not (Test-Path $syslinuxTool)) { $syslinuxTool = "O:\boot\syslinux\syslinux.exe" }
+
+    $syslinuxApplied = $false
+    if (Test-Path $syslinuxTool) {
+        if (-not (Test-Path 'O:\boot\syslinux') -and (Test-Path 'O:\boot\isolinux')) {
+            New-Item -ItemType Directory -Force -Path 'O:\boot\syslinux' | Out-Null
+            Copy-Item 'O:\boot\isolinux\*' 'O:\boot\syslinux\' -Force -Recurse -ErrorAction SilentlyContinue
+            if (Test-Path 'O:\boot\syslinux\isolinux.cfg') {
+                Copy-Item 'O:\boot\syslinux\isolinux.cfg' 'O:\boot\syslinux\syslinux.cfg' -Force
+            }
+        }
+
+        Write-Host "[+] Scrittura settore di avvio Syslinux (VBR) su volume (O:)..." -ForegroundColor Cyan
+        if (Test-Path 'O:\boot\syslinux') {
+            & $syslinuxTool -ma -f -d /boot/syslinux O:
+        } else {
+            & $syslinuxTool -ma -f O:
+        }
+
+        if ((Test-Path 'O:\ldlinux.sys') -or (Test-Path 'O:\boot\syslinux\ldlinux.sys')) {
+            $syslinuxApplied = $true
+            Write-Host "[OK] Settore di avvio Syslinux (VBR) installato su (O:)!" -ForegroundColor Green
+        }
+    }
+
+    if (-not $syslinuxApplied) {
+        Write-Host "[OK] La partizione (O:) e' stata contrassegnata come 'Attiva' per il boot diretto." -ForegroundColor Green
+    }
 }
 
 Write-Host ""
