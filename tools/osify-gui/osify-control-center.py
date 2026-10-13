@@ -19,20 +19,27 @@ from PyQt6.QtWidgets import (
     QGridLayout, QMessageBox, QFileDialog, QLineEdit, QTextEdit
 )
 from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QFont, QColor, QPalette
+from PyQt6.QtGui import QFont, QColor, QPalette, QIcon, QPixmap
 
 OSIFY_BIN = os.path.expanduser("/usr/local/bin/osify-ctl")
 if not os.path.exists(OSIFY_BIN):
     # Fallback su directory di sviluppo locale
     OSIFY_BIN = os.path.join(os.path.dirname(__file__), "../osify-ctl")
 
+LOGO_PATH = os.path.join(os.path.dirname(__file__), "../../OSify.png")
+if not os.path.exists(LOGO_PATH):
+    LOGO_PATH = "/usr/share/pixmaps/osify.png"
+
 class OSifyControlCenter(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("OSify Control Center — Dashboard di Sistema")
-        self.setMinimumSize(880, 600)
+        self.setWindowTitle("OSify Control Center — by Andryx")
+        self.setMinimumSize(920, 620)
+        if os.path.exists(LOGO_PATH):
+            self.setWindowIcon(QIcon(LOGO_PATH))
         self.init_ui()
         self.init_timer()
+
 
     def init_ui(self):
         # Palette scura moderna per KDE Plasma 6
@@ -95,12 +102,21 @@ class OSifyControlCenter(QMainWindow):
 
         # Header con Brand e Stato Ping
         header_layout = QHBoxLayout()
+
+        # Logo OSify
+        if os.path.exists(LOGO_PATH):
+            logo_label = QLabel()
+            pixmap = QPixmap(LOGO_PATH).scaled(64, 64, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            logo_label.setPixmap(pixmap)
+            logo_label.setStyleSheet("padding-right: 8px;")
+            header_layout.addWidget(logo_label)
+
         title_box = QVBoxLayout()
         title_label = QLabel("OSify Master Engine")
-        title_label.setFont(QFont("Arial", 20, QFont.Weight.Bold))
-        title_label.setStyleSheet("color: #38bdf8;")
-        sub_title = QLabel("Gaming ad Alto Refresh • Live Multi-Stream • Multi-Runtime • Emulazione")
-        sub_title.setStyleSheet("color: #64748b; font-size: 12px;")
+        title_label.setFont(QFont("Arial", 22, QFont.Weight.Bold))
+        title_label.setStyleSheet("color: #a855f7;") # Viola elegante come il logo
+        sub_title = QLabel("by Andryx • Gaming ad Alto Refresh • Live Multi-Stream • Multi-Runtime")
+        sub_title.setStyleSheet("color: #4ade80; font-size: 12px; font-weight: bold;") # Verde fluo come il logo
         title_box.addWidget(title_label)
         title_box.addWidget(sub_title)
         header_layout.addLayout(title_box)

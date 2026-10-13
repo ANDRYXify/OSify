@@ -1,8 +1,16 @@
-# OSify — Sistema Operativo per Gaming Estremo, Live Streaming e Multi-Runtime
+<p align="center">
+  <img src="OSify.png" alt="OSify Logo by Andryx" width="320"/>
+</p>
 
-**OSify** è un sistema operativo basato su architettura Linux a microarchitettura compilata (**`x86-64-v3`** e **`x86-64-v4`**), ingegnerizzato specificamente per massimizzare le prestazioni nel **gaming ad alto refresh-rate**, nel **live streaming multi-piattaforma** (Twitch, Kick, YouTube) senza lag di rete, nell'**emulazione console moderna** (PS3, Switch, PS2, Xbox 360, Wii U) e nell'esecuzione unificata di ambienti **Windows, Android e macOS**.
+<h1 align="center">OSify — Sistema Operativo per Gaming Estremo, Live Streaming e Multi-Runtime</h1>
+
+<p align="center">
+  <b>Ingegnerizzato da Andrea Taliento (ANDRYXify)</b><br/>
+  <i>Gaming a 500 FPS • Live Multi-Stream (Twitch/Kick/YT) • Architettura a Blocchi • Multi-Runtime (Win/Android/Mac) • Resurrezione PC Vintage</i>
+</p>
 
 ---
+
 
 ## 🏛️ Pilastri Architetturali
 
