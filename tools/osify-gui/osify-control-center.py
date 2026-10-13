@@ -16,7 +16,7 @@ import subprocess
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QTabWidget, QProgressBar, QFrame,
-    QGridLayout, QMessageBox, QFileDialog
+    QGridLayout, QMessageBox, QFileDialog, QLineEdit, QTextEdit
 )
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QFont, QColor, QPalette
@@ -128,8 +128,10 @@ class OSifyControlCenter(QMainWindow):
         tabs.addTab(self.create_streaming_tab(), "🔴 Live Streaming (Twitch/Kick/YT)")
         tabs.addTab(self.create_emulation_tab(), "🎮 Emulazione Console")
         tabs.addTab(self.create_runtimes_tab(), "🌐 Multi-Runtime (Win/Android/Mac)")
+        tabs.addTab(self.create_anticheat_tab(), "🛡️ Anti-Cheat (Ring-0)")
 
         main_layout.addWidget(tabs)
+
 
     def create_modes_tab(self):
         tab = QWidget()
@@ -278,7 +280,67 @@ class OSifyControlCenter(QMainWindow):
         layout.addStretch()
         return tab
 
+    def create_anticheat_tab(self):
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        layout.setSpacing(14)
+
+        card = QFrame()
+        card.setProperty("class", "card")
+        c_layout = QVBoxLayout(card)
+
+        title = QLabel("Verifica Compatibilità Anti-Cheat (Ring-0 & Proton)")
+        title.setFont(QFont("Arial", 14, QFont.Weight.Bold))
+        title.setStyleSheet("color: #f43f5e;")
+        c_layout.addWidget(title)
+
+        desc = QLabel("I giochi con anti-cheat Ring-0 (Vanguard, Ricochet) richiedono contromisure KVM Cloaked o riavvio rapido UEFI:")
+        desc.setStyleSheet("color: #94a3b8;")
+        c_layout.addWidget(desc)
+
+        # Form di ricerca gioco
+        search_box = QHBoxLayout()
+        self.game_input = QLineEdit()
+        self.game_input.setPlaceholderText("Es. Valorant, Apex Legends, Elden Ring, Fortnite...")
+        self.game_input.setStyleSheet("background: #0b0d14; border: 1px solid #334155; border-radius: 6px; padding: 10px; color: white;")
+        btn_check = QPushButton("Verifica Gioco")
+        btn_check.clicked.connect(self.check_anticheat_game)
+        search_box.addWidget(self.game_input)
+        search_box.addWidget(btn_check)
+        c_layout.addLayout(search_box)
+
+        # Output box
+        self.ac_result = QTextEdit()
+        self.ac_result.setReadOnly(True)
+        self.ac_result.setStyleSheet("background: #090d16; border: 1px solid #1e293b; border-radius: 6px; color: #38bdf8; font-family: monospace; padding: 8px;")
+        self.ac_result.setFixedHeight(120)
+        c_layout.addWidget(self.ac_result)
+
+        # Pulsanti contromisure
+        btn_row = QHBoxLayout()
+        btn_boot_win = QPushButton("⚡ Fast-Boot Windows (UEFI One-Time)")
+        btn_boot_win.setStyleSheet("background: #431407; border-color: #ea580c; color: white;")
+        btn_boot_win.clicked.connect(lambda: self.run_osify_cmd(["anticheat", "boot-windows", "--reboot"]))
+        btn_row.addWidget(btn_boot_win)
+
+        c_layout.addLayout(btn_row)
+        layout.addWidget(card)
+        layout.addStretch()
+        return tab
+
+    def check_anticheat_game(self):
+        game_name = self.game_input.text().strip()
+        if not game_name:
+            return
+        checker_script = os.path.join(os.path.dirname(__file__), "../../runtimes/windows/anticheat/osify-anticheat-checker.py")
+        try:
+            out = subprocess.check_output(["python3", checker_script, game_name], text=True)
+            self.ac_result.setPlainText(out)
+        except Exception as e:
+            self.ac_result.setPlainText(f"Errore durante la verifica: {e}")
+
     def run_osify_cmd(self, args):
+
         try:
             cmd = [OSIFY_BIN] + args
             subprocess.Popen(cmd)

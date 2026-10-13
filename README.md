@@ -25,10 +25,16 @@ Architettura PipeWire con quantizzazione a bassissima latenza (buffer a 64 campi
 * `OSify-Mic-DSP`: Canale microfono con riduzione rumore neurale in tempo reale (DeepFilterNet/RNNoise) ed equalizzatore.
 * `OSify-Stream-Master`: Bus di cattura unificato per OBS Studio.
 
-### 4. Matrice Multi-Runtime Nativa
+### 4. Matrice Multi-Runtime & Gestione Anti-Cheat Ring-0
 * **Windows (PE/DirectX)**: Proton-GE / Wine-TKG con DXVK, VKD3D-Proton, Fsync e shader cache asincrona.
+* **Gestione Anti-Cheat a Livello Kernel (Ring-0)**:
+  * **Anti-Cheat supportati da Proton**: Easy Anti-Cheat (EAC) e BattlEye con modulo nativo bridge abilitato (es. *Elden Ring*, *War Thunder*).
+  * **Anti-Cheat Ring-0 bloccanti (*Riot Vanguard*, *Ricochet*, *EA AC*)**:
+    * **Soluzione 1 (KVM Cloaked Stealth)**: Profilo macchina virtuale con mascheramento ipervisore (CPUID leaf hidden, spoofing SMBIOS ASUS ROG reale, modulo TPM 2.0 emulato e passthrough PCIe VFIO).
+    * **Soluzione 2 (Fast-Boot UEFI)**: Script one-time `osify-ctl anticheat boot-windows` che imposta `BootNext` nella NVRAM UEFI ed effettua il reboot su Windows. Al successivo spegnimento/riavvio, il sistema torna automaticamente in OSify senza toccare il BIOS.
 * **Android (APK)**: Waydroid containerizzato in LXC con condivisione diretta del kernel Linux host e accelerazione GPU Mesa dri3 (zero emulazione virtuale; bridge libndk per binari ARM).
 * **macOS (Mach-O)**: Layer Darling per toolchain Darwin e modulo KVM-VFIO per istanze macOS isolate con passthrough hardware.
+
 
 ### 5. Emulazione Console di Nuova Generazione
 Stack ottimizzato per emulatori vettoriali:

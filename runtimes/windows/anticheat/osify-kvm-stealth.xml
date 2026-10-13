@@ -1,0 +1,103 @@
+<domain type='kvm'>
+  <!-- OSify Cloaked Windows 11 / Ring-0 Anti-Cheat Virtual Machine Profile -->
+  <name>OSify-Windows-AntiCheat-Stealth</name>
+  <memory unit='GiB'>16</memory>
+  <currentMemory unit='GiB'>16</currentMemory>
+  <memoryBacking>
+    <!-- Hugepages trasparenti da 2MB per azzerare TLB miss e latenza di accesso memoria -->
+    <hugepages/>
+    <locked/>
+  </memoryBacking>
+  <vcpu placement='static'>12</vcpu>
+  
+  <os>
+    <type arch='x86_64' machine='q35'>hvm</type>
+    <!-- EDK2 OVMF Firmware con Secure Boot abilitato out-of-the-box -->
+    <loader readonly='yes' secure='yes' type='pflash'>/usr/share/edk2/x64/OVMF_CODE.secboot.4m.fd</loader>
+    <nvram>/var/lib/libvirt/qemu/nvram/OSify_VARS.fd</nvram>
+    <!-- Spoofing SMBIOS: Maschera QEMU e simula scheda madre ASUS ROG reale -->
+    <smbios mode='sysinfo'/>
+  </os>
+
+  <sysinfo type='smbios'>
+    <bios>
+      <entry name='vendor'>American Megatrends Inc.</entry>
+      <entry name='version'>4403</entry>
+      <entry name='date'>04/18/2024</entry>
+    </bios>
+    <system>
+      <entry name='manufacturer'>ASUSTeK COMPUTER INC.</entry>
+      <entry name='product'>ROG STRIX B650E-F GAMING WIFI</entry>
+      <entry name='version'>Rev 1.xx</entry>
+      <entry name='serial'>220918736100234</entry>
+      <entry name='uuid'>a4c6a992-38d5-4e76-88d4-5394ef372891</entry>
+      <entry name='sku'>SKU-001</entry>
+      <entry name='family'>ROG STRIX</entry>
+    </system>
+    <baseBoard>
+      <entry name='manufacturer'>ASUSTeK COMPUTER INC.</entry>
+      <entry name='product'>ROG STRIX B650E-F GAMING WIFI</entry>
+      <entry name='version'>Rev 1.xx</entry>
+      <entry name='serial'>220918736100234</entry>
+    </baseBoard>
+  </sysinfo>
+
+  <!-- CLOAKING HYPERVISOR & ANTI-VM DETECTION -->
+  <features>
+    <acpi/>
+    <apic/>
+    <hyperv mode='custom'>
+      <relaxed state='on'/>
+      <vapic state='on'/>
+      <spinlocks state='on' retries='8191'/>
+      <vpindex state='on'/>
+      <runtime state='on'/>
+      <synic state='on'/>
+      <stimer state='on'/>
+      <reset state='on'/>
+      <!-- Maschera la firma vendor Hyper-V sostituendola con una stringa hardware -->
+      <vendor_id state='on' value='AuthenticAMD'/>
+    </hyperv>
+    <kvm>
+      <!-- NASCONDE IL BIT HYPERVISOR NELLA FOGLIA CPUID -->
+      <hidden state='on'/>
+    </kvm>
+    <vmport state='off'/>
+    <smm state='on'/>
+    <ioapic driver='kvm'/>
+  </features>
+
+  <cpu mode='host-passthrough' check='none' migratable='off'>
+    <topology sockets='1' dies='1' cores='6' threads='2'/>
+    <!-- Maschera le istruzioni ipervisore e stabilizza il timing RDTSC -->
+    <feature policy='disable' name='hypervisor'/>
+    <feature policy='require' name='invtsc'/>
+  </cpu>
+
+  <clock offset='localtime'>
+    <timer name='rtc' tickpolicy='catchup'/>
+    <timer name='pit' tickpolicy='delay'/>
+    <timer name='hpet' present='no'/>
+    <timer name='hypervclock' present='yes'/>
+    <timer name='tsc' present='yes' mode='native'/>
+  </clock>
+
+  <devices>
+    <emulator>/usr/bin/qemu-system-x86_64</emulator>
+    
+    <!-- EMULAZIONE TPM 2.0 (Obbligatorio per Windows 11 e Riot Vanguard) -->
+    <tpm model='tpm-crb'>
+      <backend type='emulator' version='2.0'/>
+    </tpm>
+
+    <!-- GPU PASSTHROUGH (PCIe Host Device - VFIO) -->
+    <!-- Sostituire con l'indirizzo bus PCIe della scheda video dedicata -->
+    <!--
+    <hostdev mode='subsystem' type='pci' managed='yes'>
+      <source>
+        <address domain='0x0000' bus='0x01' slot='0x00' function='0x0'/>
+      </source>
+    </hostdev>
+    -->
+  </devices>
+</domain>

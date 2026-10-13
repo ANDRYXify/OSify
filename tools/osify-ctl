@@ -128,8 +128,26 @@ case "${1:-status}" in
         shift
         "$OSIFY_DIR/runtimes/macos/osify-darwin-bridge.sh" "$@"
         ;;
+    anticheat)
+        shift
+        subcmd="${1:-help}"
+        case "$subcmd" in
+            check)
+                shift
+                python3 "$OSIFY_DIR/runtimes/windows/anticheat/osify-anticheat-checker.py" "$@"
+                ;;
+            boot-windows)
+                shift
+                sudo "$OSIFY_DIR/runtimes/windows/anticheat/osify-boot-windows.sh" "$@"
+                ;;
+            *)
+                echo "Uso: osify-ctl anticheat {check <nome-gioco>|boot-windows [--reboot]}"
+                ;;
+        esac
+        ;;
     *)
-        echo "Uso: osify-ctl {status|mode <streaming|gaming|emulation|balanced>|qos|audio|emu|windows|android|darwin}"
+        echo "Uso: osify-ctl {status|mode <streaming|gaming|emulation|balanced>|qos|audio|emu|windows|android|darwin|anticheat}"
         exit 1
         ;;
 esac
+
