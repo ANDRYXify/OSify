@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Navigatore Web OSify
+GenericName=Web Browser
+Comment=Browser Internet ottimizzato con protezione privacy e accelerazione hardware
+Exec=sh -c "if command -v falkon >/dev/null 2>&1; then exec falkon %U; elif command -v firefox >/dev/null 2>&1; then exec firefox %U; else xdg-open %U; fi"
+Icon=web-browser
+Terminal=false
+Categories=Network;WebBrowser;
+MimeType=text/html;text/xml;application/xhtml+xml;x-scheme-handler/http;x-scheme-handler/https;
+StartupNotify=true

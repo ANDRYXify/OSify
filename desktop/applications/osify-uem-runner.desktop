@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=OSify Universal Runner
+GenericName=Universal Binary Executor
+Comment=Esegue in modo trasparente binari Windows PE, Android APK, WebAssembly, Java JAR, MS-DOS e Cross-ISA
+Exec=/usr/local/bin/osify-exec %f
+Icon=system-run
+Terminal=false
+Categories=System;Utility;Emulator;
+MimeType=application/x-msdos-program;application/x-msdownload;application/vnd.android.package-archive;application/wasm;application/java-archive;application/x-java-archive;application/x-executable;
+StartupNotify=true
+NoDisplay=false

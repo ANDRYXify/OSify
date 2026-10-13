@@ -135,4 +135,19 @@ maliit-framework
 iio-sensor-proxy
 linux-firmware-marvell
 
+# ------------------------------------------------------------------------------
+# SUITE WEB & INTERNET RESILIENTE
+# ------------------------------------------------------------------------------
+firefox
+falkon
 
+# ------------------------------------------------------------------------------
+# UNIVERSAL EXECUTION MATRIX (UEM) & RUNTIMES CROSS-ARCHITETTURA
+# ------------------------------------------------------------------------------
+box64
+wasmtime
+dosbox-staging
+jdk-openjdk
+fuse2
+qemu-user-static
+qemu-user-static-binfmt

@@ -4,6 +4,13 @@
 # Ingegnerizzato per display WSVGA 1024x600 e CPU Intel Atom N280
 # ==============================================================================
 
+# 0. Esecuzione Hardware Adaptation Layer (se non ancora applicato)
+if [[ -x /usr/local/bin/osify-hal.sh ]]; then
+    /usr/local/bin/osify-hal.sh 2>/dev/null || true
+elif [[ -x "$(dirname "$0")/../../uem/hal/osify-hal.sh" ]]; then
+    "$(dirname "$0")/../../uem/hal/osify-hal.sh" 2>/dev/null || true
+fi
+
 # 1. Impostazione Sfondo Ufficiale OSify
 WALLPAPER="/usr/share/backgrounds/osify/osify-netbook-1024x600.png"
 if [[ ! -f "$WALLPAPER" ]]; then

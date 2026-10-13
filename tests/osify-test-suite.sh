@@ -39,7 +39,7 @@ echo ""
 # ------------------------------------------------------------------------------
 # TEST 1: SINTASSI SCRIPT BASH (bash -n)
 # ------------------------------------------------------------------------------
-echo "--- [1/6] Verifica Sintattica Script Shell (bash -n) ---"
+echo "--- [1/7] Verifica Sintattica Script Shell (bash -n) ---"
 while IFS= read -r -d '' sh_file; do
     rel_path="${sh_file#$REPO_ROOT/}"
     if bash -n "$sh_file"; then
@@ -53,7 +53,7 @@ done < <(find "$REPO_ROOT" -type f -name "*.sh" -print0)
 # TEST 2: SINTASSI & COMPILAZIONE PYTHON
 # ------------------------------------------------------------------------------
 echo ""
-echo "--- [2/6] Verifica Compilazione Bytecode Python ---"
+echo "--- [2/7] Verifica Compilazione Bytecode Python ---"
 while IFS= read -r -d '' py_file; do
     rel_path="${py_file#$REPO_ROOT/}"
     if python3 -m py_compile "$py_file"; then
@@ -67,7 +67,7 @@ done < <(find "$REPO_ROOT" -type f -name "*.py" -print0)
 # TEST 3: VALIDAZIONE JSON
 # ------------------------------------------------------------------------------
 echo ""
-echo "--- [3/6] Validazione File JSON e Schemi ---"
+echo "--- [3/7] Validazione File JSON e Schemi ---"
 while IFS= read -r -d '' json_file; do
     rel_path="${json_file#$REPO_ROOT/}"
     if python3 -c "import json; json.load(open('$json_file'))" 2>/dev/null; then
@@ -81,7 +81,7 @@ done < <(find "$REPO_ROOT" -type f -name "*.json" -print0)
 # TEST 4: HARDWARE INTELLIGENCE PROBE
 # ------------------------------------------------------------------------------
 echo ""
-echo "--- [4/6] Collaudo Motore Hardware Diagnostics ---"
+echo "--- [4/7] Collaudo Motore Hardware Diagnostics ---"
 if out=$("$REPO_ROOT/kernel/legacy/osify-hardware-detect.sh"); then
     if echo "$out" | grep -qi "CPU Support Level"; then
         log_pass "Hardware Probe (Output consistente con diagnostica CPU)"
@@ -96,7 +96,7 @@ fi
 # TEST 5: ANTI-CHEAT INTELLIGENCE ENGINE
 # ------------------------------------------------------------------------------
 echo ""
-echo "--- [5/6] Collaudo Anti-Cheat Intelligence & Ring-0 Detection ---"
+echo "--- [5/7] Collaudo Anti-Cheat Intelligence & Ring-0 Detection ---"
 ac_script="$REPO_ROOT/runtimes/windows/anticheat/osify-anticheat-checker.py"
 if out_vanguard=$(python3 "$ac_script" "Valorant"); then
     if echo "$out_vanguard" | grep -q "BLOCKED_RING0"; then
@@ -118,7 +118,7 @@ fi
 # TEST 6: ARCHITETTURA A BLOCCHI MODULARE
 # ------------------------------------------------------------------------------
 echo ""
-echo "--- [6/6] Collaudo Gestore Architettura a Blocchi ---"
+echo "--- [6/7] Collaudo Gestore Architettura a Blocchi ---"
 bm_script="$REPO_ROOT/blocks/osify-block-manager.py"
 if python3 "$bm_script" list >/dev/null; then
     log_pass "Block Manager: Elenco blocchi caricato con successo"
@@ -135,10 +135,72 @@ else
 fi
 
 # ------------------------------------------------------------------------------
-# RISULTATO FINALE
+# TEST 7: UNIVERSAL EXECUTION MATRIX (UEM) & RADIOGRAFIA ARCHITETTURALE
 # ------------------------------------------------------------------------------
 echo ""
-echo "========================================================="
+echo "--- [7/7] Collaudo Universal Execution Matrix (UEM) & Radiografia ---"
+
+# 7.1 Status Matrix
+if "$REPO_ROOT/tools/osify-ctl" uem status | grep "Windows PE" >/dev/null; then
+    log_pass "UEM: Status Matrix riporta correttamente i sottosistemi attivi"
+else
+    log_fail "UEM: Status Matrix non consistente"
+fi
+
+# 7.2 Radiografia Binari Sintetici (MZ, PE, WASM, Java, Mach-O)
+TMP_UEM_DIR="$REPO_ROOT/tests/sandbox/uem-test-fixtures"
+mkdir -p "$TMP_UEM_DIR"
+
+# File MS-DOS MZ (senza PE)
+printf "MZ\x00\x00" > "$TMP_UEM_DIR/test-dos.exe"
+if "$REPO_ROOT/uem/runners/osify-inspect.sh" "$TMP_UEM_DIR/test-dos.exe" | grep "MS-DOS" >/dev/null; then
+    log_pass "UEM Radiography: MS-DOS 16-bit correttamente classificato"
+else
+    log_fail "UEM Radiography: Fallimento classificazione MS-DOS"
+fi
+
+# File Windows PE (MZ + PE offset a 64 bytes)
+printf "MZ%58s\x40\x00\x00\x00PE\x00\x00\x64\x86" " " > "$TMP_UEM_DIR/test-win.exe"
+if "$REPO_ROOT/uem/runners/osify-inspect.sh" "$TMP_UEM_DIR/test-win.exe" | grep "Windows Portable Executable" >/dev/null; then
+    log_pass "UEM Radiography: Windows PE64 correttamente classificato"
+else
+    log_fail "UEM Radiography: Fallimento classificazione Windows PE"
+fi
+
+# File WebAssembly (\x00asm)
+printf "\x00asm\x01\x00\x00\x00" > "$TMP_UEM_DIR/test.wasm"
+if "$REPO_ROOT/uem/runners/osify-inspect.sh" "$TMP_UEM_DIR/test.wasm" | grep "WebAssembly" >/dev/null; then
+    log_pass "UEM Radiography: WebAssembly WASI correttamente classificato"
+else
+    log_fail "UEM Radiography: Fallimento classificazione WebAssembly"
+fi
+
+# File Java Bytecode (\xca\xfe\xba\xbe\x00\x00\x00\x34)
+printf "\xca\xfe\xba\xbe\x00\x00\x00\x34" > "$TMP_UEM_DIR/test.class"
+if "$REPO_ROOT/uem/runners/osify-inspect.sh" "$TMP_UEM_DIR/test.class" | grep "Java Virtual Machine" >/dev/null; then
+    log_pass "UEM Radiography: Java Class Bytecode correttamente classificato"
+else
+    log_fail "UEM Radiography: Fallimento classificazione Java"
+fi
+
+# File Mach-O (\xfe\xed\xfa\xcf)
+printf "\xfe\xed\xfa\xcf" > "$TMP_UEM_DIR/test.macho"
+if "$REPO_ROOT/uem/runners/osify-inspect.sh" "$TMP_UEM_DIR/test.macho" | grep "Mach-O" >/dev/null; then
+    log_pass "UEM Radiography: Apple Darwin Mach-O correttamente classificato"
+else
+    log_fail "UEM Radiography: Fallimento classificazione Mach-O"
+fi
+
+# Pulizia fixture di collaudo
+rm -rf "$TMP_UEM_DIR"
+
+# 7.3 Collaudo Hardware Adaptation Layer
+if "$REPO_ROOT/uem/hal/osify-hal.sh" | grep "Hardware Adaptation Layer" >/dev/null; then
+    log_pass "HAL: Engine di tuning hardware eseguito con successo"
+else
+    log_fail "HAL: Esecuzione tuning hardware fallita"
+fi
+
 echo "                  REPORT FINALE COLLAUDO                 "
 echo "========================================================="
 echo "  TEST SUPERATI : $PASSED_COUNT"

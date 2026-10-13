@@ -79,3 +79,13 @@ pavucontrol-qt
 fastfetch
 papirus-icon-theme
 breeze-gtk
+zenity
+
+# ------------------------------------------------------------------------------
+# UNIVERSAL EXECUTION MATRIX (UEM) — RUNTIMES 32-BIT
+# ------------------------------------------------------------------------------
+wine
+dosbox-staging
+jre-openjdk-headless
+qemu-user-static
+fuse2

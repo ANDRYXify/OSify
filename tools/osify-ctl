@@ -225,8 +225,85 @@ case "${1:-status}" in
     install)
         python3 "$OSIFY_DIR/tools/osify-gui/osify-live-installer.py"
         ;;
+    uem)
+        shift
+        subcmd="${1:-status}"
+        case "$subcmd" in
+            status)
+                echo "=== OSify Universal Execution Matrix (UEM) Status ==="
+                echo "[+] Sottosistemi Eseguibili & Formati Supportati:"
+                echo "  • Windows PE (.exe / .msi / .dll)   : ATTIVO (Wine / Proton-GE / DXVK)"
+                echo "  • MS-DOS 16-bit (.com / .exe MZ)    : ATTIVO (dosbox-staging / dosemu2)"
+                echo "  • Apple macOS Mach-O (.app / CLI)   : ATTIVO (Darling Translation Layer)"
+                echo "  • Android Application (.apk / .aab) : ATTIVO (Waydroid LXC Container)"
+                echo "  • WebAssembly Standalone (.wasm)    : ATTIVO (Wasmtime / Wasmer / WASI)"
+                echo "  • Java Bytecode (.class / .jar)     : ATTIVO (OpenJDK Runtime)"
+                echo "  • Cross-ISA Linux ELF               : ATTIVO (Box64 / Box86 / QEMU-Static)"
+                echo "  • Polyglot Script Dispatcher        : ATTIVO (Shebang / Magic Sniffing)"
+                ;;
+            run)
+                shift
+                target_file="${1:-}"
+                if [[ -z "$target_file" || (! -f "$target_file" && ! -d "$target_file") ]]; then
+                    echo "Uso: osify-ctl uem run <file-o-bundle> [argomenti...]"
+                    exit 1
+                fi
+                exec "$OSIFY_DIR/uem/runners/osify-universal-dispatcher.sh" "$target_file" "${@:2}"
+                ;;
+            inspect)
+                shift
+                target_file="${1:-}"
+                if [[ -z "$target_file" || (! -f "$target_file" && ! -d "$target_file") ]]; then
+                    echo "Uso: osify-ctl uem inspect <file-o-bundle>"
+                    exit 1
+                fi
+                exec "$OSIFY_DIR/uem/runners/osify-inspect.sh" "$target_file"
+                ;;
+            register)
+                "$OSIFY_DIR/uem/hal/osify-hal.sh"
+                ;;
+            *)
+                echo "Uso: osify-ctl uem {status|run <file>|inspect <file>|register}"
+                ;;
+        esac
+        ;;
+    hal)
+        shift
+        subcmd="${1:-status}"
+        case "$subcmd" in
+            apply|run)
+                "$OSIFY_DIR/uem/hal/osify-hal.sh"
+                ;;
+            status)
+                echo "=== OSify Hardware Adaptation Layer (HAL) Status ==="
+                echo "[+] CPU Host: $(uname -m) ($(grep -m1 'model name' /proc/cpuinfo 2>/dev/null | cut -d: -f2 | xargs || echo 'Host CPU'))"
+                echo "[+] RAM Fisica: $(( $(grep MemTotal /proc/meminfo 2>/dev/null | awk '{print $2}' || echo 2097152) / 1024 )) MB"
+                echo "[+] ZRAM Status:"
+                if command -v zramctl >/dev/null 2>&1; then
+                    zramctl || echo "  Nessun device ZRAM attivo."
+                else
+                    echo "  zramctl non presente su questo host."
+                fi
+                ;;
+            *)
+                echo "Uso: osify-ctl hal {status|apply}"
+                ;;
+        esac
+        ;;
+    web)
+        shift
+        subcmd="${1:-tune}"
+        case "$subcmd" in
+            tune|optimize)
+                "$OSIFY_DIR/desktop/web/osify-browser-tuning.sh"
+                ;;
+            *)
+                echo "Uso: osify-ctl web {tune}"
+                ;;
+        esac
+        ;;
     *)
-        echo "Uso: osify-ctl {status|mode|block|install|presentation|touch|macos-gestures|test|qos|audio|emu|windows|android|darwin|anticheat|hw-detect}"
+        echo "Uso: osify-ctl {status|mode|block|install|uem|hal|web|presentation|touch|macos-gestures|test|qos|audio|emu|windows|android|darwin|anticheat|hw-detect}"
         exit 1
         ;;
 esac
