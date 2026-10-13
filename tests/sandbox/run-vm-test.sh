@@ -15,15 +15,39 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 DISK_IMAGE="$SCRIPT_DIR/osify-test-drive.qcow2"
-ISO_IMAGE=""
 
-# Cerca se esiste una ISO già compilata
-for candidate in "$REPO_ROOT/build/out/"*.iso "$SCRIPT_DIR/"*.iso; do
-    if [[ -f "$candidate" ]]; then
-        ISO_IMAGE="$candidate"
-        break
+find_iso_for_profile() {
+    local profile="$1"
+    local iso=""
+
+    if [[ "$profile" =~ ^(2|nb200|toshiba|3|stress|extreme)$ ]]; then
+        # Profilo Vintage 32-bit: cerca immagini i686/vintage
+        for candidate in \
+            "$SCRIPT_DIR/osify-vintage-base.iso" \
+            "$REPO_ROOT/build/out/release/OSify-Vintage-i686.iso" \
+            "$REPO_ROOT/build/out/"*vintage*.iso \
+            "$REPO_ROOT/build/out/"*i686*.iso \
+            "$SCRIPT_DIR/"*.iso; do
+            if [[ -f "$candidate" ]]; then
+                iso="$candidate"
+                break
+            fi
+        done
+    else
+        # Profilo Modern 64-bit: cerca immagini x86_64
+        for candidate in \
+            "$REPO_ROOT/build/out/release/OSify-x86_64-v3.iso" \
+            "$REPO_ROOT/build/out/"*x86_64*.iso \
+            "$REPO_ROOT/build/out/"*.iso \
+            "$SCRIPT_DIR/"*.iso; do
+            if [[ -f "$candidate" ]]; then
+                iso="$candidate"
+                break
+            fi
+        done
     fi
-done
+    echo "$iso"
+}
 
 check_qemu() {
     if ! command -v qemu-system-x86_64 >/dev/null 2>&1 && ! command -v qemu-system-i386 >/dev/null 2>&1; then
@@ -63,7 +87,7 @@ start_vm() {
             QEMU_BIN="qemu-system-x86_64"
             ;;
         2|nb200|toshiba)
-            PROFILE_NAME="Toshiba NB200 Netbook Simulator (Intel Atom • 1GB RAM • 1024x600)"
+            PROFILE_NAME="Toshiba NB200 Netbook Simulator (Intel Atom N270 • 1GB RAM • 1024x600)"
             MEM="1024M"
             CPUS="1"
             RESOLUTION="1024x600"
@@ -92,12 +116,15 @@ start_vm() {
             ;;
     esac
 
+    local ISO_IMAGE
+    ISO_IMAGE=$(find_iso_for_profile "$profile")
+
     echo "========================================================="
     echo "       OSify Virtual Testbed — Avvio Simulazione         "
     echo "========================================================="
     echo "[+] Profilo Attivo : $PROFILE_NAME"
     echo "[+] Binario QEMU   : $QEMU_BIN"
-    echo "[+] Modello CPU    : $CPU_MODEL"
+    echo "[+] Modello CPU    : $CPU_MODEL (Atom Diamondville 32-bit)"
     echo "[+] RAM Allocata   : $MEM"
     echo "[+] vCPU Assegnate : $CPUS"
     echo "[+] Risoluzione    : $RESOLUTION"
@@ -113,6 +140,7 @@ start_vm() {
         -vga std
         -display default,show-cursor=on
         -usb -device usb-tablet
+        -virtfs "local,path=$REPO_ROOT,mount_tag=osify,security_model=none"
     )
 
     # Accelerazione hardware solo se l'architettura host coincide
@@ -127,14 +155,17 @@ start_vm() {
         QEMU_ARGS+=(-cdrom "$ISO_IMAGE" -boot d)
     else
         echo ""
-        echo "[!] NOTA: Nessuna immagine ISO trovata in build/out/."
-        echo "    Per compilare la ISO prima del boot esegui: cd build/docker && ./run-build.sh"
-        echo "    Avvio della VM in modalita' disco per verifica BIOS/Storage..."
+        echo "[!] NOTA: Nessuna immagine ISO trovata."
+        echo "    Avvio della VM in modalita' disco..."
         QEMU_ARGS+=(-boot c)
     fi
 
     echo ""
-    echo "[+] Avvio istanza QEMU in corso... (Chiudi la finestra della VM per arrestare)"
+    echo "[+] Avvio istanza grafica QEMU per il Toshiba NB200..."
+    echo "[i] Si aprira la finestra nativa di macOS con la VM."
+    echo "[i] All'interno potrai eseguire il login (utente: root, senza password)."
+    echo "[i] La directory di OSify e montabile con: mount -t 9p -o trans=virtio osify /mnt"
+    echo "========================================================="
     exec "$QEMU_BIN" "${QEMU_ARGS[@]}"
 }
 
