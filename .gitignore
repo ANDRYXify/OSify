@@ -10,6 +10,7 @@ __pycache__/
 /tmp/
 build/out/
 build/profile/
+build/cache/
 
 # Virtual testbed storage images
 tests/sandbox/*.iso

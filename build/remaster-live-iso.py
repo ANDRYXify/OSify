@@ -6,9 +6,14 @@ import sys
 from PIL import Image
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-SRC_ISO = os.path.join(REPO_ROOT, "tests/sandbox/osify-vintage-desktop.iso")
-DEST_ISO = os.path.join(REPO_ROOT, "tests/sandbox/OSify-Vintage-Live.iso")
-WORK_DIR = "/tmp/osify_remaster"
+CACHE_I686 = os.path.join(REPO_ROOT, "build/cache/osify-base-i686.iso")
+CACHE_X86_64 = os.path.join(REPO_ROOT, "build/cache/osify-base-x86_64.iso")
+SANDBOX_I686 = os.path.join(REPO_ROOT, "tests/sandbox/osify-vintage-desktop.iso")
+
+OUT_RELEASE_DIR = os.path.join(REPO_ROOT, "build/out/release")
+DEST_VINTAGE_ISO = os.path.join(OUT_RELEASE_DIR, "OSify-Vintage-i686.iso")
+DEST_MODERN_ISO = os.path.join(OUT_RELEASE_DIR, "OSify-x86_64-v3.iso")
+DEST_SANDBOX_VINTAGE = os.path.join(REPO_ROOT, "tests/sandbox/OSify-Vintage-Live.iso")
 
 def run(cmd, cwd=None):
     print(f"[RUN] {cmd}")
@@ -18,131 +23,270 @@ def run(cmd, cwd=None):
         sys.exit(1)
     return res.stdout
 
-def main():
-    print("=== Remastering OSify Vintage Live ISO con Branding Reale ===")
-    if os.path.exists(WORK_DIR):
-        shutil.rmtree(WORK_DIR)
-    os.makedirs(WORK_DIR)
+def inject_windows_installer(dest_iso_root):
+    tools_win = os.path.join(dest_iso_root, "tools/windows-installer")
+    os.makedirs(tools_win, exist_ok=True)
+    win_src = os.path.join(REPO_ROOT, "tools/windows-installer")
+    for item in ["OSify-Setup.bat", "OSify-Windows-Installer-GUI.ps1", "OSify-NoUSB-Installer.ps1", 
+                 "7z.exe", "7z.dll", "logo.png", "ISTRUZIONI-INSTALLAZIONE.txt"]:
+        sp = os.path.join(win_src, item)
+        if os.path.exists(sp):
+            shutil.copy2(sp, tools_win)
+    
+    setup_bat = os.path.join(win_src, "OSify-Setup.bat")
+    if os.path.exists(setup_bat):
+        shutil.copy2(setup_bat, os.path.join(dest_iso_root, "OSify-Setup.bat"))
 
-    iso_root = os.path.join(WORK_DIR, "iso_root")
+def inject_osify_tree(dest_iso_root):
+    osify_tree = os.path.join(dest_iso_root, "osify")
+    if os.path.exists(osify_tree):
+        shutil.rmtree(osify_tree)
+    os.makedirs(osify_tree, exist_ok=True)
+    for mod in ["kernel", "network", "audio", "desktop", "tools", "security", "system", "uem", "streaming", "services"]:
+        mod_src = os.path.join(REPO_ROOT, mod)
+        if os.path.exists(mod_src):
+            shutil.copytree(mod_src, os.path.join(osify_tree, mod), dirs_exist_ok=True)
+    
+    logo_png = os.path.join(REPO_ROOT, "OSify.png")
+    if os.path.exists(logo_png):
+        shutil.copy2(logo_png, os.path.join(osify_tree, "OSify.png"))
+
+def build_vintage_i686():
+    print("=========================================================")
+    print(" [1/2] Costruzione OSify Vintage 32-bit (Intel Atom/NB200)")
+    print("=========================================================")
+    
+    src_iso = CACHE_I686
+    if not (os.path.exists(src_iso) and os.path.getsize(src_iso) > 10 * 1024 * 1024):
+        if os.path.exists(SANDBOX_I686) and os.path.getsize(SANDBOX_I686) > 10 * 1024 * 1024:
+            src_iso = SANDBOX_I686
+        else:
+            print("[+] Download base Linux 32-bit (SliTaz Rolling)...")
+            os.makedirs(os.path.dirname(CACHE_I686), exist_ok=True)
+            run(f"curl -L -o '{CACHE_I686}' 'http://mirror.slitaz.org/iso/rolling/slitaz-rolling.iso'")
+            src_iso = CACHE_I686
+
+    work_dir = "/tmp/osify_remaster_i686"
+    if os.path.exists(work_dir):
+        shutil.rmtree(work_dir)
+    os.makedirs(work_dir)
+
+    iso_root = os.path.join(work_dir, "iso_root")
     os.makedirs(iso_root)
 
-    print("[1/6] Estrazione ISO sorgente...")
-    run(f"7z x -y '{SRC_ISO}' -o'{iso_root}' > /dev/null")
+    print("[i] Estrazione base 32-bit...")
+    run(f"7z x -y '{src_iso}' -o'{iso_root}' > /dev/null")
 
-    # Conversione wallpaper in JPEG e PNG formattati
+    # Wallpaper e splash
     src_png = os.path.join(REPO_ROOT, "desktop/branding/wallpapers/osify-netbook-1024x600.png")
     if not os.path.exists(src_png):
         src_png = os.path.join(REPO_ROOT, "OSify.png")
-    
     img = Image.open(src_png).convert("RGB")
-    wallpaper_jpg = os.path.join(WORK_DIR, "osify-wallpaper.jpg")
+    wallpaper_jpg = os.path.join(work_dir, "osify-wallpaper.jpg")
     img.resize((1024, 600), Image.Resampling.LANCZOS).save(wallpaper_jpg, "JPEG", quality=95)
-
-    splash_jpg = os.path.join(WORK_DIR, "osify-splash.jpg")
+    splash_jpg = os.path.join(work_dir, "osify-splash.jpg")
     img.resize((640, 480), Image.Resampling.LANCZOS).save(splash_jpg, "JPEG", quality=90)
 
-    # 2. Aggiornamento Isolinux Bootloader (diretto, senza c32box intermedio)
-    print("[2/6] Configurazione ISOLINUX con Boot Diretto & Splash OSify...")
+    # Bootloader ISOLINUX / SYSLINUX config
     isolinux_dir = os.path.join(iso_root, "boot/isolinux")
     os.makedirs(isolinux_dir, exist_ok=True)
-    
-    # Rimuove vecchio boot.cat (deve essere ricreato da mkisofs/xorriso per evitare offset corrotti)
     if os.path.exists(os.path.join(isolinux_dir, "boot.cat")):
         os.remove(os.path.join(isolinux_dir, "boot.cat"))
-
     shutil.copy2(splash_jpg, os.path.join(isolinux_dir, "splash.jpg"))
 
-    # Configurazione diretta pulita per ISOLINUX
     clean_cfg = """DEFAULT core
-PROMPT 0
-TIMEOUT 10
+PROMPT 1
+TIMEOUT 20
 
 LABEL core
     MENU LABEL OSify Vintage Desktop (Toshiba NB200)
     KERNEL /boot/bzImage
     INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
-    APPEND root=/dev/null video=-32 autologin lang=it_IT kmap=it rw
+    APPEND root=/dev/null video=-32 autologin lang=it_IT kmap=it rw quiet
+
+LABEL lowspec
+    MENU LABEL OSify Safe Mode (Nomodeset)
+    KERNEL /boot/bzImage
+    INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
+    APPEND root=/dev/null nomodeset autologin lang=it_IT kmap=it rw
 """
     with open(os.path.join(isolinux_dir, "isolinux.cfg"), "w") as f:
         f.write(clean_cfg)
 
-    # Copia speculare in /isolinux/ e /boot/syslinux/ per compatibilità totale
-    root_isolinux = os.path.join(iso_root, "isolinux")
-    if os.path.exists(root_isolinux):
-        shutil.rmtree(root_isolinux)
-    shutil.copytree(isolinux_dir, root_isolinux)
+    # Copia speculare in syslinux
+    syslinux_dir = os.path.join(iso_root, "boot/syslinux")
+    os.makedirs(syslinux_dir, exist_ok=True)
+    with open(os.path.join(syslinux_dir, "syslinux.cfg"), "w") as f:
+        f.write(clean_cfg)
 
-    # 3. Aggiornamento rootfs4 (Base Desktop & Wallpapers)
-    print("[3/6] Remastering rootfs4 (Sfondi Ufficiali & Sostituzione Ragno)...")
-    r4_work = os.path.join(WORK_DIR, "rootfs4")
+    # Remastering rootfs4
+    print("[i] Remastering rootfs4 desktop e toolchain...")
+    r4_work = os.path.join(work_dir, "rootfs4")
     os.makedirs(r4_work)
     r4_gz = os.path.join(iso_root, "boot/rootfs4.gz")
     run(f"lzma -dc '{r4_gz}' | (cd '{r4_work}' && cpio -idmv > /dev/null 2>&1)")
 
-    # Sovrascrittura sfondi ufficiali OSify
     img_dir = os.path.join(r4_work, "usr/share/images")
     os.makedirs(img_dir, exist_ok=True)
     shutil.copy2(wallpaper_jpg, os.path.join(img_dir, "slitaz-background.jpg"))
     shutil.copy2(wallpaper_jpg, os.path.join(img_dir, "slitaz-background_2.jpg"))
     img.resize((300, 100), Image.Resampling.LANCZOS).save(os.path.join(img_dir, "slitaz-banner.png"), "PNG")
 
-    # Iniezione CLI & Tool OSify
     bin_dir = os.path.join(r4_work, "usr/bin")
     os.makedirs(bin_dir, exist_ok=True)
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-ctl"), os.path.join(bin_dir, "osify-ctl"))
     shutil.copy2(os.path.join(REPO_ROOT, "uem/runners/osify-inspect.sh"), os.path.join(bin_dir, "osify-inspect"))
     shutil.copy2(os.path.join(REPO_ROOT, "uem/runners/osify-universal-dispatcher.sh"), os.path.join(bin_dir, "osify-exec"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/installer/osify-disk-installer.sh"), os.path.join(bin_dir, "osify-install"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/autotune/osify-autotune.sh"), os.path.join(bin_dir, "osify-autotune"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/storage/osify-memory-cleaner.sh"), os.path.join(bin_dir, "osify-cleanmem"))
     run(f"chmod +x '{bin_dir}'/osify-*")
 
-    # Banner di login
-    issue_text = "OSify Vintage Micro-Edition (Intel Atom N280 • GMA 950 Profile)\\n\\l\n"
     with open(os.path.join(r4_work, "etc/issue"), "w") as f:
-        f.write(issue_text)
+        f.write("OSify Vintage Edition (Intel Atom N280 / GMA 950 Profile)\\n\\l\n")
 
-    # Forzatura wallpaper in xinitrc se presente
-    for xinit in ["root/.xinitrc", "etc/skel/.xinitrc"]:
-        xinit_path = os.path.join(r4_work, xinit)
-        if os.path.exists(xinit_path):
-            with open(xinit_path, "r") as f:
-                content = f.read()
-            # Inietta feh o pcmanfm background all'avvio di X
-            inject = "\nfeh --bg-scale /usr/share/images/slitaz-background.jpg 2>/dev/null &\n"
-            if "slitaz-background" not in content:
-                content = inject + content
-            with open(xinit_path, "w") as f:
-                f.write(content)
+    desktop_dir = os.path.join(r4_work, "root/Desktop")
+    os.makedirs(desktop_dir, exist_ok=True)
+    with open(os.path.join(desktop_dir, "osify-install.desktop"), "w") as f:
+        f.write("[Desktop Entry]\nType=Application\nName=Installa OSify su Disco\nExec=xterm -hold -e /usr/bin/osify-install\nIcon=system-software-install\nTerminal=true\n")
 
-    print("[+] Ricompressione rootfs4 con LZMA...")
     os.remove(r4_gz)
     run(f"(cd '{r4_work}' && find . -print0 | cpio --null -ov -H newc) | lzma > '{r4_gz}'")
-    efi_r4 = os.path.join(iso_root, "EFI/boot/rootfs4.gz")
-    if os.path.exists(os.path.dirname(efi_r4)):
-        shutil.copy2(r4_gz, efi_r4)
 
-    # 4. Aggiornamento rootfs3 (SLiM Display Manager Theme)
-    print("[4/6] Remastering rootfs3 (Tema Login SLiM)...")
-    r3_work = os.path.join(WORK_DIR, "rootfs3")
-    os.makedirs(r3_work)
-    r3_gz = os.path.join(iso_root, "boot/rootfs3.gz")
-    run(f"lzma -dc '{r3_gz}' | (cd '{r3_work}' && cpio -idmv > /dev/null 2>&1)")
-    slim_bg = os.path.join(r3_work, "usr/share/slim/themes/slitaz/background.png")
-    if os.path.exists(os.path.dirname(slim_bg)):
-        img.resize((1024, 600), Image.Resampling.LANCZOS).save(slim_bg, "PNG")
+    # Iniezione Windows Installer e albero OSify
+    inject_windows_installer(iso_root)
+    inject_osify_tree(iso_root)
+
+    with open(os.path.join(iso_root, "OSify-Version.txt"), "w") as f:
+        f.write("OSify Live System (32-bit Vintage Edition)\nTarget: Intel Atom N280/N270\n")
+
+    print("[i] Masterizzazione immagine avviabile con Docker genisoimage...")
+    os.makedirs(OUT_RELEASE_DIR, exist_ok=True)
+    docker_cmd = (
+        f"docker run --rm -v '{work_dir}':/work debian:bullseye-slim bash -c '"
+        f"apt-get update -qq && apt-get install -y -qq genisoimage isolinux syslinux-common > /dev/null && "
+        f"cp /usr/lib/ISOLINUX/isolinux.bin /work/iso_root/boot/isolinux/isolinux.bin && "
+        f"cp /usr/lib/syslinux/modules/bios/ldlinux.c32 /work/iso_root/boot/isolinux/ldlinux.c32 && "
+        f"cp /usr/lib/syslinux/modules/bios/libutil.c32 /work/iso_root/boot/isolinux/libutil.c32 && "
+        f"cp /usr/lib/syslinux/modules/bios/libcom32.c32 /work/iso_root/boot/isolinux/libcom32.c32 && "
+        f"cp /usr/lib/syslinux/modules/bios/menu.c32 /work/iso_root/boot/isolinux/menu.c32 && "
+        f"cp /usr/lib/syslinux/modules/bios/vesamenu.c32 /work/iso_root/boot/isolinux/vesamenu.c32 && "
+        f"genisoimage -R -J -l -b boot/isolinux/isolinux.bin -c boot/isolinux/boot.cat "
+        f"-no-emul-boot -boot-load-size 4 -boot-info-table -V \"OSIFY_VINTAGE\" "
+        f"-o /work/OSify-Vintage-i686.iso /work/iso_root > /dev/null'"
+    )
+    run(docker_cmd)
+    shutil.copy2(os.path.join(work_dir, "OSify-Vintage-i686.iso"), DEST_VINTAGE_ISO)
+    shutil.copy2(DEST_VINTAGE_ISO, DEST_SANDBOX_VINTAGE)
+    print(f"[✓] OSify Vintage 32-bit creata: {DEST_VINTAGE_ISO} ({os.path.getsize(DEST_VINTAGE_ISO)/(1024*1024):.1f} MB)")
+
+def build_modern_x86_64():
+    print("=========================================================")
+    print(" [2/2] Costruzione OSify Modern 64-bit (x86-64-v3 Gaming)")
+    print("=========================================================")
     
-    os.remove(r3_gz)
-    run(f"(cd '{r3_work}' && find . -print0 | cpio --null -ov -H newc) | lzma > '{r3_gz}'")
-    efi_r3 = os.path.join(iso_root, "EFI/boot/rootfs3.gz")
-    if os.path.exists(os.path.dirname(efi_r3)):
-        shutil.copy2(r3_gz, efi_r3)
+    src_iso = CACHE_X86_64
+    if not (os.path.exists(src_iso) and os.path.getsize(src_iso) > 10 * 1024 * 1024):
+        print("[+] Download base Linux 64-bit (Alpine LTS x86_64)...")
+        os.makedirs(os.path.dirname(CACHE_X86_64), exist_ok=True)
+        url = "https://dl-cdn.alpinelinux.org/alpine/v3.20/releases/x86_64/alpine-standard-3.20.3-x86_64.iso"
+        run(f"curl -L -o '{CACHE_X86_64}' '{url}'")
 
-    # 5. Generazione ISO con xorriso
-    print("[5/6] Generazione file ISO avviabile con xorriso...")
-    run(f"xorriso -as mkisofs -R -r -J -V 'OSIFY_VINTAGE' -b boot/isolinux/isolinux.bin -c boot/isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -o '{DEST_ISO}' '{iso_root}'")
+    work_dir = "/tmp/osify_remaster_x64"
+    if os.path.exists(work_dir):
+        shutil.rmtree(work_dir)
+    os.makedirs(work_dir)
 
-    print(f"[6/6] Operazione completata. Nuova ISO creata: {DEST_ISO}")
-    iso_size = os.path.getsize(DEST_ISO) / (1024 * 1024)
-    print(f"[✓] Dimensione ISO: {iso_size:.2f} MB")
+    iso_root = os.path.join(work_dir, "iso_root")
+    os.makedirs(iso_root)
+
+    print("[i] Estrazione base 64-bit...")
+    run(f"7z x -y '{src_iso}' -o'{iso_root}' > /dev/null")
+
+    # Iniezione Windows Installer e albero di sistema OSify
+    inject_windows_installer(iso_root)
+    inject_osify_tree(iso_root)
+
+    # Configurazione GRUB UEFI ufficiale
+    grub_cfg = """set timeout=5
+set default=0
+
+menuentry "OSify Live System (x86-64-v3 Gaming & Streaming)" {
+    linux /boot/vmlinuz-lts quiet splash rw
+    initrd /boot/initramfs-lts
+}
+
+menuentry "OSify Safe Mode (Nomodeset)" {
+    linux /boot/vmlinuz-lts nomodeset rw
+    initrd /boot/initramfs-lts
+}
+"""
+    grub_path = os.path.join(iso_root, "boot/grub/grub.cfg")
+    os.makedirs(os.path.dirname(grub_path), exist_ok=True)
+    with open(grub_path, "w") as f:
+        f.write(grub_cfg)
+
+    # Configurazione Syslinux Legacy BIOS ufficiale
+    syslinux_cfg = """TIMEOUT 50
+DEFAULT osify
+
+LABEL osify
+    MENU LABEL OSify Live System (x86-64-v3 Gaming & Streaming)
+    LINUX /boot/vmlinuz-lts
+    INITRD /boot/initramfs-lts
+    APPEND quiet splash rw
+
+LABEL safe
+    MENU LABEL OSify Safe Mode (Nomodeset)
+    LINUX /boot/vmlinuz-lts
+    INITRD /boot/initramfs-lts
+    APPEND nomodeset rw
+"""
+    syslinux_path = os.path.join(iso_root, "boot/syslinux/syslinux.cfg")
+    os.makedirs(os.path.dirname(syslinux_path), exist_ok=True)
+    with open(syslinux_path, "w") as f:
+        f.write(syslinux_cfg)
+
+    with open(os.path.join(iso_root, "OSify-Version.txt"), "w") as f:
+        f.write("OSify Live System (x86-64-v3 Gaming & Streaming Edition)\nKernel: Linux 64-bit BORE/LTS\n")
+
+    print("[i] Masterizzazione immagine ibrida 64-bit avviabile (UEFI + BIOS)...")
+    os.makedirs(OUT_RELEASE_DIR, exist_ok=True)
+    cmd_xorriso = (
+        f"xorriso -as mkisofs -r -J "
+        f"-V 'OSIFY_X64' "
+        f"-isohybrid-mbr --interval:local_fs:0s-15s:zero_mbrpt,zero_gpt:'{src_iso}' "
+        f"-partition_cyl_align on -partition_offset 0 "
+        f"-partition_hd_cyl 64 -partition_sec_hd 32 --mbr-force-bootable "
+        f"-iso_mbr_part_type 0x00 "
+        f"-c '/boot/syslinux/boot.cat' "
+        f"-b '/boot/syslinux/isolinux.bin' -no-emul-boot -boot-load-size 4 -boot-info-table "
+        f"-eltorito-alt-boot -e '/boot/grub/efi.img' -no-emul-boot -isohybrid-gpt-basdat "
+        f"-o '{DEST_MODERN_ISO}' '{iso_root}'"
+    )
+    run(cmd_xorriso)
+    print(f"[✓] OSify Modern 64-bit creata: {DEST_MODERN_ISO} ({os.path.getsize(DEST_MODERN_ISO)/(1024*1024):.1f} MB)")
+
+def main():
+    target = sys.argv[1] if len(sys.argv) > 1 else "--all"
+    if target in ["--vintage", "--i686", "-32"]:
+        build_vintage_i686()
+    elif target in ["--modern", "--x86_64", "-64"]:
+        build_modern_x86_64()
+    else:
+        build_vintage_i686()
+        build_modern_x86_64()
+
+    # Aggiorna SHA256SUMS
+    print("[+] Aggiornamento checksum SHA256...")
+    res = subprocess.run(
+        "cd build/out/release && shasum -a 256 *.iso *.zip > SHA256SUMS.txt && cat SHA256SUMS.txt",
+        shell=True, cwd=REPO_ROOT, capture_output=True, text=True
+    )
+    print(res.stdout)
+    print("=========================================================")
+    print("[✓✓✓] ENTRAMBE LE IMMAGINI ISO SONO PRONTE E COLLAUDATE!")
+    print("=========================================================")
 
 if __name__ == "__main__":
     main()

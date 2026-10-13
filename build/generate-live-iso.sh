@@ -134,10 +134,15 @@ EOF
 }
 
 # 1. Costruzione ISO Moderna x86_64
-build_variant "x86_64" "OSify-x86_64-v3.iso" "OSIFY_X64"
+if [[ ! -f "$OUT_DIR/OSify-x86_64-v3.iso" || $(wc -c < "$OUT_DIR/OSify-x86_64-v3.iso") -lt 15000000 ]]; then
+    build_variant "x86_64" "OSify-x86_64-v3.iso" "OSIFY_X64"
+else
+    echo "[i] ISO Moderna x86_64 già presente: $OUT_DIR/OSify-x86_64-v3.iso"
+fi
 
-# 2. Costruzione ISO Vintage 32-bit (i686) per Toshiba NB200 Netbook
-build_variant "i686" "OSify-Vintage-i686.iso" "OSIFY_I686"
+# 2. Costruzione VERA ISO Vintage 32-bit (i686) per Toshiba NB200 Netbook (Kernel, Rootfs, Desktop e Toolchain)
+echo "[+] Avvio motore di remastering live per OSify Vintage 32-bit..."
+python3 "$REPO_ROOT/build/remaster-live-iso.py"
 
 # 3. Calcolo Checksum Crittografici SHA256
 echo "[+] Calcolo checksum SHA256 per tutti gli asset..."
