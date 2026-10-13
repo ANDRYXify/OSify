@@ -140,11 +140,11 @@ class OSifyControlCenter(QMainWindow):
 
         # Tab Widget Principale
         tabs = QTabWidget()
-        tabs.addTab(self.create_modes_tab(), "⚡ Profili Istantanei")
-        tabs.addTab(self.create_streaming_tab(), "🔴 Live Streaming (Twitch/Kick/YT)")
-        tabs.addTab(self.create_emulation_tab(), "🎮 Emulazione Console")
-        tabs.addTab(self.create_runtimes_tab(), "🌐 Multi-Runtime (Win/Android/Mac)")
-        tabs.addTab(self.create_anticheat_tab(), "🛡️ Anti-Cheat (Ring-0)")
+        tabs.addTab(self.create_modes_tab(), "Profili di Sistema")
+        tabs.addTab(self.create_streaming_tab(), "Live Streaming (Twitch/Kick/YT)")
+        tabs.addTab(self.create_emulation_tab(), "Console Matrix (Orbit64/Emu)")
+        tabs.addTab(self.create_runtimes_tab(), "Multi-Runtime (Win/Android/Mac)")
+        tabs.addTab(self.create_anticheat_tab(), "Anti-Cheat Bridge")
 
         main_layout.addWidget(tabs)
 
@@ -162,31 +162,31 @@ class OSifyControlCenter(QMainWindow):
         grid.setSpacing(14)
 
         # 1. Bottone Live Streaming
-        btn_stream = QPushButton("🔴 MODALITÀ LIVE STREAMING\n(Anti-Bufferbloat CAKE + Audio VOD Safe)")
+        btn_stream = QPushButton("MODALITÀ LIVE STREAMING\n(Anti-Bufferbloat CAKE + Audio VOD Safe)")
         btn_stream.setStyleSheet("background: #831843; border-color: #f43f5e; color: white; padding: 16px;")
         btn_stream.clicked.connect(lambda: self.run_osify_cmd(["mode", "streaming"]))
         grid.addWidget(btn_stream, 0, 0)
 
         # 2. Bottone Gaming eSport
-        btn_game = QPushButton("⚡ MODALITÀ GAMING COMPETITIVO\n(CPU Max Governor + Wayland Tearing + Latency 0)")
+        btn_game = QPushButton("MODALITÀ GAMING COMPETITIVO\n(CPU Max Governor + Wayland Tearing + Latency 0)")
         btn_game.setStyleSheet("background: #1e3a8a; border-color: #3b82f6; color: white; padding: 16px;")
         btn_game.clicked.connect(lambda: self.run_osify_cmd(["mode", "gaming"]))
         grid.addWidget(btn_game, 0, 1)
 
         # 3. Bottone Emulazione Console
-        btn_emu = QPushButton("🎮 MODALITÀ CONSOLE (GAMESCOPE)\n(10-Foot UI + mimalloc + Shader Cache 128GB)")
+        btn_emu = QPushButton("MODALITÀ CONSOLE (GAMESCOPE)\n(10-Foot UI + mimalloc + Shader Cache 128GB)")
         btn_emu.setStyleSheet("background: #14532d; border-color: #22c55e; color: white; padding: 16px;")
         btn_emu.clicked.connect(lambda: self.run_osify_cmd(["mode", "emulation"]))
         grid.addWidget(btn_emu, 1, 0)
 
         # 4. Bottone Bilanciato
-        btn_bal = QPushButton("⚖️ MODALITÀ DESKTOP BILANCIATA\n(Risparmio energetico e silenziosità)")
+        btn_bal = QPushButton("MODALITÀ DESKTOP BILANCIATA\n(Risparmio energetico e silenziosità)")
         btn_bal.setStyleSheet("background: #1e293b; border-color: #475569; color: white; padding: 16px;")
         btn_bal.clicked.connect(lambda: self.run_osify_cmd(["mode", "balanced"]))
         grid.addWidget(btn_bal, 1, 1)
 
         # 5. Bottone Vintage Low-Spec (Macchine Vecchie / 2-4GB RAM)
-        btn_low = QPushButton("💻 MODALITÀ VINTAGE LOW-SPEC (PC DATATI)\n(Resurrezione 2-4GB RAM • ZRAM zstd • Footprint ~400MB)")
+        btn_low = QPushButton("MODALITÀ VINTAGE LOW-SPEC (PC DATATI)\n(Resurrezione 2-4GB RAM • ZRAM zstd • Footprint ~400MB)")
         btn_low.setStyleSheet("background: #312e81; border-color: #6366f1; color: white; padding: 14px;")
         btn_low.clicked.connect(lambda: self.run_osify_cmd(["mode", "lowspec"]))
         grid.addWidget(btn_low, 2, 0, 1, 2)
@@ -273,7 +273,7 @@ class OSifyControlCenter(QMainWindow):
         # Android Box
         and_card = QFrame()
         a_layout = QVBoxLayout(and_card)
-        a_title = QLabel("🤖 Android Runtime (Waydroid LXC)")
+        a_title = QLabel("Android Runtime (Waydroid LXC)")
         a_title.setFont(QFont("Arial", 13, QFont.Weight.Bold))
         a_layout.addWidget(a_title)
 
@@ -340,7 +340,7 @@ class OSifyControlCenter(QMainWindow):
 
         # Pulsanti contromisure
         btn_row = QHBoxLayout()
-        btn_boot_win = QPushButton("⚡ Fast-Boot Windows (UEFI One-Time)")
+        btn_boot_win = QPushButton("Fast-Boot Windows (UEFI One-Time)")
         btn_boot_win.setStyleSheet("background: #431407; border-color: #ea580c; color: white;")
         btn_boot_win.clicked.connect(lambda: self.run_osify_cmd(["anticheat", "boot-windows", "--reboot"]))
         btn_row.addWidget(btn_boot_win)

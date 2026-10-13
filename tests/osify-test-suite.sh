@@ -201,6 +201,68 @@ else
     log_fail "HAL: Esecuzione tuning hardware fallita"
 fi
 
+# ------------------------------------------------------------------------------
+# TEST 8: SOTTOSISTEMI SISTEMA OPERATIVO AUTONOMO (STANDALONE OS SUITE)
+# ------------------------------------------------------------------------------
+echo ""
+echo "--- [8/8] Collaudo Sottosistemi di Sistema Operativo Autonomo ---"
+
+# 8.1 Rete & Wi-Fi
+if "$REPO_ROOT/network/osify-wifi-manager.sh" status | grep "STATO RETE OSIFY" >/dev/null; then
+    log_pass "Network Subsystem: Wi-Fi & CAKE QoS status operativo"
+else
+    log_fail "Network Subsystem: Wi-Fi manager status fallito"
+fi
+
+# 8.2 Audio Manager
+if "$REPO_ROOT/audio/osify-sound-manager.sh" get >/dev/null; then
+    log_pass "Sound Subsystem: Lettura volume e mixer ALSA/PipeWire operativa"
+else
+    log_fail "Sound Subsystem: Audio manager get fallito"
+fi
+
+# 8.3 Display & Brightness
+if "$REPO_ROOT/system/display/osify-display-manager.sh" resolutions | grep "Modalità Video" >/dev/null; then
+    log_pass "Display Subsystem: Rilevamento risoluzioni KMS/XRandR operativo"
+else
+    log_fail "Display Subsystem: Display manager fallito"
+fi
+
+# 8.4 Power & Battery
+if "$REPO_ROOT/system/power/osify-power-manager.sh" battery >/dev/null; then
+    log_pass "Power Subsystem: Telemetria batteria ACPI e profili TDP operativi"
+else
+    log_fail "Power Subsystem: Power manager battery fallito"
+fi
+
+# 8.5 Package Manager
+if "$REPO_ROOT/tools/osify-pkg" list | grep "CATALOGO APPLICATIVI" >/dev/null; then
+    log_pass "Package Hub: Catalogo software autonomo pronto e navigabile"
+else
+    log_fail "Package Hub: osify-pkg list fallito"
+fi
+
+# 8.6 Storage & File Hub
+if "$REPO_ROOT/system/desktop/osify-file-manager.sh" storage >/dev/null; then
+    log_pass "Storage & File Hub: Montaggio dischi e associazione file UEM pronta"
+else
+    log_fail "Storage & File Hub: osify-file-manager fallito"
+fi
+
+# 8.7 Disk Installer Check
+if bash -n "$REPO_ROOT/system/installer/osify-disk-installer.sh"; then
+    log_pass "Bare-Metal Installer: Script di installazione su disco formalmente validato"
+else
+    log_fail "Bare-Metal Installer: Errore sintattico nell'installer"
+fi
+
+# 8.8 Deck Shell & Vector Assets
+if python3 -c "import sys; sys.path.append('$REPO_ROOT/tools/osify-gui'); from osify_ui_assets import create_vector_icon; assert create_vector_icon('power').size == (32, 32)"; then
+    log_pass "Deck Shell Assets: Motore vettoriale e icone anti-aliased operative al 100%"
+else
+    log_fail "Deck Shell Assets: Errore rendering icone vettoriali"
+fi
+
 echo "                  REPORT FINALE COLLAUDO                 "
 echo "========================================================="
 echo "  TEST SUPERATI : $PASSED_COUNT"

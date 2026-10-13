@@ -266,9 +266,9 @@ class OSifyLiveInstaller(QMainWindow):
         rec_title.setStyleSheet("color: #10B981;")
         rec_layout.addWidget(rec_title)
 
-        self.rad_std = QRadioButton("🚀 OSify Standard (Gaming, Live Streaming, BORE Kernel x86-64-v3)")
+        self.rad_std = QRadioButton("OSify Standard Edition (Gaming, Live Streaming, BORE Kernel x86-64-v3)")
         self.rad_std.setChecked(True)
-        self.rad_vin = QRadioButton("⚡ OSify Vintage Micro-Edition (Per Netbook Atom come Toshiba NB200 e PC con 1GB RAM)")
+        self.rad_vin = QRadioButton("OSify Vintage Micro-Edition (Per Netbook Atom Toshiba NB200 e PC con 1GB RAM)")
 
         rec_layout.addWidget(self.rad_std)
         rec_layout.addWidget(self.rad_vin)
@@ -286,15 +286,15 @@ class OSifyLiveInstaller(QMainWindow):
         desc.setStyleSheet("color: #E2E8F0; font-size: 13px;")
         layout.addWidget(desc)
 
-        self.chk_gaming = QCheckBox("🎮 Gaming & eSport Engine (Proton-GE, GameScope, Mimalloc, Anti-Cheat Bridge)")
+        self.chk_gaming = QCheckBox("Gaming & eSport Engine (Proton-GE, GameScope, Mimalloc, Anti-Cheat Bridge)")
         self.chk_gaming.setChecked(True)
-        self.chk_stream = QCheckBox("📡 Live Streaming Suite (OBS Shaper CAKE QoS, Relay Twitch/Kick/YT, Audio VOD Track 2)")
+        self.chk_stream = QCheckBox("Live Streaming Suite (OBS Shaper CAKE QoS, Relay Twitch/Kick/YT, Audio VOD Track 2)")
         self.chk_stream.setChecked(True)
-        self.chk_emu = QCheckBox("🕹️ Console Emulation (RetroArch, RPCS3, Ryujinx con shader cache asincrona)")
+        self.chk_emu = QCheckBox("Console Emulation Matrix (Orbit64 JIT, RetroArch, RPCS3 con shader cache asincrona)")
         self.chk_emu.setChecked(True)
-        self.chk_pres = QCheckBox("📊 Presentazioni dal Vivo (PowerPoint Wine, EasyWorship, NDI IP Broadcast)")
+        self.chk_pres = QCheckBox("Presentazioni & Proiezioni (PowerPoint Wine, EasyWorship, NDI IP Broadcast)")
         self.chk_pres.setChecked(False)
-        self.chk_droid = QCheckBox("🤖 Android Waydroid Engine (Esecuzione nativa app Android con accelerazione GPU)")
+        self.chk_droid = QCheckBox("Android Waydroid Engine (Esecuzione nativa app Android con accelerazione GPU)")
         self.chk_droid.setChecked(False)
 
         for c in (self.chk_gaming, self.chk_stream, self.chk_emu, self.chk_pres, self.chk_droid):

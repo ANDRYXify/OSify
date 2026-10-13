@@ -305,8 +305,36 @@ case "${1:-status}" in
                 ;;
         esac
         ;;
+    wifi)
+        shift
+        "$OSIFY_DIR/network/osify-wifi-manager.sh" "$@"
+        ;;
+    sound|audio-ctl)
+        shift
+        "$OSIFY_DIR/audio/osify-sound-manager.sh" "$@"
+        ;;
+    display)
+        shift
+        "$OSIFY_DIR/system/display/osify-display-manager.sh" "$@"
+        ;;
+    power)
+        shift
+        "$OSIFY_DIR/system/power/osify-power-manager.sh" "$@"
+        ;;
+    pkg)
+        shift
+        "$OSIFY_DIR/tools/osify-pkg" "$@"
+        ;;
+    filemgr)
+        shift
+        "$OSIFY_DIR/system/desktop/osify-file-manager.sh" "$@"
+        ;;
+    install-disk)
+        shift
+        sudo "$OSIFY_DIR/system/installer/osify-disk-installer.sh" "$@"
+        ;;
     *)
-        echo "Uso: osify-ctl {status|mode|block|install|deck|uem|hal|web|presentation|touch|macos-gestures|test|qos|audio|emu|windows|android|darwin|anticheat|hw-detect}"
+        echo "Uso: osify-ctl {status|mode|block|install|deck|uem|hal|web|wifi|audio-ctl|display|power|pkg|filemgr|install-disk|qos|audio|emu|windows|android|darwin|anticheat|hw-detect}"
         exit 1
         ;;
 esac

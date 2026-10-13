@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openbox_menu xmlns="http://openbox.org/3.4/menu">
+  <menu id="root-menu" label="OSify Menu">
+    <!-- SEZIONE WEB & RETE -->
+    <menu id="internet-menu" label="Internet &amp; Web">
+      <item label="Navigatore Web OSify">
+        <action name="Execute">
+          <command>sh -c "if command -v falkon >/dev/null 2>&1; then falkon; elif command -v firefox >/dev/null 2>&1; then firefox; fi"</command>
+        </action>
+      </item>
+      <item label="Monitor Connessione Network">
+        <action name="Execute">
+          <command>nm-connection-editor</command>
+        </action>
+      </item>
+    </menu>
+
+    <!-- SEZIONE UNIVERSAL EXECUTION MATRIX -->
+    <menu id="uem-menu" label="Universal Execution (UEM)">
+      <item label="Esegui con OSify UEM...">
+        <action name="Execute">
+          <command>sh -c "FILE=$(zenity --file-selection --title='Seleziona file da eseguire con OSify UEM' 2>/dev/null); if [ -n \"$FILE\" ]; then osify-ctl uem run \"$FILE\"; fi"</command>
+        </action>
+      </item>
+      <item label="Radiografia Architetturale Binario...">
+        <action name="Execute">
+          <command>sh -c "FILE=$(zenity --file-selection --title='Seleziona binario da analizzare' 2>/dev/null); if [ -n \"$FILE\" ]; then qterminal -e osify-inspect \"$FILE\"; fi"</command>
+        </action>
+      </item>
+      <item label="Stato Matrice Compatibilità UEM">
+        <action name="Execute">
+          <command>qterminal -e osify-ctl uem status</command>
+        </action>
+      </item>
+    </menu>
+
+    <!-- SEZIONE PRODUTTIVITÀ & TESTO -->
+    <menu id="office-menu" label="Ufficio &amp; Documenti">
+      <item label="Editor di Testo (FeatherPad)">
+        <action name="Execute">
+          <command>featherpad</command>
+        </action>
+      </item>
+      <item label="Visualizzatore Documenti PDF">
+        <action name="Execute">
+          <command>qpdfview</command>
+        </action>
+      </item>
+      <item label="Gestore Archivi Compressi">
+        <action name="Execute">
+          <command>xarchiver</command>
+        </action>
+      </item>
+    </menu>
+
+    <!-- SEZIONE GRAFICA & MEDIA -->
+    <menu id="multimedia-menu" label="Grafica &amp; Media">
+      <item label="Lettore Multimediale MPV">
+        <action name="Execute">
+          <command>mpv --player-operation-mode=pseudo-gui</command>
+        </action>
+      </item>
+      <item label="Visualizzatore Immagini">
+        <action name="Execute">
+          <command>lximage-qt</command>
+        </action>
+      </item>
+      <item label="Controllo Volume &amp; Mixer Audio">
+        <action name="Execute">
+          <command>pavucontrol-qt</command>
+        </action>
+      </item>
+    </menu>
+
+    <!-- SEZIONE SISTEMA & TERMINALE -->
+    <menu id="system-menu" label="Sistema &amp; Strumenti">
+      <item label="Terminale OSify (QTerminal)">
+        <action name="Execute">
+          <command>qterminal</command>
+        </action>
+      </item>
+      <item label="Gestione File (PCManFM-Qt)">
+        <action name="Execute">
+          <command>pcmanfm-qt</command>
+        </action>
+      </item>
+      <item label="Monitor Risorse di Sistema (Htop)">
+        <action name="Execute">
+          <command>qterminal -e htop</command>
+        </action>
+      </item>
+      <item label="OSify Pannello di Controllo">
+        <action name="Execute">
+          <command>osify-ctl status</command>
+        </action>
+      </item>
+      <item label="Diagnostica Hardware HAL">
+        <action name="Execute">
+          <command>qterminal -e osify-ctl hal status</command>
+        </action>
+      </item>
+    </menu>
+
+    <separator />
+
+    <!-- CONTROLLO SESSIONE -->
+    <item label="Ricarica Configurazione Desktop">
+      <action name="Reconfigure" />
+    </item>
+    <item label="Riavvia Sistema">
+      <action name="Execute">
+        <command>systemctl reboot</command>
+      </action>
+    </item>
+    <item label="Spegni Computer">
+      <action name="Execute">
+        <command>systemctl poweroff</command>
+      </action>
+    </item>
+  </menu>
+</openbox_menu>
