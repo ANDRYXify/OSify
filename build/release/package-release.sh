@@ -33,7 +33,8 @@ rm -f "$ZIP_PATH"
         "OSify-Setup.bat" \
         "OSify-Windows-Installer-GUI.ps1" \
         "OSify-NoUSB-Installer.ps1" \
-        "7za.exe" \
+        "7z.exe" \
+        "7z.dll" \
         "logo.png" \
         "ISTRUZIONI-INSTALLAZIONE.txt"
 )

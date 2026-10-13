@@ -146,27 +146,55 @@ Write-Host "[+] Preparazione partizione temporanea per installazione ($neededMB 
 
 $partitionReady = $false
 
-# Se l'unità O: esiste già, formattala e riusala direttamente
+# Se l'unita O: esiste gia, controlla se ha gia i file o formattala
 if (Test-Path 'O:\') {
-    Write-Host "[i] Partizione (O:) gia' esistente. Formattazione rapida per installazione..." -ForegroundColor Yellow
-    $dpCleanFile = Join-Path $env:TEMP "osify_clean_dp.txt"
-    $dpCleanCommands = @(
-        "select volume O",
-        "format fs=fat32 quick label=OSIFY_BOOT",
-        "active"
-    )
-    [System.IO.File]::WriteAllLines($dpCleanFile, $dpCleanCommands)
-    $pInfo = New-Object System.Diagnostics.ProcessStartInfo
-    $pInfo.FileName = "diskpart.exe"
-    $pInfo.Arguments = "/s `"$dpCleanFile`""
-    $pInfo.UseShellExecute = $false
-    $pInfo.CreateNoWindow = $true
-    $procDp = [System.Diagnostics.Process]::Start($pInfo)
-    $procDp.WaitForExit()
-    Remove-Item $dpCleanFile -Force -ErrorAction SilentlyContinue
-    if (Test-Path 'O:\') {
+    # Controllo se i file sono stati estratti in una sottocartella di O: (es. estrazione WinRAR/7-Zip con cartella)
+    try {
+        $nested = Get-ChildItem 'O:\' -Directory -ErrorAction SilentlyContinue | Where-Object { 
+            (Test-Path "$($_.FullName)\boot") -or (Test-Path "$($_.FullName)\osify") -or (Test-Path "$($_.FullName)\isolinux") 
+        } | Select-Object -First 1
+        if ($nested) {
+            Write-Host "[i] File OSify rilevati nella sottocartella $($nested.Name): spostamento alla radice di (O:)..." -ForegroundColor Cyan
+            Get-ChildItem $nested.FullName | Move-Item -Destination 'O:\' -Force
+            Remove-Item $nested.FullName -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    } catch {}
+
+    $hasOsifyFiles = (Test-Path 'O:\boot') -or (Test-Path 'O:\osify') -or (Test-Path 'O:\EFI') -or (Test-Path 'O:\isolinux') -or (Test-Path 'O:\arch') -or (Test-Path 'O:\OSify-Setup.bat')
+    if ($hasOsifyFiles) {
+        Write-Host "[OK] File di installazione di OSify gia' presenti su (O:)! Preservazione in corso..." -ForegroundColor Green
         $partitionReady = $true
-        Write-Host "[OK] Unita (O:) pronta all'uso." -ForegroundColor Green
+        $dpActFile = Join-Path $env:TEMP "osify_act_dp.txt"
+        [System.IO.File]::WriteAllLines($dpActFile, @("select volume O", "active"))
+        $pInfo = New-Object System.Diagnostics.ProcessStartInfo
+        $pInfo.FileName = "diskpart.exe"
+        $pInfo.Arguments = "/s `"$dpActFile`""
+        $pInfo.UseShellExecute = $false
+        $pInfo.CreateNoWindow = $true
+        $procDp = [System.Diagnostics.Process]::Start($pInfo)
+        $procDp.WaitForExit()
+        Remove-Item $dpActFile -Force -ErrorAction SilentlyContinue
+    } else {
+        Write-Host "[i] Partizione (O:) rilevata. Formattazione rapida per installazione..." -ForegroundColor Yellow
+        $dpCleanFile = Join-Path $env:TEMP "osify_clean_dp.txt"
+        $dpCleanCommands = @(
+            "select volume O",
+            "format fs=fat32 quick label=OSIFY_BOOT",
+            "active"
+        )
+        [System.IO.File]::WriteAllLines($dpCleanFile, $dpCleanCommands)
+        $pInfo = New-Object System.Diagnostics.ProcessStartInfo
+        $pInfo.FileName = "diskpart.exe"
+        $pInfo.Arguments = "/s `"$dpCleanFile`""
+        $pInfo.UseShellExecute = $false
+        $pInfo.CreateNoWindow = $true
+        $procDp = [System.Diagnostics.Process]::Start($pInfo)
+        $procDp.WaitForExit()
+        Remove-Item $dpCleanFile -Force -ErrorAction SilentlyContinue
+        if (Test-Path 'O:\') {
+            $partitionReady = $true
+            Write-Host "[OK] Unita (O:) pronta all'uso." -ForegroundColor Green
+        }
     }
 }
 
@@ -208,14 +236,31 @@ Write-Host "[+] Estrazione dei file del sistema operativo su unita O:\..." -Fore
 
 $extracted = $false
 
-# Metodo A: 7za.exe standalone locale incluso nel pacchetto (100% offline)
-$local7za = Join-Path $scriptDir "7za.exe"
-if (Test-Path $local7za) {
-    Write-Host "[i] Estrazione rapida tramite 7za integrato offline..." -ForegroundColor Cyan
-    & $local7za x $IsoPath -oO:\ -y | Out-Null
+# Controllo preliminare se i file sono già estratti
+try {
+    $nested = Get-ChildItem 'O:\' -Directory -ErrorAction SilentlyContinue | Where-Object { 
+        (Test-Path "$($_.FullName)\boot") -or (Test-Path "$($_.FullName)\osify") -or (Test-Path "$($_.FullName)\isolinux") 
+    } | Select-Object -First 1
+    if ($nested) {
+        Write-Host "[i] File trovati nella sottocartella $($nested.Name): riposizionamento in corso..." -ForegroundColor Cyan
+        Get-ChildItem $nested.FullName | Move-Item -Destination 'O:\' -Force
+        Remove-Item $nested.FullName -Recurse -Force -ErrorAction SilentlyContinue
+    }
+} catch {}
+
+if ((Test-Path 'O:\boot') -or (Test-Path 'O:\osify') -or (Test-Path 'O:\EFI') -or (Test-Path 'O:\isolinux') -or (Test-Path 'O:\arch') -or (Test-Path 'O:\OSify-Setup.bat')) {
+    $extracted = $true
+    Write-Host "[OK] I file di avvio di OSify sono gia' presenti su (O:)!" -ForegroundColor Green
+}
+
+# Metodo A: 7z.exe completo con 7z.dll incluso nel pacchetto (Supporto ISO nativo, 100% offline)
+$local7z = Join-Path $scriptDir "7z.exe"
+if (-not $extracted -and (Test-Path $local7z)) {
+    Write-Host "[i] Estrazione rapida tramite 7-Zip completo integrato offline..." -ForegroundColor Cyan
+    & $local7z x $IsoPath -oO:\ -y | Out-Null
     if ((Test-Path 'O:\boot') -or (Test-Path 'O:\EFI') -or (Test-Path 'O:\arch') -or (Test-Path 'O:\osify')) {
         $extracted = $true
-        Write-Host "[OK] File estratti con successo tramite 7za locale!" -ForegroundColor Green
+        Write-Host "[OK] File estratti con successo tramite 7-Zip locale!" -ForegroundColor Green
     }
 }
 
@@ -223,8 +268,7 @@ if (Test-Path $local7za) {
 if (-not $extracted) {
     $7zPaths = @(
         "$env:ProgramFiles\7-Zip\7z.exe",
-        "${env:ProgramFiles(x86)}\7-Zip\7z.exe",
-        Join-Path $scriptDir "7z.exe"
+        "${env:ProgramFiles(x86)}\7-Zip\7z.exe"
     )
     foreach ($exe in $7zPaths) {
         if (Test-Path $exe) {

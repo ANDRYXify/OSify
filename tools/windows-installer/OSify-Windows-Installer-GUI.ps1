@@ -531,21 +531,45 @@ $btnInstall.Add_Click({
 
     $partitionReady = $false
 
-    # Se l'unità O: esiste già (es. tentativo precedente), usala direttamente
+    # Controllo se l'unita O: esiste gia
     if (Test-Path 'O:\') {
-        Append-Log "[i] Unita (O:) rilevata come gia presente. Preparazione rapida..."
-        $dpCleanFile = Join-Path $env:TEMP "osify_clean_dp.txt"
-        $dpCleanLines = @(
-            "select volume O",
-            "format fs=fat32 quick label=OSIFY_BOOT",
-            "active"
-        )
-        [System.IO.File]::WriteAllLines($dpCleanFile, $dpCleanLines)
-        $code = Run-ToolWithOutput "diskpart.exe" "/s `"$dpCleanFile`"" "Formattazione rapida unita (O:)"
-        Remove-Item $dpCleanFile -Force -ErrorAction SilentlyContinue
-        if (Test-Path 'O:\') {
+        # Controllo se i file sono stati estratti in una sottocartella di O: (es. estrazione WinRAR/7-Zip con cartella)
+        try {
+            $nested = Get-ChildItem 'O:\' -Directory -ErrorAction SilentlyContinue | Where-Object { 
+                (Test-Path "$($_.FullName)\boot") -or (Test-Path "$($_.FullName)\osify") -or (Test-Path "$($_.FullName)\isolinux") 
+            } | Select-Object -First 1
+            if ($nested) {
+                Append-Log "[i] File OSify rilevati nella sottocartella $($nested.Name): spostamento alla radice di (O:)..."
+                Get-ChildItem $nested.FullName | Move-Item -Destination 'O:\' -Force
+                Remove-Item $nested.FullName -Recurse -Force -ErrorAction SilentlyContinue
+            }
+        } catch {}
+
+        # CONTROLLO FONDAMENTALE: se l'utente ha gia estratto i file su O: NON cancellarli!
+        $hasOsifyFiles = (Test-Path 'O:\boot') -or (Test-Path 'O:\osify') -or (Test-Path 'O:\EFI') -or (Test-Path 'O:\isolinux') -or (Test-Path 'O:\arch') -or (Test-Path 'O:\OSify-Setup.bat')
+        if ($hasOsifyFiles) {
+            Append-Log "[OK] File di installazione di OSify gia' presenti sull'unita (O:)! Preservazione in corso..."
             $partitionReady = $true
-            Append-Log "[OK] Unita (O:) pronta per i file di installazione."
+            # Garantisci che la partizione sia attiva per il boot senza formattarla
+            $dpActFile = Join-Path $env:TEMP "osify_act_dp.txt"
+            [System.IO.File]::WriteAllLines($dpActFile, @("select volume O", "active"))
+            $null = Run-ToolWithOutput "diskpart.exe" "/s `"$dpActFile`"" "Attivazione partizione (O:) per il boot"
+            Remove-Item $dpActFile -Force -ErrorAction SilentlyContinue
+        } else {
+            Append-Log "[i] Unita (O:) rilevata. Formattazione rapida per installazione..."
+            $dpCleanFile = Join-Path $env:TEMP "osify_clean_dp.txt"
+            $dpCleanLines = @(
+                "select volume O",
+                "format fs=fat32 quick label=OSIFY_BOOT",
+                "active"
+            )
+            [System.IO.File]::WriteAllLines($dpCleanFile, $dpCleanLines)
+            $code = Run-ToolWithOutput "diskpart.exe" "/s `"$dpCleanFile`"" "Formattazione rapida unita (O:)"
+            Remove-Item $dpCleanFile -Force -ErrorAction SilentlyContinue
+            if (Test-Path 'O:\') {
+                $partitionReady = $true
+                Append-Log "[OK] Unita (O:) formattata e pronta per i file di installazione."
+            }
         }
     }
 
@@ -604,17 +628,35 @@ $btnInstall.Add_Click({
     # FASE 2: Estrazione File ISO
     $progBar.Value = 45
     $txtStepInfo.Text = "[2/4] Estrazione file di sistema e bootloader su (O:)..."
-    Append-Log "[+] Estrazione dell'immagine ISO in corso..."
+    Append-Log "[+] Controllo ed estrazione dei file del sistema operativo..."
 
     $extracted = $false
 
-    # Metodo A: 7za.exe standalone locale incluso nel pacchetto (100% offline e ultra-veloce)
-    $local7za = Join-Path $scriptDir "7za.exe"
-    if (Test-Path $local7za) {
-        $code = Run-ToolWithOutput $local7za "x `"$global:SelectedIso`" -oO:\ -y" "Estrazione tramite 7za integrato"
+    # Controllo se i file sono già estratti (es. estrazione manuale o precedente)
+    try {
+        $nested = Get-ChildItem 'O:\' -Directory -ErrorAction SilentlyContinue | Where-Object { 
+            (Test-Path "$($_.FullName)\boot") -or (Test-Path "$($_.FullName)\osify") -or (Test-Path "$($_.FullName)\isolinux") 
+        } | Select-Object -First 1
+        if ($nested) {
+            Append-Log "[i] File trovati nella sottocartella $($nested.Name): riposizionamento in corso..."
+            Get-ChildItem $nested.FullName | Move-Item -Destination 'O:\' -Force
+            Remove-Item $nested.FullName -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    } catch {}
+
+    if ((Test-Path 'O:\boot') -or (Test-Path 'O:\osify') -or (Test-Path 'O:\EFI') -or (Test-Path 'O:\isolinux') -or (Test-Path 'O:\arch') -or (Test-Path 'O:\OSify-Setup.bat')) {
+        $extracted = $true
+        Append-Log "[OK] I file di avvio di OSify sono gia' presenti e pronti su (O:)!"
+    }
+
+    # Metodo A: 7z.exe completo con 7z.dll incluso nel pacchetto (Supporto ISO nativo, 100% offline)
+    $local7z = Join-Path $scriptDir "7z.exe"
+    if (-not $extracted -and (Test-Path $local7z)) {
+        Append-Log "[+] Estrazione ISO in corso con 7-Zip nativo integrato..."
+        $code = Run-ToolWithOutput $local7z "x `"$global:SelectedIso`" -oO:\ -y" "Estrazione ISO tramite 7-Zip completo integrato"
         if ((Test-Path 'O:\boot') -or (Test-Path 'O:\EFI') -or (Test-Path 'O:\arch') -or (Test-Path 'O:\osify')) {
             $extracted = $true
-            Append-Log "[OK] File estratti con successo tramite 7za locale!"
+            Append-Log "[OK] File ISO estratti con successo su (O:) tramite 7-Zip integrato!"
         }
     }
 
@@ -622,8 +664,7 @@ $btnInstall.Add_Click({
     if (-not $extracted) {
         $candidates7z = @(
             "$env:ProgramFiles\7-Zip\7z.exe",
-            "${env:ProgramFiles(x86)}\7-Zip\7z.exe",
-            (Join-Path $scriptDir "7z.exe")
+            "${env:ProgramFiles(x86)}\7-Zip\7z.exe"
         )
         foreach ($c7z in $candidates7z) {
             if ($c7z -and (Test-Path $c7z)) {
@@ -652,8 +693,9 @@ $btnInstall.Add_Click({
     }
 
     if (-not $extracted) {
-        Append-Log "[ERRORE] Impossibile estrarre i file della ISO sull'unita (O:)."
-        [System.Windows.MessageBox]::Show("Estrazione file non riuscita. Puoi estrarre manualmente i file della ISO dentro O:\ e riprovare.", "Errore Estrazione", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
+        Append-Log "[ERRORE] Impossibile estrarre automaticamente i file della ISO sull'unita (O:)."
+        Append-Log "[i] Suggerimento: Puoi estrarre i file contenuti nella ISO direttamente dentro l'unita (O:), poi clicca 'PREPARA INSTALLAZIONE SENZA USB' e i file verranno preservati automaticamente!"
+        [System.Windows.MessageBox]::Show("Estrazione automatica non completata.`n`nPuoi estrarre i file della ISO direttamente nell'unita O:\ con qualsiasi programma, poi ricliccare 'PREPARA INSTALLAZIONE SENZA USB': l'installer li riconoscera' e non li cancellera'.", "Estrazione File", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning)
         $btnInstall.IsEnabled = $true
         return
     }
