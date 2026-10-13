@@ -10,3 +10,6 @@ __pycache__/
 /tmp/
 build/out/
 
+# Virtual testbed storage images
+tests/sandbox/*.iso
+tests/sandbox/*.qcow2

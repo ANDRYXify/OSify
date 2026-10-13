@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openbox_config xmlns="http://openbox.org/3.4/rc" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <resistance>
+    <strength>10</strength>
+    <screen_edge_strength>20</screen_edge_strength>
+  </resistance>
+  <focus>
+    <focusNew>yes</focusNew>
+    <followMouse>no</followMouse>
+    <focusLast>yes</focusLast>
+    <underMouse>no</underMouse>
+  </focus>
+  <placement>
+    <policy>Smart</policy>
+    <center>yes</center>
+  </placement>
+  <theme>
+    <name>Clearlooks-Dark</name>
+    <titleLayout>NLIMC</titleLayout>
+    <keepBorder>yes</keepBorder>
+    <animateIconify>no</animateIconify>
+    <font place="ActiveWindowTitle">
+      <name>Inter</name>
+      <size>9</size>
+      <weight>Bold</weight>
+    </font>
+    <font place="InactiveWindowTitle">
+      <name>Inter</name>
+      <size>8</size>
+      <weight>Normal</weight>
+    </font>
+  </theme>
+  <desktops>
+    <number>2</number>
+    <firstdesktop>1</firstdesktop>
+    <names>
+      <name>Lavoro</name>
+      <name>Multimediale</name>
+    </names>
+  </desktops>
+  <keyboard>
+    <!-- Switch Finestre (Alt+Tab) -->
+    <keybind key="A-Tab">
+      <action name="NextWindow">
+        <finalactions>
+          <action name="Focus"/>
+          <action name="Raise"/>
+          <action name="Unshade"/>
+        </finalactions>
+      </action>
+    </keybind>
+    <keybind key="A-S-Tab">
+      <action name="PreviousWindow">
+        <finalactions>
+          <action name="Focus"/>
+          <action name="Raise"/>
+          <action name="Unshade"/>
+        </finalactions>
+      </action>
+    </keybind>
+
+    <!-- Window Snapping a Meta' Schermo (Super + Frecce) -->
+    <keybind key="W-Left">
+      <action name="Unmaximize"/>
+      <action name="MoveResizeTo">
+        <x>0</x>
+        <y>0</y>
+        <width>50%</width>
+        <height>100%</height>
+      </action>
+    </keybind>
+    <keybind key="W-Right">
+      <action name="Unmaximize"/>
+      <action name="MoveResizeTo">
+        <x>50%</x>
+        <y>0</y>
+        <width>50%</width>
+        <height>100%</height>
+      </action>
+    </keybind>
+    <keybind key="W-Up">
+      <action name="ToggleMaximize"/>
+    </keybind>
+    <keybind key="W-Down">
+      <action name="Iconify"/>
+    </keybind>
+
+    <!-- Chiusura Finestra (Alt+F4 o Super+Q) -->
+    <keybind key="A-F4">
+      <action name="Close"/>
+    </keybind>
+    <keybind key="W-q">
+      <action name="Close"/>
+    </keybind>
+
+    <!-- Terminale Rapido (Super+T) -->
+    <keybind key="W-t">
+      <action name="Execute">
+        <command>qterminal</command>
+      </action>
+    </keybind>
+    <!-- Browser Rapido (Super+B) -->
+    <keybind key="W-b">
+      <action name="Execute">
+        <command>falkon</command>
+      </action>
+    </keybind>
+  </keyboard>
+  <mouse>
+    <default/>
+    <!-- Scorciatoia Alt + Click Sinistro per trascinamento ovunque (FONDAMENTALE su schermi 1024x600) -->
+    <context name="Frame">
+      <mousebind button="A-Left" action="Press">
+        <action name="Focus"/>
+        <action name="Raise"/>
+      </mousebind>
+      <mousebind button="A-Left" action="Drag">
+        <action name="Move"/>
+      </mousebind>
+      <mousebind button="A-Right" action="Drag">
+        <action name="Resize"/>
+      </mousebind>
+    </context>
+  </mouse>
+</openbox_config>

@@ -2,37 +2,37 @@
 :: ==============================================================================
 :: OSify Windows No-USB Installer Launcher (by Andryx)
 :: ==============================================================================
-:: Avvia l'installer grafico di OSify con elevazione automatica dei privilegi
-:: e sblocco della ExecutionPolicy di PowerShell.
+:: Compatibilita universale: Windows 7 SP1, Windows 8, Windows 10, Windows 11
 :: ==============================================================================
 
 title OSify Windows Installer - by Andryx
 color 0B
+
+:: 1. Controllo Privilegi di Amministratore
+net session >nul 2>&1
+if %errorlevel% equ 0 goto :RUN_INSTALLER
+
+echo [i] Richiesta privilegi di amministratore UAC in corso...
+powershell.exe -Command "Start-Process cmd -ArgumentList '/c \"\"%~f0\"\"' -Verb RunAs"
+exit /b
+
+:RUN_INSTALLER
+cd /d "%~dp0"
 
 echo =========================================================
 echo        OSify Windows Installer Launcher (by Andryx)      
 echo =========================================================
 echo.
 
-:: 1. Verifica ed elevazione privilegi di Amministratore (UAC)
-net session >nul 2>&1
-if %errorLevel% neq 0 (
-    echo [i] Richiesta privilegi di amministratore (UAC)...
-    powershell -Command "Start-Process cmd -ArgumentList '/c \"\"%~f0\"\"' -Verb RunAs"
-    exit /b
-)
-
-cd /d "%~dp0"
-
-:: 2. Avvio Interfaccia Grafica Moderna (WPF Cyberpunk Theme)
-echo [i] Avvio interfaccia grafica di installazione OSify in corso...
+:: 2. Avvio prioritario Interfaccia Grafica WPF
 if exist "%~dp0OSify-Windows-Installer-GUI.ps1" (
+    echo [i] Avvio interfaccia grafica OSify in corso...
     powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File "%~dp0OSify-Windows-Installer-GUI.ps1"
-    if %errorLevel% equ 0 exit /b
+    if %errorlevel% equ 0 exit /b
 )
 
-:: 3. Fallback Modalita Testuale se la GUI non e disponibile
-echo [i] Avvio modalita guidata da riga di comando...
+:: 3. Fallback automatico su console testuale
+echo [i] Avvio installer in modalita console guidata...
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0OSify-NoUSB-Installer.ps1"
 
 echo.

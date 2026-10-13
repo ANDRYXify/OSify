@@ -1,0 +1,81 @@
+# ==============================================================================
+# OSify Vintage Micro-Edition — Elenco Pacchetti Ufficiali (Target i686 / 32-bit)
+# ==============================================================================
+# Configurazione ottimizzata specificamente per Netbook a 32-bit (es. Toshiba NB200
+# con CPU Intel Atom N270/N280, 1GB RAM e GPU Intel GMA 950).
+# Footprint di memoria target a freddo: ~110-125 MB.
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# CORE DI SISTEMA & KERNEL LTS
+# ------------------------------------------------------------------------------
+base
+base-devel
+linux-lts
+linux-lts-headers
+linux-firmware
+btrfs-progs
+e2fsprogs
+dosfstools
+zram-generator
+networkmanager
+curl
+wget
+git
+zsh
+htop
+pciutils
+usbutils
+
+# ------------------------------------------------------------------------------
+# DRIVER GRAFICI & SERVER X11 (INTEL GMA 950 / i915 LEGACY)
+# ------------------------------------------------------------------------------
+xorg-server
+xorg-xinit
+xf86-video-intel
+mesa
+mesa-dri-drivers
+libva-intel-driver
+
+# ------------------------------------------------------------------------------
+# DESKTOP ENVIRONMENT ULTRA-LEGGERO: LXQt + OPENBOX
+# ------------------------------------------------------------------------------
+lxqt-core
+openbox
+pcmanfm-qt
+qterminal
+lxqt-panel
+lxqt-notificationd
+lxqt-policykit
+lxqt-session
+tint2
+feh
+picom
+
+# ------------------------------------------------------------------------------
+# SUITE DI APPLICATIVI ESSENZIALI
+# ------------------------------------------------------------------------------
+# Browser Web reattivo a basso consumo di memoria
+falkon
+
+# Produttività, Documenti & Visualizzatori
+qpdfview
+featherpad
+lximage-qt
+xarchiver
+p7zip
+
+# Riproduzione Multimediale & Audio
+pipewire
+pipewire-alsa
+pipewire-pulse
+wireplumber
+mpv
+pavucontrol-qt
+
+# ------------------------------------------------------------------------------
+# BRANDING & UTILITY OSIFY
+# ------------------------------------------------------------------------------
+fastfetch
+papirus-icon-theme
+breeze-gtk

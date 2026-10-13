@@ -3,7 +3,7 @@
 # ==============================================================================
 # Interfaccia grafica nativa ad alto impatto visivo (Dark Theme / Neon Cyberpunk)
 # Ispirata al logo ufficiale di OSify: toni Deep Obsidian, Viola Neon e Verde Menta.
-# Funziona su Windows 7 SP1, Windows 8, Windows 10 e Windows 11 senza dipendenze esterne.
+# Compatibile al 100% con Windows 7 SP1 (PowerShell v2.0), Windows 8, 10 e 11.
 # ==============================================================================
 
 Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase
@@ -38,7 +38,7 @@ if (-not (Test-Path $logoPath)) {
 <Window
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Title="OSify — Installer per Windows (Senza USB)"
+    Title="OSify - Installer per Windows (Senza USB)"
     Height="680" Width="820"
     WindowStartupLocation="CenterScreen"
     ResizeMode="CanMinimize"
@@ -113,7 +113,7 @@ if (-not (Test-Path $logoPath)) {
             <Image Name="ImgLogo" Width="64" Height="64" Margin="0,0,16,0" RenderOptions.BitmapScalingMode="HighQuality"/>
             <StackPanel VerticalAlignment="Center">
                 <TextBlock Text="OSify Setup" FontSize="26" FontWeight="Bold" Foreground="#FFFFFF"/>
-                <TextBlock Text="Installazione Diretta da Windows Senza Chiavetta USB • by Andrea Taliento" FontSize="12" Foreground="#94A3B8"/>
+                <TextBlock Text="Installazione Diretta da Windows Senza Chiavetta USB - by Andrea Taliento" FontSize="12" Foreground="#94A3B8"/>
             </StackPanel>
         </StackPanel>
 
@@ -146,10 +146,10 @@ if (-not (Test-Path $logoPath)) {
             <Border Grid.Column="0" Name="CardModern" Style="{StaticResource EditionCard}">
                 <StackPanel>
                     <Grid>
-                        <TextBlock Text="🚀 OSify Standard (x86_64)" FontWeight="Bold" FontSize="14" Foreground="#FFFFFF"/>
+                        <TextBlock Text="[+] OSify Standard (x86_64)" FontWeight="Bold" FontSize="14" Foreground="#FFFFFF"/>
                         <RadioButton Name="RadioModern" HorizontalAlignment="Right" IsChecked="True"/>
                     </Grid>
-                    <TextBlock Text="Kernel BORE • AVX2 • Gaming 500 FPS • PipeWire Low-Latency" FontSize="11" Foreground="#A78BFA" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                    <TextBlock Text="Kernel BORE - AVX2 - Gaming 500 FPS - PipeWire Low-Latency" FontSize="11" Foreground="#A78BFA" Margin="0,4,0,0" TextWrapping="Wrap"/>
                     <TextBlock Text="Consigliato per PC con CPU moderne a 64-bit e oltre 2GB di RAM." FontSize="10" Foreground="#64748B" Margin="0,4,0,0" TextWrapping="Wrap"/>
                 </StackPanel>
             </Border>
@@ -158,10 +158,10 @@ if (-not (Test-Path $logoPath)) {
             <Border Grid.Column="2" Name="CardVintage" Style="{StaticResource EditionCard}">
                 <StackPanel>
                     <Grid>
-                        <TextBlock Text="⚡ OSify Vintage (i686 Micro)" FontWeight="Bold" FontSize="14" Foreground="#FFFFFF"/>
+                        <TextBlock Text="[*] OSify Vintage (i686 Micro)" FontWeight="Bold" FontSize="14" Foreground="#FFFFFF"/>
                         <RadioButton Name="RadioVintage" HorizontalAlignment="Right"/>
                     </Grid>
-                    <TextBlock Text="32-Bit Nativo • Footprint ~120MB • ZRAM lz4 • Atom &amp; GMA950" FontSize="11" Foreground="#34D399" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                    <TextBlock Text="32-Bit Nativo - Footprint ~120MB - ZRAM lz4 - Atom e GMA950" FontSize="11" Foreground="#34D399" Margin="0,4,0,0" TextWrapping="Wrap"/>
                     <TextBlock Text="Specifico per Netbook (es. Toshiba NB200 Atom N280) e PC con 1GB RAM." FontSize="10" Foreground="#64748B" Margin="0,4,0,0" TextWrapping="Wrap"/>
                 </StackPanel>
             </Border>
@@ -188,7 +188,7 @@ if (-not (Test-Path $logoPath)) {
         <!-- 5. Log Box Stile Terminale Cyberpunk -->
         <Border Grid.Row="4" Background="#08080C" BorderBrush="#1C1C2B" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,16">
             <ScrollViewer Name="ScrollLogs" VerticalScrollBarVisibility="Auto">
-                <TextBlock Name="TxtLogs" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" Foreground="#10B981" TextWrapping="Wrap" Text="[OSify Setup] Inizializzazione completata. Pronto all'azione."/>
+                <TextBlock Name="TxtLogs" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" Foreground="#10B981" TextWrapping="Wrap" Text="[OSify Setup] Inizializzazione completata. Pronto per iniziare."/>
             </ScrollViewer>
         </Border>
 
@@ -304,9 +304,9 @@ function Update-IsoSearch {
 
     if ($found) {
         $global:SelectedIso = $found
-        $txtIsoStatus.Text = "[✓] Immagine Trovata: " + [System.IO.Path]::GetFileName($found)
+        $txtIsoStatus.Text = "[OK] Immagine Trovata: " + [System.IO.Path]::GetFileName($found)
         $txtIsoStatus.Foreground = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#10B981")
-        Append-Log "[✓] ISO rilevata: $found"
+        Append-Log "[OK] ISO rilevata: $found"
     } else {
         $global:SelectedIso = ""
         $txtIsoStatus.Text = "[!] Nessuna ISO locale trovata. Clicca 'Scarica' o 'Sfoglia'."
@@ -324,9 +324,9 @@ $btnBrowseIso.Add_Click({
     $dialog.Title = "Seleziona Immagine ISO di OSify"
     if ($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
         $global:SelectedIso = $dialog.FileName
-        $txtIsoStatus.Text = "[✓] Immagine: " + [System.IO.Path]::GetFileName($dialog.FileName)
+        $txtIsoStatus.Text = "[OK] Immagine: " + [System.IO.Path]::GetFileName($dialog.FileName)
         $txtIsoStatus.Foreground = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#10B981")
-        Append-Log "[✓] Selezionata ISO manuale: $($dialog.FileName)"
+        Append-Log "[OK] Selezionata ISO manuale: $($dialog.FileName)"
     }
 })
 
@@ -347,9 +347,9 @@ $btnDownloadIso.Add_Click({
         $wc = New-Object System.Net.WebClient
         $wc.DownloadFile($url, $targetPath)
         $global:SelectedIso = $targetPath
-        $txtIsoStatus.Text = "[✓] Scaricata: $isoName"
+        $txtIsoStatus.Text = "[OK] Scaricata: $isoName"
         $txtIsoStatus.Foreground = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#10B981")
-        Append-Log "[✓] Download completato con successo: $targetPath"
+        Append-Log "[OK] Download completato con successo: $targetPath"
         $txtStepInfo.Text = "Download completato! Pronto all'installazione."
     } catch {
         Append-Log "[!] Errore durante il download: $($_.Exception.Message)"
@@ -379,7 +379,7 @@ $btnInstall.Add_Click({
     # FASE 1: Partizionamento DiskPart
     $progBar.Value = 15
     $txtStepInfo.Text = "[1/4] Creazione partizione temporanea da 5GB tramite DiskPart..."
-    Append-Log "[+] Preparazione script DiskPart per unità O:\..."
+    Append-Log "[+] Preparazione script DiskPart per unita O:\..."
 
     $dpFile = Join-Path $env:TEMP "osify_gui_dp.txt"
     $dpLines = @(
@@ -402,11 +402,11 @@ $btnInstall.Add_Click({
     Remove-Item $dpFile -Force -ErrorAction SilentlyContinue
 
     if (-not (Test-Path "O:\")) {
-        Append-Log "[ERRORE] Impossibile creare l'unità O:\. Verifica lo spazio libero."
+        Append-Log "[ERRORE] Impossibile creare l'unita O:\. Verifica lo spazio libero."
         $btnInstall.IsEnabled = $true
         return
     }
-    Append-Log "[✓] Partizione O:\ creata e pronta."
+    Append-Log "[OK] Partizione O:\ creata e pronta."
 
     # FASE 2: Estrazione File ISO
     $progBar.Value = 45
@@ -455,7 +455,7 @@ $btnInstall.Add_Click({
     }
 
     $progBar.Value = 80
-    Append-Log "[✓] File estratti con successo su O:\."
+    Append-Log "[OK] File estratti con successo su O:\."
 
     # FASE 3: Configurazione Avvio BCD
     $txtStepInfo.Text = "[3/4] Configurazione voce di avvio nel Boot Manager..."
@@ -470,23 +470,23 @@ $btnInstall.Add_Click({
                 bcdedit /set $guid path "\EFI\BOOT\BOOTX64.EFI"
                 bcdedit /displayorder $guid /addlast
                 bcdedit /bootsequence $guid
-                Append-Log "[✓] Voce UEFI BOOTX64.EFI configurata."
+                Append-Log "[OK] Voce UEFI BOOTX64.EFI configurata."
             }
         } catch {}
     } else {
-        Append-Log "[✓] Sistema Legacy BIOS (MBR): partizione O:\ attiva per il boot."
+        Append-Log "[OK] Sistema Legacy BIOS (MBR): partizione O:\ attiva per il boot."
     }
 
     # FASE 4: Completato!
     $progBar.Value = 100
-    $txtStepInfo.Text = "[✓] Configurazione completata con successo! Pronto al riavvio."
+    $txtStepInfo.Text = "[OK] Configurazione completata con successo! Pronto al riavvio."
     Append-Log "========================================================="
-    Append-Log "[✓] INSTALLAZIONE PRONTA SULL'UNITA O:\"
+    Append-Log "[OK] INSTALLAZIONE PRONTA SULL'UNITA O:\"
     Append-Log "Al riavvio il PC si avviera direttamente in OSify."
     Append-Log "Terminata l'installazione, la partizione O:\ verra rimossa."
     Append-Log "========================================================="
 
-    $reboot = [System.Windows.MessageBox]::Show("La partizione di avvio di OSify è pronta!`n`nVuoi riavviare il computer adesso per iniziare l'installazione di OSify?", "Installazione Pronta", [System.Windows.MessageBoxButton]::YesNo, [System.Windows.MessageBoxImage]::Information)
+    $reboot = [System.Windows.MessageBox]::Show("La partizione di avvio di OSify e' pronta!`n`nVuoi riavviare il computer adesso per iniziare l'installazione di OSify?", "Installazione Pronta", [System.Windows.MessageBoxButton]::YesNo, [System.Windows.MessageBoxImage]::Information)
     if ($reboot -eq [System.Windows.MessageBoxResult]::Yes) {
         Restart-Computer -Force
     }

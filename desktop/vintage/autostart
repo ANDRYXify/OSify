@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# OSify Vintage Desktop Autostart — Session Initialization
+# Ingegnerizzato per display WSVGA 1024x600 e CPU Intel Atom N280
+# ==============================================================================
+
+# 1. Impostazione Sfondo Ufficiale OSify
+WALLPAPER="/usr/share/backgrounds/osify/osify-netbook-1024x600.png"
+if [[ ! -f "$WALLPAPER" ]]; then
+    WALLPAPER="$(dirname "$0")/../branding/wallpapers/osify-netbook-1024x600.png"
+fi
+
+if command -v feh >/dev/null 2>&1 && [[ -f "$WALLPAPER" ]]; then
+    feh --bg-scale "$WALLPAPER" &
+elif command -v pcmanfm-qt >/dev/null 2>&1; then
+    pcmanfm-qt --set-wallpaper="$WALLPAPER" --wallpaper-mode=fit &
+fi
+
+# 2. Compositor Leggero (Picom ottimizzato per Intel GMA 950 / DRI2)
+# Disattivate sfocature gaussiane pesanti per prevenire cali di framerate sulla GPU integrata
+if command -v picom >/dev/null 2>&1; then
+    picom --backend xrender --no-fading-openclose --shadow-radius 5 &
+fi
+
+# 3. Demone di Notifica & Gestore Rete
+if command -v nm-applet >/dev/null 2>&1; then
+    nm-applet &
+fi
+
+# 4. Pannello Desktop Compatto (Tint2 / LXQt Panel a 24px)
+if command -v tint2 >/dev/null 2>&1; then
+    tint2 &
+elif command -v lxqt-panel >/dev/null 2>&1; then
+    lxqt-panel &
+fi
+
+# 5. Gestione Energetica e Schermo
+xset s off -dpms
