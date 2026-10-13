@@ -39,7 +39,9 @@ build_variant() {
 
     # Copia tool di installazione da Windows
     cp "$REPO_ROOT/tools/windows-installer/OSify-Setup.bat" "$variant_dir/tools/windows-installer/"
+    cp "$REPO_ROOT/tools/windows-installer/OSify-Windows-Installer-GUI.ps1" "$variant_dir/tools/windows-installer/"
     cp "$REPO_ROOT/tools/windows-installer/OSify-NoUSB-Installer.ps1" "$variant_dir/tools/windows-installer/"
+    cp "$REPO_ROOT/tools/windows-installer/logo.png" "$variant_dir/tools/windows-installer/"
     cp "$REPO_ROOT/tools/windows-installer/ISTRUZIONI-INSTALLAZIONE.txt" "$variant_dir/tools/windows-installer/"
     cp "$REPO_ROOT/tools/windows-installer/OSify-Setup.bat" "$variant_dir/OSify-Setup.bat"
 

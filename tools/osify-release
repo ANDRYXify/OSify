@@ -1,0 +1,129 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# OSify Release & GitHub Packages Manager (by Andryx)
+# ==============================================================================
+# Automatizza il ciclo completo di packaging e sincronizzazione su GitHub:
+# 1. build   : Compila gli archivi Windows Installer (.zip), Live ISOs e SHA256SUMS
+# 2. upload  : Aggiorna gli asset su una release esistente tramite GitHub CLI (gh)
+# 3. publish : Crea una nuova release con tag, note di rilascio e upload asset
+# 4. status  : Ispeziona le release e lo stato dei pacchetti su GitHub
+# ==============================================================================
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+RELEASE_DIR="$REPO_ROOT/build/out/release"
+
+log() { echo -e "\033[1;34m[osify-release]\033[0m $*"; }
+ok()  { echo -e "\033[1;32m[✓]\033[0m $*"; }
+warn(){ echo -e "\033[1;33m[!]\033[0m $*"; }
+err() { echo -e "\033[1;31m[ERRORE]\033[0m $*" >&2; }
+
+cmd_build() {
+    log "Costruzione e preparazione asset di release..."
+    bash "$REPO_ROOT/build/release/package-release.sh"
+    bash "$REPO_ROOT/build/generate-live-iso.sh"
+    ok "Asset pronti in $RELEASE_DIR"
+}
+
+cmd_upload() {
+    local tag="${1:-v1.0.0}"
+    cmd_build
+
+    log "Verifica presenza GitHub CLI (gh)..."
+    if ! command -v gh &>/dev/null; then
+        err "GitHub CLI (gh) non trovato nel PATH. Installalo o imposta il token."
+        exit 1
+    fi
+
+    log "Caricamento asset aggiornati sulla release $tag (sostituzione atomica)..."
+    gh release upload "$tag" \
+        "$RELEASE_DIR/OSify-NoUSB-Windows-Installer.zip" \
+        "$RELEASE_DIR/OSify-x86_64-v3.iso" \
+        "$RELEASE_DIR/OSify-Vintage-i686.iso" \
+        "$RELEASE_DIR/SHA256SUMS.txt" \
+        --clobber --repo ANDRYXify/OSify
+
+    ok "Asset sincronizzati con successo sulla release $tag!"
+}
+
+cmd_publish() {
+    local tag="${1:-}"
+    local title="${2:-OSify Official Release $tag}"
+    if [[ -z "$tag" ]]; then
+        err "Specifica un tag di versione (es. ./tools/osify-release publish v1.1.0)"
+        exit 1
+    fi
+
+    cmd_build
+
+    if ! command -v gh &>/dev/null; then
+        err "GitHub CLI (gh) non trovato nel PATH."
+        exit 1
+    fi
+
+    log "Creazione release $tag su GitHub..."
+    local notes_file="$RELEASE_DIR/release_notes.md"
+    cat <<EOF > "$notes_file"
+### OSify $tag — Official Release
+
+Include:
+• **OSify-NoUSB-Windows-Installer.zip**: Installatore grafico nativo per Windows (compatibile con Windows 7 SP1, 8, 10, 11 - PowerShell v2.0 e .NET 3.5).
+• **OSify-x86_64-v3.iso**: Immagine avviabile Live a 64-bit per Gaming, Streaming, Kernel BORE e Desktop Plasma 6.
+• **OSify-Vintage-i686.iso**: Immagine avviabile a 32-bit ultra-leggera per netbook e hardware legacy (Toshiba NB200 Atom N280).
+• **SHA256SUMS.txt**: Checksum crittografici di verifica integrità.
+
+Tutte le novità includono:
+- Overhaul grafico premium con Theme Engine (5 palette cromatiche, pulsanti vettoriali macOS Traffic Lights, Win11 Fluent, KDE Breeze).
+- Window Snapping, context menu desktop e finestre native di personalizzazione.
+- Supporto universale per touchscreen (44px target), precision trackpad e vintage trackpad PS/2 (edge scrolling).
+- Ottimizzazione memoria e cache con tutela degli shader di gioco Vulkan/DXVK (Steam/Proton).
+- Shell poliglotta con suite completa Homebrew (\`brew doctor\`, \`brew cleanup\`, ecc.).
+EOF
+
+    # Se il tag locale non esiste, crealo e invialo
+    if ! git rev-parse "$tag" &>/dev/null; then
+        log "Creazione tag git $tag..."
+        git tag -a "$tag" -m "$title"
+        git push origin "$tag"
+    fi
+
+    gh release create "$tag" \
+        "$RELEASE_DIR/OSify-NoUSB-Windows-Installer.zip" \
+        "$RELEASE_DIR/OSify-x86_64-v3.iso" \
+        "$RELEASE_DIR/OSify-Vintage-i686.iso" \
+        "$RELEASE_DIR/SHA256SUMS.txt" \
+        --title "$title" \
+        --notes-file "$notes_file" \
+        --repo ANDRYXify/OSify \
+        --clobber
+
+    ok "Nuova release $tag pubblicata su GitHub con successo!"
+}
+
+cmd_status() {
+    log "Stato release GitHub attuali:"
+    gh release list --repo ANDRYXify/OSify || true
+}
+
+case "${1:-status}" in
+    build)
+        cmd_build
+        ;;
+    upload)
+        shift
+        cmd_upload "${1:-v1.0.0}"
+        ;;
+    publish)
+        shift
+        cmd_publish "$@"
+        ;;
+    status)
+        cmd_status
+        ;;
+    *)
+        echo "Uso: $0 {build | upload [tag] | publish <tag> [titolo] | status}"
+        exit 1
+        ;;
+esac
