@@ -13,19 +13,37 @@
 
 <p align="center">
   <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-NoUSB-Windows-Installer.zip">
-    <img src="https://img.shields.io/badge/Installer-Windows_Senza_USB-0078D6?style=flat-square&logo=windows&logoColor=white" alt="Installer Windows"/>
+    <img src="https://img.shields.io/badge/Installer_Windows-Senza_USB_(v1.1.0)-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Installer Windows Senza USB"/>
   </a>
   &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-x86_64-v3.iso">
-    <img src="https://img.shields.io/badge/ISO-Standard_x86--64--v3-7C3AED?style=flat-square&logo=linux&logoColor=white" alt="ISO x86_64"/>
+    <img src="https://img.shields.io/badge/ISO_Standard-x86--64--v3_(v1.1.0)-7C3AED?style=for-the-badge&logo=linux&logoColor=white" alt="ISO Standard x86_64-v3"/>
   </a>
   &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-Vintage-i686.iso">
-    <img src="https://img.shields.io/badge/ISO-Vintage_32--bit_i686-10B981?style=flat-square&logo=linux&logoColor=white" alt="ISO i686"/>
+    <img src="https://img.shields.io/badge/ISO_Vintage-32--bit_i686_(v1.1.0)-10B981?style=for-the-badge&logo=linux&logoColor=white" alt="ISO Vintage 32-bit i686"/>
   </a>
   &nbsp;
-  <a href="https://github.com/ANDRYXify/OSify/releases/tag/v1.0.0">
-    <img src="https://img.shields.io/badge/Release-v1.0.0-334155?style=flat-square&logo=github&logoColor=white" alt="Release"/>
+  <a href="https://github.com/ANDRYXify/OSify/releases/latest">
+    <img src="https://img.shields.io/badge/Release-v1.1.0_Latest-22C55E?style=for-the-badge&logo=github&logoColor=white" alt="Official Release"/>
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/ANDRYXify/OSify/pkgs/container/osify">
+    <img src="https://img.shields.io/badge/Container-ghcr.io%2Fandryxify%2Fosify:latest-2563EB?style=flat-square&logo=docker&logoColor=white" alt="GitHub Container Registry"/>
+  </a>
+  &nbsp;
+  <a href="https://github.com/ANDRYXify/OSify/actions">
+    <img src="https://img.shields.io/badge/Tests-105%2F105_Passed-059669?style=flat-square&logo=githubactions&logoColor=white" alt="Test Suite"/>
+  </a>
+  &nbsp;
+  <a href="#architettura-dei-due-target">
+    <img src="https://img.shields.io/badge/Arch-x86__64_|_i686_|_ARM_|_Silicon-6366F1?style=flat-square&logo=archlinux&logoColor=white" alt="Architetture Supportate"/>
+  </a>
+  &nbsp;
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/License-GPL_v3.0-64748B?style=flat-square&logo=gnu&logoColor=white" alt="Licenza GPLv3"/>
   </a>
 </p>
 
@@ -223,7 +241,7 @@ osify-ctl block enable android
 osify-ctl anticheat check Valorant
 
 # Collaudo preventivo tramite test suite e simulatore QEMU
-osify-ctl test suite                       # Esecuzione test suite ufficiale (85/85 test verificati)
+osify-ctl test suite                       # Esecuzione test suite ufficiale (105/105 test verificati)
 osify-ctl test hw-check --profile toshiba  # Diagnosi vincoli Toshiba NB200
 osify-ctl test vm toshiba                  # Avvio VM con CPU Atom n270 e display 1024x600
 ```

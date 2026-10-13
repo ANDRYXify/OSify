@@ -28,7 +28,7 @@ cmd_build() {
 }
 
 cmd_upload() {
-    local tag="${1:-v1.0.0}"
+    local tag="${1:-v1.1.0}"
     cmd_build
 
     log "Verifica presenza GitHub CLI (gh)..."
@@ -112,7 +112,7 @@ case "${1:-status}" in
         ;;
     upload)
         shift
-        cmd_upload "${1:-v1.0.0}"
+        cmd_upload "${1:-v1.1.0}"
         ;;
     publish)
         shift

@@ -64,7 +64,7 @@ build_variant() {
     cat <<EOF > "$variant_dir/OSify-Version.txt"
 OSify Live System — Ingegnerizzato da Andrea Taliento (ANDRYXify)
 Variante: $variant
-Build: v1.0.0 Official Release
+Build: v1.1.0 Official Release
 Data: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
 Kernel: Linux BORE Ultra-Low-Latency / LTS Vintage
 EOF
