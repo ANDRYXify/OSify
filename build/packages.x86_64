@@ -127,3 +127,12 @@ wireless-regdb
 wpa_supplicant
 crda
 
+# ------------------------------------------------------------------------------
+# TOUCHSCREEN, TABLET 2-IN-1 & MICROSOFT SURFACE SUITE
+# ------------------------------------------------------------------------------
+maliit-keyboard
+maliit-framework
+iio-sensor-proxy
+linux-firmware-marvell
+
+

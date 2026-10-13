@@ -97,10 +97,30 @@ Stack ottimizzato per emulatori vettoriali:
 * **Tipografia Microsoft Fedele al 100%**: Font Calibri, Cambria, Segoe UI e Arial installati per prevenire sfasamenti di testo e interruzioni di riga durante le presentazioni.
 * **Uscita NDI Video (Network Device Interface)**: Le slide vengono trasmesse direttamente via rete IP a OBS Studio senza richiedere schede di acquisizione fisiche, consentendo overlay di testi trasparenti per la live.
 * **Multi-Display & Stage Display**: Gestione a 3 schermi (Console Operatore, Schermo Sala/Proiettore borderless e Confidence Monitor per i relatori sul palco).
-* **Clicker USB RF a Latenza Zero**: Regole udev dedicate per telecomandi Logitech (R400, R800, Spotlight) e Kensington con disattivazione del risparmio energetico USB.
-* **Modalità Inhibit**: Disattivazione automatica di salvaschermo e notifiche pop-up durante la presentazione.
+### 13. Installer Windows Senza Chiavetta USB (No-USB Engine)
+* **Installazione diretta da Windows**: Per utenti con vecchi PC privi di pendrive USB, lo script [`tools/windows-installer/OSify-NoUSB-Installer.ps1`](file:///Users/andryxify/OSify/tools/windows-installer/OSify-NoUSB-Installer.ps1):
+  1. Riduce temporaneamente `C:` di 5 GB tramite `diskpart` e crea una partizione `OSIFY_BOOT`.
+  2. Estrae l'immagine di OSify e registra una voce temporanea nel BCD di Windows Boot Manager.
+  3. Imposta un riavvio one-time che parte direttamente nell'installer di OSify.
+* **Auto-Cancellazione Post-Install**: Il modulo [`system/installer/osify-cleanup-temp-partition.sh`](file:///Users/andryxify/OSify/system/installer/osify-cleanup-temp-partition.sh) rileva la partizione temporanea al termine dell'installazione, la cancella ed espande il disco principale per non sprecare nemmeno un byte.
+
+### 14. Multitasking & Gestione Finestre Stile MacBook
+* Script: [`desktop/macos-multitasking/kwin-macos-gestures.sh`](file:///Users/andryxify/OSify/desktop/macos-multitasking/kwin-macos-gestures.sh)
+* **Mission Control & Spaces su Wayland**:
+  * **Swipe a 3-4 dita verso l'alto**: Apre la panoramica interattiva (Mission Control) con tutti i desktop virtuali allineati in alto.
+  * **Swipe orizzontale a 3 dita**: Scorrimento cinematico fluido 1:1 tra i diversi spazi di lavoro (Spaces).
+  * **Hot Corners (Angoli Attivi)**: In alto a sinistra per Mission Control, in basso a destra per mostrare la scrivania.
+  * **Trackpad fluido**: Tap-to-click, scrolling naturale e pinch-to-zoom Wayland abilitati di default.
+
+### 15. Touchscreen, Tablet 2-in-1 & Microsoft Surface Suite
+* Script e regole: [`system/touchscreen/osify-touch-surface.sh`](file:///Users/andryxify/OSify/system/touchscreen/osify-touch-surface.sh) e [`system/touchscreen/99-osify-surface.rules`](file:///Users/andryxify/OSify/system/touchscreen/99-osify-surface.rules)
+* **Supporto Hardware Microsoft Surface**: Integrazione driver per digitalizzatori Intel IPTS, sensori batteria `surface_aggregator` e penne stilo con livelli di pressione (Surface Pen / MPP).
+* **Tastiera Virtuale a Comparsa Automatica**: Tastiera Maliit Wayland integrata che compare toccando campi di testo se la tastiera fisica è staccata o ripiegata.
+* **Auto-Rotazione & Accelerometro**: `iio-sensor-proxy` ruota automaticamente lo schermo e il digitalizzatore touch in base all'orientamento fisico del dispositivo.
+* **Tablet Mode Switch**: Distaccando la Type Cover o ribaltando il display a 360°, KWin ingrandisce i pulsanti dell'interfaccia per il tocco delle dita.
 
 ---
+
 
 ## 📁 Struttura del Progetto
 

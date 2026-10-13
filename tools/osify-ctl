@@ -181,8 +181,26 @@ case "${1:-status}" in
                 ;;
         esac
         ;;
+    touch)
+        shift
+        subcmd="${1:-setup}"
+        case "$subcmd" in
+            setup)
+                "$OSIFY_DIR/system/touchscreen/osify-touch-surface.sh" setup
+                ;;
+            tablet|desktop|auto)
+                "$OSIFY_DIR/system/touchscreen/osify-touch-surface.sh" mode "$subcmd"
+                ;;
+            *)
+                echo "Uso: osify-ctl touch {setup|tablet|desktop|auto}"
+                ;;
+        esac
+        ;;
+    macos-gestures)
+        "$OSIFY_DIR/desktop/macos-multitasking/kwin-macos-gestures.sh"
+        ;;
     *)
-        echo "Uso: osify-ctl {status|mode|block|presentation|qos|audio|emu|windows|android|darwin|anticheat|hw-detect}"
+        echo "Uso: osify-ctl {status|mode|block|presentation|touch|macos-gestures|qos|audio|emu|windows|android|darwin|anticheat|hw-detect}"
         exit 1
         ;;
 esac

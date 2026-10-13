@@ -1,0 +1,13 @@
+# OSify - Regole Udev per Microsoft Surface & Dispositivi Touchscreen
+# Posizione target su sistema: /etc/udev/rules.d/99-osify-surface.rules
+
+# Permessi di accesso diretto per Surface Pen e digitalizzatore N-Trig / MPP
+KERNEL=="hidraw*", ATTRS{idVendor}=="045e", ATTRS{idProduct}=="09*", MODE="0660", TAG+="uaccess"
+KERNEL=="hidraw*", ATTRS{idVendor}=="045e", ATTRS{idProduct}=="07*", MODE="0660", TAG+="uaccess"
+
+# Dispositivi Touchscreen generici I2C e USB HID
+KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{bInterfaceClass}=="03", MODE="0660", TAG+="uaccess"
+
+# Notifica automatica per distacco/aggancio Surface Type Cover (Tablet Mode switch)
+SUBSYSTEM=="input", ATTR{name}=="*Surface Type Cover*", ACTION=="add", RUN+="/usr/local/bin/osify-ctl touch desktop"
+SUBSYSTEM=="input", ATTR{name}=="*Surface Type Cover*", ACTION=="remove", RUN+="/usr/local/bin/osify-ctl touch tablet"
