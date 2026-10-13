@@ -199,8 +199,31 @@ case "${1:-status}" in
     macos-gestures)
         "$OSIFY_DIR/desktop/macos-multitasking/kwin-macos-gestures.sh"
         ;;
+    test)
+        shift
+        subcmd="${1:-suite}"
+        case "$subcmd" in
+            suite)
+                "$OSIFY_DIR/tests/osify-test-suite.sh"
+                ;;
+            vm)
+                shift
+                "$OSIFY_DIR/tests/sandbox/run-vm-test.sh" "$@"
+                ;;
+            hw-check|hw)
+                shift
+                python3 "$OSIFY_DIR/tools/hardware/osify-hw-validator.py" "$@"
+                ;;
+            sandbox)
+                "$OSIFY_DIR/tests/sandbox/run-docker-sandbox.sh"
+                ;;
+            *)
+                echo "Uso: osify-ctl test {suite|vm [modern|toshiba|stress]|hw-check [--profile toshiba]|sandbox}"
+                ;;
+        esac
+        ;;
     *)
-        echo "Uso: osify-ctl {status|mode|block|presentation|touch|macos-gestures|qos|audio|emu|windows|android|darwin|anticheat|hw-detect}"
+        echo "Uso: osify-ctl {status|mode|block|presentation|touch|macos-gestures|test|qos|audio|emu|windows|android|darwin|anticheat|hw-detect}"
         exit 1
         ;;
 esac

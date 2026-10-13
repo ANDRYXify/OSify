@@ -13,11 +13,19 @@
 
 <p align="center">
   <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-NoUSB-Windows-Installer.zip">
-    <img src="https://img.shields.io/badge/Download_Installer-Windows_Senza_USB_(ZIP)-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Download Windows No-USB Installer"/>
+    <img src="https://img.shields.io/badge/Download_Installer-Windows_Senza_USB-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Download Windows No-USB Installer"/>
   </a>
   &nbsp;&nbsp;
-  <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-x86_64-v3.iso">
-    <img src="https://img.shields.io/badge/Download_ISO-OSify_x86--64--v3_(Live)-9333EA?style=for-the-badge&logo=linux&logoColor=white" alt="Download OSify ISO"/>
+  <a href="https://github.com/ANDRYXify/OSify/releases">
+    <img src="https://img.shields.io/badge/Release_ISO-Tutte_le_Versioni-9333EA?style=for-the-badge&logo=archlinux&logoColor=white" alt="Release Ufficiali & ISO"/>
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://github.com/ANDRYXify/OSify/actions">
+    <img src="https://img.shields.io/badge/CI%2FCD-Build_Pipeline-10B981?style=for-the-badge&logo=githubactions&logoColor=white" alt="Build Pipeline"/>
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://github.com/ANDRYXify/OSify">
+    <img src="https://img.shields.io/badge/Test_Suite-36%2F36_Passati-brightgreen?style=for-the-badge&logo=checkmarx&logoColor=white" alt="Test Suite"/>
   </a>
 </p>
 
@@ -202,4 +210,26 @@ osify-ctl mode lowspec     # Resurrezione PC vintage (~400MB RAM)
 cd build/docker && ./run-build.sh
 ```
 
+### 5. Ambiente di Test Isolato & Simulatore Hardware Netbook (QEMU & Docker)
+Prima di installare OSify su macchine reali (come il netbook Toshiba NB200 o PC datati), è possibile collaudare l'intero ambiente in isolamento su Mac o Linux:
 
+```bash
+# Diagnosi predittiva hardware (simula il Toshiba NB200 con CPU Atom N280 e 1GB RAM)
+python3 tools/hardware/osify-hw-validator.py --profile toshiba
+
+# Avvio VM QEMU con profilo hardware calibrato (Atom 1-core, 1GB RAM, 1024x600)
+./tests/sandbox/run-vm-test.sh toshiba
+
+# Avvio VM per postazioni gaming moderne (4 vCPU, 4GB RAM, 1080p)
+./tests/sandbox/run-vm-test.sh modern
+
+# Shell Linux interattiva containerizzata per testare comandi e script
+./tests/sandbox/run-docker-sandbox.sh
+```
+
+### 6. Installazione da Windows Senza Chiavetta USB
+Ideale per netbook o PC privi di porte USB funzionanti o chiavette:
+1. Scarica [OSify-NoUSB-Windows-Installer.zip](https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-NoUSB-Windows-Installer.zip) ed estrailo in una cartella.
+2. Posiziona l'immagine ISO di sistema nella stessa cartella (oppure lascia che l'installer la scarichi automaticamente da GitHub).
+3. Fai click destro su `OSify-Setup.bat` e seleziona **Esegui come amministratore**.
+4. L'installer ridurrà temporaneamente C: di 5 GB, configurerà la partizione di avvio e imposterà il riavvio diretto nel programma di installazione di OSify.
