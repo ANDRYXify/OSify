@@ -222,6 +222,9 @@ case "${1:-status}" in
                 ;;
         esac
         ;;
+    deck|steamos|shell)
+        python3 "$OSIFY_DIR/tools/osify-gui/osify-deck-shell.py"
+        ;;
     install)
         python3 "$OSIFY_DIR/tools/osify-gui/osify-live-installer.py"
         ;;
@@ -303,7 +306,7 @@ case "${1:-status}" in
         esac
         ;;
     *)
-        echo "Uso: osify-ctl {status|mode|block|install|uem|hal|web|presentation|touch|macos-gestures|test|qos|audio|emu|windows|android|darwin|anticheat|hw-detect}"
+        echo "Uso: osify-ctl {status|mode|block|install|deck|uem|hal|web|presentation|touch|macos-gestures|test|qos|audio|emu|windows|android|darwin|anticheat|hw-detect}"
         exit 1
         ;;
 esac
