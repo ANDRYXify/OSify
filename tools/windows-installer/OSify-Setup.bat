@@ -13,7 +13,7 @@ net session >nul 2>&1
 if %errorlevel% equ 0 goto :RUN_INSTALLER
 
 echo [i] Richiesta privilegi di amministratore UAC in corso...
-powershell.exe -Command "Start-Process cmd -ArgumentList '/c \"\"%~f0\"\"' -Verb RunAs"
+powershell.exe -NoProfile -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
 exit /b
 
 :RUN_INSTALLER
@@ -29,6 +29,9 @@ if exist "%~dp0OSify-Windows-Installer-GUI.ps1" (
     echo [i] Avvio interfaccia grafica OSify in corso...
     powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File "%~dp0OSify-Windows-Installer-GUI.ps1"
     if %errorlevel% equ 0 exit /b
+    echo [!] Avviso: Chiusura o interruzione interfaccia grafica.
+    echo [i] Avvio procedura guidata in modalita console...
+    echo.
 )
 
 :: 3. Fallback automatico su console testuale

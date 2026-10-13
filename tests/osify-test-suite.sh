@@ -502,6 +502,32 @@ else
     log_fail "Window Manager Esteso: Errore nel collaudo delle finestre native o del refresh dinamico"
 fi
 
+# 11.6 Windows Installer & Compatibilita PowerShell v2.0 (Windows 7 SP1 / 8 / 10 / 11)
+if python3 -c "
+import xml.etree.ElementTree as ET
+import re
+
+files = [
+    '$REPO_ROOT/tools/windows-installer/OSify-Windows-Installer-GUI.ps1',
+    '$REPO_ROOT/tools/windows-installer/OSify-NoUSB-Installer.ps1'
+]
+
+for fpath in files:
+    with open(fpath, 'r', encoding='utf-8') as f:
+        content = f.read()
+    assert '::new(' not in content, f'Trovato ::new() in {fpath}'
+    if 'GUI.ps1' in fpath:
+        m = re.search(r'@\"\s*\n(<Window.*?</Window>)\s*\n\"@', content, re.DOTALL)
+        assert m, 'XAML non trovato'
+        ET.fromstring(m.group(1))
+
+print('Windows Installer scripts validated')
+" >/dev/null 2>&1; then
+    log_pass "Windows Installer: Compatibilita PowerShell v2.0 / Windows 7 SP1 (.NET 3.5), XAML e assenza costruttori incompatibili validata"
+else
+    log_fail "Windows Installer: Errore nella validazione degli script PowerShell per Windows"
+fi
+
 echo "                  REPORT FINALE COLLAUDO                 "
 echo "========================================================="
 echo "  TEST SUPERATI : $PASSED_COUNT"

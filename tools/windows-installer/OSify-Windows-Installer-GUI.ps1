@@ -6,12 +6,18 @@
 # Compatibile al 100% con Windows 7 SP1 (PowerShell v2.0), Windows 8, 10 e 11.
 # ==============================================================================
 
-Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase
+Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, System.Windows.Forms
+
+# Helper Convertitore Pennelli WPF (Compatibile al 100% con PowerShell 2.0 / .NET 3.5 su Windows 7)
+$global:BrushConv = New-Object System.Windows.Media.BrushConverter
+function Get-Brush([string]$hex) {
+    return $global:BrushConv.ConvertFromString($hex)
+}
 
 # 1. Rilevamento Hardware in Tempo Reale
 $proc = Get-WmiObject Win32_Processor | Select-Object -First 1
 $cpuName = if ($proc.Name) { $proc.Name.Trim() } else { "Processore Sconosciuto" }
-$is64Bit = ($proc.AddressWidth -eq 64) -or [Environment]::Is64BitOperatingSystem
+$is64Bit = ($env:PROCESSOR_ARCHITECTURE -eq "AMD64") -or ($env:PROCESSOR_ARCHITEW6432 -eq "AMD64") -or ($proc.AddressWidth -eq 64)
 
 $totalRamMB = 2048
 try {
@@ -243,11 +249,13 @@ if (Test-Path $logoPath) {
     } catch {}
 }
 
-# Funzione Log
+# Funzione Log protetta per qualsiasi versione di Windows
 function Append-Log($msg) {
     $txtLogs.Text += "`n$msg"
     $scrollLogs.ScrollToEnd()
-    [System.Windows.Forms.Application]::DoEvents()
+    try {
+        [System.Windows.Forms.Application]::DoEvents()
+    } catch {}
 }
 
 # Inizializzazione Dati Hardware
@@ -257,31 +265,31 @@ $txtHwDetails.Text = "Memoria RAM: $totalRamMB MB | Spazio Libero su C: : $freeS
 if (-not $is64Bit) {
     # CPU 32-bit (es. Toshiba NB200 con Intel Atom N280)
     $txtBadgeArch.Text = "32-BIT (i686)"
-    $badgeArch.Background = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#F59E0B")
+    $badgeArch.Background = Get-Brush "#F59E0B"
     $radioVintage.IsChecked = $true
     $radioModern.IsChecked = $false
-    $cardVintage.BorderBrush = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#10B981")
+    $cardVintage.BorderBrush = Get-Brush "#10B981"
     Append-Log "[!] CPU 32-bit rilevata (Atom/Vintage): selezionata automaticamente l'edizione OSify Vintage i686."
 } else {
     $txtBadgeArch.Text = "64-BIT (x86_64)"
-    $badgeArch.Background = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#7C3AED")
+    $badgeArch.Background = Get-Brush "#7C3AED"
     $radioModern.IsChecked = $true
-    $cardModern.BorderBrush = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#8B5CF6")
+    $cardModern.BorderBrush = Get-Brush "#8B5CF6"
 }
 
 # Click sulle Card per cambiare selezione
 $cardModern.Add_MouseDown({
     $radioModern.IsChecked = $true
     $radioVintage.IsChecked = $false
-    $cardModern.BorderBrush = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#8B5CF6")
-    $cardVintage.BorderBrush = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#252538")
+    $cardModern.BorderBrush = Get-Brush "#8B5CF6"
+    $cardVintage.BorderBrush = Get-Brush "#252538"
     Update-IsoSearch
 })
 $cardVintage.Add_MouseDown({
     $radioVintage.IsChecked = $true
     $radioModern.IsChecked = $false
-    $cardVintage.BorderBrush = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#10B981")
-    $cardModern.BorderBrush = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#252538")
+    $cardVintage.BorderBrush = Get-Brush "#10B981"
+    $cardModern.BorderBrush = Get-Brush "#252538"
     Update-IsoSearch
 })
 
@@ -291,9 +299,10 @@ $global:SelectedIso = ""
 function Update-IsoSearch {
     $pattern = if ($radioVintage.IsChecked) { "*vintage*.iso", "*i686*.iso", "*osify*.iso" } else { "*x86_64*.iso", "*osify*.iso" }
     $found = $null
-    $searchDirs = @($scriptDir, [Environment]::GetFolderPath("UserProfile") + "\Downloads", [Environment]::GetFolderPath("Desktop"))
+    $userProf = if ($env:USERPROFILE) { $env:USERPROFILE } else { [Environment]::GetFolderPath("UserProfile") }
+    $searchDirs = @($scriptDir, "$userProf\Downloads", "$userProf\Desktop")
     foreach ($d in $searchDirs) {
-        if (Test-Path $d) {
+        if ($d -and (Test-Path $d)) {
             foreach ($pat in $pattern) {
                 $f = Get-ChildItem -Path $d -Filter $pat -ErrorAction SilentlyContinue | Select-Object -First 1
                 if ($f) { $found = $f.FullName; break }
@@ -305,12 +314,12 @@ function Update-IsoSearch {
     if ($found) {
         $global:SelectedIso = $found
         $txtIsoStatus.Text = "[OK] Immagine Trovata: " + [System.IO.Path]::GetFileName($found)
-        $txtIsoStatus.Foreground = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#10B981")
+        $txtIsoStatus.Foreground = Get-Brush "#10B981"
         Append-Log "[OK] ISO rilevata: $found"
     } else {
         $global:SelectedIso = ""
         $txtIsoStatus.Text = "[!] Nessuna ISO locale trovata. Clicca 'Scarica' o 'Sfoglia'."
-        $txtIsoStatus.Foreground = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#F59E0B")
+        $txtIsoStatus.Foreground = Get-Brush "#F59E0B"
     }
 }
 
@@ -325,7 +334,7 @@ $btnBrowseIso.Add_Click({
     if ($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
         $global:SelectedIso = $dialog.FileName
         $txtIsoStatus.Text = "[OK] Immagine: " + [System.IO.Path]::GetFileName($dialog.FileName)
-        $txtIsoStatus.Foreground = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#10B981")
+        $txtIsoStatus.Foreground = Get-Brush "#10B981"
         Append-Log "[OK] Selezionata ISO manuale: $($dialog.FileName)"
     }
 })
@@ -343,12 +352,14 @@ $btnDownloadIso.Add_Click({
     $btnInstall.IsEnabled = $false
 
     try {
-        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]3072
+        try {
+            [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+        } catch {}
         $wc = New-Object System.Net.WebClient
         $wc.DownloadFile($url, $targetPath)
         $global:SelectedIso = $targetPath
         $txtIsoStatus.Text = "[OK] Scaricata: $isoName"
-        $txtIsoStatus.Foreground = [System.Windows.Media.BrushConverter]::new().ConvertFromString("#10B981")
+        $txtIsoStatus.Foreground = Get-Brush "#10B981"
         Append-Log "[OK] Download completato con successo: $targetPath"
         $txtStepInfo.Text = "Download completato! Pronto all'installazione."
     } catch {
@@ -428,12 +439,20 @@ $btnInstall.Add_Click({
     }
 
     if (-not $extracted) {
-        # Fallback 7-Zip
-        $7z = "$env:ProgramFiles\7-Zip\7z.exe"
-        if (Test-Path $7z) {
-            Append-Log "[i] Estrazione tramite 7-Zip..."
-            & $7z x $global:SelectedIso -o"O:\" -y | Out-Null
-            $extracted = $true
+        # Fallback 7-Zip (64-bit, 32-bit o cartella locale)
+        $candidates7z = @(
+            "$env:ProgramFiles\7-Zip\7z.exe",
+            "${env:ProgramFiles(x86)}\7-Zip\7z.exe",
+            (Join-Path $scriptDir "7z.exe"),
+            (Join-Path $scriptDir "7za.exe")
+        )
+        foreach ($c7z in $candidates7z) {
+            if ($c7z -and (Test-Path $c7z)) {
+                Append-Log "[i] Estrazione tramite 7-Zip ($c7z)..."
+                & $c7z x $global:SelectedIso -o"O:\" -y | Out-Null
+                $extracted = $true
+                break
+            }
         }
     }
 
@@ -441,6 +460,7 @@ $btnInstall.Add_Click({
         # Download mini 7za se Windows 7 senza 7-Zip
         try {
             Append-Log "[i] Scaricamento mini-estrattore 7za per Windows 7..."
+            try { [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072 } catch {}
             $wc = New-Object System.Net.WebClient
             $zip = Join-Path $env:TEMP "7za.zip"
             $wc.DownloadFile("https://www.7-zip.org/a/7za920.zip", $zip)
@@ -449,8 +469,10 @@ $btnInstall.Add_Click({
             if (-not (Test-Path $dest)) { New-Item -ItemType Directory -Path $dest | Out-Null }
             $shell.NameSpace($dest).CopyHere($shell.NameSpace($zip).Items(), 16)
             $exe = Join-Path $dest "7za.exe"
-            & $exe x $global:SelectedIso -o"O:\" -y | Out-Null
-            $extracted = $true
+            if (Test-Path $exe) {
+                & $exe x $global:SelectedIso -o"O:\" -y | Out-Null
+                $extracted = $true
+            }
         } catch {}
     }
 
@@ -464,15 +486,20 @@ $btnInstall.Add_Click({
     if ($isUefi -and (Test-Path "O:\EFI\BOOT\BOOTX64.EFI")) {
         try {
             $bcdOut = bcdedit /create /d "Installa OSify (Senza USB)" /application bootapp
-            if ($bcdOut -match "\{([a-fA-F0-9\-]+)\}") {
-                $guid = "{" + $matches[1] + "}"
+            $guidMatch = [System.Text.RegularExpressions.Regex]::Match($bcdOut, '\{([0-9a-fA-F-]+)\}')
+            if ($guidMatch.Success) {
+                $guid = $guidMatch.Value
                 bcdedit /set $guid device partition=O:
                 bcdedit /set $guid path "\EFI\BOOT\BOOTX64.EFI"
                 bcdedit /displayorder $guid /addlast
                 bcdedit /bootsequence $guid
-                Append-Log "[OK] Voce UEFI BOOTX64.EFI configurata."
+                Append-Log "[OK] Voce UEFI BOOTX64.EFI configurata: $guid"
+            } else {
+                Append-Log "[!] GUID BCD non estratto, boot gestito tramite partizione attiva."
             }
-        } catch {}
+        } catch {
+            Append-Log "[!] Configurazione BCD facoltativa: $($_.Exception.Message)"
+        }
     } else {
         Append-Log "[OK] Sistema Legacy BIOS (MBR): partizione O:\ attiva per il boot."
     }

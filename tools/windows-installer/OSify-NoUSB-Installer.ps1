@@ -30,7 +30,7 @@ if (-not $isAdmin) {
 
 # 2. Diagnostica Architettura Hardware (32-bit vs 64-bit)
 $proc = Get-WmiObject Win32_Processor | Select-Object -First 1
-$is64BitCapable = ($proc.AddressWidth -eq 64) -or [Environment]::Is64BitOperatingSystem
+$is64BitCapable = ($env:PROCESSOR_ARCHITECTURE -eq "AMD64") -or ($env:PROCESSOR_ARCHITEW6432 -eq "AMD64") -or ($proc.AddressWidth -eq 64)
 $cpuName = $proc.Name
 
 Write-Host "[+] Processore Rilevato: $cpuName" -ForegroundColor Cyan
@@ -48,21 +48,19 @@ if (-not $is64BitCapable) {
 
 # 3. Configurazione Sicurezza TLS per download su Windows 7 / 8 / 10
 try {
-    # 3072 = Tls12 in .NET Framework (compatibile anche con PowerShell v2 su Win7)
-    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]3072
-} catch {
-    # Ignora se non supportato da versioni obsolete di .NET
-}
+    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+} catch {}
 
 # 4. Ricerca o Acquisizione dell'Immagine ISO di Sistema
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 function Search-LocalIso {
+    $userProf = if ($env:USERPROFILE) { $env:USERPROFILE } else { [Environment]::GetFolderPath("UserProfile") }
     $searchPaths = @(
         $scriptDir,
         $PWD.Path,
-        [Environment]::GetFolderPath("UserProfile") + "\Downloads",
-        [Environment]::GetFolderPath("Desktop")
+        "$userProf\Downloads",
+        "$userProf\Desktop"
     )
 
     foreach ($p in $searchPaths) {
@@ -258,16 +256,19 @@ if ($isUefi -and (Test-Path "O:\EFI\BOOT\BOOTX64.EFI")) {
     Write-Host "[i] Sistema UEFI rilevato: creazione entry BCD per BOOTX64.EFI..." -ForegroundColor Yellow
     try {
         $bcdOut = bcdedit /create /d "Installa OSify (Senza USB)" /application bootapp
-        if ($bcdOut -match "\{([a-fA-F0-9\-]+)\}") {
-            $guid = "{" + $matches[1] + "}"
+        $guidMatch = [System.Text.RegularExpressions.Regex]::Match($bcdOut, '\{([0-9a-fA-F-]+)\}')
+        if ($guidMatch.Success) {
+            $guid = $guidMatch.Value
             bcdedit /set $guid device partition=O:
             bcdedit /set $guid path "\EFI\BOOT\BOOTX64.EFI"
             bcdedit /displayorder $guid /addlast
             bcdedit /bootsequence $guid
-            Write-Host "[✓] Voce di boot UEFI registrata con successo!" -ForegroundColor Green
+            Write-Host "[✓] Voce di boot UEFI registrata con successo: $guid" -ForegroundColor Green
+        } else {
+            Write-Host "[!] Nota: GUID non trovato in output bcdedit, avvio tramite partizione attiva." -ForegroundColor Yellow
         }
     } catch {
-        Write-Host "[!] Nota: Configurazione BCD non riuscita, il boot avverra tramite partizione primaria attiva." -ForegroundColor Yellow
+        Write-Host "[!] Nota: Configurazione BCD facoltativa: $($_.Exception.Message)" -ForegroundColor Yellow
     }
 } else {
     Write-Host "[i] Sistema Legacy BIOS (MBR) rilevato (es. Toshiba Netbook)." -ForegroundColor Yellow
@@ -283,6 +284,6 @@ Write-Host "Al riavvio del computer partira automaticamente l'installer di OSify
 Write-Host "Terminata l'installazione, la partizione O:\ verra rimossa automaticamente."
 Write-Host ""
 $reboot = Read-Host "Desideri riavviare il computer adesso? (S/N)"
-if ($reboot -match "^[sSyY]") {
+if ($reboot -match '^[sSyY]') {
     Restart-Computer -Force
 }
