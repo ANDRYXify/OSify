@@ -5,7 +5,7 @@ import subprocess
 import sys
 import lzma
 import hashlib
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 
 LANCZOS_FILTER = getattr(getattr(Image, 'Resampling', None), 'LANCZOS', getattr(Image, 'LANCZOS', getattr(Image, 'ANTIALIAS', 1)))
 
@@ -138,34 +138,401 @@ def build_vintage_i686():
     src_png = os.path.join(REPO_ROOT, "desktop/branding/wallpapers/osify-netbook-1024x600.png")
     if not os.path.exists(src_png):
         src_png = os.path.join(REPO_ROOT, "OSify.png")
+def create_boot_splash(dest_jpg):
+    img = Image.new("RGB", (640, 480), color=(11, 13, 20))
+    draw = ImageDraw.Draw(img)
+    for r in range(180, 0, -2):
+        alpha = int(45 * (1 - r / 180))
+        color = (11 + int(alpha * 1.5), 13 + int(alpha * 0.5), 20 + int(alpha * 3))
+        draw.ellipse([(320 - r, 100 - r//2), (320 + r, 100 + r//2)], fill=color)
+    logo_path = os.path.join(REPO_ROOT, "OSify.png")
+    if os.path.exists(logo_path):
+        logo = Image.open(logo_path).convert("RGBA")
+        logo.thumbnail((90, 90))
+        img.paste(logo, (320 - logo.width//2, 45), logo)
+    draw.text((320, 145), "OSify Operating System", fill=(255, 255, 255), anchor="mm")
+    draw.text((320, 168), "Ingegnerizzato da Andrea Taliento (ANDRYXify)", fill=(6, 182, 212), anchor="mm")
+    draw.text((320, 186), "Intel Atom N280 • GMA 950 • WSVGA 1024x600 Live Profile", fill=(148, 163, 184), anchor="mm")
+    img.save(dest_jpg, "JPEG", quality=90)
+
+def remaster_rootfs3(work_dir, iso_root, wallpaper_jpg):
+    print("[i] Remastering rootfs3 (SLIM autologin 0s, rimozione ragno SliTaz, OSify Cyber-Bar)...")
+    r3_work = os.path.join(work_dir, "rootfs3")
+    os.makedirs(r3_work, exist_ok=True)
+    r3_gz = os.path.join(iso_root, "boot/rootfs3.gz")
+    
+    with open(r3_gz, "rb") as f:
+        r3_data = lzma.decompress(f.read())
+    extract_cpio_archive(r3_data, r3_work)
+
+    # 1. Configurazione SLIM per autologin forzato e tema osify
+    slim_conf = os.path.join(r3_work, "etc/slim.conf")
+    if os.path.exists(slim_conf):
+        with open(slim_conf, "r") as f:
+            lines = f.readlines()
+        new_lines = []
+        for line in lines:
+            if line.strip().startswith("auto_login") or line.strip().startswith("#auto_login"):
+                new_lines.append("auto_login          yes\n")
+            elif line.strip().startswith("default_user") or line.strip().startswith("#default_user"):
+                new_lines.append("default_user        tux\n")
+            elif line.strip().startswith("current_theme"):
+                new_lines.append("current_theme       osify\n")
+            else:
+                new_lines.append(line)
+        with open(slim_conf, "w") as f:
+            f.writelines(new_lines)
+
+    # 2. Sostituzione temi SLIM: cancellazione totale del ragno di SliTaz
+    blank_panel = Image.new("RGBA", (1, 1), (0, 0, 0, 0))
+    for theme_dir in ["usr/share/slim/themes/slitaz", "usr/share/slim/themes/base", "usr/share/slim/themes/osify"]:
+        td = os.path.join(r3_work, theme_dir)
+        os.makedirs(td, exist_ok=True)
+        shutil.copy2(wallpaper_jpg, os.path.join(td, "background.png"))
+        blank_panel.save(os.path.join(td, "panel.png"), "PNG")
+        with open(os.path.join(td, "slim.theme"), "w") as f:
+            f.write("""# OSify SLIM Theme
+# Ingegnerizzato da Andrea Taliento (ANDRYXify)
+input_panel_x 50%
+input_panel_y 50%
+input_name_x 30
+input_name_y 30
+input_pass_x 30
+input_pass_y 30
+input_font Sans:size=10
+input_color #000000
+welcome_x -1000
+welcome_y -1000
+intro_x -1000
+intro_y -1000
+username_msg
+password_msg
+""")
+
+    # 3. Configurazione Pannello LXPanel (OSify Cyber-Bar)
+    lxpanel_cfg = """# OSify Cyber-Bar Configuration
+Global {
+    edge=bottom
+    allign=center
+    margin=0
+    widthtype=percent
+    width=100
+    height=24
+    transparent=1
+    tintcolor=#0b0d14
+    alpha=240
+    autohide=0
+    heightwhenhidden=2
+    setdocktype=1
+    setpartialstrut=1
+    usefontcolor=1
+    fontsize=9
+    fontcolor=#e2e8f0
+    usefontsize=1
+    background=0
+    iconsize=20
+    loglevel=2
+}
+
+Plugin {
+    type = menu
+    Config {
+        image=/usr/share/pixmaps/osify.png
+        system {
+        }
+        separator {
+        }
+        item {
+            name=⚡ OSify Quick Access HUD
+            image=preferences-system
+            action=/usr/bin/osify-hud
+        }
+        item {
+            name=📊 OSify Process Commander (Task Manager)
+            image=utilities-system-monitor
+            action=/usr/bin/osify-taskmanager
+        }
+        item {
+            name=⚙️ OSify Control Center
+            image=preferences-desktop
+            action=/usr/bin/osify-settings
+        }
+        item {
+            name=💾 Installa OSify su Disco
+            image=system-software-install
+            action=terminal -geometry 95x26 -T 'OSify Installer' -e /usr/bin/osify-install
+        }
+        separator {
+        }
+        item {
+            name=Terminale OSify
+            image=terminal
+            action=/usr/bin/osify-terminal
+        }
+        item {
+            name=File Manager
+            image=system-file-manager
+            action=pcmanfm
+        }
+        separator {
+        }
+        item {
+            name=Blocca Schermo
+            image=system-lock-screen
+            action=xlock
+        }
+        item {
+            name=Riavvia Computer
+            image=system-reboot-panel
+            action=reboot
+        }
+        item {
+            name=Spegni Computer
+            image=system-shutdown-panel
+            action=poweroff
+        }
+    }
+}
+
+Plugin {
+    type = launchbar
+    Config {
+        Button {
+            id=/usr/share/applications/osify-hud.desktop
+        }
+        Button {
+            id=/usr/share/applications/osify-taskmanager.desktop
+        }
+        Button {
+            id=/usr/share/applications/pcmanfm.desktop
+        }
+        Button {
+            id=/usr/share/applications/osify-terminal.desktop
+        }
+        Button {
+            id=/usr/share/applications/osify-settings.desktop
+        }
+    }
+}
+
+Plugin {
+    type = space
+    Config {
+        Size=6
+    }
+}
+
+Plugin {
+    type = taskbar
+    Config {
+        tooltips=1
+        IconsOnly=0
+        ShowAllDesks=0
+        UseMouseWheel=1
+        UseUrgencyHint=1
+        FlatButton=1
+        MaxTaskWidth=180
+        spacing=2
+        GroupedTasks=0
+    }
+}
+
+Plugin {
+    type = space
+    expand=1
+    Config {
+        Size=4
+    }
+}
+
+Plugin {
+    type = tray
+}
+
+Plugin {
+    type = space
+    Config {
+        Size=4
+    }
+}
+
+Plugin {
+    type = volumealsa
+}
+
+Plugin {
+    type = space
+    Config {
+        Size=4
+    }
+}
+
+Plugin {
+    type = batt
+    Config {
+        HideIfNoBattery=0
+        AlarmTime=10
+        BackgroundColor=#1e293b
+        BorderWidth=1
+        ChargingColor1=#10b981
+        ChargingColor2=#10b981
+        DischargingColor1=#ef4444
+        DischargingColor2=#f59e0b
+        Size=10
+    }
+}
+
+Plugin {
+    type = space
+    Config {
+        Size=4
+    }
+}
+
+Plugin {
+    type = cpu
+}
+
+Plugin {
+    type = space
+    Config {
+        Size=4
+    }
+}
+
+Plugin {
+    type = dclock
+    Config {
+        ClockFmt=%H:%M
+        TooltipFmt=%A %d %B %Y
+        BoldFont=1
+        IconOnly=0
+        CenterText=1
+    }
+}
+"""
+    for p_path in ["etc/skel/.config/lxpanel/slitaz/panels/panel", "etc/lxpanel/slitaz/panels/panel", "etc/lxpanel/default/panels/panel"]:
+        full_p = os.path.join(r3_work, p_path)
+        os.makedirs(os.path.dirname(full_p), exist_ok=True)
+        with open(full_p, "w") as f:
+            f.write(lxpanel_cfg)
+
+    # 4. Scorciatoie Openbox in etc/xdg/openbox/rc.xml
+    rc_xml = os.path.join(r3_work, "etc/xdg/openbox/rc.xml")
+    if os.path.exists(rc_xml):
+        with open(rc_xml, "r") as f:
+            rc_content = f.read()
+        custom_keys = """
+    <!-- OSify Universali Hotkeys -->
+    <keybind key="W-a"><action name="Execute"><command>/usr/bin/osify-hud</command></action></keybind>
+    <keybind key="C-S-Escape"><action name="Execute"><command>/usr/bin/osify-taskmanager</command></action></keybind>
+    <keybind key="W-F10"><action name="Execute"><command>/usr/bin/osify-hud --toggle-scale</command></action></keybind>
+    <keybind key="W-t"><action name="Execute"><command>/usr/bin/osify-terminal</command></action></keybind>
+    <keybind key="C-A-t"><action name="Execute"><command>/usr/bin/osify-terminal</command></action></keybind>
+    <keybind key="W-e"><action name="Execute"><command>pcmanfm</command></action></keybind>
+    <keybind key="W-F1"><action name="Execute"><command>/usr/bin/osify-welcome</command></action></keybind>
+"""
+        if "</keyboard>" in rc_content:
+            rc_content = rc_content.replace("</keyboard>", f"{custom_keys}\n  </keyboard>")
+            with open(rc_xml, "w") as f:
+                f.write(rc_content)
+
+    os.remove(r3_gz)
+    run(f"(cd '{r3_work}' && find . -print0 | cpio --null -ov -H newc) | python3 -c \"import lzma, sys; sys.stdout.buffer.write(lzma.compress(sys.stdin.buffer.read(), format=lzma.FORMAT_ALONE))\" > '{r3_gz}'")
+    print(f"[✓] rootfs3 ricompatto con successo ({os.path.getsize(r3_gz)/(1024*1024):.1f} MB)")
+
+def build_vintage_i686():
+    print("=========================================================")
+    print(" [1/2] Costruzione OSify Vintage 32-bit (Intel Atom/NB200)")
+    print("=========================================================")
+    
+    src_iso = CACHE_I686
+    if not (os.path.exists(src_iso) and os.path.getsize(src_iso) > 10 * 1024 * 1024):
+        if os.path.exists(SANDBOX_I686) and os.path.getsize(SANDBOX_I686) > 10 * 1024 * 1024:
+            src_iso = SANDBOX_I686
+        else:
+            print("[+] Download base Linux 32-bit (SliTaz Rolling)...")
+            os.makedirs(os.path.dirname(CACHE_I686), exist_ok=True)
+            run(f"curl -L -o '{CACHE_I686}' 'http://mirror.slitaz.org/iso/rolling/slitaz-rolling.iso'")
+            src_iso = CACHE_I686
+
+    work_dir = "/tmp/osify_remaster_i686"
+    if os.path.exists(work_dir):
+        shutil.rmtree(work_dir)
+    os.makedirs(work_dir)
+
+    iso_root = os.path.join(work_dir, "iso_root")
+    os.makedirs(iso_root)
+
+    print("[i] Estrazione base 32-bit...")
+    run(f"7z x -y '{src_iso}' -o'{iso_root}' > /dev/null")
+
+    # Wallpaper e splash ad alta risoluzione
+    src_png = os.path.join(REPO_ROOT, "desktop/branding/wallpapers/osify-netbook-1024x600.png")
+    if not os.path.exists(src_png):
+        src_png = os.path.join(REPO_ROOT, "OSify.png")
     img = Image.open(src_png).convert("RGB")
     wallpaper_jpg = os.path.join(work_dir, "osify-wallpaper.jpg")
     img.resize((1024, 600), LANCZOS_FILTER).save(wallpaper_jpg, "JPEG", quality=95)
+    
     splash_jpg = os.path.join(work_dir, "osify-splash.jpg")
-    img.resize((640, 480), LANCZOS_FILTER).save(splash_jpg, "JPEG", quality=90)
+    create_boot_splash(splash_jpg)
 
-    # Bootloader ISOLINUX / SYSLINUX config
+    # Bootloader ISOLINUX / SYSLINUX grafico ad alta risoluzione
     isolinux_dir = os.path.join(iso_root, "boot/isolinux")
     os.makedirs(isolinux_dir, exist_ok=True)
     if os.path.exists(os.path.join(isolinux_dir, "boot.cat")):
         os.remove(os.path.join(isolinux_dir, "boot.cat"))
     shutil.copy2(splash_jpg, os.path.join(isolinux_dir, "splash.jpg"))
 
-    clean_cfg = """DEFAULT osify
+    clean_cfg = """UI vesamenu.c32
 PROMPT 0
-TIMEOUT 50
+TIMEOUT 40
+
+MENU TITLE OSify Operating System — by Andrea Taliento (ANDRYXify)
+MENU BACKGROUND splash.jpg
+MENU WIDTH 78
+MENU MARGIN 6
+MENU ROWS 12
+MENU TIMEOUTROW 18
+MENU TABMSGROW 16
+MENU CMDLINEROW 16
+
+MENU COLOR border       *   #00000000 #00000000 none
+MENU COLOR title        *   #ffffffff #00000000 *
+MENU COLOR sel          0   #ffffffff #7c3aedcc *
+MENU COLOR unsel        0   #b0ffffff #00000000 none
+MENU COLOR help         *   #ffffffff #00000000 *
+MENU COLOR timeout      1;37;40 #06b6d4ff #00000000 std
+MENU COLOR timeout_msg  37;40   #a0ffffff #00000000 std
 
 LABEL osify
-    MENU LABEL OSify Vintage Live Desktop (Intel Atom N280)
+    MENU LABEL 🚀 OSify Vintage Desktop (Live Session — Automazione Completa)
     KERNEL /boot/bzImage
     INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
-    APPEND root=/dev/null autologin lang=it_IT kmap=it rw quiet
+    APPEND root=/dev/null video=-32 autologin lang=it_IT kmap=it rw quiet splash vga=791 vt.global_cursor_default=0
+
+LABEL turbo
+    MENU LABEL ⚡ OSify Turbo Performance Mode (CPU 1.66GHz & zRAM Max)
+    KERNEL /boot/bzImage
+    INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
+    APPEND root=/dev/null video=-32 autologin lang=it_IT kmap=it rw quiet splash vga=791 osify.turbo=1
 
 LABEL safe
-    MENU LABEL OSify Safe Mode (Nomodeset)
+    MENU LABEL 🛠️ OSify Safe Graphics (Fallback VESA / Nomodeset)
     KERNEL /boot/bzImage
     INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
-    APPEND root=/dev/null nomodeset autologin lang=it_IT kmap=it rw
+    APPEND root=/dev/null nomodeset autologin lang=it_IT kmap=it rw vga=791
+
+LABEL install
+    MENU LABEL 💾 Installa OSify su Disco Fisso
+    KERNEL /boot/bzImage
+    INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
+    APPEND root=/dev/null video=-32 autologin lang=it_IT kmap=it rw quiet splash vga=791 osify.install=1
+
+LABEL memtest
+    MENU LABEL 🧠 Verifica Memoria RAM (Memtest86)
+    KERNEL /boot/memtest.exe
 """
     with open(os.path.join(isolinux_dir, "isolinux.cfg"), "w") as f:
         f.write(clean_cfg)
@@ -175,6 +542,10 @@ LABEL safe
     os.makedirs(syslinux_dir, exist_ok=True)
     with open(os.path.join(syslinux_dir, "syslinux.cfg"), "w") as f:
         f.write(clean_cfg)
+    shutil.copy2(splash_jpg, os.path.join(syslinux_dir, "splash.jpg"))
+
+    # Remastering di rootfs3 (SLIM, LXPanel, Openbox)
+    remaster_rootfs3(work_dir, iso_root, wallpaper_jpg)
 
     # Remastering rootfs4
     print("[i] Remastering rootfs4 desktop e toolchain...")
@@ -189,6 +560,7 @@ LABEL safe
 
     img_dir = os.path.join(r4_work, "usr/share/images")
     os.makedirs(img_dir, exist_ok=True)
+    shutil.copy2(wallpaper_jpg, os.path.join(img_dir, "osify-wallpaper.jpg"))
     shutil.copy2(wallpaper_jpg, os.path.join(img_dir, "slitaz-background.jpg"))
     shutil.copy2(wallpaper_jpg, os.path.join(img_dir, "slitaz-background_2.jpg"))
     img.resize((300, 100), LANCZOS_FILTER).save(os.path.join(img_dir, "slitaz-banner.png"), "PNG")
@@ -244,7 +616,27 @@ LABEL safe
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-welcome-wizard.py"), os.path.join(bin_dir, "osify-welcome-wizard.py"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/input/osify-input-manager.sh"), os.path.join(bin_dir, "osify-input"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/autotune/osify-hw-probe.sh"), os.path.join(bin_dir, "osify-hw-probe"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-hud.sh"), os.path.join(bin_dir, "osify-hud"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-taskmanager.sh"), os.path.join(bin_dir, "osify-taskmanager"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-settings.sh"), os.path.join(bin_dir, "osify-settings"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-terminal.sh"), os.path.join(bin_dir, "osify-terminal"))
     run(f"chmod +x '{bin_dir}'/osify-*")
+
+    # Iniezione Icona OSify nel sistema
+    pixmaps_dir = os.path.join(r4_work, "usr/share/pixmaps")
+    os.makedirs(pixmaps_dir, exist_ok=True)
+    osify_png = os.path.join(REPO_ROOT, "OSify.png")
+    if os.path.exists(osify_png):
+        shutil.copy2(osify_png, os.path.join(pixmaps_dir, "osify.png"))
+        for icon_path in [
+            "usr/share/icons/SliTaz-Faenza/48x48/places/start-here.png",
+            "usr/share/icons/SliTaz-Faenza/22x22/places/start-here.png",
+            "usr/share/icons/SliTaz-Faenza-Dark/22x22/places/start-here.png",
+            "usr/share/icons/hicolor/48x48/apps/osify.png"
+        ]:
+            full_ip = os.path.join(r4_work, icon_path)
+            os.makedirs(os.path.dirname(full_ip), exist_ok=True)
+            shutil.copy2(osify_png, full_ip)
 
     # Inizializzazione Hardware Autonoma in /etc/init.d/local.sh
     local_sh = os.path.join(r4_work, "etc/init.d/local.sh")
@@ -273,8 +665,9 @@ EndSection
 
     # Iniezione hook autostart in .xinitrc (utente tux e root)
     hook_str = (
-        "\\n# Avvio Wizard di Primo Avvio e Configurazione Touchpad OSify\\n"
-        "(sleep 2 && /usr/bin/osify-welcome) &\\n"
+        "\\n# Inizializzazione Ambiente Desktop OSify (Sfondo, Touchpad, Wizard)\\n"
+        "(pcmanfm --set-wallpaper=/usr/share/images/osify-wallpaper.jpg --wallpaper-mode=fit) 2>/dev/null &\\n"
+        "(sleep 1 && /usr/bin/osify-welcome) &\\n"
         "(sleep 1 && synclient TapButton1=1 TapButton2=3 TapButton3=2 VertEdgeScroll=1 HorizEdgeScroll=1) 2>/dev/null &\\n"
     )
     for rc in [os.path.join(r4_work, "etc/skel/.xinitrc"), os.path.join(r4_work, "root/.xinitrc")]:
@@ -287,45 +680,91 @@ EndSection
                     f.write(content)
 
     with open(os.path.join(r4_work, "etc/issue"), "w") as f:
-        f.write("OSify Vintage Edition (Intel Atom N280 / GMA 950 Profile)\\n\\l\n")
+        f.write("OSify Operating System (32-bit Vintage Edition — by Andrea Taliento)\\n\\l\n")
 
-    # Launcher Desktop per Installazione (apre in terminale con geometria WSVGA 1024x600 ottimale)
-    desktop_inst_entry = (
-        "[Desktop Entry]\n"
-        "Type=Application\n"
-        "Name=Installa OSify su Disco\n"
-        "Comment=Configurazione e Installazione OSify per Netbook\n"
-        "Exec=terminal -geometry 95x26+30+30 -T 'OSify Installer' -e /usr/bin/osify-install\n"
-        "Icon=system-software-install\n"
-        "Terminal=false\n"
-        "Categories=System;\n"
-    )
+    # Entry Applicative Ufficiali OSify (.desktop)
+    app_entries = {
+        "osify-hud.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=⚡ OSify Quick Access HUD\n"
+            "Comment=Pannello Rapido Prestazioni, zRAM e Virtual Scaler 1280x768\n"
+            "Exec=/usr/bin/osify-hud\n"
+            "Icon=preferences-system\n"
+            "Terminal=false\n"
+            "Categories=System;Settings;\n"
+        ),
+        "osify-taskmanager.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=📊 OSify Process Commander\n"
+            "Comment=Task Manager Grafico e Gestione Attività in Tempo Reale\n"
+            "Exec=/usr/bin/osify-taskmanager\n"
+            "Icon=utilities-system-monitor\n"
+            "Terminal=false\n"
+            "Categories=System;\n"
+        ),
+        "osify-settings.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=⚙️ OSify Control Center\n"
+            "Comment=Centro di Controllo Sistema, Rete, Touchpad e Schermo\n"
+            "Exec=/usr/bin/osify-settings\n"
+            "Icon=preferences-desktop\n"
+            "Terminal=false\n"
+            "Categories=Settings;\n"
+        ),
+        "osify-terminal.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=💻 Terminale OSify\n"
+            "Comment=Terminale con Fastfetch e Diagnostica Hardware\n"
+            "Exec=terminal -geometry 95x26 -T 'OSify Terminal' -e /usr/bin/osify-terminal\n"
+            "Icon=terminal\n"
+            "Terminal=false\n"
+            "Categories=System;\n"
+        ),
+        "osify-install.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=💾 Installa OSify su Disco\n"
+            "Comment=Installatore Guidato su Disco Fisso\n"
+            "Exec=terminal -geometry 95x26 -T 'OSify Installer' -e /usr/bin/osify-install\n"
+            "Icon=system-software-install\n"
+            "Terminal=false\n"
+            "Categories=System;\n"
+        ),
+        "osify-welcome.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=👋 Benvenuto in OSify\n"
+            "Comment=Esperienza di Primo Avvio e Diagnostica Netbook\n"
+            "Exec=/usr/bin/osify-welcome\n"
+            "Icon=preferences-desktop\n"
+            "Terminal=false\n"
+            "Categories=System;\n"
+        )
+    }
 
-    # Launcher Desktop per Benvenuto e Diagnostica (esegue lo script nativo GTK2/YAD)
-    desktop_welcome_entry = (
-        "[Desktop Entry]\n"
-        "Type=Application\n"
-        "Name=Benvenuto in OSify\n"
-        "Comment=Esperienza di Primo Avvio e Configurazione Guidata per Netbook\n"
-        "Exec=/usr/bin/osify-welcome\n"
-        "Icon=preferences-desktop\n"
-        "Terminal=false\n"
-        "Categories=System;\n"
-    )
+    # Scrittura in usr/share/applications e sui Desktop utente
+    apps_sys = os.path.join(r4_work, "usr/share/applications")
+    os.makedirs(apps_sys, exist_ok=True)
+    for name, content in app_entries.items():
+        with open(os.path.join(apps_sys, name), "w") as f:
+            f.write(content)
 
     for dpath in ["root/Desktop", "home/tux/Desktop", "etc/skel/Desktop"]:
         full_d = os.path.join(r4_work, dpath)
         os.makedirs(full_d, exist_ok=True)
-        with open(os.path.join(full_d, "osify-install.desktop"), "w") as f:
-            f.write(desktop_inst_entry)
-        with open(os.path.join(full_d, "osify-welcome.desktop"), "w") as f:
-            f.write(desktop_welcome_entry)
+        for name, content in app_entries.items():
+            with open(os.path.join(full_d, name), "w") as f:
+                f.write(content)
 
     # Autostart automatico XDG
     autostart_dir = os.path.join(r4_work, "etc/xdg/autostart")
     os.makedirs(autostart_dir, exist_ok=True)
     with open(os.path.join(autostart_dir, "osify-welcome.desktop"), "w") as f:
-        f.write(desktop_welcome_entry)
+        f.write(app_entries["osify-welcome.desktop"])
 
     os.remove(r4_gz)
     run(f"(cd '{r4_work}' && find . -print0 | cpio --null -ov -H newc) | python3 -c \"import lzma, sys; sys.stdout.buffer.write(lzma.compress(sys.stdin.buffer.read(), format=lzma.FORMAT_ALONE))\" > '{r4_gz}'")

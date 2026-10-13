@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=💻 Terminale OSify
+Comment=Terminale con Fastfetch e Diagnostica Hardware
+Exec=terminal -geometry 95x26 -T 'OSify Terminal' -e /usr/bin/osify-terminal
+Icon=terminal
+Terminal=false
+Categories=System;

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=📊 OSify Process Commander
+Comment=Task Manager Grafico e Gestione Attività in Tempo Reale
+Exec=/usr/bin/osify-taskmanager
+Icon=utilities-system-monitor
+Terminal=false
+Categories=System;

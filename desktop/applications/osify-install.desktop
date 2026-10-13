@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=💾 Installa OSify su Disco
+Comment=Installatore Guidato su Disco Fisso
+Exec=terminal -geometry 95x26 -T 'OSify Installer' -e /usr/bin/osify-install
+Icon=system-software-install
+Terminal=false
+Categories=System;
