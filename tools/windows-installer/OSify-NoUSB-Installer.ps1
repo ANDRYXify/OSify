@@ -137,42 +137,110 @@ Write-Host "[OK] Immagine ISO selezionata: $IsoPath" -ForegroundColor Green
 Write-Host ""
 
 # 5. Creazione Partizione Temporanea di Boot con DiskPart
-Write-Host "[+] Preparazione partizione temporanea da 5GB per installazione..." -ForegroundColor Cyan
+$isoLengthMB = 800
+if ($IsoPath -and (Test-Path $IsoPath)) {
+    $isoLengthMB = [math]::Round((Get-Item $IsoPath).Length / 1MB)
+}
+$neededMB = [math]::Max(1200, $isoLengthMB + 350)
+Write-Host "[+] Preparazione partizione temporanea per installazione ($neededMB MB richiesti)..." -ForegroundColor Cyan
 
-$dpFile = Join-Path $env:TEMP "osify_diskpart.txt"
-$dpCommands = @(
-    "select volume c",
-    "shrink desired=5120 minimum=4096",
-    "create partition primary",
-    "format fs=fat32 quick label=OSIFY_BOOT",
-    "assign letter=O",
-    "active"
-)
-[System.IO.File]::WriteAllLines($dpFile, $dpCommands)
+$partitionReady = $false
 
-$pInfo = New-Object System.Diagnostics.ProcessStartInfo
-$pInfo.FileName = "diskpart.exe"
-$pInfo.Arguments = "/s `"$dpFile`""
-$pInfo.UseShellExecute = $false
-$pInfo.CreateNoWindow = $true
-$procDp = [System.Diagnostics.Process]::Start($pInfo)
-$procDp.WaitForExit()
-Remove-Item $dpFile -Force -ErrorAction SilentlyContinue
+# Se l'unità O: esiste già, formattala e riusala direttamente
+if (Test-Path 'O:\') {
+    Write-Host "[i] Partizione (O:) gia' esistente. Formattazione rapida per installazione..." -ForegroundColor Yellow
+    $dpCleanFile = Join-Path $env:TEMP "osify_clean_dp.txt"
+    $dpCleanCommands = @(
+        "select volume O",
+        "format fs=fat32 quick label=OSIFY_BOOT",
+        "active"
+    )
+    [System.IO.File]::WriteAllLines($dpCleanFile, $dpCleanCommands)
+    $pInfo = New-Object System.Diagnostics.ProcessStartInfo
+    $pInfo.FileName = "diskpart.exe"
+    $pInfo.Arguments = "/s `"$dpCleanFile`""
+    $pInfo.UseShellExecute = $false
+    $pInfo.CreateNoWindow = $true
+    $procDp = [System.Diagnostics.Process]::Start($pInfo)
+    $procDp.WaitForExit()
+    Remove-Item $dpCleanFile -Force -ErrorAction SilentlyContinue
+    if (Test-Path 'O:\') {
+        $partitionReady = $true
+        Write-Host "[OK] Unita (O:) pronta all'uso." -ForegroundColor Green
+    }
+}
+
+if (-not $partitionReady) {
+    $dpFile = Join-Path $env:TEMP "osify_diskpart.txt"
+    $dpCommands = @(
+        "select volume c",
+        "shrink desired=$neededMB minimum=800",
+        "create partition primary",
+        "format fs=fat32 quick label=OSIFY_BOOT",
+        "assign letter=O",
+        "active"
+    )
+    [System.IO.File]::WriteAllLines($dpFile, $dpCommands)
+
+    $pInfo = New-Object System.Diagnostics.ProcessStartInfo
+    $pInfo.FileName = "diskpart.exe"
+    $pInfo.Arguments = "/s `"$dpFile`""
+    $pInfo.UseShellExecute = $false
+    $pInfo.CreateNoWindow = $true
+    $procDp = [System.Diagnostics.Process]::Start($pInfo)
+    $procDp.WaitForExit()
+    Remove-Item $dpFile -Force -ErrorAction SilentlyContinue
+
+    if (Test-Path 'O:\') {
+        $partitionReady = $true
+        Write-Host "[OK] Partizione di avvio (O:) creata e formattata con successo." -ForegroundColor Green
+    }
+}
 
 if (-not (Test-Path 'O:\')) {
     Write-Host "[ERRORE] Impossibile creare l'unita (O:) per l'avvio temporaneo." -ForegroundColor Red
-    Write-Host "Verifica di avere almeno 5 GB liberi su C: per consentire il restringimento." -ForegroundColor Yellow
+    Write-Host "Verifica lo spazio libero su C: o se il disco MBR ha gia' raggiunto il limite di 4 partizioni." -ForegroundColor Yellow
     exit 1
 }
-Write-Host "[OK] Partizione di avvio (O:) creata e formattata con successo." -ForegroundColor Green
 
 # 6. Estrazione File da ISO verso l'unità O:\
 Write-Host "[+] Estrazione dei file del sistema operativo su unita O:\..." -ForegroundColor Cyan
 
 $extracted = $false
 
-# Metodo A: Mount-DiskImage (Windows 8, 10, 11)
-if (Get-Command "Mount-DiskImage" -ErrorAction SilentlyContinue) {
+# Metodo A: 7za.exe standalone locale incluso nel pacchetto (100% offline)
+$local7za = Join-Path $scriptDir "7za.exe"
+if (Test-Path $local7za) {
+    Write-Host "[i] Estrazione rapida tramite 7za integrato offline..." -ForegroundColor Cyan
+    & $local7za x $IsoPath -oO:\ -y | Out-Null
+    if ((Test-Path 'O:\boot') -or (Test-Path 'O:\EFI') -or (Test-Path 'O:\arch') -or (Test-Path 'O:\osify')) {
+        $extracted = $true
+        Write-Host "[OK] File estratti con successo tramite 7za locale!" -ForegroundColor Green
+    }
+}
+
+# Metodo B: 7-Zip locale di sistema (se installato su Windows 7 / 8 / 10 / 11)
+if (-not $extracted) {
+    $7zPaths = @(
+        "$env:ProgramFiles\7-Zip\7z.exe",
+        "${env:ProgramFiles(x86)}\7-Zip\7z.exe",
+        Join-Path $scriptDir "7z.exe"
+    )
+    foreach ($exe in $7zPaths) {
+        if (Test-Path $exe) {
+            Write-Host "[i] Estrazione ISO in corso tramite 7-Zip ($exe)..." -ForegroundColor Cyan
+            & $exe x $IsoPath -oO:\ -y | Out-Null
+            if ((Test-Path 'O:\boot') -or (Test-Path 'O:\EFI') -or (Test-Path 'O:\arch') -or (Test-Path 'O:\osify')) {
+                $extracted = $true
+                Write-Host "[OK] File estratti con successo tramite 7-Zip!" -ForegroundColor Green
+                break
+            }
+        }
+    }
+}
+
+# Metodo C: Mount-DiskImage (Windows 8, 10, 11)
+if (-not $extracted -and (Get-Command "Mount-DiskImage" -ErrorAction SilentlyContinue)) {
     try {
         Write-Host "[i] Tentativo montaggio ISO tramite Windows DiskImage..." -ForegroundColor Gray
         $mount = Mount-DiskImage -ImagePath $IsoPath -PassThru
@@ -184,59 +252,7 @@ if (Get-Command "Mount-DiskImage" -ErrorAction SilentlyContinue) {
             $extracted = $true
             Write-Host "[OK] File estratti tramite montaggio nativo." -ForegroundColor Green
         }
-    } catch {
-        Write-Host "[!] Montaggio nativo fallito, passaggio ai metodi compatibili Windows 7..." -ForegroundColor Yellow
-    }
-}
-
-# Metodo B: 7-Zip locale (se installato su Windows 7 / 8 / 10 / 11)
-if (-not $extracted) {
-    $7zPaths = @(
-        "$env:ProgramFiles\7-Zip\7z.exe",
-        "${env:ProgramFiles(x86)}\7-Zip\7z.exe",
-        Join-Path $scriptDir "7z.exe",
-        Join-Path $scriptDir "7za.exe"
-    )
-    foreach ($exe in $7zPaths) {
-        if (Test-Path $exe) {
-            Write-Host "[i] Estrazione ISO in corso tramite 7-Zip ($exe)..." -ForegroundColor Cyan
-            & $exe x $IsoPath -oO:\ -y | Out-Null
-            if ((Test-Path 'O:\boot') -or (Test-Path 'O:\EFI') -or (Test-Path 'O:\arch')) {
-                $extracted = $true
-                Write-Host "[OK] File estratti con successo tramite 7-Zip!" -ForegroundColor Green
-                break
-            }
-        }
-    }
-}
-
-# Metodo C: Download automatico mini estrattore 7za se su Windows 7 puro senza 7-Zip
-if (-not $extracted) {
-    Write-Host "[i] Download mini-estrattore portatile per Windows 7..." -ForegroundColor Yellow
-    try { [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072 } catch {}
-    $7zaUrl = "https://www.7-zip.org/a/7za920.zip"
-    $7zaZip = Join-Path $env:TEMP "7za.zip"
-    $7zaDir = Join-Path $env:TEMP "7za"
-    try {
-        $wc = New-Object System.Net.WebClient
-        $wc.DownloadFile($7zaUrl, $7zaZip)
-        # Decompressione ZIP nativa via Shell COM (disponibile da Windows XP a Windows 11)
-        $shell = New-Object -ComObject Shell.Application
-        $zipPackage = $shell.NameSpace($7zaZip)
-        if (-not (Test-Path $7zaDir)) { New-Item -ItemType Directory -Path $7zaDir | Out-Null }
-        $destFolder = $shell.NameSpace($7zaDir)
-        $destFolder.CopyHere($zipPackage.Items(), 16)
-        
-        $standalone7z = Join-Path $7zaDir "7za.exe"
-        if (Test-Path $standalone7z) {
-            Write-Host "[+] Estrazione ISO in corso con 7za..." -ForegroundColor Cyan
-            & $standalone7z x $IsoPath -oO:\ -y | Out-Null
-            $extracted = $true
-            Write-Host "[OK] File estratti con successo su O:\." -ForegroundColor Green
-        }
-    } catch {
-        Write-Host "[!] Estrazione automatica non riuscita." -ForegroundColor Yellow
-    }
+    } catch {}
 }
 
 if (-not $extracted) {

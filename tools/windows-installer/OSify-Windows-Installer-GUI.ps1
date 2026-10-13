@@ -4,11 +4,35 @@
 # Interfaccia grafica nativa ad alto impatto visivo (Dark Theme / Neon Cyberpunk)
 # Ispirata al logo ufficiale di OSify: toni Deep Obsidian, Viola Neon e Verde Menta.
 # Compatibile al 100% con Windows 7 SP1 (PowerShell v2.0), Windows 8, 10 e 11.
+# Ottimizzata per netbook a bassa risoluzione (Toshiba NB200 WSVGA 1024x600).
 # ==============================================================================
 
-Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, System.Windows.Forms
+# Caricamento Assembly WPF e Win32
+Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase, System.Drawing
 
-# Helper Convertitore Pennelli WPF (Compatibile al 100% con PowerShell 2.0 / .NET 3.5 su Windows 7)
+# Abilitazione preventivo protocolli TLS 1.2 su Windows 7 SP1 / .NET 3.5
+try {
+    $tlsKey = "HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols\TLS 1.2\Client"
+    if (-not (Test-Path $tlsKey)) { New-Item -Path $tlsKey -Force | Out-Null }
+    Set-ItemProperty -Path $tlsKey -Name "DisabledByDefault" -Value 0 -Type DWord -Force -ErrorAction SilentlyContinue
+    Set-ItemProperty -Path $tlsKey -Name "Enabled" -Value 1 -Type DWord -Force -ErrorAction SilentlyContinue
+
+    $netKeys = @(
+        "HKLM:\SOFTWARE\Microsoft\.NETFramework\v2.0.50727",
+        "HKLM:\SOFTWARE\Microsoft\.NETFramework\v4.0.30319",
+        "HKLM:\SOFTWARE\Wow6432Node\Microsoft\.NETFramework\v2.0.50727",
+        "HKLM:\SOFTWARE\Wow6432Node\Microsoft\.NETFramework\v4.0.30319"
+    )
+    foreach ($nk in $netKeys) {
+        if (Test-Path $nk) {
+            Set-ItemProperty -Path $nk -Name "SystemDefaultTlsVersions" -Value 1 -Type DWord -Force -ErrorAction SilentlyContinue
+            Set-ItemProperty -Path $nk -Name "SchUseStrongCrypto" -Value 1 -Type DWord -Force -ErrorAction SilentlyContinue
+        }
+    }
+    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+} catch {}
+
+# Helper Convertitore Pennelli WPF (Compatibile con PowerShell 2.0 / .NET 3.5)
 $global:BrushConv = New-Object System.Windows.Media.BrushConverter
 function Get-Brush([string]$hex) {
     return $global:BrushConv.ConvertFromString($hex)
@@ -39,13 +63,13 @@ if (-not (Test-Path $logoPath)) {
     if (Test-Path $logoCandidate) { $logoPath = (Resolve-Path $logoCandidate).Path }
 }
 
-# 2. Definizione Layout XAML (WPF Cyberpunk Theme)
+# 2. Definizione Layout XAML (Ottimizzato per schermi WSVGA 1024x600 e risoluzioni standard)
 [xml]$xaml = @"
 <Window
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Title="OSify - Installer per Windows (Senza USB)"
-    Height="680" Width="820"
+    Height="530" Width="760"
     WindowStartupLocation="CenterScreen"
     ResizeMode="CanMinimize"
     Background="#0D0D14"
@@ -58,8 +82,8 @@ if (-not (Test-Path $logoPath)) {
             <Setter Property="Background" Value="#151522"/>
             <Setter Property="BorderBrush" Value="#252538"/>
             <Setter Property="BorderThickness" Value="1.5"/>
-            <Setter Property="CornerRadius" Value="10"/>
-            <Setter Property="Padding" Value="14"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="10,8"/>
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
 
@@ -68,14 +92,14 @@ if (-not (Test-Path $logoPath)) {
             <Setter Property="Background" Value="#7C3AED"/>
             <Setter Property="Foreground" Value="#FFFFFF"/>
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="Padding" Value="16,10"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="16,8"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="8" Padding="{TemplateBinding Padding}">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
@@ -87,15 +111,15 @@ if (-not (Test-Path $logoPath)) {
             <Setter Property="Background" Value="#232336"/>
             <Setter Property="Foreground" Value="#94A3B8"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Padding" Value="10,5"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="BorderBrush" Value="#33334D"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                        <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="5" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                     </ControlTemplate>
@@ -104,7 +128,7 @@ if (-not (Test-Path $logoPath)) {
         </Style>
     </Window.Resources>
 
-    <Grid Margin="24">
+    <Grid Margin="16,10,16,10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/> <!-- Header con Logo -->
             <RowDefinition Height="Auto"/> <!-- Hardware Info Banner -->
@@ -115,36 +139,36 @@ if (-not (Test-Path $logoPath)) {
         </Grid.RowDefinitions>
 
         <!-- 1. Header con Logo OSify e Titolo -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
-            <Image Name="ImgLogo" Width="64" Height="64" Margin="0,0,16,0" RenderOptions.BitmapScalingMode="HighQuality"/>
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+            <Image Name="ImgLogo" Width="48" Height="48" Margin="0,0,12,0" RenderOptions.BitmapScalingMode="HighQuality"/>
             <StackPanel VerticalAlignment="Center">
-                <TextBlock Text="OSify Setup" FontSize="26" FontWeight="Bold" Foreground="#FFFFFF"/>
-                <TextBlock Text="Installazione Diretta da Windows Senza Chiavetta USB - by Andrea Taliento" FontSize="12" Foreground="#94A3B8"/>
+                <TextBlock Text="OSify Setup" FontSize="22" FontWeight="Bold" Foreground="#FFFFFF"/>
+                <TextBlock Text="Installazione Diretta da Windows Senza USB - Ingegnerizzato da Andrea Taliento" FontSize="11" Foreground="#94A3B8"/>
             </StackPanel>
         </StackPanel>
 
         <!-- 2. Hardware Scanner Banner -->
-        <Border Grid.Row="1" Background="#161626" BorderBrush="#2B2B44" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,16">
+        <Border Grid.Row="1" Background="#161626" BorderBrush="#2B2B44" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,0,0,10">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0">
-                    <TextBlock Name="TxtCpu" Text="CPU: Rilevamento in corso..." FontSize="12" FontWeight="SemiBold" Foreground="#E2E8F0"/>
-                    <TextBlock Name="TxtHwDetails" Text="RAM e Disco in analisi..." FontSize="11" Foreground="#94A3B8" Margin="0,2,0,0"/>
+                    <TextBlock Name="TxtCpu" Text="CPU: Rilevamento in corso..." FontSize="11" FontWeight="SemiBold" Foreground="#E2E8F0"/>
+                    <TextBlock Name="TxtHwDetails" Text="RAM e Disco in analisi..." FontSize="10" Foreground="#94A3B8" Margin="0,2,0,0"/>
                 </StackPanel>
-                <Border Grid.Column="1" Name="BadgeArch" Background="#7C3AED" CornerRadius="6" Padding="8,4" VerticalAlignment="Center">
-                    <TextBlock Name="TxtBadgeArch" Text="64-BIT" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF"/>
+                <Border Grid.Column="1" Name="BadgeArch" Background="#7C3AED" CornerRadius="5" Padding="8,3" VerticalAlignment="Center">
+                    <TextBlock Name="TxtBadgeArch" Text="64-BIT" FontSize="10" FontWeight="Bold" Foreground="#FFFFFF"/>
                 </Border>
             </Grid>
         </Border>
 
-        <!-- 3. Selezione Edizione (Card a Due Colonne) -->
-        <Grid Grid.Row="2" Margin="0,0,0,16">
+        <!-- 3. Selezione Edizione (Card Compatte a Due Colonne) -->
+        <Grid Grid.Row="2" Margin="0,0,0,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="12"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
@@ -152,11 +176,11 @@ if (-not (Test-Path $logoPath)) {
             <Border Grid.Column="0" Name="CardModern" Style="{StaticResource EditionCard}">
                 <StackPanel>
                     <Grid>
-                        <TextBlock Text="[+] OSify Standard (x86_64)" FontWeight="Bold" FontSize="14" Foreground="#FFFFFF"/>
+                        <TextBlock Text="[+] OSify Standard (x86_64)" FontWeight="Bold" FontSize="12" Foreground="#FFFFFF"/>
                         <RadioButton Name="RadioModern" HorizontalAlignment="Right" IsChecked="True"/>
                     </Grid>
-                    <TextBlock Text="Kernel BORE - AVX2 - Gaming 500 FPS - PipeWire Low-Latency" FontSize="11" Foreground="#A78BFA" Margin="0,4,0,0" TextWrapping="Wrap"/>
-                    <TextBlock Text="Consigliato per PC con CPU moderne a 64-bit e oltre 2GB di RAM." FontSize="10" Foreground="#64748B" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                    <TextBlock Text="Kernel BORE - AVX2 - Gaming 500 FPS - PipeWire Low-Latency" FontSize="10" Foreground="#A78BFA" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                    <TextBlock Text="Consigliato per PC moderni a 64-bit con oltre 2GB di RAM." FontSize="9" Foreground="#64748B" Margin="0,2,0,0" TextWrapping="Wrap"/>
                 </StackPanel>
             </Border>
 
@@ -164,37 +188,51 @@ if (-not (Test-Path $logoPath)) {
             <Border Grid.Column="2" Name="CardVintage" Style="{StaticResource EditionCard}">
                 <StackPanel>
                     <Grid>
-                        <TextBlock Text="[*] OSify Vintage (i686 Micro)" FontWeight="Bold" FontSize="14" Foreground="#FFFFFF"/>
+                        <TextBlock Text="[*] OSify Vintage (i686 Micro)" FontWeight="Bold" FontSize="12" Foreground="#FFFFFF"/>
                         <RadioButton Name="RadioVintage" HorizontalAlignment="Right"/>
                     </Grid>
-                    <TextBlock Text="32-Bit Nativo - Footprint ~120MB - ZRAM lz4 - Atom e GMA950" FontSize="11" Foreground="#34D399" Margin="0,4,0,0" TextWrapping="Wrap"/>
-                    <TextBlock Text="Specifico per Netbook (es. Toshiba NB200 Atom N280) e PC con 1GB RAM." FontSize="10" Foreground="#64748B" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                    <TextBlock Text="32-Bit Nativo - Footprint ~120MB - ZRAM lz4 - Atom e GMA950" FontSize="10" Foreground="#34D399" Margin="0,2,0,0" TextWrapping="Wrap"/>
+                    <TextBlock Text="Specifico per Netbook (Toshiba NB200 Atom N280) e PC con 1GB RAM." FontSize="9" Foreground="#64748B" Margin="0,2,0,0" TextWrapping="Wrap"/>
                 </StackPanel>
             </Border>
         </Grid>
 
-        <!-- 4. Selezione File ISO -->
-        <Border Grid.Row="3" Background="#161626" BorderBrush="#2B2B44" BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,16">
+        <!-- 4. Selezione File ISO (con TextBox Modificabile, Drag&Drop e Pulsanti Azione) -->
+        <Border Grid.Row="3" Background="#161626" BorderBrush="#2B2B44" BorderThickness="1" CornerRadius="6" Padding="10,8" Margin="0,0,0,10">
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="8"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                    <TextBlock Text="IMMAGINE ISO DEL SISTEMA OPERATIVO" FontSize="10" FontWeight="Bold" Foreground="#64748B"/>
-                    <TextBlock Name="TxtIsoStatus" Text="Ricerca immagine in corso..." FontSize="12" Foreground="#38BDF8" TextTrimming="CharacterEllipsis" Margin="0,2,0,0"/>
-                </StackPanel>
-                <Button Grid.Column="1" Name="BtnDownloadIso" Content="Scarica da GitHub" Style="{StaticResource SecondaryButton}"/>
-                <Button Grid.Column="3" Name="BtnBrowseIso" Content="Sfoglia..." Style="{StaticResource SecondaryButton}"/>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                
+                <Grid Grid.Row="0" Margin="0,0,0,6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="IMMAGINE ISO DEL SISTEMA OPERATIVO OSIFY" FontSize="10" FontWeight="Bold" Foreground="#64748B" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Name="TxtIsoStatus" Text="Nessun file selezionato" FontSize="10" Foreground="#F59E0B" FontWeight="SemiBold"/>
+                </Grid>
+
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="6"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="6"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0" Name="TxtIsoPath" Height="26" Background="#0C0C14" Foreground="#E2E8F0" BorderBrush="#33334D" BorderThickness="1" Padding="6,3" FontSize="11" VerticalContentAlignment="Center" AllowDrop="True"/>
+                    <Button Grid.Column="2" Name="BtnBrowseIso" Content="Sfoglia..." Style="{StaticResource SecondaryButton}"/>
+                    <Button Grid.Column="4" Name="BtnDownloadIso" Content="Scarica ISO" Style="{StaticResource SecondaryButton}"/>
+                </Grid>
             </Grid>
         </Border>
 
         <!-- 5. Log Box Stile Terminale Cyberpunk -->
-        <Border Grid.Row="4" Background="#08080C" BorderBrush="#1C1C2B" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,16">
+        <Border Grid.Row="4" Background="#08080C" BorderBrush="#1C1C2B" BorderThickness="1" CornerRadius="6" Padding="8" Margin="0,0,0,10">
             <ScrollViewer Name="ScrollLogs" VerticalScrollBarVisibility="Auto">
-                <TextBlock Name="TxtLogs" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="11" Foreground="#10B981" TextWrapping="Wrap" Text="[OSify Setup] Inizializzazione completata. Pronto per iniziare."/>
+                <TextBlock Name="TxtLogs" FontFamily="Consolas, Cascadia Code, Courier New" FontSize="10" Foreground="#10B981" TextWrapping="Wrap" Text="[OSify Setup] Inizializzazione completata. Pronto per iniziare."/>
             </ScrollViewer>
         </Border>
 
@@ -205,10 +243,10 @@ if (-not (Test-Path $logoPath)) {
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <ProgressBar Grid.Row="0" Name="ProgBar" Height="8" Background="#1E1E2E" Foreground="#10B981" BorderThickness="0" Margin="0,0,0,12" Value="0" Maximum="100"/>
+            <ProgressBar Grid.Row="0" Name="ProgBar" Height="6" Background="#1E1E2E" Foreground="#10B981" BorderThickness="0" Margin="0,0,0,8" Value="0" Maximum="100"/>
 
             <Grid Grid.Row="1">
-                <TextBlock Name="TxtStepInfo" Text="Pronto per iniziare. 5 GB temporanei richiesti su C:." VerticalAlignment="Center" FontSize="11" Foreground="#94A3B8"/>
+                <TextBlock Name="TxtStepInfo" Text="Pronto per iniziare. 1.5 GB minimi richiesti per la partizione di avvio." VerticalAlignment="Center" FontSize="10" Foreground="#94A3B8"/>
                 <Button Name="BtnInstall" HorizontalAlignment="Right" Content="PREPARA INSTALLAZIONE SENZA USB" Style="{StaticResource NeonButton}"/>
             </Grid>
         </Grid>
@@ -229,6 +267,7 @@ $cardModern = $window.FindName("CardModern")
 $cardVintage = $window.FindName("CardVintage")
 $radioModern = $window.FindName("RadioModern")
 $radioVintage = $window.FindName("RadioVintage")
+$txtIsoPath = $window.FindName("TxtIsoPath")
 $txtIsoStatus = $window.FindName("TxtIsoStatus")
 $btnDownloadIso = $window.FindName("BtnDownloadIso")
 $btnBrowseIso = $window.FindName("BtnBrowseIso")
@@ -249,18 +288,26 @@ if (Test-Path $logoPath) {
     } catch {}
 }
 
-# Funzione Log protetta per qualsiasi versione di Windows
+# Funzione Refresh UI in tempo reale per evitare freeze della finestra
+function Refresh-UI {
+    try {
+        [System.Windows.Threading.Dispatcher]::CurrentDispatcher.Invoke(
+            [System.Windows.Threading.DispatcherPriority]::Background,
+            [Action]{}
+        )
+    } catch {}
+}
+
+# Funzione Log protetta con scroll e refresh immediato
 function Append-Log($msg) {
     $txtLogs.Text += "`n$msg"
     $scrollLogs.ScrollToEnd()
-    try {
-        [System.Windows.Forms.Application]::DoEvents()
-    } catch {}
+    Refresh-UI
 }
 
 # Inizializzazione Dati Hardware
 $txtCpu.Text = "CPU: $cpuName"
-$txtHwDetails.Text = "Memoria RAM: $totalRamMB MB | Spazio Libero su C: : $freeSpaceGB GB (Minimo 5 GB richiesti)"
+$txtHwDetails.Text = "Memoria RAM: $totalRamMB MB | Spazio Libero su C: : $freeSpaceGB GB"
 
 if (-not $is64Bit) {
     # CPU 32-bit (es. Toshiba NB200 con Intel Atom N280)
@@ -283,24 +330,67 @@ $cardModern.Add_MouseDown({
     $radioVintage.IsChecked = $false
     $cardModern.BorderBrush = Get-Brush "#8B5CF6"
     $cardVintage.BorderBrush = Get-Brush "#252538"
-    Update-IsoSearch
+    if (-not $txtIsoPath.Text) { Update-IsoSearch }
 })
 $cardVintage.Add_MouseDown({
     $radioVintage.IsChecked = $true
     $radioModern.IsChecked = $false
     $cardVintage.BorderBrush = Get-Brush "#10B981"
     $cardModern.BorderBrush = Get-Brush "#252538"
-    Update-IsoSearch
+    if (-not $txtIsoPath.Text) { Update-IsoSearch }
 })
 
-# Ricerca ISO Locale
+# Gestione Percorso ISO e Validazione
 $global:SelectedIso = ""
 
+function Set-SelectedIso([string]$path) {
+    if ($path -and (Test-Path $path)) {
+        $global:SelectedIso = (Resolve-Path $path).Path
+        $txtIsoPath.Text = $global:SelectedIso
+        $fileSizeMB = [math]::Round((Get-Item $global:SelectedIso).Length / 1MB, 1)
+        $txtIsoStatus.Text = "[OK] Immagine Rilevata ($fileSizeMB MB)"
+        $txtIsoStatus.Foreground = Get-Brush "#10B981"
+        Append-Log "[OK] Immagine ISO selezionata: $global:SelectedIso ($fileSizeMB MB)"
+    } else {
+        $global:SelectedIso = ""
+        $txtIsoStatus.Text = "[!] File ISO non trovato"
+        $txtIsoStatus.Foreground = Get-Brush "#F59E0B"
+    }
+}
+
+$txtIsoPath.Add_TextChanged({
+    $cleanPath = $txtIsoPath.Text.Trim().Trim('"').Trim("'")
+    if ($cleanPath -and (Test-Path $cleanPath)) {
+        $global:SelectedIso = $cleanPath
+        $fileSizeMB = [math]::Round((Get-Item $cleanPath).Length / 1MB, 1)
+        $txtIsoStatus.Text = "[OK] File Valido ($fileSizeMB MB)"
+        $txtIsoStatus.Foreground = Get-Brush "#10B981"
+    } else {
+        $global:SelectedIso = ""
+        $txtIsoStatus.Text = "[!] Inserisci o seleziona un file .iso esistente"
+        $txtIsoStatus.Foreground = Get-Brush "#F59E0B"
+    }
+})
+
+# Supporto Drag and Drop del file ISO nella finestra
+$window.AllowDrop = $true
+$window.Add_Drop({
+    param($s, $e)
+    if ($e.Data.GetDataPresent([System.Windows.DataFormats]::FileDrop)) {
+        $files = $e.Data.GetData([System.Windows.DataFormats]::FileDrop)
+        if ($files -and $files.Length -gt 0) {
+            Set-SelectedIso $files[0]
+        }
+    }
+})
+
+# Ricerca Automatica ISO Locale
 function Update-IsoSearch {
+    if ($txtIsoPath.Text -and (Test-Path $txtIsoPath.Text)) { return }
     $pattern = if ($radioVintage.IsChecked) { "*vintage*.iso", "*i686*.iso", "*osify*.iso" } else { "*x86_64*.iso", "*osify*.iso" }
     $found = $null
     $userProf = if ($env:USERPROFILE) { $env:USERPROFILE } else { [Environment]::GetFolderPath("UserProfile") }
-    $searchDirs = @($scriptDir, "$userProf\Downloads", "$userProf\Desktop")
+    $searchDirs = @($scriptDir, "$userProf\Downloads", "$userProf\Desktop", "C:\Downloads")
     foreach ($d in $searchDirs) {
         if ($d -and (Test-Path $d)) {
             foreach ($pat in $pattern) {
@@ -312,34 +402,37 @@ function Update-IsoSearch {
     }
 
     if ($found) {
-        $global:SelectedIso = $found
-        $txtIsoStatus.Text = "[OK] Immagine Trovata: " + [System.IO.Path]::GetFileName($found)
-        $txtIsoStatus.Foreground = Get-Brush "#10B981"
-        Append-Log "[OK] ISO rilevata: $found"
+        Set-SelectedIso $found
     } else {
-        $global:SelectedIso = ""
-        $txtIsoStatus.Text = "[!] Nessuna ISO locale trovata. Clicca 'Scarica' o 'Sfoglia'."
+        $txtIsoStatus.Text = "[!] Nessuna ISO trovata. Clicca 'Sfoglia' o 'Scarica'."
         $txtIsoStatus.Foreground = Get-Brush "#F59E0B"
     }
 }
 
 Update-IsoSearch
 
-# Sfoglia File ISO
+# Sfoglia File ISO (Usa Microsoft.Win32.OpenFileDialog nativo di WPF)
 $btnBrowseIso.Add_Click({
-    Add-Type -AssemblyName System.Windows.Forms
-    $dialog = New-Object System.Windows.Forms.OpenFileDialog
-    $dialog.Filter = "Immagini ISO (*.iso)|*.iso|Tutti i file (*.*)|*.*"
-    $dialog.Title = "Seleziona Immagine ISO di OSify"
-    if ($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
-        $global:SelectedIso = $dialog.FileName
-        $txtIsoStatus.Text = "[OK] Immagine: " + [System.IO.Path]::GetFileName($dialog.FileName)
-        $txtIsoStatus.Foreground = Get-Brush "#10B981"
-        Append-Log "[OK] Selezionata ISO manuale: $($dialog.FileName)"
+    try {
+        $dialog = New-Object Microsoft.Win32.OpenFileDialog
+        $dialog.Filter = "Immagini ISO (*.iso)|*.iso|Tutti i file (*.*)|*.*"
+        $dialog.Title = "Seleziona Immagine ISO di OSify"
+        if ($dialog.ShowDialog()) {
+            Set-SelectedIso $dialog.FileName
+        }
+    } catch {
+        # Fallback WinForms
+        Add-Type -AssemblyName System.Windows.Forms
+        $wfDialog = New-Object System.Windows.Forms.OpenFileDialog
+        $wfDialog.Filter = "Immagini ISO (*.iso)|*.iso|Tutti i file (*.*)|*.*"
+        $wfDialog.Title = "Seleziona Immagine ISO di OSify"
+        if ($wfDialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
+            Set-SelectedIso $wfDialog.FileName
+        }
     }
 })
 
-# Download Diretto da GitHub
+# Download Diretto da GitHub con Gestione Robustezza & Fallback Browser
 $btnDownloadIso.Add_Click({
     $isVintage = $radioVintage.IsChecked
     $isoName = if ($isVintage) { "OSify-Vintage-i686.iso" } else { "OSify-x86_64-v3.iso" }
@@ -351,35 +444,80 @@ $btnDownloadIso.Add_Click({
     $btnDownloadIso.IsEnabled = $false
     $btnInstall.IsEnabled = $false
 
+    $downloadSuccess = $false
     try {
-        try {
-            [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
-        } catch {}
         $wc = New-Object System.Net.WebClient
+        $wc.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64)")
+        Append-Log "[i] Connessione al server di rilascio in corso..."
+        Refresh-UI
         $wc.DownloadFile($url, $targetPath)
-        $global:SelectedIso = $targetPath
-        $txtIsoStatus.Text = "[OK] Scaricata: $isoName"
-        $txtIsoStatus.Foreground = Get-Brush "#10B981"
-        Append-Log "[OK] Download completato con successo: $targetPath"
-        $txtStepInfo.Text = "Download completato! Pronto all'installazione."
+        if (Test-Path $targetPath) {
+            Set-SelectedIso $targetPath
+            $downloadSuccess = $true
+            Append-Log "[OK] Download completato con successo: $targetPath"
+            $txtStepInfo.Text = "Download completato! Pronto per l'installazione."
+        }
     } catch {
-        Append-Log "[!] Errore durante il download: $($_.Exception.Message)"
-        [System.Diagnostics.Process]::Start("https://github.com/ANDRYXify/OSify/releases")
+        Append-Log "[!] Download diretto non riuscito tramite WebClient: $($_.Exception.Message)"
+        Append-Log "[i] Apertura del browser web predefinito per il download manuale..."
+        try {
+            [System.Diagnostics.Process]::Start($url)
+        } catch {
+            [System.Diagnostics.Process]::Start("https://github.com/ANDRYXify/OSify/releases")
+        }
+        [System.Windows.MessageBox]::Show("Il download diretto non puo' completarsi tramite i certificati di rete di Windows 7.`n`nE' stata aperta la pagina di download nel tuo browser.`nUna volta completato il download del file '$isoName', clicca 'Sfoglia' per selezionarlo.", "Download nel Browser", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
     } finally {
         $btnDownloadIso.IsEnabled = $true
         $btnInstall.IsEnabled = $true
     }
 })
 
+# Helper per esecuzione comandi esterni senza congelamento della finestra
+function Run-ToolWithOutput([string]$exePath, [string]$argString, [string]$description) {
+    Append-Log "[+] $description..."
+    $pInfo = New-Object System.Diagnostics.ProcessStartInfo
+    $pInfo.FileName = $exePath
+    $pInfo.Arguments = $argString
+    $pInfo.UseShellExecute = $false
+    $pInfo.RedirectStandardOutput = $true
+    $pInfo.RedirectStandardError = $true
+    $pInfo.CreateNoWindow = $true
+
+    $proc = [System.Diagnostics.Process]::Start($pInfo)
+    while (-not $proc.HasExited) {
+        $line = $proc.StandardOutput.ReadLine()
+        if ($line) {
+            $trimmed = $line.Trim()
+            if ($trimmed) { Append-Log "  > $trimmed" }
+        }
+        Refresh-UI
+        [System.Threading.Thread]::Sleep(40)
+    }
+    $remaining = $proc.StandardOutput.ReadToEnd()
+    if ($remaining) {
+        foreach ($rLine in $remaining.Split("`n")) {
+            $t = $rLine.Trim()
+            if ($t) { Append-Log "  > $t" }
+        }
+    }
+    return $proc.ExitCode
+}
+
 # Processo di Installazione
 $btnInstall.Add_Click({
+    # 1. Verifica selezione ISO
     if (-not $global:SelectedIso -or -not (Test-Path $global:SelectedIso)) {
-        [System.Windows.MessageBox]::Show("Seleziona o scarica prima l'immagine ISO di OSify per procedere.", "Immagine ISO Mancante", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning)
+        [System.Windows.MessageBox]::Show("Seleziona o indica prima il file ISO di OSify per procedere.`nPuoi cliccare 'Sfoglia' o trascinare il file nella finestra.", "Immagine ISO Mancante", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Warning)
         return
     }
 
-    if ($freeSpaceGB -lt 5.0) {
-        $res = [System.Windows.MessageBox]::Show("Su C: sono disponibili solo $freeSpaceGB GB liberi (consigliati almeno 5 GB). Desideri tentare comunque?", "Spazio su Disco Ridotto", [System.Windows.MessageBoxButton]::YesNo, [System.Windows.MessageBoxImage]::Question)
+    # 2. Calcolo dello spazio strettamente necessario (per Vintage bastano ~1.5 GB)
+    $isoLengthMB = [math]::Round((Get-Item $global:SelectedIso).Length / 1MB)
+    $neededMB = [math]::Max(1200, $isoLengthMB + 350)
+    $neededGB = [math]::Round($neededMB / 1024, 1)
+
+    if ($freeSpaceGB -lt $neededGB -and -not (Test-Path 'O:\')) {
+        $res = [System.Windows.MessageBox]::Show("Su C: sono rilevati $freeSpaceGB GB liberi (spazio raccomandato: $neededGB GB).`nDesideri tentare comunque il partizionamento?", "Spazio su Disco Ridotto", [System.Windows.MessageBoxButton]::YesNo, [System.Windows.MessageBoxImage]::Question)
         if ($res -ne [System.Windows.MessageBoxResult]::Yes) { return }
     }
 
@@ -387,46 +525,121 @@ $btnInstall.Add_Click({
     $btnBrowseIso.IsEnabled = $false
     $btnDownloadIso.IsEnabled = $false
 
-    # FASE 1: Partizionamento DiskPart
+    # FASE 1: Partizionamento o Preparazione Unità O:
     $progBar.Value = 15
-    $txtStepInfo.Text = "[1/4] Creazione partizione temporanea da 5GB tramite DiskPart..."
-    Append-Log "[+] Preparazione script DiskPart per unita O:\..."
+    $txtStepInfo.Text = "[1/4] Configurazione partizione temporanea per l'avvio..."
 
-    $dpFile = Join-Path $env:TEMP "osify_gui_dp.txt"
-    $dpLines = @(
-        "select volume c",
-        "shrink desired=5120 minimum=4096",
-        "create partition primary",
-        "format fs=fat32 quick label=OSIFY_BOOT",
-        "assign letter=O",
-        "active"
-    )
-    [System.IO.File]::WriteAllLines($dpFile, $dpLines)
+    $partitionReady = $false
 
-    $pInfo = New-Object System.Diagnostics.ProcessStartInfo
-    $pInfo.FileName = "diskpart.exe"
-    $pInfo.Arguments = "/s `"$dpFile`""
-    $pInfo.UseShellExecute = $false
-    $pInfo.CreateNoWindow = $true
-    $p = [System.Diagnostics.Process]::Start($pInfo)
-    $p.WaitForExit()
-    Remove-Item $dpFile -Force -ErrorAction SilentlyContinue
+    # Se l'unità O: esiste già (es. tentativo precedente), usala direttamente
+    if (Test-Path 'O:\') {
+        Append-Log "[i] Unita (O:) rilevata come gia presente. Preparazione rapida..."
+        $dpCleanFile = Join-Path $env:TEMP "osify_clean_dp.txt"
+        $dpCleanLines = @(
+            "select volume O",
+            "format fs=fat32 quick label=OSIFY_BOOT",
+            "active"
+        )
+        [System.IO.File]::WriteAllLines($dpCleanFile, $dpCleanLines)
+        $code = Run-ToolWithOutput "diskpart.exe" "/s `"$dpCleanFile`"" "Formattazione rapida unita (O:)"
+        Remove-Item $dpCleanFile -Force -ErrorAction SilentlyContinue
+        if (Test-Path 'O:\') {
+            $partitionReady = $true
+            Append-Log "[OK] Unita (O:) pronta per i file di installazione."
+        }
+    }
+
+    if (-not $partitionReady) {
+        Append-Log "[+] Creazione partizione temporanea tramite DiskPart (Dimensione richiesta: $neededMB MB)..."
+        $dpFile = Join-Path $env:TEMP "osify_gui_dp.txt"
+        $dpLines = @(
+            "select volume c",
+            "shrink desired=$neededMB minimum=800",
+            "create partition primary",
+            "format fs=fat32 quick label=OSIFY_BOOT",
+            "assign letter=O",
+            "active"
+        )
+        [System.IO.File]::WriteAllLines($dpFile, $dpLines)
+
+        $code = Run-ToolWithOutput "diskpart.exe" "/s `"$dpFile`"" "Esecuzione DiskPart su volume C:"
+        Remove-Item $dpFile -Force -ErrorAction SilentlyContinue
+
+        if (Test-Path 'O:\') {
+            $partitionReady = $true
+            Append-Log "[OK] Partizione (O:) creata con successo e pronta."
+        } else {
+            # Tentativo fallback con dimensione minima per netbook con poco spazio
+            Append-Log "[!] Tentativo creazione con dimensione ultra-compatta (800MB)..."
+            $dpFbFile = Join-Path $env:TEMP "osify_fb_dp.txt"
+            $dpFbLines = @(
+                "select volume c",
+                "shrink desired=800 minimum=500",
+                "create partition primary",
+                "format fs=fat32 quick label=OSIFY_BOOT",
+                "assign letter=O",
+                "active"
+            )
+            [System.IO.File]::WriteAllLines($dpFbFile, $dpFbLines)
+            $code = Run-ToolWithOutput "diskpart.exe" "/s `"$dpFbFile`"" "Tentativo DiskPart ridotto"
+            Remove-Item $dpFbFile -Force -ErrorAction SilentlyContinue
+
+            if (Test-Path 'O:\') {
+                $partitionReady = $true
+                Append-Log "[OK] Partizione (O:) creata al secondo tentativo."
+            }
+        }
+    }
 
     if (-not (Test-Path 'O:\')) {
-        Append-Log "[ERRORE] Impossibile creare l'unita (O:). Verifica lo spazio libero."
+        Append-Log "[ERRORE] Impossibile creare o trovare l'unita (O:)."
+        Append-Log "Suggerimento: Verifica che il disco non abbia gia' 4 partizioni primarie (limite MBR)."
+        [System.Windows.MessageBox]::Show("Impossibile creare automaticamente la partizione O:\.`n`nMotivo probabile: il disco MBR ha gia' raggiunto il limite di 4 partizioni, oppure C: non ha spazio non frammentato da ridurre.", "Errore Partizione", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
         $btnInstall.IsEnabled = $true
+        $btnBrowseIso.IsEnabled = $true
+        $btnDownloadIso.IsEnabled = $true
         return
     }
-    Append-Log "[OK] Partizione (O:) creata e pronta."
 
     # FASE 2: Estrazione File ISO
     $progBar.Value = 45
-    $txtStepInfo.Text = "[2/4] Estrazione file di avvio e sistema su O:\..."
+    $txtStepInfo.Text = "[2/4] Estrazione file di sistema e bootloader su (O:)..."
     Append-Log "[+] Estrazione dell'immagine ISO in corso..."
 
     $extracted = $false
-    if (Get-Command "Mount-DiskImage" -ErrorAction SilentlyContinue) {
+
+    # Metodo A: 7za.exe standalone locale incluso nel pacchetto (100% offline e ultra-veloce)
+    $local7za = Join-Path $scriptDir "7za.exe"
+    if (Test-Path $local7za) {
+        $code = Run-ToolWithOutput $local7za "x `"$global:SelectedIso`" -oO:\ -y" "Estrazione tramite 7za integrato"
+        if ((Test-Path 'O:\boot') -or (Test-Path 'O:\EFI') -or (Test-Path 'O:\arch') -or (Test-Path 'O:\osify')) {
+            $extracted = $true
+            Append-Log "[OK] File estratti con successo tramite 7za locale!"
+        }
+    }
+
+    # Metodo B: 7-Zip installato nel sistema
+    if (-not $extracted) {
+        $candidates7z = @(
+            "$env:ProgramFiles\7-Zip\7z.exe",
+            "${env:ProgramFiles(x86)}\7-Zip\7z.exe",
+            (Join-Path $scriptDir "7z.exe")
+        )
+        foreach ($c7z in $candidates7z) {
+            if ($c7z -and (Test-Path $c7z)) {
+                $code = Run-ToolWithOutput $c7z "x `"$global:SelectedIso`" -oO:\ -y" "Estrazione tramite 7-Zip di sistema"
+                if ((Test-Path 'O:\boot') -or (Test-Path 'O:\EFI') -or (Test-Path 'O:\arch') -or (Test-Path 'O:\osify')) {
+                    $extracted = $true
+                    break
+                }
+            }
+        }
+    }
+
+    # Metodo C: Mount-DiskImage (Windows 8, 10, 11)
+    if (-not $extracted -and (Get-Command "Mount-DiskImage" -ErrorAction SilentlyContinue)) {
         try {
+            Append-Log "[i] Tentativo di montaggio nativo tramite Mount-DiskImage..."
             $mount = Mount-DiskImage -ImagePath $global:SelectedIso -PassThru
             $isoVol = $mount | Get-Volume
             if ($isoVol -and $isoVol.DriveLetter) {
@@ -439,45 +652,14 @@ $btnInstall.Add_Click({
     }
 
     if (-not $extracted) {
-        # Fallback 7-Zip (64-bit, 32-bit o cartella locale)
-        $candidates7z = @(
-            "$env:ProgramFiles\7-Zip\7z.exe",
-            "${env:ProgramFiles(x86)}\7-Zip\7z.exe",
-            (Join-Path $scriptDir "7z.exe"),
-            (Join-Path $scriptDir "7za.exe")
-        )
-        foreach ($c7z in $candidates7z) {
-            if ($c7z -and (Test-Path $c7z)) {
-                Append-Log "[i] Estrazione tramite 7-Zip ($c7z)..."
-                & $c7z x $global:SelectedIso -oO:\ -y | Out-Null
-                $extracted = $true
-                break
-            }
-        }
-    }
-
-    if (-not $extracted) {
-        # Download mini 7za se Windows 7 senza 7-Zip
-        try {
-            Append-Log "[i] Scaricamento mini-estrattore 7za per Windows 7..."
-            try { [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072 } catch {}
-            $wc = New-Object System.Net.WebClient
-            $zip = Join-Path $env:TEMP "7za.zip"
-            $wc.DownloadFile("https://www.7-zip.org/a/7za920.zip", $zip)
-            $shell = New-Object -ComObject Shell.Application
-            $dest = Join-Path $env:TEMP "7za_app"
-            if (-not (Test-Path $dest)) { New-Item -ItemType Directory -Path $dest | Out-Null }
-            $shell.NameSpace($dest).CopyHere($shell.NameSpace($zip).Items(), 16)
-            $exe = Join-Path $dest "7za.exe"
-            if (Test-Path $exe) {
-                & $exe x $global:SelectedIso -oO:\ -y | Out-Null
-                $extracted = $true
-            }
-        } catch {}
+        Append-Log "[ERRORE] Impossibile estrarre i file della ISO sull'unita (O:)."
+        [System.Windows.MessageBox]::Show("Estrazione file non riuscita. Puoi estrarre manualmente i file della ISO dentro O:\ e riprovare.", "Errore Estrazione", [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Error)
+        $btnInstall.IsEnabled = $true
+        return
     }
 
     $progBar.Value = 80
-    Append-Log "[OK] File estratti con successo su O:\."
+    Append-Log "[OK] Tutti i file di avvio sono stati posizionati su (O:)."
 
     # FASE 3: Configurazione Avvio BCD
     $txtStepInfo.Text = "[3/4] Configurazione voce di avvio nel Boot Manager..."
@@ -501,7 +683,7 @@ $btnInstall.Add_Click({
             Append-Log "[!] Configurazione BCD facoltativa: $($_.Exception.Message)"
         }
     } else {
-        Append-Log "[OK] Sistema Legacy BIOS (MBR): partizione O:\ attiva per il boot."
+        Append-Log "[OK] Sistema Legacy BIOS (MBR): partizione O:\ contrassegnata come attiva per l'avvio diretto."
     }
 
     # FASE 4: Completato!
