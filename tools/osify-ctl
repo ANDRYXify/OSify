@@ -214,11 +214,14 @@ case "${1:-status}" in
                 shift
                 python3 "$OSIFY_DIR/tools/hardware/osify-hw-validator.py" "$@"
                 ;;
+            desktop|gui)
+                python3 "$OSIFY_DIR/tools/desktop-simulator/server.py"
+                ;;
             sandbox)
                 "$OSIFY_DIR/tests/sandbox/run-docker-sandbox.sh"
                 ;;
             *)
-                echo "Uso: osify-ctl test {suite|vm [modern|toshiba|stress]|hw-check [--profile toshiba]|sandbox}"
+                echo "Uso: osify-ctl test {suite|desktop|vm [modern|toshiba|stress]|hw-check [--profile toshiba]|sandbox}"
                 ;;
         esac
         ;;
