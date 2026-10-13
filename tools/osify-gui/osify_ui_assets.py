@@ -235,6 +235,40 @@ def create_vector_icon(icon_type, size=32, color="#94a3b8", scale=4):
         d.line([(cx - r, cy), (cx + r, cy)], fill=color, width=lw)
         d.ellipse([cx - int(r * 0.45), cy - r, cx + int(r * 0.45), cy + r], outline=color, width=lw)
 
+    elif icon_type == "palette":
+        # Tavolozza d'artista per personalizzazione grafica e temi
+        cx, cy = hi_size // 2, hi_size // 2
+        pr = int(w * 0.42)
+        # Corpo tavolozza ellittica
+        d.ellipse([cx - pr, cy - int(pr * 0.8), cx + pr, cy + int(pr * 0.8)], outline=color, width=lw)
+        # Foro per pollice
+        d.ellipse([cx + int(pr * 0.3), cy + int(pr * 0.1), cx + int(pr * 0.6), cy + int(pr * 0.45)], outline=color, width=max(1, lw - 1))
+        # 3 Punti di colore
+        for dx, dy in [(-int(pr * 0.5), -int(pr * 0.2)), (-int(pr * 0.1), -int(pr * 0.45)), (int(pr * 0.3), -int(pr * 0.35))]:
+            d.ellipse([cx + dx - int(scale * 2.5), cy + dy - int(scale * 2.5), cx + dx + int(scale * 2.5), cy + dy + int(scale * 2.5)], fill=color)
+
+    elif icon_type == "broom":
+        # Icona per pulizia e ottimizzazione memoria cache
+        cx, cy = hi_size // 2, hi_size // 2
+        # Manico diagonale
+        d.line([(cx + int(w * 0.35), cy - int(h * 0.4)), (cx - int(w * 0.1), cy + int(h * 0.1))], fill=color, width=lw)
+        # Setole della scopa
+        bx, by = cx - int(w * 0.25), cy + int(h * 0.25)
+        d.polygon([(cx - int(w * 0.05), cy + int(h * 0.05)), (cx - int(w * 0.2), cy + int(h * 0.4)), (cx - int(w * 0.4), cy + int(h * 0.25))], outline=color, width=lw)
+        # Linee di brillantezza / pulito
+        d.line([(cx + int(w * 0.15), cy + int(h * 0.25)), (cx + int(w * 0.3), cy + int(h * 0.25))], fill=color, width=max(1, lw - 1))
+        d.line([(cx + int(w * 0.22), cy + int(h * 0.18)), (cx + int(w * 0.22), cy + int(h * 0.32))], fill=color, width=max(1, lw - 1))
+
+    elif icon_type == "touch":
+        # Dito e target touch per tablet e schermi tattili
+        cx, cy = hi_size // 2, hi_size // 2
+        # Sagoma dito puntatore verso l'alto
+        fx = cx - int(scale * 3)
+        draw_rounded_rect(d, (fx, cy - int(h * 0.2), fx + int(scale * 10), cy + int(h * 0.4)), radius=int(scale * 5), outline=color, width=lw)
+        # Cerchi concentrici di tocco in alto
+        d.arc([cx - int(w * 0.25), cy - int(h * 0.45), cx + int(w * 0.25), cy + int(h * 0.05)], start=210, end=330, fill=color, width=lw)
+        d.arc([cx - int(w * 0.4), cy - int(h * 0.6), cx + int(w * 0.4), cy + int(h * 0.2)], start=220, end=320, fill=color, width=max(1, lw - 1))
+
     # Downsampling di alta qualità per perfetto anti-aliasing
     return im.resize((size, size), Image.Resampling.LANCZOS)
 

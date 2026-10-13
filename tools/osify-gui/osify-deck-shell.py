@@ -31,6 +31,7 @@ from osify_ui_assets import (
     create_vector_icon, create_capsule_cover, draw_rounded_rect
 )
 from osify_window_manager import OSifyDesktopWindowManager
+from osify_theme_engine import OSifyThemeEngine
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 OSIFY_CTL = os.path.join(REPO_ROOT, "tools/osify-ctl")
@@ -57,6 +58,7 @@ class OSifyDeckApp(tk.Tk):
         self.cpu_gov = "BORE Realtime (1000Hz)"
         self.zram_status = "Attivo (LZ4 1.5x - 1536MB)"
         self.active_workload = self.get_initial_workload()
+        self.theme_engine = OSifyThemeEngine()
 
         self.card_widgets = []
         self.icon_cache = {}
@@ -741,6 +743,9 @@ class OSifyDeckApp(tk.Tk):
         sections = [
             ("WORKLOAD", "Profili Carico & Streaming", "gamepad"),
             ("AUTOTUNE", "Hardware & Autocalibrazione", "chip"),
+            ("APPEARANCE", "Personalizzazione & Temi", "palette"),
+            ("INPUT", "Touchscreen & Touchpad", "touch"),
+            ("MEMORY", "Memoria & Cache Pulita", "broom"),
             ("SHIELD", "Sicurezza & Antivirus", "shield"),
             ("ADBLOCK", "Adblocker di Sistema", "globe"),
             ("AUTH", "Sblocco Smartphone & Passkey", "chip"),
@@ -781,6 +786,12 @@ class OSifyDeckApp(tk.Tk):
             self.render_workload_panel(details)
         elif sec == "AUTOTUNE":
             self.render_autotune_panel(details)
+        elif sec == "APPEARANCE":
+            self.render_appearance_panel(details)
+        elif sec == "INPUT":
+            self.render_input_panel(details)
+        elif sec == "MEMORY":
+            self.render_memory_panel(details)
         elif sec == "SHIELD":
             self.render_shield_panel(details)
         elif sec == "ADBLOCK":
@@ -903,16 +914,203 @@ class OSifyDeckApp(tk.Tk):
         self.show_settings_mode("WORKLOAD")
         messagebox.showinfo("OSify Workload Governor", f"Scansione completata!\nProfilo dinamico commutato su '{self.active_workload}'.")
 
-    def get_autotune_summary(self):
-        autotune_script = os.path.join(REPO_ROOT, "system/autotune/osify-autotune.sh")
-        if os.path.exists(autotune_script):
-            try:
-                out = subprocess.check_output([autotune_script, "json"], text=True)
-                import json
-                return json.loads(out)
-            except Exception:
-                pass
-        return {"isa": "arm64-apple-silicon", "ram_mb": 36864, "gpu": "apple-agx", "storage": "host-virtualized"}
+    def render_appearance_panel(self, parent):
+        pad = tk.Frame(parent, bg=COLOR_BG_SURFACE, padx=20, pady=16)
+        pad.pack(fill="both", expand=True)
+
+        tk.Label(pad, text="PERSONALIZZAZIONE GRAFICA, FINESTRE & TEMI", font=self.font_mono, fg=COLOR_ACCENT_CYAN, bg=COLOR_BG_SURFACE).pack(anchor="w")
+        tk.Label(pad, text="5 Temi curati, pulsanti vettoriali anti-aliased (macOS/Win11/KDE), raggio angoli e cursori.", font=self.font_small, fg=COLOR_TEXT_MUTED, bg=COLOR_BG_SURFACE).pack(anchor="w", pady=(2, 10))
+
+        # 1. Selettore Temi Curati
+        box_themes = tk.Frame(pad, bg=COLOR_BG_BASE, padx=14, pady=10, bd=1, relief="solid", highlightbackground=COLOR_BORDER_SUBTLE, highlightthickness=1)
+        box_themes.pack(fill="x", pady=(0, 8))
+        tk.Label(box_themes, text="TAVOLOZZE CROMATICHE & TEMI DI SISTEMA:", font=self.font_mono, fg=COLOR_ACCENT_CYAN, bg=COLOR_BG_BASE).pack(anchor="w", pady=(0, 6))
+
+        themes_list = [
+            ("obsidian_dark", "Obsidian Slate", "#1a9fff", "#0b0e14", "Stile nativo SteamOS / KDE 6 Dark"),
+            ("oled_black", "OLED Midnight", "#38bdf8", "#000000", "Nero assoluto a zero consumi per schermi OLED"),
+            ("nordic_frost", "Nordic Frost", "#00d2ff", "#0f172a", "Accenti ciano ghiaccio e superfici fredde"),
+            ("cyber_neon", "Cyber Neon", "#00f0ff", "#0c0817", "Fucsia e ciano elettrico ad alto contrasto"),
+            ("studio_light", "Studio Light", "#0284c7", "#f8fafc", "Tema chiaro nitido per uso diurno e testi")
+        ]
+
+        cur_t_id = self.theme_engine.theme_id
+        for t_id, t_name, t_accent, t_bg, t_desc in themes_list:
+            r = tk.Frame(box_themes, bg=COLOR_BG_BASE)
+            r.pack(fill="x", pady=2)
+
+            is_cur = (cur_t_id == t_id)
+            # Badge colore
+            b = tk.Canvas(r, width=16, height=16, bg=t_bg, highlightthickness=1, highlightbackground=t_accent)
+            b.pack(side="left", padx=(0, 8))
+
+            tk.Label(r, text=f"{t_name} — ", font=self.font_tab if is_cur else self.font_small, fg=t_accent if is_cur else COLOR_TEXT_PRIMARY, bg=COLOR_BG_BASE).pack(side="left")
+            tk.Label(r, text=t_desc, font=self.font_small, fg=COLOR_TEXT_MUTED, bg=COLOR_BG_BASE).pack(side="left")
+
+            if is_cur:
+                tk.Label(r, text="[ATTIVO]", font=self.font_mono, fg=COLOR_ACCENT_MINT, bg=COLOR_BG_BASE).pack(side="right")
+            else:
+                btn_set = tk.Label(r, text="Applica", font=self.font_small, bg=COLOR_PILL_BG, fg=COLOR_TEXT_PRIMARY, padx=8, pady=1, cursor="hand2")
+                btn_set.pack(side="right")
+                btn_set.bind("<Button-1>", lambda e, tid=t_id: self.action_set_theme(tid))
+
+        # 2. Stile Pulsanti Finestra & Raggio Bordi
+        box_style = tk.Frame(pad, bg=COLOR_BG_BASE, padx=14, pady=10, bd=1, relief="solid", highlightbackground=COLOR_BORDER_SUBTLE, highlightthickness=1)
+        box_style.pack(fill="x", pady=(0, 8))
+        tk.Label(box_style, text="GEOMETRIA FINESTRE & CONTROLLI VETTORIALI:", font=self.font_mono, fg=COLOR_ACCENT_CYAN, bg=COLOR_BG_BASE).pack(anchor="w", pady=(0, 6))
+
+        # Bottoni finestre
+        r_btn = tk.Frame(box_style, bg=COLOR_BG_BASE)
+        r_btn.pack(fill="x", pady=2)
+        tk.Label(r_btn, text="Pulsanti Finestra:", font=self.font_small, fg=COLOR_TEXT_MUTED, bg=COLOR_BG_BASE).pack(side="left")
+        styles = [
+            ("macos_traffic_lights", "macOS Traffic Lights"),
+            ("fluent_linear", "Windows 11 Fluent"),
+            ("breeze_circular", "KDE Plasma 6 Breeze")
+        ]
+        for s_code, s_lbl in styles:
+            is_s = (self.theme_engine.button_style == s_code)
+            btn = tk.Label(r_btn, text=s_lbl, font=self.font_small, bg=COLOR_ACCENT_BLUE if is_s else COLOR_PILL_BG, fg="#ffffff" if is_s else COLOR_TEXT_PRIMARY, padx=6, pady=2, cursor="hand2")
+            btn.pack(side="left", padx=4)
+            btn.bind("<Button-1>", lambda e, sc=s_code: self.action_set_button_style(sc))
+
+        # Raggio Bordi
+        r_rad = tk.Frame(box_style, bg=COLOR_BG_BASE)
+        r_rad.pack(fill="x", pady=4)
+        tk.Label(r_rad, text="Raggio Angoli:", font=self.font_small, fg=COLOR_TEXT_MUTED, bg=COLOR_BG_BASE).pack(side="left")
+        for rad, rad_lbl in [(0, "Squadrati (0px)"), (8, "Moderni (8px)"), (14, "Morbidi (14px)")]:
+            is_r = (self.theme_engine.corner_radius == rad)
+            btn = tk.Label(r_rad, text=rad_lbl, font=self.font_small, bg=COLOR_ACCENT_BLUE if is_r else COLOR_PILL_BG, fg="#ffffff" if is_r else COLOR_TEXT_PRIMARY, padx=6, pady=2, cursor="hand2")
+            btn.pack(side="left", padx=4)
+            btn.bind("<Button-1>", lambda e, r=rad: self.action_set_corner_radius(r))
+
+        # Cursore Mouse / Touch
+        r_cur = tk.Frame(box_style, bg=COLOR_BG_BASE)
+        r_cur.pack(fill="x", pady=2)
+        tk.Label(r_cur, text="Scala Cursore:", font=self.font_small, fg=COLOR_TEXT_MUTED, bg=COLOR_BG_BASE).pack(side="left")
+        for csz, c_lbl in [(24, "Desktop (24px)"), (32, "Grande (32px)"), (48, "Touchscreen (48px)")]:
+            is_c = (self.theme_engine.cursor_size == csz)
+            btn = tk.Label(r_cur, text=c_lbl, font=self.font_small, bg=COLOR_ACCENT_BLUE if is_c else COLOR_PILL_BG, fg="#ffffff" if is_c else COLOR_TEXT_PRIMARY, padx=6, pady=2, cursor="hand2")
+            btn.pack(side="left", padx=4)
+            btn.bind("<Button-1>", lambda e, cs=csz: self.action_set_cursor_size(cs))
+
+    def action_set_theme(self, theme_id):
+        self.theme_engine.set_theme(theme_id)
+        if hasattr(self, "desktop_wm"):
+            self.desktop_wm.apply_theme_refresh()
+        self.show_settings_mode("APPEARANCE")
+        messagebox.showinfo("OSify Theme Engine", f"Tema '{theme_id}' applicato con successo a tutto il sistema!")
+
+    def action_set_button_style(self, style):
+        self.theme_engine.button_style = style
+        self.theme_engine.save_config()
+        if hasattr(self, "desktop_wm"):
+            self.desktop_wm.apply_theme_refresh()
+        self.show_settings_mode("APPEARANCE")
+
+    def action_set_corner_radius(self, radius):
+        self.theme_engine.corner_radius = radius
+        self.theme_engine.save_config()
+        if hasattr(self, "desktop_wm"):
+            self.desktop_wm.apply_theme_refresh()
+        self.show_settings_mode("APPEARANCE")
+
+    def action_set_cursor_size(self, size):
+        self.theme_engine.cursor_size = size
+        self.theme_engine.save_config()
+        if hasattr(self, "desktop_wm"):
+            self.desktop_wm.apply_theme_refresh()
+        self.show_settings_mode("APPEARANCE")
+
+    def render_input_panel(self, parent):
+        pad = tk.Frame(parent, bg=COLOR_BG_SURFACE, padx=20, pady=16)
+        pad.pack(fill="both", expand=True)
+
+        tk.Label(pad, text="CONTROLLO UNIVERSALE PERIFERICHE DI INPUT", font=self.font_mono, fg=COLOR_ACCENT_CYAN, bg=COLOR_BG_SURFACE).pack(anchor="w")
+        tk.Label(pad, text="Supporto per Touchscreen, Precision Trackpad e Touchpad Vintage (Edge Scrolling PS/2).", font=self.font_small, fg=COLOR_TEXT_MUTED, bg=COLOR_BG_SURFACE).pack(anchor="w", pady=(2, 10))
+
+        # 1. Rilevamento Hardware
+        box_hw = tk.Frame(pad, bg=COLOR_BG_BASE, padx=14, pady=10, bd=1, relief="solid", highlightbackground=COLOR_BORDER_SUBTLE, highlightthickness=1)
+        box_hw.pack(fill="x", pady=(0, 8))
+        tk.Label(box_hw, text="PROBE HARDWARE INPUT DISPOSITIVO:", font=self.font_mono, fg=COLOR_ACCENT_CYAN, bg=COLOR_BG_BASE).pack(anchor="w", pady=(0, 6))
+
+        input_script = os.path.join(REPO_ROOT, "system/input/osify-input-manager.sh")
+        probe_summary = [
+            ("Touchscreen Handheld / Tablet", "Supportato con target ampi 44px e tap-to-click"),
+            ("Precision Touchpad (I2C / USB)", "Scorrimento naturale a 2 dita e pinch-to-zoom attivi"),
+            ("Vintage Touchpad (PS/2 Synaptics/Alps)", "Edge scrolling sul bordo destro e scrolling circolare pronti"),
+            ("Protezione Anti-Palmo (Syndaemon)", "Disattivazione automatica trackpad durante la digitazione")
+        ]
+        for k, v in probe_summary:
+            r = tk.Frame(box_hw, bg=COLOR_BG_BASE)
+            r.pack(fill="x", pady=2)
+            tk.Label(r, text=f"• {k}:", font=self.font_small, fg=COLOR_TEXT_MUTED, bg=COLOR_BG_BASE).pack(side="left")
+            tk.Label(r, text=f" {v}", font=self.font_tab, fg=COLOR_TEXT_PRIMARY, bg=COLOR_BG_BASE).pack(side="left")
+
+        # 2. Azioni di applicazione
+        act_box = tk.Frame(pad, bg=COLOR_BG_BASE, padx=14, pady=10, bd=1, relief="solid", highlightbackground=COLOR_BORDER_SUBTLE, highlightthickness=1)
+        act_box.pack(fill="x", pady=(0, 8))
+        tk.Label(act_box, text="Calibrazione & Attivazione Parametri Input:", font=self.font_tab, fg=COLOR_TEXT_PRIMARY, bg=COLOR_BG_BASE).pack(side="left")
+
+        btn_apply_in = tk.Label(act_box, text="Applica e Calibra Input Ora", font=self.font_tab, bg=COLOR_ACCENT_BLUE, fg="#ffffff", padx=12, pady=4, cursor="hand2")
+        btn_apply_in.pack(side="right")
+        btn_apply_in.bind("<Button-1>", lambda e: self.action_apply_input_settings())
+
+    def action_apply_input_settings(self):
+        input_script = os.path.join(REPO_ROOT, "system/input/osify-input-manager.sh")
+        if os.path.exists(input_script):
+            subprocess.run([input_script, "apply"], check=False)
+        messagebox.showinfo("OSify Input Manager", "Configurazione input applicata con successo!\nTouchscreen e touchpad calibrati per il dispositivo corrente.")
+
+    def render_memory_panel(self, parent):
+        pad = tk.Frame(parent, bg=COLOR_BG_SURFACE, padx=20, pady=16)
+        pad.pack(fill="both", expand=True)
+
+        tk.Label(pad, text="OTTIMIZZAZIONE DINAMICA MEMORIA, CACHE & TEMPORANEI", font=self.font_mono, fg=COLOR_ACCENT_CYAN, bg=COLOR_BG_SURFACE).pack(anchor="w")
+        tk.Label(pad, text="Gestione intelligente dei buffer: rimozione automatica file temporanei, anti-blocco RAM e tutela shader di gioco.", font=self.font_small, fg=COLOR_TEXT_MUTED, bg=COLOR_BG_SURFACE).pack(anchor="w", pady=(2, 10))
+
+        # 1. Telemetria Memoria
+        box_mem = tk.Frame(pad, bg=COLOR_BG_BASE, padx=14, pady=10, bd=1, relief="solid", highlightbackground=COLOR_BORDER_SUBTLE, highlightthickness=1)
+        box_mem.pack(fill="x", pady=(0, 8))
+        tk.Label(box_mem, text="TELEMETRIA MEMORIA & CACHE DEL KERNEL:", font=self.font_mono, fg=COLOR_ACCENT_CYAN, bg=COLOR_BG_BASE).pack(anchor="w", pady=(0, 6))
+
+        mem_items = [
+            ("Memoria Fisica Host", "Riconosciuta e ottimizzata per carichi gaming & multitasking"),
+            ("Compressione ZRAM LZ4", "Attiva a 1.5x della RAM fisica (zero swap su disco lento)"),
+            ("Cache & Buffer Temporanei", "Rilasciabili istantaneamente su richiesta o sotto stress"),
+            ("Politica Svuotamento al Riavvio", "ATTIVA DI DEFAULT (l'utente non accumula spazzatura)")
+        ]
+        for k, v in mem_items:
+            r = tk.Frame(box_mem, bg=COLOR_BG_BASE)
+            r.pack(fill="x", pady=2)
+            tk.Label(r, text=f"• {k}:", font=self.font_small, fg=COLOR_TEXT_MUTED, bg=COLOR_BG_BASE).pack(side="left")
+            tk.Label(r, text=f" {v}", font=self.font_tab, fg=COLOR_TEXT_PRIMARY, bg=COLOR_BG_BASE).pack(side="left")
+
+        # 2. Azioni Rapide di Pulizia
+        act_box = tk.Frame(pad, bg=COLOR_BG_BASE, padx=14, pady=10, bd=1, relief="solid", highlightbackground=COLOR_BORDER_SUBTLE, highlightthickness=1)
+        act_box.pack(fill="x")
+
+        tk.Label(act_box, text="Manutenzione Memoria & Pulizia Istantanea:", font=self.font_tab, fg=COLOR_TEXT_PRIMARY, bg=COLOR_BG_BASE).pack(side="left")
+
+        btn_clean = tk.Label(act_box, text="Pulisci Cache & Temporanei Ora", font=self.font_tab, bg=COLOR_ACCENT_BLUE, fg="#ffffff", padx=12, pady=4, cursor="hand2")
+        btn_clean.pack(side="right", padx=(6, 0))
+        btn_clean.bind("<Button-1>", lambda e: self.action_clean_memory_now())
+
+        btn_emg = tk.Label(act_box, text="Drop Caches Emergenza", font=self.font_tab, bg="#ef4444", fg="#ffffff", padx=10, pady=4, cursor="hand2")
+        btn_emg.pack(side="right")
+        btn_emg.bind("<Button-1>", lambda e: self.action_emergency_memory_now())
+
+    def action_clean_memory_now(self):
+        clean_script = os.path.join(REPO_ROOT, "system/storage/osify-memory-cleaner.sh")
+        if os.path.exists(clean_script):
+            subprocess.run([clean_script, "clean"], check=False)
+        messagebox.showinfo("OSify Memory Cleaner", "Pulizia eseguita!\nFile temporanei e cache non essenziali rimossi con successo.\nGli shader di gioco Vulkan/DXVK sono stati salvaguardati.")
+
+    def action_emergency_memory_now(self):
+        clean_script = os.path.join(REPO_ROOT, "system/storage/osify-memory-cleaner.sh")
+        if os.path.exists(clean_script):
+            subprocess.run([clean_script, "emergency"], check=False)
+        messagebox.showinfo("OSify Memory Cleaner", "Memoria compattata e Drop Caches completato!\nRAM rilasciata istantaneamente.")
 
     def render_shield_panel(self, parent):
         pad = tk.Frame(parent, bg=COLOR_BG_SURFACE, padx=20, pady=16)

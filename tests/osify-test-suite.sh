@@ -394,6 +394,114 @@ else
     log_fail "OSify ISO Builder: Errore nella preparazione del profilo ISO autonomo"
 fi
 
+# ------------------------------------------------------------------------------
+# TEST 11: PERSONALIZZAZIONE PREMIUM, INPUT UNIVERSALE, GESTIONE MEMORIA & HOMEBREW
+# ------------------------------------------------------------------------------
+echo ""
+echo "--- [11] Personalizzazione Grafica, Input Universale, Memoria & Homebrew ---"
+
+# 11.1 OSify Theme Engine & Vector Titlebar Buttons
+if python3 -c "
+import sys
+sys.path.insert(0, '$REPO_ROOT/tools/osify-gui')
+import tkinter as tk
+from osify_theme_engine import OSifyThemeEngine, THEMES
+
+root = tk.Tk()
+root.withdraw()
+
+te = OSifyThemeEngine()
+assert len(THEMES) >= 5, 'Meno di 5 temi configurati'
+for tid in ('obsidian_dark', 'oled_black', 'nordic_frost', 'cyber_neon', 'studio_light'):
+    assert tid in THEMES, f'Tema {tid} mancante'
+    te.set_theme(tid)
+    assert te.theme_id == tid
+
+for style in ('macos_traffic_lights', 'fluent_linear', 'breeze_circular'):
+    te.set_window_buttons_style(style)
+    assert te.button_style == style
+    # Genera pulsanti di prova
+    for b in ('close', 'minimize', 'maximize'):
+        for st in ('normal', 'hover', 'active'):
+            img = te.render_titlebar_button(b, st, size=14)
+            assert img is not None
+
+te.set_corner_radius(8)
+assert te.corner_radius == 8
+te.set_cursor_size(32)
+assert te.cursor_size == 32
+root.destroy()
+print('Theme Engine OK')
+" >/dev/null 2>&1; then
+    log_pass "Theme Engine: 5 temi ufficiali, rendering vettoriale pulsanti finestra (macOS/Win11/KDE) e parametri geometrici validati"
+else
+    log_fail "Theme Engine: Errore nella validazione del motore di personalizzazione grafica"
+fi
+
+# 11.2 Ottimizzazione Dinamica Memoria, Cache & Temporanei
+if [[ -x "$REPO_ROOT/system/storage/osify-memory-cleaner.sh" ]] && \
+   "$REPO_ROOT/system/storage/osify-memory-cleaner.sh" status >/dev/null 2>&1 && \
+   "$REPO_ROOT/system/storage/osify-memory-cleaner.sh" test >/dev/null 2>&1; then
+    log_pass "Memory Cleaner: Pulizia cache/temporanei al riavvio, protezione Anti-OOM e tutela shader gioco Vulkan verificate"
+else
+    log_fail "Memory Cleaner: Errore nel collaudo del gestore memoria e cache"
+fi
+
+# 11.3 Gestione Universale Input (Touchscreen, Precision Trackpad & Vintage PS/2)
+if [[ -x "$REPO_ROOT/system/input/osify-input-manager.sh" ]] && \
+   "$REPO_ROOT/system/input/osify-input-manager.sh" status >/dev/null 2>&1 && \
+   "$REPO_ROOT/system/input/osify-input-manager.sh" test >/dev/null 2>&1; then
+    log_pass "Input Manager: Touchscreen 44px, precision trackpad naturale e scrolling bordo destro per netbook PS/2 operativi"
+else
+    log_fail "Input Manager: Errore nel collaudo del motore universale periferiche input"
+fi
+
+# 11.4 Shell Polyglot & Suite Homebrew Completa
+if [[ -x "$REPO_ROOT/tools/osify-shell/osify-polyglot-env.sh" ]] && \
+   "$REPO_ROOT/tools/osify-shell/osify-polyglot-env.sh" test >/dev/null 2>&1; then
+    log_pass "Polyglot Shell: Homebrew CLI suite (install, search, cleanup, doctor), comandi Windows e macOS verificati al 100%"
+else
+    log_fail "Polyglot Shell: Errore nel collaudo dei comandi shell e integrazione Homebrew"
+fi
+
+# 11.5 Window Manager: Snapping, Hot-Reload Temi e Finestre Native
+if python3 -c "
+import sys
+sys.path.insert(0, '$REPO_ROOT/tools/osify-gui')
+import tkinter as tk
+from osify_ui_assets import create_vector_icon
+from osify_window_manager import OSifyDesktopWindowManager
+
+root = tk.Tk()
+root.geometry('1160x720')
+viewport = tk.Frame(root)
+viewport.pack(fill='both', expand=True)
+
+wm = OSifyDesktopWindowManager(viewport, lambda t, **k: create_vector_icon(t), lambda: None)
+root.update_idletasks()
+
+# Apri finestre native create
+wm.open_customizer_window()
+wm.open_memory_cleaner_window()
+wm.open_input_settings_window()
+root.update_idletasks()
+
+assert any(w.title == 'Personalizzazione & Stile' for w in wm.windows.values())
+assert any(w.title == 'Pulizia Memoria & Cache' for w in wm.windows.values())
+assert any(w.title == 'Calibrazione Input & Touch' for w in wm.windows.values())
+
+# Test Hot-Reload Temi
+wm.apply_theme_refresh()
+root.update_idletasks()
+
+root.destroy()
+print('WM Advanced Features OK')
+" >/dev/null 2>&1; then
+    log_pass "Window Manager Esteso: Finestre di personalizzazione, pulizia memoria, input e hot-reload del tema collaudati con successo"
+else
+    log_fail "Window Manager Esteso: Errore nel collaudo delle finestre native o del refresh dinamico"
+fi
+
 echo "                  REPORT FINALE COLLAUDO                 "
 echo "========================================================="
 echo "  TEST SUPERATI : $PASSED_COUNT"
