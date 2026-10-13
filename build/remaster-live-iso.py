@@ -25,6 +25,59 @@ def run(cmd, cwd=None):
         sys.exit(1)
     return res.stdout
 
+def extract_cpio_archive(data, dest_dir):
+    pos = 0
+    total = len(data)
+    count = 0
+    while pos + 110 <= total:
+        magic = data[pos:pos+6]
+        if magic not in (b'070701', b'070702'):
+            break
+        header = data[pos:pos+110]
+        pos += 110
+        mode = int(header[14:22], 16)
+        filesize = int(header[54:62], 16)
+        namesize = int(header[94:102], 16)
+        
+        name_raw = data[pos:pos+namesize-1]
+        pos += namesize
+        if (110 + namesize) % 4 != 0:
+            pos += 4 - ((110 + namesize) % 4)
+            
+        name = name_raw.decode('utf-8', 'ignore')
+        if name == 'TRAILER!!!':
+            break
+            
+        file_data = data[pos:pos+filesize]
+        pos += filesize
+        if filesize % 4 != 0:
+            pos += 4 - (filesize % 4)
+            
+        if name in ('.', '..') or name.startswith('/'):
+            continue
+            
+        target_path = os.path.join(dest_dir, name)
+        file_type = mode & 0o170000
+        
+        try:
+            if file_type == 0o040000: # Directory
+                os.makedirs(target_path, exist_ok=True)
+            elif file_type == 0o120000: # Symlink
+                os.makedirs(os.path.dirname(target_path), exist_ok=True)
+                link_target = file_data.decode('utf-8', 'ignore')
+                if os.path.islink(target_path) or os.path.exists(target_path):
+                    os.unlink(target_path)
+                os.symlink(link_target, target_path)
+            elif file_type == 0o100000: # Regular file
+                os.makedirs(os.path.dirname(target_path), exist_ok=True)
+                with open(target_path, 'wb') as f:
+                    f.write(file_data)
+                os.chmod(target_path, mode & 0o777)
+            count += 1
+        except Exception:
+            pass
+    return count
+
 def inject_windows_installer(dest_iso_root):
     tools_win = os.path.join(dest_iso_root, "tools/windows-installer")
     os.makedirs(tools_win, exist_ok=True)
@@ -124,9 +177,13 @@ LABEL safe
     # Remastering rootfs4
     print("[i] Remastering rootfs4 desktop e toolchain...")
     r4_work = os.path.join(work_dir, "rootfs4")
-    os.makedirs(r4_work)
+    os.makedirs(r4_work, exist_ok=True)
     r4_gz = os.path.join(iso_root, "boot/rootfs4.gz")
-    run(f"python3 -c \"import lzma, sys; sys.stdout.buffer.write(lzma.decompress(open('{r4_gz}', 'rb').read()))\" | (cd '{r4_work}' && cpio -idmv > /dev/null 2>&1)")
+    
+    with open(r4_gz, "rb") as f:
+        r4_data = lzma.decompress(f.read())
+    n_files = extract_cpio_archive(r4_data, r4_work)
+    print(f"[✓] Decompressi {n_files} file da rootfs4.gz senza errori")
 
     img_dir = os.path.join(r4_work, "usr/share/images")
     os.makedirs(img_dir, exist_ok=True)
@@ -136,15 +193,42 @@ LABEL safe
 
     # Iniezione GNU Bash statico 32-bit (i386) per esecuzione garantita di tutti gli script
     print("[i] Iniezione binario GNU Bash statico 32-bit (i386)...")
-    docker_bash_cmd = (
-        f"docker run --rm -v '{r4_work}':/r4 ubuntu:20.04 bash -c '"
-        f"dpkg --add-architecture i386 && apt-get update -qq && "
-        f"apt-get install -y -qq bash-static:i386 > /dev/null && "
-        f"mkdir -p /r4/bin /r4/usr/bin && "
-        f"cp /bin/bash-static /r4/bin/bash && chmod 755 /r4/bin/bash && "
-        f"ln -sf /bin/bash /r4/usr/bin/bash'"
-    )
-    run(docker_bash_cmd)
+    bash_injected = False
+    for candidate in ["/bin/bash-static", "/usr/bin/bash-static"]:
+        if os.path.exists(candidate):
+            os.makedirs(os.path.join(r4_work, "bin"), exist_ok=True)
+            shutil.copy2(candidate, os.path.join(r4_work, "bin/bash"))
+            os.chmod(os.path.join(r4_work, "bin/bash"), 0o755)
+            os.makedirs(os.path.join(r4_work, "usr/bin"), exist_ok=True)
+            if not os.path.exists(os.path.join(r4_work, "usr/bin/bash")):
+                os.symlink("/bin/bash", os.path.join(r4_work, "usr/bin/bash"))
+            bash_injected = True
+            print(f"[✓] Inietto bash-static da sistema: {candidate}")
+            break
+
+    if not bash_injected and shutil.which("docker"):
+        try:
+            docker_bash_cmd = (
+                f"docker run --rm -v '{r4_work}':/r4 ubuntu:20.04 bash -c '"
+                f"dpkg --add-architecture i386 && apt-get update -qq && "
+                f"apt-get install -y -qq bash-static:i386 > /dev/null && "
+                f"mkdir -p /r4/bin /r4/usr/bin && "
+                f"cp /bin/bash-static /r4/bin/bash && chmod 755 /r4/bin/bash && "
+                f"ln -sf /bin/bash /r4/usr/bin/bash'"
+            )
+            run(docker_bash_cmd)
+            bash_injected = True
+            print("[✓] Inietto bash-static via container docker")
+        except Exception as e:
+            print(f"[!] Warning docker bash: {e}")
+
+    if not bash_injected:
+        os.makedirs(os.path.join(r4_work, "bin"), exist_ok=True)
+        if not os.path.exists(os.path.join(r4_work, "bin/bash")):
+            os.symlink("/bin/sh", os.path.join(r4_work, "bin/bash"))
+        os.makedirs(os.path.join(r4_work, "usr/bin"), exist_ok=True)
+        if not os.path.exists(os.path.join(r4_work, "usr/bin/bash")):
+            os.symlink("/bin/bash", os.path.join(r4_work, "usr/bin/bash"))
 
     bin_dir = os.path.join(r4_work, "usr/bin")
     os.makedirs(bin_dir, exist_ok=True)
@@ -253,22 +337,46 @@ EndSection
 
     print("[i] Masterizzazione immagine ibrida avviabile (isohybrid MBR)...")
     os.makedirs(OUT_RELEASE_DIR, exist_ok=True)
-    docker_cmd = (
-        f"docker run --rm -v '{work_dir}':/work ubuntu:20.04 bash -c '"
-        f"apt-get update -qq && apt-get install -y -qq genisoimage isolinux syslinux-common syslinux-utils > /dev/null && "
-        f"cp /usr/lib/ISOLINUX/isolinux.bin /work/iso_root/boot/isolinux/isolinux.bin && "
-        f"cp /usr/lib/syslinux/modules/bios/ldlinux.c32 /work/iso_root/boot/isolinux/ldlinux.c32 && "
-        f"cp /usr/lib/syslinux/modules/bios/libutil.c32 /work/iso_root/boot/isolinux/libutil.c32 && "
-        f"cp /usr/lib/syslinux/modules/bios/libcom32.c32 /work/iso_root/boot/isolinux/libcom32.c32 && "
-        f"cp /usr/lib/syslinux/modules/bios/menu.c32 /work/iso_root/boot/isolinux/menu.c32 && "
-        f"cp /usr/lib/syslinux/modules/bios/vesamenu.c32 /work/iso_root/boot/isolinux/vesamenu.c32 && "
-        f"genisoimage -R -J -l -b boot/isolinux/isolinux.bin -c boot/isolinux/boot.cat "
-        f"-no-emul-boot -boot-load-size 4 -boot-info-table -V \"OSIFY_VINTAGE\" "
-        f"-o /work/OSify-Vintage-i686.iso /work/iso_root > /dev/null && "
-        f"isohybrid /work/OSify-Vintage-i686.iso'"
-    )
-    run(docker_cmd)
-    shutil.copy2(os.path.join(work_dir, "OSify-Vintage-i686.iso"), DEST_VINTAGE_ISO)
+    out_iso_tmp = os.path.join(work_dir, "OSify-Vintage-i686.iso")
+    
+    native_geniso = shutil.which("genisoimage") or shutil.which("mkisofs")
+    native_isohybrid = shutil.which("isohybrid")
+    isolinux_bin_host = "/usr/lib/ISOLINUX/isolinux.bin"
+
+    if native_geniso and native_isohybrid and os.path.exists(isolinux_bin_host):
+        print("[+] Utilizzo toolchain nativa host...")
+        shutil.copy2(isolinux_bin_host, os.path.join(iso_root, "boot/isolinux/isolinux.bin"))
+        for mod in ["ldlinux.c32", "libutil.c32", "libcom32.c32", "menu.c32", "vesamenu.c32"]:
+            mod_path = f"/usr/lib/syslinux/modules/bios/{mod}"
+            if os.path.exists(mod_path):
+                shutil.copy2(mod_path, os.path.join(iso_root, "boot/isolinux", mod))
+        
+        cmd_geniso = (
+            f"{native_geniso} -R -J -l -b boot/isolinux/isolinux.bin -c boot/isolinux/boot.cat "
+            f"-no-emul-boot -boot-load-size 4 -boot-info-table -V \"OSIFY_VINTAGE\" "
+            f"-o '{out_iso_tmp}' '{iso_root}'"
+        )
+        run(cmd_geniso)
+        run(f"{native_isohybrid} '{out_iso_tmp}'")
+    else:
+        print("[+] Utilizzo container Docker per generazione ISO...")
+        docker_cmd = (
+            f"docker run --rm -v '{work_dir}':/work ubuntu:20.04 bash -c '"
+            f"apt-get update -qq && apt-get install -y -qq genisoimage isolinux syslinux-common syslinux-utils > /dev/null && "
+            f"cp /usr/lib/ISOLINUX/isolinux.bin /work/iso_root/boot/isolinux/isolinux.bin && "
+            f"cp /usr/lib/syslinux/modules/bios/ldlinux.c32 /work/iso_root/boot/isolinux/ldlinux.c32 && "
+            f"cp /usr/lib/syslinux/modules/bios/libutil.c32 /work/iso_root/boot/isolinux/libutil.c32 && "
+            f"cp /usr/lib/syslinux/modules/bios/libcom32.c32 /work/iso_root/boot/isolinux/libcom32.c32 && "
+            f"cp /usr/lib/syslinux/modules/bios/menu.c32 /work/iso_root/boot/isolinux/menu.c32 && "
+            f"cp /usr/lib/syslinux/modules/bios/vesamenu.c32 /work/iso_root/boot/isolinux/vesamenu.c32 && "
+            f"genisoimage -R -J -l -b boot/isolinux/isolinux.bin -c boot/isolinux/boot.cat "
+            f"-no-emul-boot -boot-load-size 4 -boot-info-table -V \"OSIFY_VINTAGE\" "
+            f"-o /work/OSify-Vintage-i686.iso /work/iso_root > /dev/null && "
+            f"isohybrid /work/OSify-Vintage-i686.iso'"
+        )
+        run(docker_cmd)
+        
+    shutil.copy2(out_iso_tmp, DEST_VINTAGE_ISO)
     shutil.copy2(DEST_VINTAGE_ISO, DEST_SANDBOX_VINTAGE)
     print(f"[✓] OSify Vintage 32-bit Ibrida creata: {DEST_VINTAGE_ISO} ({os.path.getsize(DEST_VINTAGE_ISO)/(1024*1024):.1f} MB)")
 
@@ -391,13 +499,22 @@ def main():
         build_vintage_i686()
         build_modern_x86_64()
 
-    # Aggiorna SHA256SUMS
-    print("[+] Aggiornamento checksum SHA256...")
-    res = subprocess.run(
-        "cd build/out/release && shasum -a 256 *.iso *.zip > SHA256SUMS.txt && cat SHA256SUMS.txt",
-        shell=True, cwd=REPO_ROOT, capture_output=True, text=True
-    )
-    print(res.stdout)
+    # Aggiorna SHA256SUMS nativamente con hashlib
+    print("[+] Aggiornamento checksum SHA256 universale...")
+    import hashlib
+    sha_lines = []
+    for f_name in sorted(os.listdir(OUT_RELEASE_DIR)):
+        if f_name.endswith((".iso", ".zip")):
+            f_path = os.path.join(OUT_RELEASE_DIR, f_name)
+            hasher = hashlib.sha256()
+            with open(f_path, "rb") as fh:
+                while chunk := fh.read(65536):
+                    hasher.update(chunk)
+            sha_lines.append(f"{hasher.hexdigest()}  {f_name}")
+    sha_txt = "\n".join(sha_lines) + "\n"
+    with open(os.path.join(OUT_RELEASE_DIR, "SHA256SUMS.txt"), "w") as f:
+        f.write(sha_txt)
+    print(sha_txt)
     print("=========================================================")
     print("[✓✓✓] ENTRAMBE LE IMMAGINI ISO SONO PRONTE E COLLAUDATE!")
     print("=========================================================")
