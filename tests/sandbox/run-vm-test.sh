@@ -21,8 +21,9 @@ find_iso_for_profile() {
     local iso=""
 
     if [[ "$profile" =~ ^(2|nb200|toshiba|3|stress|extreme)$ ]]; then
-        # Profilo Vintage 32-bit: cerca immagini i686/vintage
+        # Profilo Vintage 32-bit: desktop grafico pronto all'uso
         for candidate in \
+            "$SCRIPT_DIR/osify-vintage-desktop.iso" \
             "$SCRIPT_DIR/osify-vintage-base.iso" \
             "$REPO_ROOT/build/out/release/OSify-Vintage-i686.iso" \
             "$REPO_ROOT/build/out/"*vintage*.iso \
