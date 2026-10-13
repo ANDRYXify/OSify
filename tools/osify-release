@@ -96,8 +96,7 @@ EOF
         "$RELEASE_DIR/SHA256SUMS.txt" \
         --title "$title" \
         --notes-file "$notes_file" \
-        --repo ANDRYXify/OSify \
-        --clobber
+        --repo ANDRYXify/OSify
 
     ok "Nuova release $tag pubblicata su GitHub con successo!"
 }
