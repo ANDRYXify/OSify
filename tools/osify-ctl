@@ -155,8 +155,34 @@ case "${1:-status}" in
         shift
         "$OSIFY_DIR/kernel/legacy/osify-hardware-detect.sh" "$@"
         ;;
+    block)
+        shift
+        python3 "$OSIFY_DIR/blocks/osify-block-manager.py" "$@"
+        ;;
+    presentation)
+        shift
+        subcmd="${1:-setup}"
+        case "$subcmd" in
+            setup)
+                "$OSIFY_DIR/presentation/osify-presentation-setup.sh" setup
+                ;;
+            mode)
+                shift
+                "$OSIFY_DIR/presentation/osify-presentation-setup.sh" mode "$@"
+                ;;
+            displays)
+                "$OSIFY_DIR/presentation/osify-ndi-stage.sh" displays
+                ;;
+            ndi)
+                "$OSIFY_DIR/presentation/osify-ndi-stage.sh" ndi
+                ;;
+            *)
+                echo "Uso: osify-ctl presentation {setup|mode <on|off>|displays|ndi}"
+                ;;
+        esac
+        ;;
     *)
-        echo "Uso: osify-ctl {status|mode <streaming|gaming|emulation|balanced|lowspec>|qos|audio|emu|windows|android|darwin|anticheat|hw-detect}"
+        echo "Uso: osify-ctl {status|mode|block|presentation|qos|audio|emu|windows|android|darwin|anticheat|hw-detect}"
         exit 1
         ;;
 esac

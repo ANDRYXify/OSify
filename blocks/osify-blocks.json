@@ -1,0 +1,70 @@
+{
+    "version": "1.0",
+    "description": "OSify Modular Architecture — Configurazione a Blocchi Funzionali",
+    "blocks": {
+        "core": {
+            "name": "Core System & BORE Scheduler",
+            "description": "Kernel a bassa latenza, Btrfs subvolumi, sysctl tunato e limiti real-time.",
+            "enabled": true,
+            "locked": true,
+            "services": ["systemd-oomd"],
+            "packages": ["base", "linux-cachyos-bore", "btrfs-progs"]
+        },
+        "gaming": {
+            "name": "eSport & High-Refresh Gaming",
+            "description": "Gamescope micro-compositor, GameMode, Wayland Tearing sbloccato e Proton-GE.",
+            "enabled": true,
+            "locked": false,
+            "services": ["gamemoded", "osify-daemon"],
+            "packages": ["gamescope", "gamemode", "steam", "lutris"]
+        },
+        "streaming": {
+            "name": "Live Multi-Broadcast (Twitch/Kick/YT)",
+            "description": "CAKE QoS anti-bufferbloat, Relay Multi-RTMP zero-re-encoding e PipeWire virtual sinks.",
+            "enabled": true,
+            "locked": false,
+            "services": ["osify-qos"],
+            "packages": ["obs-studio", "ffmpeg", "nftables"]
+        },
+        "presentation": {
+            "name": "Stage & Event Presentation Suite",
+            "description": "Supporto PowerPoint ed EasyWorship (Wine MediaFoundation/DirectShow), NDI tools, font Microsoft e multi-display stage.",
+            "enabled": true,
+            "locked": false,
+            "services": [],
+            "packages": ["wine", "winetricks", "cabextract", "gst-plugins-good", "gst-libav"]
+        },
+        "emulation": {
+            "name": "Next-Gen Console Emulation",
+            "description": "RPCS3, Ryujinx, PCSX2, Dolphin, allocatore mimalloc, cache shader 128GB e 10-foot UI.",
+            "enabled": true,
+            "locked": false,
+            "services": [],
+            "packages": ["mimalloc", "retroarch"]
+        },
+        "android": {
+            "name": "Android Native Runtime (Waydroid)",
+            "description": "Container LXC con GPU pass-through Mesa e bridge di traduzione ARM libndk.",
+            "enabled": false,
+            "locked": false,
+            "services": ["waydroid-container"],
+            "packages": ["waydroid", "lxc"]
+        },
+        "darwin": {
+            "name": "macOS Bridge & KVM VFIO",
+            "description": "Darling userspace container e profili KVM cloaked con hardware passthrough.",
+            "enabled": false,
+            "locked": false,
+            "services": [],
+            "packages": ["qemu-full", "ovmf"]
+        },
+        "vintage": {
+            "name": "Vintage PC & Low-RAM Resurrection",
+            "description": "Profilo Low-Spec KDE (~400MB RAM), ZRAM compressa in zstd e sblocco GPU legacy Vulkan.",
+            "enabled": false,
+            "locked": false,
+            "services": [],
+            "packages": ["zram-generator", "syslinux"]
+        }
+    }
+}

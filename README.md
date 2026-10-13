@@ -72,24 +72,50 @@ Stack ottimizzato per emulatori vettoriali:
 * **Hardware Probe Automatico**: [`kernel/legacy/osify-hardware-detect.sh`](file:///Users/andryxify/OSify/kernel/legacy/osify-hardware-detect.sh) scansiona l'hardware e tara il sistema in tempo reale.
 
 
+### 11. Architettura Modulare "A Blocchi" (Lego-Style)
+* **Personalizzazione istantanea e dichiarativa**: il sistema è suddiviso in blocchi indipendenti gestiti via JSON ([`blocks/osify-blocks.json`](file:///Users/andryxify/OSify/blocks/osify-blocks.json)).
+* **Composizione on-demand**: puoi comporre il tuo OSify attivando o disattivando con un singolo comando i blocchi:
+  * `gaming`: Gamescope, Steam, GameMode, Proton-GE.
+  * `streaming`: OBS Studio, Multi-RTMP relay, CAKE QoS, PipeWire VOD sinks.
+  * `presentation`: PowerPoint, EasyWorship, NDI bridge, font Microsoft, clicker USB.
+  * `emulation`: RPCS3, Ryujinx, PCSX2, Dolphin, mimalloc wrapper.
+  * `android`: Waydroid LXC container con bridge ARM.
+  * `darwin`: Darling CLI e profili OSX-KVM VFIO.
+  * `vintage`: ZRAM zstd e KDE Plasma Low-Spec.
+* Comando rapido: `osify-ctl block list` oppure `osify-ctl block enable <blocco>`.
+
+### 12. Stage & Event Presentation Suite (PowerPoint & EasyWorship)
+* **Prefix Wine Multimediale**: [`presentation/osify-presentation-setup.sh`](file:///Users/andryxify/OSify/presentation/osify-presentation-setup.sh) configura un ambiente dedicato con DirectShow, MediaFoundation, LAVFilters e WMP11 per eseguire sfondi video e transizioni complesse in **EasyWorship** e **PowerPoint**.
+* **Tipografia Microsoft Fedele al 100%**: Font Calibri, Cambria, Segoe UI e Arial installati per prevenire sfasamenti di testo e interruzioni di riga durante le presentazioni.
+* **Uscita NDI Video (Network Device Interface)**: Le slide vengono trasmesse direttamente via rete IP a OBS Studio senza richiedere schede di acquisizione fisiche, consentendo overlay di testi trasparenti per la live.
+* **Multi-Display & Stage Display**: Gestione a 3 schermi (Console Operatore, Schermo Sala/Proiettore borderless e Confidence Monitor per i relatori sul palco).
+* **Clicker USB RF a Latenza Zero**: Regole udev dedicate per telecomandi Logitech (R400, R800, Spotlight) e Kensington con disattivazione del risparmio energetico USB.
+* **Modalità Inhibit**: Disattivazione automatica di salvaschermo e notifiche pop-up durante la presentazione.
+
 ---
 
 ## 📁 Struttura del Progetto
 
 ```
 OSify/
+├── blocks/               # Architettura modulare a blocchi (osify-blocks.json & manager)
 ├── build/                # Strumenti di generazione ISO (Archiso x86-64-v3 profile)
 │   └── docker/           # Builder Docker per compilare la ISO da macOS o Linux
 ├── kernel/               # Sysctl, udev rules per controller e storage, moduli
+│   └── legacy/           # Rilevamento hardware dinamico e sblocco GPU storiche
+├── presentation/         # Suite presentazioni (EasyWorship, PowerPoint, NDI, clicker)
 ├── network/              # QoS Traffic Shaper (CAKE, BBRv3, nftables DSCP)
 ├── audio/                # Profili PipeWire Pro-Audio & virtual sinks
 ├── emulation/            # Launcher ad alte prestazioni con mimalloc & shader cache
 ├── runtimes/             # Moduli Windows (Proton), Android (Waydroid), macOS (Darling/KVM)
+│   └── windows/anticheat # Database Anti-Cheat Ring-0, KVM Stealth e Fast-Boot UEFI
 ├── streaming/            # Profili OBS Studio & Multi-RTMP relay zero-overhead
 │   └── relay/            # Relay simultaneo Twitch + Kick + YouTube
 ├── services/             # Demone di rilevamento e ottimizzazione automatica
 ├── system/storage/       # Layout Btrfs, subvolumi, No-CoW e configurazioni Snapper
 ├── desktop/              # Configurazioni KDE Plasma 6 Wayland (HDR, VRR, Tearing)
+│   └── profiles/         # Profilo grafico Low-Spec per macchine con 2GB-4GB RAM
+├── tests/                # Test suite ingegneristica automatizzata (29 verifiche)
 └── tools/                # CLI ('osify-ctl') e Control Center GUI per KDE Plasma 6
     └── osify-gui/        # Dashboard grafica moderna in PyQt6 per KDE Plasma
 ```
@@ -103,23 +129,36 @@ OSify/
 python3 tools/osify-gui/osify-control-center.py
 ```
 
-### 2. Gestione Profili da Terminale (CLI)
+### 2. Gestione del Sistema da Terminale (CLI)
 ```bash
-# Verifica diagnostica di sistema
-osify-ctl status
+# Diagnostica hardware e supporto CPU (v1, v2, v3, v4)
+osify-ctl hw-detect
 
-# Attivazione profilo live streaming con protezione ping
-osify-ctl mode streaming
+# Gestione architettura a blocchi
+osify-ctl block list
+osify-ctl block enable presentation
+osify-ctl block enable android
 
-# Attivazione profilo gaming eSport
-osify-ctl mode gaming
+# Verifica compatibilità anti-cheat (Ring-0)
+osify-ctl anticheat check Valorant
 
-# Avvio frontend console TV con Gamescope
-osify-ctl mode emulation
+# Modalità presentazioni dal vivo (PowerPoint / EasyWorship)
+osify-ctl presentation mode on
+
+# Profili istantanei
+osify-ctl mode streaming   # Live Twitch/Kick/YT con protezione ping
+osify-ctl mode gaming      # eSport a latenza minima
+osify-ctl mode lowspec     # Resurrezione PC vintage (~400MB RAM)
 ```
 
-### 3. Compilazione Immagine ISO (da Mac o Linux via Docker)
+### 3. Esecuzione Test Suite Automatizzata
+```bash
+./tests/osify-test-suite.sh
+```
+
+### 4. Compilazione Immagine ISO Avviabile (via Docker da Mac o Linux)
 ```bash
 cd build/docker && ./run-build.sh
 ```
+
 

@@ -1,0 +1,16 @@
+# OSify - Regole Udev per Telecomandi di Presentazione & Clicker RF/Bluetooth
+# Posizione target su sistema: /etc/udev/rules.d/99-osify-clickers.rules
+# Disabilita l'autosospensione USB per evitare ritardi nel cambio slide
+
+# Logitech Wireless Presenter (R400, R800, Spotlight)
+ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="046d", ATTR{idProduct}=="c52d", TEST=="power/control", ATTR{power/control}="on"
+ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="046d", ATTR{idProduct}=="c538", TEST=="power/control", ATTR{power/control}="on"
+ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="046d", ATTR{idProduct}=="c53e", TEST=="power/control", ATTR{power/control}="on"
+
+# Kensington Wireless Presenter
+ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="047d", ATTR{idProduct}=="105a", TEST=="power/control", ATTR{power/control}="on"
+ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="047d", ATTR{idProduct}=="2010", TEST=="power/control", ATTR{power/control}="on"
+
+# Permessi di input diretti a latenza zero
+KERNEL=="hidraw*", ATTRS{idVendor}=="046d", MODE="0660", TAG+="uaccess"
+KERNEL=="hidraw*", ATTRS{idVendor}=="047d", MODE="0660", TAG+="uaccess"
