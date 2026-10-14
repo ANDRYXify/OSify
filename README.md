@@ -58,7 +58,7 @@ OSify è un sistema operativo basato su Linux ingegnerizzato su due target archi
 
 ---
 
-## 🌟 Esperienza a 360° Out-Of-The-Box & Live-to-Disk Persistence (v1.4.0)
+## 🌟 Esperienza a 360° Out-Of-The-Box & Live-to-Disk Persistence (v1.5.0)
 
 OSify non è un clone o una derivata generica: è un sistema operativo con un'architettura completa progettata per consentire all'utente di lavorare, programmare, giocare e personalizzare ogni aspetto fin dal primo secondo.
 

@@ -10,6 +10,17 @@ from PIL import Image, ImageDraw, ImageFont
 LANCZOS_FILTER = getattr(getattr(Image, 'Resampling', None), 'LANCZOS', getattr(Image, 'LANCZOS', getattr(Image, 'ANTIALIAS', 1)))
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+VERSION_FILE = os.path.join(REPO_ROOT, "VERSION")
+OSIFY_VERSION = "1.5.0"
+if os.path.isfile(VERSION_FILE):
+    try:
+        with open(VERSION_FILE, "r") as f:
+            v = f.read().strip()
+            if v:
+                OSIFY_VERSION = v
+    except Exception:
+        pass
+
 CACHE_I686 = os.path.join(REPO_ROOT, "build/cache/osify-base-i686.iso")
 CACHE_X86_64 = os.path.join(REPO_ROOT, "build/cache/osify-base-x86_64.iso")
 SANDBOX_I686 = os.path.join(REPO_ROOT, "tests/sandbox/osify-vintage-desktop.iso")
@@ -962,15 +973,15 @@ nice -n 19 /usr/bin/osify-update daemon >/var/log/osify-autoupdate.log 2>&1 &
 
     # Impronta e Identita Indelebile OSify nel Kernel e User-Space
     with open(os.path.join(r4_work, "etc/osify-version"), "w") as f:
-        f.write("1.3.0\n")
+        f.write(f"{OSIFY_VERSION}\n")
 
     with open(os.path.join(r4_work, "etc/os-release"), "w") as f:
-        f.write("""NAME="OSify"
-PRETTY_NAME="OSify 1.3.0 (Vintage Universal Edition)"
+        f.write(f"""NAME="OSify"
+PRETTY_NAME="OSify {OSIFY_VERSION} (Vintage Universal Edition)"
 ID=osify
 ID_LIKE="slitaz debian linux"
-VERSION="1.3.0"
-VERSION_ID="1.3.0"
+VERSION="{OSIFY_VERSION}"
+VERSION_ID="{OSIFY_VERSION}"
 HOME_URL="https://github.com/ANDRYXify/OSify"
 BUG_REPORT_URL="https://github.com/ANDRYXify/OSify/issues"
 SUPPORT_URL="https://github.com/ANDRYXify/OSify"
@@ -978,10 +989,10 @@ ANSI_COLOR="0;36"
 """)
 
     with open(os.path.join(r4_work, "etc/lsb-release"), "w") as f:
-        f.write("""DISTRIB_ID=OSify
-DISTRIB_RELEASE=1.3.0
+        f.write(f"""DISTRIB_ID=OSify
+DISTRIB_RELEASE={OSIFY_VERSION}
 DISTRIB_CODENAME=vintage
-DISTRIB_DESCRIPTION="OSify 1.3.0 (Vintage Universal Edition)"
+DISTRIB_DESCRIPTION="OSify {OSIFY_VERSION} (Vintage Universal Edition)"
 """)
 
     with open(os.path.join(r4_work, "etc/hostname"), "w") as f:
@@ -994,7 +1005,7 @@ DISTRIB_DESCRIPTION="OSify 1.3.0 (Vintage Universal Edition)"
 """)
 
     with open(os.path.join(r4_work, "etc/issue"), "w") as f:
-        f.write(r"""\033[1;36m
+        f.write(rf"""\033[1;36m
    ____   _____  _  __       
   / __ \ / ____|(_)/ _|      
  | |  | | (___   _| |_ _   _ 
@@ -1004,17 +1015,17 @@ DISTRIB_DESCRIPTION="OSify 1.3.0 (Vintage Universal Edition)"
                         __/ |
                        |___/ 
 \033[0m
- \033[1;37mOSify 1.3.0 (Vintage Universal Edition)\033[0m - Kernel \r (\m)
+ \033[1;37mOSify {OSIFY_VERSION} (Vintage Universal Edition)\033[0m - Kernel \r (\m)
  Ingegnerizzato da Andrea Taliento (ANDRYXify)
  
 """)
 
     with open(os.path.join(r4_work, "etc/issue.net"), "w") as f:
-        f.write("OSify 1.3.0 (Vintage Universal Edition) - \\r (\\m)\n")
+        f.write(f"OSify {OSIFY_VERSION} (Vintage Universal Edition) - \\r (\\m)\n")
 
     with open(os.path.join(r4_work, "etc/motd"), "w") as f:
-        f.write(r"""==============================================================================
-   OSify 1.3.0 — Sistema Operativo Universale & Resurrezione Hardware
+        f.write(rf"""==============================================================================
+   OSify {OSIFY_VERSION} — Sistema Operativo Universale & Resurrezione Hardware
 ==============================================================================
  Nucleo: Linux (\r \m)
  Identita: OSify (ID: osify)
@@ -1322,7 +1333,7 @@ WINDOW_MANAGER="openbox"
     inject_osify_tree(iso_root)
 
     with open(os.path.join(iso_root, "OSify-Version.txt"), "w") as f:
-        f.write("OSify Live System (32-bit Vintage Edition)\nTarget: Intel Atom N280/N270\n")
+        f.write(f"OSify Live System v{OSIFY_VERSION} (32-bit Vintage Edition)\nTarget: Intel Atom / Netbook / i686 Universal\n")
 
     print("[i] Masterizzazione immagine ibrida avviabile (isohybrid MBR)...")
     os.makedirs(OUT_RELEASE_DIR, exist_ok=True)
