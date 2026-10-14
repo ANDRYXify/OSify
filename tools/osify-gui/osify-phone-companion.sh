@@ -30,7 +30,7 @@ launch_android_mirror() {
                 --window-icon="$LOGO_IMG" \
                 --image="$LOGO_IMG" \
                 --text="<big><b>Come collegare il tuo telefono Android:</b></big>\n\n1. Sul telefono vai in <b>Impostazioni &gt; Info sul telefono</b> e tocca 7 volte <b>Numero build</b>.\n2. Entra in <b>Opzioni Sviluppatore</b> e attiva <b>Debug USB</b>.\n3. Collega il telefono con cavo USB al PC e premi <b>'Consenti sempre'</b> sul display del telefono.\n\nPremi OK dopo aver collegato il cavo per avviare il mirroring." \
-                --button="🔄 Riprova:0" --button="Annulla:1" --center
+                --button="Riprova:0" --button="Annulla:1" --center
             if [ $? -eq 0 ]; then
                 exec "$0" --android
             fi
@@ -84,20 +84,42 @@ launch_ios_files() {
     fi
 }
 
+detect_usb_phones() {
+    local detected=""
+    for u in /sys/bus/usb/devices/*; do
+        [ -f "$u/idVendor" ] || continue
+        vid=$(cat "$u/idVendor" 2>/dev/null)
+        case "$vid" in
+            18d1|04e8|2717|12d1|2a70|0fce|22b8|1004)
+                mfg=$(cat "$u/manufacturer" 2>/dev/null || echo "Android")
+                detected="Android ($mfg)"
+                ;;
+            05ac)
+                detected="Apple iPhone/iPad"
+                ;;
+        esac
+    done
+    echo "$detected"
+}
+
 # ------------------------------------------------------------------------------
-# FRONTEND PRINCIPALE YAD
+# FRONTEND PRINCIPALE
 # ------------------------------------------------------------------------------
+USB_STATUS=$(detect_usb_phones)
+STATUS_MSG="Nessun telefono collegato via cavo USB."
+[ -n "$USB_STATUS" ] && STATUS_MSG="Rilevato via cavo USB: $USB_STATUS"
+
 if [ -n "$DISPLAY" ] && command -v yad >/dev/null 2>&1; then
     MODE_SEL=$(yad --form \
         --title="OSify — Phone Companion & Screen Mirroring" \
         --window-icon="$LOGO_IMG" \
         --image="$LOGO_IMG" \
         --image-on-top \
-        --text="<big><b>OSify Phone Companion</b></big>\nCollega, controlla e duplica lo schermo del tuo smartphone direttamente sul PC." \
+        --text="<big><b>OSify Phone Companion</b></big>\nCollega, controlla e duplica lo schermo del tuo smartphone direttamente sul PC.\n\nStato Hardware: <b>$STATUS_MSG</b>" \
         --width=540 --center \
-        --field="Seleziona Tipo di Dispositivo:CB" "🤖 Android (Mirroring 60fps & Controllo Mouse/Tastiera)!🍎 Apple iOS (AirPlay Mirroring Schermo & Audio)!📁 Apple iOS (Accesso Foto e Documenti via Cavo)" \
-        --button="🚀 Connetti:0" \
-        --button="gtk-cancel:1")
+        --field="Seleziona Tipo di Dispositivo:CB" "Android (Mirroring 60 FPS & Controllo Mouse/Tastiera)!Apple iOS (AirPlay Mirroring Schermo & Audio)!Apple iOS (Accesso Foto e Documenti via Cavo)" \
+        --button="Connetti:0" \
+        --button="Annulla:1")
 
     if [ $? -eq 0 ]; then
         CHOICE=$(echo "$MODE_SEL" | awk -F'|' '{print $1}')

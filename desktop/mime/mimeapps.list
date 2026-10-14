@@ -1,0 +1,21 @@
+[Default Applications]
+application/x-msdos-program=osify-uem-runner.desktop
+application/x-msdownload=osify-uem-runner.desktop
+application/x-msi=osify-uem-runner.desktop
+application/vnd.android.package-archive=osify-uem-runner.desktop
+application/wasm=osify-uem-runner.desktop
+application/java-archive=osify-uem-runner.desktop
+application/x-java-archive=osify-uem-runner.desktop
+application/x-apple-diskimage=osify-uem-runner.desktop
+application/x-ios-app=osify-uem-runner.desktop
+
+[Added Associations]
+application/x-msdos-program=osify-uem-runner.desktop;
+application/x-msdownload=osify-uem-runner.desktop;
+application/x-msi=osify-uem-runner.desktop;
+application/vnd.android.package-archive=osify-uem-runner.desktop;
+application/wasm=osify-uem-runner.desktop;
+application/java-archive=osify-uem-runner.desktop;
+application/x-java-archive=osify-uem-runner.desktop;
+application/x-apple-diskimage=osify-uem-runner.desktop;
+application/x-ios-app=osify-uem-runner.desktop;

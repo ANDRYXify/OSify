@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/x-msdos-program">
+    <comment>Eseguibile Windows o MS-DOS (OSify UEM)</comment>
+    <glob pattern="*.exe"/>
+    <glob pattern="*.com"/>
+    <glob pattern="*.bat"/>
+  </mime-type>
+  <mime-type type="application/x-msi">
+    <comment>Programma di Installazione Windows MSI (OSify UEM)</comment>
+    <glob pattern="*.msi"/>
+  </mime-type>
+  <mime-type type="application/vnd.android.package-archive">
+    <comment>Pacchetto Applicativo Android (OSify UEM)</comment>
+    <glob pattern="*.apk"/>
+  </mime-type>
+  <mime-type type="application/wasm">
+    <comment>Modulo Binario WebAssembly (OSify UEM)</comment>
+    <glob pattern="*.wasm"/>
+  </mime-type>
+  <mime-type type="application/x-apple-diskimage">
+    <comment>Immagine Disco Apple macOS (OSify UEM)</comment>
+    <glob pattern="*.dmg"/>
+  </mime-type>
+  <mime-type type="application/x-ios-app">
+    <comment>Applicazione iOS IPA (OSify UEM)</comment>
+    <glob pattern="*.ipa"/>
+  </mime-type>
+</mime-info>

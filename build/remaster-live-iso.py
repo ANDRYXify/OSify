@@ -219,6 +219,7 @@ OPENBOX_AUTOSTART = """#!/bin/sh
 # OSify Openbox Session Autostart
 [ -x /usr/bin/osify-input-setup ] && /usr/bin/osify-input-setup &
 [ -x /usr/bin/osify-storage-governor ] && /usr/bin/osify-storage-governor --tune &
+[ -x /usr/bin/osify-first-boot ] && (sleep 1.5 && /usr/bin/osify-first-boot) &
 if command -v pcmanfm >/dev/null 2>&1; then
     (sleep 0.3 && pgrep -f "pcmanfm --desktop" >/dev/null || pcmanfm --desktop) &
 fi
@@ -1048,6 +1049,8 @@ LABEL memtest
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-app-drawer.sh"), os.path.join(bin_dir, "osify-drawer"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/input/osify-input-setup.sh"), os.path.join(bin_dir, "osify-input-setup"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/session/osify-session.sh"), os.path.join(bin_dir, "osify-session"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/session/osify-first-boot.sh"), os.path.join(bin_dir, "osify-first-boot"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/session/osify-first-boot.sh"), os.path.join(r4_work, "usr/local/bin/osify-first-boot"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/updater/osify-live-updater.sh"), os.path.join(bin_dir, "osify-update"))
     for f in os.listdir(bin_dir):
         p = os.path.join(bin_dir, f)
@@ -1629,6 +1632,18 @@ WINDOW_MANAGER="openbox"
     os.makedirs(autostart_dir, exist_ok=True)
     with open(os.path.join(autostart_dir, "osify-hub.desktop"), "w") as f:
         f.write(app_entries["osify-hub.desktop"])
+
+    # Registrazione Associazioni MIME Universali UEM per doppio click su EXE, APK, WASM
+    mime_pkg_dir = os.path.join(r4_work, "usr/share/mime/packages")
+    os.makedirs(mime_pkg_dir, exist_ok=True)
+    shutil.copy2(os.path.join(REPO_ROOT, "desktop/mime/osify-uem.xml"), os.path.join(mime_pkg_dir, "osify-uem.xml"))
+
+    for m_dest in ["usr/share/applications/mimeapps.list", "etc/xdg/mimeapps.list"]:
+        m_full = os.path.join(r4_work, m_dest)
+        os.makedirs(os.path.dirname(m_full), exist_ok=True)
+        shutil.copy2(os.path.join(REPO_ROOT, "desktop/mime/mimeapps.list"), m_full)
+
+    shutil.copy2(os.path.join(REPO_ROOT, "desktop/applications/osify-uem-runner.desktop"), os.path.join(r4_work, "usr/share/applications/osify-uem-runner.desktop"))
 
     os.remove(r4_gz)
     run(f"(cd '{r4_work}' && find . -print0 | cpio --null -ov -H newc) | python3 -c \"import lzma, sys; sys.stdout.buffer.write(lzma.compress(sys.stdin.buffer.read(), format=lzma.FORMAT_ALONE))\" > '{r4_gz}'")

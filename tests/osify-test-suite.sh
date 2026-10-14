@@ -269,6 +269,24 @@ else
     log_fail "Deck Shell Assets: Errore rendering icone vettoriali"
 fi
 
+# 8.9 Out-Of-Box Experience First-Boot
+if [ -x "$REPO_ROOT/system/session/osify-first-boot.sh" ] && bash -n "$REPO_ROOT/system/session/osify-first-boot.sh"; then
+    log_pass "OOBE Subsystem: Script di inizializzazione primo avvio su disco presente e valido"
+else
+    log_fail "OOBE Subsystem: osify-first-boot.sh non valido o non eseguibile"
+fi
+
+# 8.10 FreeDesktop MIME & Universal Execution Matrix Associations
+if [ -f "$REPO_ROOT/desktop/mime/osify-uem.xml" ] && [ -f "$REPO_ROOT/desktop/mime/mimeapps.list" ]; then
+    if grep -q "application/x-msdos-program=osify-uem-runner.desktop" "$REPO_ROOT/desktop/mime/mimeapps.list"; then
+        log_pass "UEM MIME Subsystem: Associazioni universali FreeDesktop (EXE, APK, WASM) collegate al dispatcher"
+    else
+        log_fail "UEM MIME Subsystem: Mappatura mimeapps.list incompleta"
+    fi
+else
+    log_fail "UEM MIME Subsystem: File di configurazione MIME mancanti"
+fi
+
 # ==============================================================================
 # FASE 9: HARDWARE INTELLIGENCE, WORKLOAD GOVERNOR & POLYGLOT CLI
 # ==============================================================================

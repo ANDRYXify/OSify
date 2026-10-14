@@ -74,7 +74,7 @@ if [ -n "$DISPLAY" ] && command -v yad >/dev/null 2>&1; then
         --width=520 --center \
         --field="Sorgente Video HDMI / UVC:CB" "$CAP_DEVS" \
         --field="Modalità Schermo:CB" "Schermo Intero (Fullscreen)!Finestra Fluida (1280x720)" \
-        --button="🎮 Avvia Pass-Through 60fps:0" \
+        --button="Avvia Pass-Through a 60 FPS:0" \
         --button="gtk-cancel:1")
 
     if [ $? -eq 0 ]; then

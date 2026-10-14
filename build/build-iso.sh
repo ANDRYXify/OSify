@@ -96,6 +96,28 @@ EOF
 exec /opt/osify/system/installer/osify-disk-installer.sh "$@"
 EOF
 
+    cat << 'EOF' > "$PROFILE_DIR/airootfs/usr/local/bin/osify-power"
+#!/usr/bin/env bash
+exec /opt/osify/system/power/osify-power.sh "$@"
+EOF
+
+    cat << 'EOF' > "$PROFILE_DIR/airootfs/usr/local/bin/osify-first-boot"
+#!/usr/bin/env bash
+exec /opt/osify/system/session/osify-first-boot.sh "$@"
+EOF
+
+    cat << 'EOF' > "$PROFILE_DIR/airootfs/usr/local/bin/osify-exec"
+#!/usr/bin/env bash
+exec /opt/osify/uem/runners/osify-universal-dispatcher.sh "$@"
+EOF
+
+    # Registrazione Associazioni MIME UEM
+    mkdir -p "$PROFILE_DIR/airootfs/usr/share/mime/packages" "$PROFILE_DIR/airootfs/usr/share/applications" "$PROFILE_DIR/airootfs/etc/xdg"
+    cp "$SCRIPT_DIR/../desktop/mime/osify-uem.xml" "$PROFILE_DIR/airootfs/usr/share/mime/packages/osify-uem.xml" 2>/dev/null || true
+    cp "$SCRIPT_DIR/../desktop/mime/mimeapps.list" "$PROFILE_DIR/airootfs/usr/share/applications/mimeapps.list" 2>/dev/null || true
+    cp "$SCRIPT_DIR/../desktop/mime/mimeapps.list" "$PROFILE_DIR/airootfs/etc/xdg/mimeapps.list" 2>/dev/null || true
+    cp "$SCRIPT_DIR/../desktop/applications/osify-uem-runner.desktop" "$PROFILE_DIR/airootfs/usr/share/applications/osify-uem-runner.desktop" 2>/dev/null || true
+
     chmod +x "$PROFILE_DIR/airootfs/usr/local/bin/"*
 
     # Configurazione Systemd: Timer Live Updater & Servizi Sicurezza
