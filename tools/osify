@@ -236,7 +236,11 @@ cmd_aiuto() {
     echo "  ${C_CYAN}osify profilo${C_RESET}              Configura identità utente, credenziali e avatar"
     echo "  ${C_CYAN}osify cattura${C_RESET}              Acquisizione video a bassa latenza HDMI/Console"
     echo "  ${C_CYAN}osify telefono${C_RESET}             Mirroring e controllo smartphone Android / iOS"
-    echo "  ${C_CYAN}osify aggiorna${C_RESET}             Verifica e installa aggiornamenti da GitHub"
+    echo "  ${C_CYAN}osify audio [get|set|mute|switch]${C_RESET} Regola volume, mute o commuta altoparlanti/cuffie/HDMI"
+    echo "  ${C_CYAN}osify dischi [--status|--eject]${C_RESET}  Telemetria bus USB/SD, tuning anti-freeze e rimozione sicura"
+    echo "  ${C_CYAN}osify spegni${C_RESET}                Arresta immediatamente il computer in totale sicurezza"
+    echo "  ${C_CYAN}osify riavvia${C_RESET}               Riavvia il computer in modo pulito"
+    echo "  ${C_CYAN}osify uem <file>${C_RESET}            Esegue binari Windows PE, Android APK, DOS, Mach-O, WASM"
     echo "  ${C_CYAN}osify aiuto${C_RESET}                Mostra questa guida di riferimento"
     echo ""
     echo "${C_BOLD}SCORCIATOIE DA TASTIERA GLOBALI (Sempre attive su Desktop):${C_RESET}"
@@ -271,12 +275,15 @@ cmd_dashboard() {
         echo "  ${C_YELLOW}[7]${C_RESET} ${C_WHITE}Gaming Hub${C_RESET}                     - Retrocomputing ed emulazione"
         echo "  ${C_YELLOW}[8]${C_RESET} ${C_WHITE}Acquisizione Video HDMI${C_RESET}        - Visualizza feed HDMI a schermo intero"
         echo "  ${C_YELLOW}[9]${C_RESET} ${C_WHITE}Mirroring Smartphone${C_RESET}           - Connessione smartphone via USB"
+        echo "  ${C_YELLOW}[A]${C_RESET} ${C_WHITE}Audio e Uscite${C_RESET}                 - Regola volume, mute e canali"
+        echo "  ${C_YELLOW}[D]${C_RESET} ${C_WHITE}Dischi e Rimozione Sicura${C_RESET}     - Gestione bus USB/SD e safe unmount"
         echo "  ${C_YELLOW}[I]${C_RESET} ${C_WHITE}Installa OSify su Disco${C_RESET}        - Procedura guidata permanente"
         echo "  ${C_YELLOW}[P]${C_RESET} ${C_WHITE}Profilo e Multiutenza${C_RESET}          - Gestione account e permessi"
         echo "  ${C_YELLOW}[U]${C_RESET} ${C_WHITE}Aggiornamento Sistema${C_RESET}          - Sincronizzazione aggiornamenti"
+        echo "  ${C_YELLOW}[S]${C_RESET} ${C_WHITE}Spegni o Riavvia${C_RESET}               - Menu alimentazione e sessione"
         echo "  ${C_YELLOW}[Q]${C_RESET} ${C_WHITE}Esci al Prompt Shell${C_RESET}"
         echo "${C_BOLD}===============================================================================${C_RESET}"
-        printf "${C_CYAN}Scegli un'opzione [1-9, I, P, U, Q]: ${C_RESET}"
+        printf "${C_CYAN}Scegli un'opzione [1-9, A, D, I, P, U, S, Q]: ${C_RESET}"
         read -r choice || break
         
         case "$choice" in
@@ -333,6 +340,28 @@ cmd_dashboard() {
                 [ -x /usr/bin/osify-phone ] && /usr/bin/osify-phone &
                 break
                 ;;
+            A|a)
+                echo ""
+                echo "1) Alza Volume (+5%)"
+                echo "2) Abbassa Volume (-5%)"
+                echo "3) Muto / Attiva"
+                echo "4) Esegui Test Canali Audio"
+                printf "Scelta [1-4]: "
+                read -r amode
+                case "$amode" in
+                    1) /usr/bin/osify-sound-manager up 2>/dev/null || true ;;
+                    2) /usr/bin/osify-sound-manager down 2>/dev/null || true ;;
+                    3) /usr/bin/osify-sound-manager mute 2>/dev/null || true ;;
+                    4) /usr/bin/osify-sound-manager test 2>/dev/null || true ;;
+                esac
+                printf "\nPremi INVIO per continuare..."
+                read -r _dummy
+                ;;
+            D|d)
+                [ -x /usr/bin/osify-storage-governor ] && /usr/bin/osify-storage-governor --status || true
+                printf "\nPremi INVIO per continuare..."
+                read -r _dummy
+                ;;
             I|i)
                 [ -x /usr/bin/osify-install ] && /usr/bin/osify-install &
                 break
@@ -345,6 +374,10 @@ cmd_dashboard() {
                 [ -x /usr/bin/osify-update ] && /usr/bin/osify-update || true
                 printf "\nPremi INVIO per continuare..."
                 read -r _dummy
+                ;;
+            S|s)
+                [ -x /usr/bin/osify-power ] && /usr/bin/osify-power || true
+                break
                 ;;
             Q|q|exit)
                 clear
@@ -403,6 +436,30 @@ case "${1:-}" in
     aggiorna|update|upgrade)
         shift
         [ -x /usr/bin/osify-live-updater.sh ] && exec /usr/bin/osify-live-updater.sh "$@" || [ -x /usr/bin/osify-update ] && exec /usr/bin/osify-update "$@" || true
+        ;;
+    audio|suono|volume)
+        shift
+        [ -x /usr/bin/osify-sound-manager ] && exec /usr/bin/osify-sound-manager "$@" || echo "Modulo audio non disponibile"
+        ;;
+    dischi|storage|eject)
+        shift
+        [ -x /usr/bin/osify-storage-governor ] && exec /usr/bin/osify-storage-governor "$@" || echo "Modulo storage non disponibile"
+        ;;
+    spegni|poweroff|halt|shutdown)
+        shift
+        [ -x /usr/bin/osify-power ] && exec /usr/bin/osify-power off "$@" || true
+        ;;
+    riavvia|reboot)
+        shift
+        [ -x /usr/bin/osify-power ] && exec /usr/bin/osify-power reboot "$@" || true
+        ;;
+    power|alimentazione)
+        shift
+        [ -x /usr/bin/osify-power ] && exec /usr/bin/osify-power "$@" || true
+        ;;
+    uem|esegui|exec)
+        shift
+        [ -x /usr/bin/osify-exec ] && exec /usr/bin/osify-exec "$@" || echo "Modulo UEM dispatcher non disponibile"
         ;;
     aiuto|help|-h|--help)
         cmd_aiuto

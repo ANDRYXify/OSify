@@ -11,9 +11,21 @@
 ACTION="${1:---tune}"
 DEV_TARGET="${2:-}"
 
+# Auto-elevazione per operazioni che modificano parametri kernel o smontano filesystem
+if [ "$(id -u 2>/dev/null || echo 0)" -ne 0 ]; then
+    case "$ACTION" in
+        --status|-s) ;; # Lettura consentita a tutti gli utenti
+        *)
+            if command -v sudo >/dev/null 2>&1; then
+                exec sudo "$0" "$@"
+            fi
+            ;;
+    esac
+fi
+
 log() { printf "\033[1;36m[OSify-Storage]\033[0m %s\n" "$*"; }
-ok()  { printf "\033[1;32m[✓]\033[0m %s\n" "$*"; }
-warn(){ printf "\033[1;33m[!]\033[0m %s\n" "$*"; }
+ok()  { printf "\033[1;32m[OK]\033[0m %s\n" "$*"; }
+warn(){ printf "\033[1;33m[AVVISO]\033[0m %s\n" "$*"; }
 
 # 1. Rilevamento velocità bus hardware (USB 2.0 vs 3.0 vs SD)
 get_device_bus_type() {

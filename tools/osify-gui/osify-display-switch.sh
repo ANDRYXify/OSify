@@ -80,9 +80,31 @@ if [ -n "$DISPLAY" ] && command -v yad >/dev/null 2>&1; then
     exit 0
 fi
 
+if [ -n "$DISPLAY" ] && command -v dialog >/dev/null 2>&1 && [ -t 0 ]; then
+    OPT=$(dialog --backtitle "OSify Operating System" \
+        --title " Gestione Uscite Video " \
+        --menu "\nSeleziona la modalita' per monitor esterno / HDMI:\n" 14 55 5 \
+        "1" "Clona Schermo (Mirroring Proiettore)" \
+        "2" "Estendi a Destra (Dual Monitor)" \
+        "3" "Estendi a Sinistra" \
+        "4" "Solo Monitor Esterno" \
+        "5" "Solo Schermo Laptop" \
+        3>&1 1>&2 2>&3)
+    case "$OPT" in
+        1) apply_display_mode "mirror" ;;
+        2) apply_display_mode "right" ;;
+        3) apply_display_mode "left" ;;
+        4) apply_display_mode "external_only" ;;
+        5) apply_display_mode "internal_only" ;;
+    esac
+    exit 0
+fi
+
 case "$1" in
     --mirror)   apply_display_mode "mirror" ;;
     --right)    apply_display_mode "right" ;;
+    --left)     apply_display_mode "left" ;;
     --external) apply_display_mode "external_only" ;;
+    --internal) apply_display_mode "internal_only" ;;
     *)          apply_display_mode "mirror" ;;
 esac
