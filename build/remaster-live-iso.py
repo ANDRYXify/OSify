@@ -289,8 +289,14 @@ OSIFY_OPENBOX_MENU = """<?xml version="1.0" encoding="UTF-8"?>
       <action name="Execute"><command>/usr/bin/terminal -T 'Aggiornamento Sistema' -e /usr/bin/osify-update</command></action>
     </item>
     <separator/>
-    <item label="Esci / Riavvia / Spegni">
-      <action name="Execute"><command>/usr/bin/terminal -geometry 60x14 -T 'Uscita OSify' -e sh -c 'echo "1) Riavvia  2) Spegni  3) Chiudi sessione"; read -r a; case $a in 1) reboot;; 2) poweroff;; 3) pkill -u $USER;; esac'</command></action>
+    <item label="Spegni Computer" icon="/usr/share/pixmaps/osify-taskmanager.png">
+      <action name="Execute"><command>/usr/bin/osify-power off</command></action>
+    </item>
+    <item label="Riavvia Computer" icon="/usr/share/pixmaps/osify-update.png">
+      <action name="Execute"><command>/usr/bin/osify-power reboot</command></action>
+    </item>
+    <item label="Chiudi Sessione Desktop" icon="/usr/share/pixmaps/osify-settings.png">
+      <action name="Execute"><command>/usr/bin/osify-power logout</command></action>
     </item>
   </menu>
 </openbox_menu>
@@ -551,12 +557,12 @@ Plugin {
         item {
             name=Riavvia Computer
             image=/usr/share/pixmaps/osify-update.png
-            action=reboot
+            action=/usr/bin/osify-power reboot
         }
         item {
             name=Spegni Computer
             image=/usr/share/pixmaps/osify-taskmanager.png
-            action=poweroff
+            action=/usr/bin/osify-power off
         }
     }
 }
@@ -964,6 +970,16 @@ LABEL memtest
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-terminal-wrapper.sh"), os.path.join(bin_dir, "terminal"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-terminal-wrapper.sh"), os.path.join(r4_work, "usr/local/bin/terminal"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-terminal-wrapper.sh"), os.path.join(bin_dir, "x-terminal-emulator"))
+
+    # Power Subsystem Deterministico
+    shutil.copy2(os.path.join(REPO_ROOT, "system/power/osify-power.sh"), os.path.join(bin_dir, "osify-power"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/power/osify-power.sh"), os.path.join(r4_work, "usr/local/bin/poweroff"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/power/osify-power.sh"), os.path.join(r4_work, "usr/local/bin/reboot"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/power/osify-power.sh"), os.path.join(r4_work, "usr/local/bin/halt"))
+    os.chmod(os.path.join(bin_dir, "osify-power"), 0o755)
+    os.chmod(os.path.join(r4_work, "usr/local/bin/poweroff"), 0o755)
+    os.chmod(os.path.join(r4_work, "usr/local/bin/reboot"), 0o755)
+    os.chmod(os.path.join(r4_work, "usr/local/bin/halt"), 0o755)
 
     # Master Command OSify (CLI & TUI Dashboard a 360 Gradi)
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify"), os.path.join(bin_dir, "osify"))

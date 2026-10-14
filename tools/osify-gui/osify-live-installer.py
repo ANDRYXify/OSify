@@ -18,6 +18,7 @@ import sys
 import os
 import subprocess
 import json
+import shutil
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QStackedWidget, QProgressBar, QFrame,
@@ -394,7 +395,12 @@ class OSifyLiveInstaller(QMainWindow):
 
     def reboot_system(self):
         try:
-            subprocess.run(["systemctl", "reboot"])
+            if shutil.which("osify-power"):
+                subprocess.run(["osify-power", "reboot"])
+            elif shutil.which("systemctl"):
+                subprocess.run(["systemctl", "reboot"])
+            else:
+                subprocess.run(["sudo", "reboot"])
         except Exception:
             sys.exit(0)
 

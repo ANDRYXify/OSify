@@ -192,7 +192,7 @@ if command -v dialog >/dev/null 2>&1; then
         --yesno "\nCongratulazioni! OSify e' stato installato con successo su $TARGET_DEV.\n\nVuoi riavviare il computer adesso?\n(Ricordati di rimuovere la chiavetta USB durante il riavvio)" 12 65
 
     if [ $? -eq 0 ]; then
-        reboot 2>/dev/null || poweroff 2>/dev/null || true
+        /usr/bin/osify-power reboot 2>/dev/null || osify-power reboot 2>/dev/null || reboot 2>/dev/null || true
     fi
     exit 0
 fi

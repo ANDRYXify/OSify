@@ -235,6 +235,12 @@ else
     log_fail "Power Subsystem: Power manager battery fallito"
 fi
 
+if [ -x "$REPO_ROOT/system/power/osify-power.sh" ]; then
+    log_pass "Power Subsystem: osify-power script deterministico presente ed eseguibile"
+else
+    log_fail "Power Subsystem: osify-power non eseguibile"
+fi
+
 # 8.5 Package Manager
 if "$REPO_ROOT/tools/osify-pkg" list | grep "CATALOGO APPLICATIVI" >/dev/null; then
     log_pass "Package Hub: Catalogo software autonomo pronto e navigabile"

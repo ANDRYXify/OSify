@@ -2,12 +2,25 @@
 # ==============================================================================
 # OSify Wi-Fi Manager — Connettività Wireless Guidata & Immediata
 # ==============================================================================
-# Ingegnerizzato da Andrea Taliento (ANDRYXify)
+# Ingegnerizzato per OSify Operating System
 # Compatibile al 100% con POSIX /bin/sh, Busybox ash e GNU Bash.
-# Supporta interfaccia interattiva dialog o modalità TUI console pura.
 # ==============================================================================
 
-set -e
+# Auto-elevazione privilegi con sudo
+if [ "$(id -u 2>/dev/null || echo 0)" -ne 0 ]; then
+    if command -v sudo >/dev/null 2>&1; then
+        exec sudo "$0" "$@"
+    elif command -v su >/dev/null 2>&1; then
+        exec su -c "$0 $*"
+    fi
+fi
+
+# Se lanciato dal desktop senza terminale interattivo, apri xterm
+if [ -n "$DISPLAY" ] && [ ! -t 0 ]; then
+    if command -v xterm >/dev/null 2>&1; then
+        exec xterm -title "Connessione Wi-Fi — OSify" -geometry 80x25 -bg "#0b0d14" -fg "#38bdf8" -cr "#10b981" +sb -e "$0" --interactive
+    fi
+fi
 
 find_wifi_iface() {
     if command -v iw >/dev/null 2>&1; then
@@ -45,15 +58,23 @@ scan_wifi_ssids() {
     ssids_file="/tmp/osify_ssids.txt"
     rm -f "$ssids_file"
     
+    # 1. Tentativo con nmcli
     if command -v nmcli >/dev/null 2>&1; then
         nmcli -t -f SSID,SIGNAL,SECURITY device wifi list 2>/dev/null | grep -v '^:' | sort -u > "$ssids_file" || true
-    elif command -v iwlist >/dev/null 2>&1; then
+    fi
+
+    # 2. Tentativo con iwlist
+    if [ ! -s "$ssids_file" ] && command -v iwlist >/dev/null 2>&1; then
         iwlist "$IFACE" scan 2>/dev/null | awk -F: '/ESSID/{gsub(/"/, "", $2); if (length($2) > 0) print $2":80%:WPA"}' | sort -u > "$ssids_file" || true
     fi
 
+    # 3. Tentativo con iw dev scan
+    if [ ! -s "$ssids_file" ] && command -v iw >/dev/null 2>&1; then
+        iw dev "$IFACE" scan 2>/dev/null | awk '/SSID: /{if (length($2) > 0) print $2":75%:WPA"}' | sort -u > "$ssids_file" || true
+    fi
+
     if [ ! -s "$ssids_file" ]; then
-        # Se non ci sono reti o la scansione è vuota, aggiungiamo opzione manuale
-        echo "Rete-Nascosta-o-Manuale:100%:WPA2" > "$ssids_file"
+        echo "Inserisci-Rete-Manualmente:100%:WPA2" > "$ssids_file"
     fi
     echo "$ssids_file"
 }
@@ -64,7 +85,6 @@ connect_to_ssid() {
 
     printf "\033[1;34m[OSify-WiFi]\033[0m Connessione a '%s' su %s...\n" "$target_ssid" "$IFACE"
 
-    # Termina istanze precedenti di wpa_supplicant su questa interfaccia
     pkill -f "wpa_supplicant.*$IFACE" 2>/dev/null || true
     sleep 1
 
@@ -98,192 +118,85 @@ EOF
         wpa_supplicant -B -i "$IFACE" -c "$conf_file" 2>/dev/null || true
         sleep 2
         
-        # Richiesta DHCP
+        # Richiesta IP con client DHCP (udhcpc per Busybox / SliTaz)
         if command -v udhcpc >/dev/null 2>&1; then
-            udhcpc -i "$IFACE" -n -q -t 5 2>/dev/null || true
+            udhcpc -i "$IFACE" -b -q -t 5 2>/dev/null || true
         elif command -v dhclient >/dev/null 2>&1; then
-            dhclient -1 "$IFACE" 2>/dev/null || true
+            dhclient "$IFACE" 2>/dev/null || true
         fi
-    fi
-
-    # Configurazione DNS ad alte prestazioni e privacy (Cloudflare 1.1.1.1 e Quad9 9.9.9.9)
-    if [ -w /etc/resolv.conf ]; then
-        cat << 'EOF' > /etc/resolv.conf
-# OSify Fast & Secure DNS Resolver
-nameserver 1.1.1.1
-nameserver 9.9.9.9
-options timeout:1 attempts:2
-EOF
-    fi
-
-    # Verifica connettività
-    CUR_IP="$(get_current_ip "$IFACE")"
-    if [ -n "$CUR_IP" ]; then
-        return 0
-    else
-        # Test ping veloce
-        if ping -c 1 -W 2 1.1.1.1 >/dev/null 2>&1; then
-            return 0
-        fi
-        return 1
     fi
 }
 
-# --- Modalità Interattiva Dialog ---
-run_dialog_ui() {
-    while true; do
-        CUR_IP="$(get_current_ip "$IFACE")"
-        if [ -n "$CUR_IP" ]; then
-            STATUS_MSG="Stato: CONNESSO | IP: $CUR_IP ($IFACE)"
-        else
-            STATUS_MSG="Stato: NON CONNESSO | Interfaccia: $IFACE"
-        fi
-
-        ACTION=$(dialog --stdout --backtitle "OSify Wi-Fi Manager — Andrea Taliento" \
-            --title " 🌐 Gestione Connessioni Wi-Fi & Rete " \
-            --menu "$STATUS_MSG\n\nScegli un'operazione:" 15 65 5 \
-            "1" "📡  Scansiona e Connettiti a una Rete Wi-Fi" \
-            "2" "⌨️   Connettiti inserendo SSID Manuale / Nascosto" \
-            "3" "🔄  Rilascia e Rinnova Indirizzo IP (DHCP)" \
-            "4" "🛑  Disconnetti Wi-Fi corrente" \
-            "0" "❌  Esci" 2>/dev/null || echo "0")
-
-        case "$ACTION" in
-            1)
-                dialog --title "Ricerca Reti" --infobox "\nScansione frequenze wireless in corso...\n" 5 50
-                sfile="$(scan_wifi_ssids)"
-                
-                # Prepara menu reti
-                menu_args=""
-                line_no=1
-                while IFS=: read -r s_name s_sig s_sec; do
-                    if [ -n "$s_name" ]; then
-                        menu_args="$menu_args \"$s_name\" \"Segnale: $s_sig ($s_sec)\""
-                        line_no=$((line_no + 1))
-                    fi
-                done < "$sfile"
-
-                if [ -z "$menu_args" ]; then
-                    dialog --title "Avviso" --msgbox "Nessuna rete Wi-Fi rilevata.\nVerifica che la scheda Wi-Fi sia attiva." 7 50
-                    continue
-                fi
-
-                CHOSEN_SSID=$(eval "dialog --stdout --title 'Seleziona Rete Wi-Fi' --menu 'Scegli la rete a cui vuoi connetterti:' 18 65 8 $menu_args" 2>/dev/null || true)
-                rm -f "$sfile"
-
-                if [ -n "$CHOSEN_SSID" ]; then
-                    PASS=$(dialog --stdout --title "Password Wi-Fi" --insecure --passwordbox "Inserisci la chiave di sicurezza per '$CHOSEN_SSID':\n(Lascia vuoto se la rete è aperta)" 9 55 2>/dev/null || true)
-                    
-                    dialog --title "Connessione" --infobox "\nNegoziazione crittografia e richiesta IP...\n" 5 50
-                    if connect_to_ssid "$CHOSEN_SSID" "$PASS"; then
-                        NEW_IP="$(get_current_ip "$IFACE")"
-                        dialog --title "Connesso con Successo!" --msgbox "\n[✓] Connesso alla rete: $CHOSEN_SSID\n[✓] Indirizzo IP Assegnato: $NEW_IP\n[✓] Protezione DNS Attiva (1.1.1.1 / 9.9.9.9)\n" 9 55
-                    else
-                        dialog --title "Errore Connessione" --msgbox "\nImpossibile ottenere l'indirizzo IP da '$CHOSEN_SSID'.\nVerifica la password o la potenza del segnale." 8 55
-                    fi
-                fi
-                ;;
-            2)
-                MAN_SSID=$(dialog --stdout --title "SSID Manuale" --inputbox "Inserisci il nome esatto della rete Wi-Fi (SSID):" 8 50 2>/dev/null || true)
-                if [ -n "$MAN_SSID" ]; then
-                    MAN_PASS=$(dialog --stdout --title "Password Wi-Fi" --insecure --passwordbox "Inserisci la password di rete:" 8 50 2>/dev/null || true)
-                    dialog --title "Connessione" --infobox "\nConnessione a $MAN_SSID in corso...\n" 5 50
-                    if connect_to_ssid "$MAN_SSID" "$MAN_PASS"; then
-                        dialog --title "Connesso!" --msgbox "Connessione a $MAN_SSID completata con successo!" 6 45
-                    else
-                        dialog --title "Errore" --msgbox "Connessione fallita." 6 40
-                    fi
-                fi
-                ;;
-            3)
-                pkill -f "udhcpc.*$IFACE" 2>/dev/null || true
-                udhcpc -i "$IFACE" -n -q -t 5 2>/dev/null || true
-                dialog --title "Rinnovo IP" --msgbox "Richiesta DHCP inviata su $IFACE." 6 45
-                ;;
-            4)
-                pkill -f "wpa_supplicant.*$IFACE" 2>/dev/null || true
-                pkill -f "udhcpc.*$IFACE" 2>/dev/null || true
-                if command -v ip >/dev/null 2>&1; then
-                    ip addr flush dev "$IFACE" 2>/dev/null || true
-                fi
-                dialog --title "Disconnesso" --msgbox "Interfaccia $IFACE disconnessa." 6 45
-                ;;
-            0|"")
-                clear
-                exit 0
-                ;;
-        esac
-    done
-}
-
-# --- Modalità TUI Testuale ---
-run_cli_ui() {
-    clear
-    printf "\033[1;36m=========================================================\033[0m\n"
-    printf "\033[1;32m      OSify Wi-Fi Manager — Connettività Wireless        \033[0m\n"
-    printf "\033[1;34m      Ingegnerizzato da Andrea Taliento (ANDRYXify)     \033[0m\n"
-    printf "\033[1;36m=========================================================\033[0m\n\n"
-    
-    CUR_IP="$(get_current_ip "$IFACE")"
-    if [ -n "$CUR_IP" ]; then
-        echo "• Stato: CONNESSO (IP: $CUR_IP su $IFACE)"
-    else
-        echo "• Stato: NON CONNESSO (Interfaccia: $IFACE)"
-    fi
-    echo ""
-    echo "1) Scansiona reti Wi-Fi e connettiti"
-    echo "2) Inserisci SSID manuale e password"
-    echo "3) Disconnetti"
-    echo "0) Esci"
-    echo ""
-    printf "Scelta [0-3]: "
-    read -r opt
-    case "$opt" in
-        1)
-            echo "[+] Scansione reti wireless in corso..."
-            sfile="$(scan_wifi_ssids)"
-            idx=1
-            while IFS=: read -r s_name s_sig s_sec; do
-                if [ -n "$s_name" ]; then
-                    printf "  [%d] %-25s (Segnale: %s | %s)\n" "$idx" "$s_name" "$s_sig" "$s_sec"
-                    idx=$((idx + 1))
-                fi
-            done < "$sfile"
-            total=$((idx - 1))
-            if [ "$total" -eq 0 ]; then
-                echo "Nessuna rete trovata."
-                rm -f "$sfile"
-                return
-            fi
-            printf "\nSeleziona numero rete [1-%d]: " "$total"
-            read -r num
-            selected_ssid="$(sed -n "${num}p" "$sfile" | cut -d: -f1)"
-            rm -f "$sfile"
-            if [ -n "$selected_ssid" ]; then
-                printf "Password per '%s': " "$selected_ssid"
-                read -r wpass
-                connect_to_ssid "$selected_ssid" "$wpass"
-            fi
-            ;;
-        2)
-            printf "Nome SSID: "
-            read -r m_ssid
-            printf "Password: "
-            read -r m_pass
-            connect_to_ssid "$m_ssid" "$m_pass"
-            ;;
-        3)
-            pkill -f "wpa_supplicant.*$IFACE" 2>/dev/null || true
-            echo "Disconnesso."
-            ;;
-        *)
-            exit 0
-            ;;
-    esac
-}
-
+# Modalità Interattiva Dialog se presente
 if command -v dialog >/dev/null 2>&1; then
-    run_dialog_ui
-else
-    run_cli_ui
+    dialog --backtitle "OSify Operating System" \
+        --infobox "\nScansione delle reti wireless in corso su $IFACE...\nAttendere qualche secondo..." 6 60
+
+    SCAN_FILE=$(scan_wifi_ssids)
+    
+    # Costruisci opzioni dialog
+    OPTIONS=""
+    idx=1
+    while IFS=: read -r s_name s_sig s_sec; do
+        [ -z "$s_name" ] && continue
+        OPTIONS="$OPTIONS $idx \"$s_name ($s_sig - $s_sec)\""
+        eval "SSID_NAME_$idx=\"$s_name\""
+        idx=$((idx + 1))
+    done < "$SCAN_FILE"
+
+    if [ -z "$OPTIONS" ]; then
+        dialog --backtitle "OSify Operating System" \
+            --title " Nessuna Rete Rilevata " \
+            --msgbox "\nNessuna rete Wi-Fi trovata.\nVerifica che la scheda Wi-Fi sia attiva." 8 50
+        exit 1
+    fi
+
+    CHOICE=$(eval "dialog --backtitle 'OSify Operating System' --title ' Reti Wireless Disponibili ' --menu '\nSeleziona la rete a cui connetterti:\n' 17 65 8 $OPTIONS 3>&1 1>&2 2>&3")
+    [ $? -ne 0 ] && exit 0
+
+    eval "SELECTED_SSID=\"\$SSID_NAME_$CHOICE\""
+
+    if [ "$SELECTED_SSID" = "Inserisci-Rete-Manualmente" ]; then
+        SELECTED_SSID=$(dialog --backtitle "OSify Operating System" \
+            --title " Nome Rete (SSID) " \
+            --inputbox "\nInserisci il nome esatto della rete Wi-Fi (SSID):" 10 55 \
+            3>&1 1>&2 2>&3)
+        [ $? -ne 0 ] && exit 0
+    fi
+
+    WIFI_PASS=$(dialog --backtitle "OSify Operating System" \
+        --title " Password di Rete " \
+        --insecure \
+        --passwordbox "\nInserisci la password per '$SELECTED_SSID':\n(Lascia vuoto per rete aperta)" 11 55 \
+        3>&1 1>&2 2>&3)
+    [ $? -ne 0 ] && exit 0
+
+    dialog --backtitle "OSify Operating System" \
+        --infobox "\nConnessione a '$SELECTED_SSID' in corso...\nNegoziazione indirizzo IP..." 6 55
+
+    connect_to_ssid "$SELECTED_SSID" "$WIFI_PASS"
+    sleep 2
+
+    ASSIGNED_IP=$(get_current_ip "$IFACE")
+    if [ -n "$ASSIGNED_IP" ]; then
+        dialog --backtitle "OSify Operating System" \
+            --title " Connesso con Successo! " \
+            --msgbox "\nConnesso alla rete: $SELECTED_SSID\nIndirizzo IP assegnato: $ASSIGNED_IP\n\nLa connessione a Internet e' attiva." 10 55
+    else
+        dialog --backtitle "OSify Operating System" \
+            --title " Stato Connessione " \
+            --msgbox "\nComando di connessione inviato a '$SELECTED_SSID'.\nSe la password e' corretta, la rete sara' disponibile a breve." 9 55
+    fi
+    exit 0
 fi
+
+# Fallback Console TUI
+echo "=== Gestore Rete Wi-Fi OSify ==="
+echo "Interfaccia attiva: $IFACE"
+SCAN_FILE=$(scan_wifi_ssids)
+cat "$SCAN_FILE"
+printf "Nome SSID: "
+read -r sel_ssid
+printf "Password: "
+read -r sel_pass
+connect_to_ssid "$sel_ssid" "$sel_pass"
