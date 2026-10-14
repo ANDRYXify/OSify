@@ -15,12 +15,14 @@ KERNEL_INFO=$(uname -srm)
 RAM_INFO=$(awk '/MemTotal/ {print int($2/1024)" MB"}' /proc/meminfo 2>/dev/null || echo "1024 MB")
 UPTIME_INFO=$(uptime 2>/dev/null | sed 's/.*up \([^,]*\), .*/\1/' || echo "Attivo")
 
+OSIFY_VER=$(cat /etc/osify-version 2>/dev/null || echo "1.2.0")
+
 # Finestra Notebook a Schede
 RESP=$(yad --form \
     --title="OSify Control Center — Impostazioni di Sistema" \
     --window-icon="preferences-desktop" \
     --width=540 \
-    --height=420 \
+    --height=480 \
     --center \
     --text="<b><big>⚙️ OSify Control Center</big></b>\n<i>Ingegnerizzato da Andrea Taliento (ANDRYXify)</i>\n" \
     --field="<b>SCHERMO & RISOLUZIONE</b>":LBL "" \
@@ -32,16 +34,27 @@ RESP=$(yad --form \
     --field="<b>AUDIO & VOLUME</b>":LBL "" \
     --field="Volume Master (%):":NUM "80!0..100!5" \
     --field="Sblocca Canali Audio (ALSA Unmute):":CHK "TRUE" \
-    --field="<b>INFORMAZIONI HARDWARE</b>":LBL "" \
+    --field="<b>INFORMAZIONI HARDWARE & AGGIORNAMENTI</b>":LBL "" \
+    --field="Versione OSify:":RO "v$OSIFY_VER" \
     --field="Processore:":RO "$CPU_INFO" \
     --field="Scheda Video:":RO "$GPU_INFO" \
     --field="Kernel & Architettura:":RO "$KERNEL_INFO" \
     --field="Memoria Installata:":RO "$RAM_INFO" \
+    --button="🔄 Controlla Aggiornamenti":20 \
     --button="🔊 Test Suono":10 \
     --button="Salva e Applica":0 \
     --button="Chiudi":1)
 
 RET=$?
+
+if [ "$RET" -eq 20 ]; then
+    if [ -x /usr/bin/osify-update ]; then
+        /usr/bin/osify-update --gui &
+    elif [ -x "$REPO_ROOT/system/updater/osify-live-updater.sh" ]; then
+        "$REPO_ROOT/system/updater/osify-live-updater.sh" --gui &
+    fi
+    exit 0
+fi
 
 if [ "$RET" -eq 10 ]; then
     # Test audio con beep o aplay sintetico

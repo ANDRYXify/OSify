@@ -1,0 +1,17 @@
+[Unit]
+Description=OSify Background Autonomous Auto-Update Daemon
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/osify-update daemon
+Restart=always
+RestartSec=60
+Nice=19
+IOSchedulingClass=idle
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

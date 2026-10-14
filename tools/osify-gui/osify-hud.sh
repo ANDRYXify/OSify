@@ -128,11 +128,21 @@ RESP=$(yad --form \
     --field="⚡ Profilo Energetico:":CB "Turbo Performance (1.66 GHz)!Adattivo Ondemand!Risparmio Eco" \
     --field="🖥️ Risoluzione Schermo:":CB "WSVGA Nativa 1024x600!Virtual Enhancer 1280x768 (Anti-Cutoff)" \
     --field="🌙 Filtro Notte (Luce Blu):":CHK "FALSE" \
+    --button="🔄 Aggiorna OSify":20 \
     --button="⚡ Boost RAM Subito":10 \
     --button="Applica Impostazioni":0 \
     --button="Chiudi":1)
 
 STATUS=$?
+
+if [ "$STATUS" -eq 20 ]; then
+    if [ -x /usr/bin/osify-update ]; then
+        /usr/bin/osify-update --gui &
+    elif [ -x "$REPO_ROOT/system/updater/osify-live-updater.sh" ]; then
+        "$REPO_ROOT/system/updater/osify-live-updater.sh" --gui &
+    fi
+    exit 0
+fi
 
 if [ "$STATUS" -eq 10 ]; then
     action_boost_ram

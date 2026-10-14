@@ -107,6 +107,11 @@ def inject_osify_tree(dest_iso_root):
     logo_png = os.path.join(REPO_ROOT, "OSify.png")
     if os.path.exists(logo_png):
         shutil.copy2(logo_png, os.path.join(osify_tree, "OSify.png"))
+    
+    version_file = os.path.join(REPO_ROOT, "VERSION")
+    if os.path.exists(version_file):
+        shutil.copy2(version_file, os.path.join(dest_iso_root, "VERSION"))
+        shutil.copy2(version_file, os.path.join(osify_tree, "VERSION"))
 
 def build_vintage_i686():
     print("=========================================================")
@@ -350,6 +355,11 @@ Plugin {
             image=system-software-install
             action=terminal -geometry 95x26 -T 'OSify Installer' -e /usr/bin/osify-install
         }
+        item {
+            name=🔄 Aggiorna OSify
+            image=system-software-update
+            action=/usr/bin/osify-update --gui
+        }
         separator {
         }
         item {
@@ -399,6 +409,9 @@ Plugin {
         }
         Button {
             id=/usr/share/applications/osify-settings.desktop
+        }
+        Button {
+            id=/usr/share/applications/osify-update.desktop
         }
     }
 }
@@ -722,6 +735,7 @@ LABEL memtest
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-taskmanager.sh"), os.path.join(bin_dir, "osify-taskmanager"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-settings.sh"), os.path.join(bin_dir, "osify-settings"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-terminal.sh"), os.path.join(bin_dir, "osify-terminal"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/updater/osify-live-updater.sh"), os.path.join(bin_dir, "osify-update"))
     run(f"chmod +x '{bin_dir}'/osify-*")
 
     # Iniezione Icona OSify nel sistema
@@ -740,13 +754,20 @@ LABEL memtest
             os.makedirs(os.path.dirname(full_ip), exist_ok=True)
             shutil.copy2(osify_png, full_ip)
 
-    # Inizializzazione Hardware Autonoma in /etc/init.d/local.sh
+    # Inizializzazione Hardware Autonoma e Auto-Updater in /etc/init.d/local.sh
     local_sh = os.path.join(r4_work, "etc/init.d/local.sh")
     with open(local_sh, "a") as f:
         f.write("""
 # OSify Universal Autonomous Hardware Engine
 /usr/bin/osify-hw-probe >/var/log/osify-hw-probe.log 2>&1 &
+
+# OSify Autonomous Auto-Updater Background Monitor
+nice -n 19 /usr/bin/osify-update daemon >/var/log/osify-autoupdate.log 2>&1 &
 """)
+
+    # Versione di sistema /etc/osify-version
+    with open(os.path.join(r4_work, "etc/osify-version"), "w") as f:
+        f.write("1.2.0\n")
 
     # Configurazione Touchpad Synaptics/Alps (Tap-to-click e Scorrimento Bordo)
     syn_dir = os.path.join(r4_work, "etc/X11/xorg.conf.d")
@@ -840,6 +861,16 @@ EndSection
             "Icon=preferences-desktop\n"
             "Terminal=false\n"
             "Categories=System;\n"
+        ),
+        "osify-update.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=🔄 Aggiorna OSify\n"
+            "Comment=Verifica e installa aggiornamenti ufficiali a caldo\n"
+            "Exec=/usr/bin/osify-update --gui\n"
+            "Icon=system-software-update\n"
+            "Terminal=false\n"
+            "Categories=System;Settings;PackageManager;\n"
         )
     }
 

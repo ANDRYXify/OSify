@@ -1,0 +1,48 @@
+#!/bin/sh
+# /etc/init.d/osify-autoupdate: OSify Autonomous Auto-Updater Background Daemon
+# Ingegnerizzato da Andrea Taliento (ANDRYXify)
+
+NAME="osify-autoupdate"
+DESC="OSify Autonomous Auto-Updater Daemon"
+DAEMON="/usr/bin/osify-update"
+PIDFILE="/var/run/${NAME}.pid"
+
+case "$1" in
+    start)
+        echo -n "Avvio del demone $DESC: "
+        if [ -x "$DAEMON" ]; then
+            nice -n 19 "$DAEMON" daemon >/var/log/osify-autoupdate.log 2>&1 &
+            echo $! > "$PIDFILE"
+            echo "avviato con successo."
+        else
+            echo "eseguibile non trovato in $DAEMON."
+        fi
+        ;;
+    stop)
+        echo -n "Arresto del demone $DESC: "
+        if [ -f "$PIDFILE" ]; then
+            kill "$(cat "$PIDFILE")" 2>/dev/null || true
+            rm -f "$PIDFILE"
+        fi
+        pkill -f "osify-update daemon" 2>/dev/null || true
+        echo "arrestato."
+        ;;
+    restart|reload)
+        $0 stop
+        sleep 1
+        $0 start
+        ;;
+    status)
+        if pgrep -f "osify-update daemon" >/dev/null 2>&1; then
+            echo "$DESC e' ATTIVO (PID: $(pgrep -f "osify-update daemon" | head -n1))."
+        else
+            echo "$DESC non e' in esecuzione."
+        fi
+        ;;
+    *)
+        echo "Uso: $0 {start|stop|restart|status}"
+        exit 1
+        ;;
+esac
+
+exit 0

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=🔄 Aggiorna OSify (Auto-Updater)
+Comment=Verifica, scarica e applica aggiornamenti per OSify a caldo
+Exec=/usr/bin/osify-update --gui
+Icon=system-software-update
+Terminal=false
+Categories=System;Settings;PackageManager;
