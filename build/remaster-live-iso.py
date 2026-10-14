@@ -152,7 +152,7 @@ def create_boot_splash(dest_jpg):
         img.paste(logo, (320 - logo.width//2, 45), logo)
     draw.text((320, 145), "OSify Operating System", fill=(255, 255, 255), anchor="mm")
     draw.text((320, 168), "Ingegnerizzato da Andrea Taliento (ANDRYXify)", fill=(6, 182, 212), anchor="mm")
-    draw.text((320, 186), "Intel Atom N280 • GMA 950 • WSVGA 1024x600 Live Profile", fill=(148, 163, 184), anchor="mm")
+    draw.text((320, 186), "Intel Atom N280 - GMA 950 - WSVGA 1024x600 Live Profile", fill=(148, 163, 184), anchor="mm")
     img.save(dest_jpg, "JPEG", quality=90)
 
 def remaster_rootfs3(work_dir, iso_root, wallpaper_jpg):
