@@ -219,6 +219,7 @@ OPENBOX_AUTOSTART = """#!/bin/sh
 # OSify Openbox Session Autostart
 [ -x /usr/bin/osify-input-setup ] && /usr/bin/osify-input-setup &
 [ -x /usr/bin/osify-storage-governor ] && /usr/bin/osify-storage-governor --tune &
+[ -x /usr/bin/osify-automount ] && (/usr/bin/osify-automount daemon >/dev/null 2>&1) &
 [ -x /usr/bin/osify-first-boot ] && (sleep 1.5 && /usr/bin/osify-first-boot) &
 if command -v pcmanfm >/dev/null 2>&1; then
     (sleep 0.3 && pgrep -f "pcmanfm --desktop" >/dev/null || pcmanfm --desktop) &
@@ -1054,6 +1055,10 @@ LABEL memtest
     shutil.copy2(os.path.join(REPO_ROOT, "system/session/osify-session.sh"), os.path.join(bin_dir, "osify-session"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/session/osify-first-boot.sh"), os.path.join(bin_dir, "osify-first-boot"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/session/osify-first-boot.sh"), os.path.join(r4_work, "usr/local/bin/osify-first-boot"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/storage/osify-automount.sh"), os.path.join(bin_dir, "osify-automount"))
+    shutil.copy2(os.path.join(REPO_ROOT, "network/osify-bluetooth.sh"), os.path.join(bin_dir, "osify-bluetooth"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/snapshot/osify-snapshot.sh"), os.path.join(bin_dir, "osify-snapshot"))
+    shutil.copy2(os.path.join(REPO_ROOT, "network/osify-net-check.sh"), os.path.join(bin_dir, "osify-net-check"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/updater/osify-live-updater.sh"), os.path.join(bin_dir, "osify-update"))
     for f in os.listdir(bin_dir):
         p = os.path.join(bin_dir, f)
@@ -1647,6 +1652,7 @@ WINDOW_MANAGER="openbox"
         shutil.copy2(os.path.join(REPO_ROOT, "desktop/mime/mimeapps.list"), m_full)
 
     shutil.copy2(os.path.join(REPO_ROOT, "desktop/applications/osify-uem-runner.desktop"), os.path.join(r4_work, "usr/share/applications/osify-uem-runner.desktop"))
+    shutil.copy2(os.path.join(REPO_ROOT, "desktop/applications/osify-bluetooth.desktop"), os.path.join(r4_work, "usr/share/applications/osify-bluetooth.desktop"))
 
     os.remove(r4_gz)
     run(f"(cd '{r4_work}' && find . -print0 | cpio --null -ov -H newc) | python3 -c \"import lzma, sys; sys.stdout.buffer.write(lzma.compress(sys.stdin.buffer.read(), format=lzma.FORMAT_ALONE))\" > '{r4_gz}'")

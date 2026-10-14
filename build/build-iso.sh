@@ -111,12 +111,33 @@ EOF
 exec /opt/osify/uem/runners/osify-universal-dispatcher.sh "$@"
 EOF
 
+    cat << 'EOF' > "$PROFILE_DIR/airootfs/usr/local/bin/osify-automount"
+#!/usr/bin/env bash
+exec /opt/osify/system/storage/osify-automount.sh "$@"
+EOF
+
+    cat << 'EOF' > "$PROFILE_DIR/airootfs/usr/local/bin/osify-bluetooth"
+#!/usr/bin/env bash
+exec /opt/osify/network/osify-bluetooth.sh "$@"
+EOF
+
+    cat << 'EOF' > "$PROFILE_DIR/airootfs/usr/local/bin/osify-snapshot"
+#!/usr/bin/env bash
+exec /opt/osify/system/snapshot/osify-snapshot.sh "$@"
+EOF
+
+    cat << 'EOF' > "$PROFILE_DIR/airootfs/usr/local/bin/osify-net-check"
+#!/usr/bin/env bash
+exec /opt/osify/network/osify-net-check.sh "$@"
+EOF
+
     # Registrazione Associazioni MIME UEM
     mkdir -p "$PROFILE_DIR/airootfs/usr/share/mime/packages" "$PROFILE_DIR/airootfs/usr/share/applications" "$PROFILE_DIR/airootfs/etc/xdg"
     cp "$SCRIPT_DIR/../desktop/mime/osify-uem.xml" "$PROFILE_DIR/airootfs/usr/share/mime/packages/osify-uem.xml" 2>/dev/null || true
     cp "$SCRIPT_DIR/../desktop/mime/mimeapps.list" "$PROFILE_DIR/airootfs/usr/share/applications/mimeapps.list" 2>/dev/null || true
     cp "$SCRIPT_DIR/../desktop/mime/mimeapps.list" "$PROFILE_DIR/airootfs/etc/xdg/mimeapps.list" 2>/dev/null || true
     cp "$SCRIPT_DIR/../desktop/applications/osify-uem-runner.desktop" "$PROFILE_DIR/airootfs/usr/share/applications/osify-uem-runner.desktop" 2>/dev/null || true
+    cp "$SCRIPT_DIR/../desktop/applications/osify-bluetooth.desktop" "$PROFILE_DIR/airootfs/usr/share/applications/osify-bluetooth.desktop" 2>/dev/null || true
 
     chmod +x "$PROFILE_DIR/airootfs/usr/local/bin/"*
 

@@ -27,5 +27,15 @@ fi
 
 # 3. Fallback synclient se il modulo Xorg synaptics è attivo
 if command -v synclient >/dev/null 2>&1; then
-    synclient TapButton1=1 TapButton2=3 TapButton3=2 VertEdgeScroll=1 HorizEdgeScroll=1 CoastingSpeed=20 2>/dev/null || true
+    synclient TapButton1=1 TapButton2=3 TapButton3=2 VertEdgeScroll=1 HorizEdgeScroll=1 PalmDetect=1 CoastingSpeed=20 2>/dev/null || true
+fi
+
+# 4. Eliminazione Input Lag Tastiera & Accelerazione Fluida Cursore
+if [ -n "$DISPLAY" ] && command -v xset >/dev/null 2>&1; then
+    # Ripetizione tasti reattiva (ritardo 250ms, 30 caratteri al secondo)
+    xset r rate 250 30 2>/dev/null || true
+    # Accelerazione del puntatore naturale
+    xset m 2/1 4 2>/dev/null || true
+    # Disabilita screensaver cieco di X11 (gestito da OSify Power Subsystem)
+    xset s off -dpms 2>/dev/null || true
 fi

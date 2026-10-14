@@ -461,6 +461,22 @@ case "${1:-}" in
         shift
         [ -x /usr/bin/osify-exec ] && exec /usr/bin/osify-exec "$@" || echo "Modulo UEM dispatcher non disponibile"
         ;;
+    bluetooth|bt)
+        shift
+        [ -x /usr/bin/osify-bluetooth ] && exec /usr/bin/osify-bluetooth "$@" || echo "Modulo bluetooth non disponibile"
+        ;;
+    snapshot|ripristino|backup)
+        shift
+        [ -x /usr/bin/osify-snapshot ] && exec /usr/bin/osify-snapshot "$@" || echo "Modulo snapshot non disponibile"
+        ;;
+    net-check|diagnostica|ping)
+        shift
+        [ -x /usr/bin/osify-net-check ] && exec /usr/bin/osify-net-check "$@" || echo "Modulo diagnostica rete non disponibile"
+        ;;
+    automount)
+        shift
+        [ -x /usr/bin/osify-automount ] && exec /usr/bin/osify-automount "$@" || echo "Modulo automount non disponibile"
+        ;;
     aiuto|help|-h|--help)
         cmd_aiuto
         ;;

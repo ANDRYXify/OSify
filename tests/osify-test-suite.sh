@@ -287,6 +287,34 @@ else
     log_fail "UEM MIME Subsystem: File di configurazione MIME mancanti"
 fi
 
+# 8.11 Intelligent Automounter
+if [ -x "$REPO_ROOT/system/storage/osify-automount.sh" ] && bash -n "$REPO_ROOT/system/storage/osify-automount.sh"; then
+    log_pass "Storage Automount Subsystem: Script demone montaggio USB/SD presente e verificato"
+else
+    log_fail "Storage Automount Subsystem: osify-automount.sh non valido"
+fi
+
+# 8.12 Bluetooth Subsystem
+if [ -x "$REPO_ROOT/network/osify-bluetooth.sh" ] && bash -n "$REPO_ROOT/network/osify-bluetooth.sh"; then
+    log_pass "Bluetooth Subsystem: Gestore periferiche wireless HID e A2DP operativo"
+else
+    log_fail "Bluetooth Subsystem: osify-bluetooth.sh non valido"
+fi
+
+# 8.13 Time Machine Snapshot Subsystem
+if [ -x "$REPO_ROOT/system/snapshot/osify-snapshot.sh" ] && bash -n "$REPO_ROOT/system/snapshot/osify-snapshot.sh"; then
+    log_pass "Snapshot & Recovery Subsystem: Motore Time Machine di ripristino atomico operativo"
+else
+    log_fail "Snapshot & Recovery Subsystem: osify-snapshot.sh non valido"
+fi
+
+# 8.14 Network Diagnostics & Captive Portal Engine
+if [ -x "$REPO_ROOT/network/osify-net-check.sh" ] && bash -n "$REPO_ROOT/network/osify-net-check.sh"; then
+    log_pass "Network Diagnostic Subsystem: Radiografia 5 livelli e Captive Portal engine validati"
+else
+    log_fail "Network Diagnostic Subsystem: osify-net-check.sh non valido"
+fi
+
 # ==============================================================================
 # FASE 9: HARDWARE INTELLIGENCE, WORKLOAD GOVERNOR & POLYGLOT CLI
 # ==============================================================================

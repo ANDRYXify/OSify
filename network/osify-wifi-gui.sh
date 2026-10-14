@@ -179,9 +179,19 @@ if command -v dialog >/dev/null 2>&1; then
 
     ASSIGNED_IP=$(get_current_ip "$IFACE")
     if [ -n "$ASSIGNED_IP" ]; then
+        # Verifica reale accesso Internet e Captive Portal
+        NET_STATUS="Accesso a Internet attivo e verificato."
+        CHECK_TOOL="$(dirname "$0")/osify-net-check.sh"
+        [ ! -x "$CHECK_TOOL" ] && CHECK_TOOL="/usr/bin/osify-net-check"
+        if [ -x "$CHECK_TOOL" ]; then
+            if ! "$CHECK_TOOL" portal >/dev/null 2>&1; then
+                NET_STATUS="ATTENZIONE: Rilevato Captive Portal (richiesto login Web)."
+            fi
+        fi
+
         dialog --backtitle "OSify Operating System" \
             --title " Connesso con Successo! " \
-            --msgbox "\nConnesso alla rete: $SELECTED_SSID\nIndirizzo IP assegnato: $ASSIGNED_IP\n\nLa connessione a Internet e' attiva." 10 55
+            --msgbox "\nConnesso alla rete: $SELECTED_SSID\nIndirizzo IP assegnato: $ASSIGNED_IP\n\nStato: $NET_STATUS" 11 58
     else
         dialog --backtitle "OSify Operating System" \
             --title " Stato Connessione " \

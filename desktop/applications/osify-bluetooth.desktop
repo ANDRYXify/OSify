@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Dispositivi Bluetooth
+Comment=Collega cuffie wireless, controller di gioco, mouse e tastiere
+Exec=/usr/bin/osify-bluetooth
+Icon=/usr/share/pixmaps/osify-hub.png
+Terminal=false
+Categories=Settings;HardwareSettings;Network;
+Keywords=bluetooth;wireless;headset;cuffie;controller;gamepad;mouse;keyboard;
