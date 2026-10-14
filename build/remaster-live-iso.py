@@ -141,19 +141,93 @@ def build_vintage_i686():
 def create_boot_splash(dest_jpg):
     img = Image.new("RGB", (640, 480), color=(11, 13, 20))
     draw = ImageDraw.Draw(img)
-    for r in range(180, 0, -2):
-        alpha = int(45 * (1 - r / 180))
+    for r in range(160, 0, -2):
+        alpha = int(45 * (1 - r / 160))
         color = (11 + int(alpha * 1.5), 13 + int(alpha * 0.5), 20 + int(alpha * 3))
-        draw.ellipse([(320 - r, 100 - r//2), (320 + r, 100 + r//2)], fill=color)
+        draw.ellipse([(320 - r, 70 - r//2), (320 + r, 70 + r//2)], fill=color)
     logo_path = os.path.join(REPO_ROOT, "OSify.png")
     if os.path.exists(logo_path):
         logo = Image.open(logo_path).convert("RGBA")
-        logo.thumbnail((90, 90))
-        img.paste(logo, (320 - logo.width//2, 45), logo)
-    draw.text((320, 145), "OSify Operating System", fill=(255, 255, 255), anchor="mm")
-    draw.text((320, 168), "Ingegnerizzato da Andrea Taliento (ANDRYXify)", fill=(6, 182, 212), anchor="mm")
-    draw.text((320, 186), "Intel Atom N280 - GMA 950 - WSVGA 1024x600 Live Profile", fill=(148, 163, 184), anchor="mm")
+        logo.thumbnail((75, 75))
+        img.paste(logo, (320 - logo.width//2, 25), logo)
+    draw.text((320, 110), "OSify Operating System", fill=(255, 255, 255), anchor="mm")
+    draw.text((320, 128), "Ingegnerizzato da Andrea Taliento (ANDRYXify)", fill=(6, 182, 212), anchor="mm")
+    draw.text((320, 144), "Intel Atom N280 - GMA 950 - WSVGA 1024x600 Live Profile", fill=(148, 163, 184), anchor="mm")
     img.save(dest_jpg, "JPEG", quality=90)
+
+CLEAN_XINITRC = """#!/bin/sh
+# OSify Universal Desktop Session Manager
+# Ingegnerizzato da Andrea Taliento (ANDRYXify)
+
+# 1. Carica configurazione desktop
+if [ -f "$HOME/.config/slitaz/applications.conf" ]; then
+    . "$HOME/.config/slitaz/applications.conf"
+elif [ -f "/etc/slitaz/applications.conf" ]; then
+    . "/etc/slitaz/applications.conf"
+fi
+
+[ -z "$WINDOW_MANAGER" ] && WINDOW_MANAGER="openbox"
+[ -n "$1" ] && WINDOW_MANAGER="$1"
+
+# 2. Aggiorna menu applicazioni di sistema
+if command -v tazbox >/dev/null 2>&1; then
+    tazbox mkmenu 2>/dev/null &
+fi
+
+# 3. Imposta wallpaper OSify con pcmanfm
+if command -v pcmanfm >/dev/null 2>&1; then
+    (pcmanfm --set-wallpaper=/usr/share/images/osify-wallpaper.jpg --wallpaper-mode=fit) 2>/dev/null &
+fi
+
+# 4. Driver Touchpad Synaptics/Alps (Tap e Scorrimento Bordo)
+if command -v synclient >/dev/null 2>&1; then
+    (synclient TapButton1=1 TapButton2=3 TapButton3=2 VertEdgeScroll=1 HorizEdgeScroll=1) 2>/dev/null &
+fi
+
+# 5. OSify First-Boot Wizard & Quick Diagnostic
+if [ -x /usr/bin/osify-welcome ]; then
+    (sleep 1 && /usr/bin/osify-welcome) 2>/dev/null &
+fi
+
+# 6. Avvio LXPanel se non gia attivo
+if command -v lxpanel >/dev/null 2>&1; then
+    (sleep 1 && pgrep -x lxpanel >/dev/null || lxpanel --profile slitaz) 2>/dev/null &
+fi
+
+# 7. Wrapper D-Bus / ConsoleKit per permessi utente
+if [ -f '/usr/bin/ck-launch-session' ]; then
+    EXEC="exec ck-launch-session dbus-launch --sh-syntax --exit-with-session"
+elif command -v dbus-launch >/dev/null 2>&1; then
+    EXEC="exec dbus-launch --sh-syntax --exit-with-session"
+else
+    EXEC="exec"
+fi
+
+# 8. Keymap layout italiano se configurato
+if [ -f /etc/keymap.conf ]; then
+    kmaplang=$(cat /etc/keymap.conf | awk -F'-' '{print $1}')
+    [ -n "$kmaplang" ] && setxkbmap "$kmaplang" 2>/dev/null
+fi
+
+# 9. Esecuzione Window Manager
+case "$WINDOW_MANAGER" in
+    openbox|openbox-session)
+        $EXEC openbox-session
+        ;;
+    lxde*|lxde-session)
+        $EXEC startlxde
+        ;;
+    *)
+        if command -v openbox-session >/dev/null 2>&1; then
+            $EXEC openbox-session
+        elif command -v "$WINDOW_MANAGER" >/dev/null 2>&1; then
+            $EXEC "$WINDOW_MANAGER"
+        else
+            $EXEC openbox
+        fi
+        ;;
+esac
+"""
 
 def remaster_rootfs3(work_dir, iso_root, wallpaper_jpg):
     print("[i] Remastering rootfs3 (SLIM autologin 0s, rimozione ragno SliTaz, OSify Cyber-Bar)...")
@@ -165,23 +239,37 @@ def remaster_rootfs3(work_dir, iso_root, wallpaper_jpg):
         r3_data = lzma.decompress(f.read())
     extract_cpio_archive(r3_data, r3_work)
 
-    # 1. Configurazione SLIM per autologin forzato e tema osify
+    # 1. Configurazione SLIM per autologin forzato e tema osify con fallback indistruttibile
     slim_conf = os.path.join(r3_work, "etc/slim.conf")
-    if os.path.exists(slim_conf):
-        with open(slim_conf, "r") as f:
-            lines = f.readlines()
-        new_lines = []
-        for line in lines:
-            if line.strip().startswith("auto_login") or line.strip().startswith("#auto_login"):
-                new_lines.append("auto_login          yes\n")
-            elif line.strip().startswith("default_user") or line.strip().startswith("#default_user"):
-                new_lines.append("default_user        tux\n")
-            elif line.strip().startswith("current_theme"):
-                new_lines.append("current_theme       osify\n")
-            else:
-                new_lines.append(line)
-        with open(slim_conf, "w") as f:
-            f.writelines(new_lines)
+    slim_content = """default_path        /bin:/usr/bin:/usr/local/bin:/usr/X11R6/bin
+default_xserver     /usr/bin/Xorg
+halt_cmd            /sbin/poweroff
+reboot_cmd          /sbin/reboot
+console_cmd         /usr/bin/xterm -C -fg white -bg black +sb -T "Console login" -e /bin/sh -l -c "exec /bin/login"
+xauth_path          /usr/bin/xauth 
+authfile            /var/run/slim.auth
+hidecursor          true
+login_cmd           exec /bin/sh -l -c "if [ -f ~/.xinitrc ]; then exec /bin/sh -l ~/.xinitrc %session; elif [ -f /etc/skel/.xinitrc ]; then exec /bin/sh -l /etc/skel/.xinitrc %session; else exec openbox-session; fi"
+auto_login          yes
+default_user        tux
+current_theme       osify
+lockfile            /var/lock/slim.lock
+logfile             /var/log/slim.log
+"""
+    os.makedirs(os.path.dirname(slim_conf), exist_ok=True)
+    with open(slim_conf, "w") as f:
+        f.write(slim_content)
+
+    # Scrittura diretta e deterministica di .xinitrc con permessi 755
+    for rc_path in ["etc/skel/.xinitrc", "root/.xinitrc", "home/tux/.xinitrc", "etc/X11/xinit/xinitrc"]:
+        full_rc = os.path.join(r3_work, rc_path)
+        os.makedirs(os.path.dirname(full_rc), exist_ok=True)
+        with open(full_rc, "w") as f:
+            f.write(CLEAN_XINITRC)
+        os.chmod(full_rc, 0o755)
+    tux_home_r3 = os.path.join(r3_work, "home/tux")
+    os.makedirs(tux_home_r3, exist_ok=True)
+    os.chmod(tux_home_r3, 0o777)
 
     # 2. Sostituzione temi SLIM: cancellazione totale del ragno di SliTaz
     blank_panel = Image.new("RGBA", (1, 1), (0, 0, 0, 0))
@@ -411,7 +499,14 @@ Plugin {
     }
 }
 """
-    for p_path in ["etc/skel/.config/lxpanel/slitaz/panels/panel", "etc/lxpanel/slitaz/panels/panel", "etc/lxpanel/default/panels/panel"]:
+    for p_path in [
+        "etc/skel/.config/lxpanel/slitaz/panels/panel",
+        "home/tux/.config/lxpanel/slitaz/panels/panel",
+        "etc/lxpanel/slitaz/panels/panel",
+        "etc/lxpanel/default/panels/panel",
+        "etc/xdg/lxpanel/default/panels/panel",
+        "etc/xdg/lxpanel/original/panels/panel"
+    ]:
         full_p = os.path.join(r3_work, p_path)
         os.makedirs(os.path.dirname(full_p), exist_ok=True)
         with open(full_p, "w") as f:
@@ -436,6 +531,11 @@ Plugin {
             rc_content = rc_content.replace("</keyboard>", f"{custom_keys}\n  </keyboard>")
             with open(rc_xml, "w") as f:
                 f.write(rc_content)
+            for ob_p in ["etc/skel/.config/openbox/rc.xml", "home/tux/.config/openbox/rc.xml", "root/.config/openbox/rc.xml"]:
+                full_ob = os.path.join(r3_work, ob_p)
+                os.makedirs(os.path.dirname(full_ob), exist_ok=True)
+                with open(full_ob, "w") as f:
+                    f.write(rc_content)
 
     os.remove(r3_gz)
     run(f"(cd '{r3_work}' && find . -print0 | cpio --null -ov -H newc) | python3 -c \"import lzma, sys; sys.stdout.buffer.write(lzma.compress(sys.stdin.buffer.read(), format=lzma.FORMAT_ALONE))\" > '{r3_gz}'")
@@ -485,15 +585,17 @@ def build_vintage_i686():
         os.remove(os.path.join(isolinux_dir, "boot.cat"))
     shutil.copy2(splash_jpg, os.path.join(isolinux_dir, "splash.jpg"))
 
-    clean_cfg = """UI vesamenu.c32
+    clean_cfg = """DEFAULT osify
+UI vesamenu.c32
 PROMPT 0
 TIMEOUT 40
 
-MENU TITLE OSify Operating System — by Andrea Taliento (ANDRYXify)
+MENU TITLE OSify Operating System (32-bit Vintage Edition)
 MENU BACKGROUND splash.jpg
 MENU WIDTH 78
 MENU MARGIN 6
-MENU ROWS 12
+MENU ROWS 7
+MENU VSHIFT 4
 MENU TIMEOUTROW 18
 MENU TABMSGROW 16
 MENU CMDLINEROW 16
@@ -507,31 +609,31 @@ MENU COLOR timeout      1;37;40 #06b6d4ff #00000000 std
 MENU COLOR timeout_msg  37;40   #a0ffffff #00000000 std
 
 LABEL osify
-    MENU LABEL 🚀 OSify Vintage Desktop (Live Session — Automazione Completa)
+    MENU LABEL [1] OSify Vintage Desktop (Auto-boot / Live Session)
     KERNEL /boot/bzImage
     INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
     APPEND root=/dev/null video=-32 autologin lang=it_IT kmap=it rw quiet splash vga=791 vt.global_cursor_default=0
 
 LABEL turbo
-    MENU LABEL ⚡ OSify Turbo Performance Mode (CPU 1.66GHz & zRAM Max)
+    MENU LABEL [2] OSify Turbo Performance Mode (1.66GHz & zRAM Max)
     KERNEL /boot/bzImage
     INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
     APPEND root=/dev/null video=-32 autologin lang=it_IT kmap=it rw quiet splash vga=791 osify.turbo=1
 
 LABEL safe
-    MENU LABEL 🛠️ OSify Safe Graphics (Fallback VESA / Nomodeset)
+    MENU LABEL [3] OSify Safe Graphics Mode (Fallback VESA / Nomodeset)
     KERNEL /boot/bzImage
     INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
     APPEND root=/dev/null nomodeset autologin lang=it_IT kmap=it rw vga=791
 
 LABEL install
-    MENU LABEL 💾 Installa OSify su Disco Fisso
+    MENU LABEL [4] Installa OSify su Disco Fisso
     KERNEL /boot/bzImage
     INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
     APPEND root=/dev/null video=-32 autologin lang=it_IT kmap=it rw quiet splash vga=791 osify.install=1
 
 LABEL memtest
-    MENU LABEL 🧠 Verifica Memoria RAM (Memtest86)
+    MENU LABEL [5] Verifica Memoria RAM (Memtest86)
     KERNEL /boot/memtest.exe
 """
     with open(os.path.join(isolinux_dir, "isolinux.cfg"), "w") as f:
@@ -663,21 +765,16 @@ LABEL memtest
 EndSection
 """)
 
-    # Iniezione hook autostart in .xinitrc (utente tux e root)
-    hook_str = (
-        "\\n# Inizializzazione Ambiente Desktop OSify (Sfondo, Touchpad, Wizard)\\n"
-        "(pcmanfm --set-wallpaper=/usr/share/images/osify-wallpaper.jpg --wallpaper-mode=fit) 2>/dev/null &\\n"
-        "(sleep 1 && /usr/bin/osify-welcome) &\\n"
-        "(sleep 1 && synclient TapButton1=1 TapButton2=3 TapButton3=2 VertEdgeScroll=1 HorizEdgeScroll=1) 2>/dev/null &\\n"
-    )
-    for rc in [os.path.join(r4_work, "etc/skel/.xinitrc"), os.path.join(r4_work, "root/.xinitrc")]:
-        if os.path.exists(rc):
-            with open(rc, "r") as f:
-                content = f.read()
-            if "case \"$WINDOW_MANAGER\" in" in content:
-                content = content.replace("case \"$WINDOW_MANAGER\" in", f"{hook_str}\ncase \"$WINDOW_MANAGER\" in")
-                with open(rc, "w") as f:
-                    f.write(content)
+    # Iniezione deterministica di .xinitrc con permessi 755 in rootfs4
+    for rc_path in ["etc/skel/.xinitrc", "root/.xinitrc", "home/tux/.xinitrc", "etc/X11/xinit/xinitrc"]:
+        full_rc = os.path.join(r4_work, rc_path)
+        os.makedirs(os.path.dirname(full_rc), exist_ok=True)
+        with open(full_rc, "w") as f:
+            f.write(CLEAN_XINITRC)
+        os.chmod(full_rc, 0o755)
+    tux_home_r4 = os.path.join(r4_work, "home/tux")
+    os.makedirs(tux_home_r4, exist_ok=True)
+    os.chmod(tux_home_r4, 0o777)
 
     with open(os.path.join(r4_work, "etc/issue"), "w") as f:
         f.write("OSify Operating System (32-bit Vintage Edition — by Andrea Taliento)\\n\\l\n")
