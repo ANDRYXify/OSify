@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Name=📊 Task Manager
+Name=Task Manager
 Comment=Task Manager Grafico e Telemetria di Sistema in Tempo Reale
 Exec=/usr/bin/osify-taskmanager
 Icon=/usr/share/pixmaps/osify-taskmanager.png

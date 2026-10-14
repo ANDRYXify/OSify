@@ -67,7 +67,7 @@ if command -v sakura >/dev/null 2>&1; then
     exec /bin/sh -c "sakura $SAKURA_ARGS -x \"$COMMAND\""
 fi
 
-# 2. Rilevamento XTERM (garantito su qualsiasi ambiente Xorg)
+# 2. Rilevamento XTERM (garantito nativo in OSify)
 if command -v xterm >/dev/null 2>&1; then
     XTERM_GEOM="${GEOMETRY:-80x24}"
     exec xterm \
@@ -76,7 +76,6 @@ if command -v xterm >/dev/null 2>&1; then
         -bg "#0b0d14" \
         -fg "#38bdf8" \
         -cr "#10b981" \
-        -fn "-*-fixed-medium-r-*-*-14-*-*-*-*-*-*-*" \
         +sb \
         -e /bin/sh -c "$COMMAND"
 fi

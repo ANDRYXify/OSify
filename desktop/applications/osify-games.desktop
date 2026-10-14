@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Name=🎮 Gaming Hub
+Name=Gaming Hub
 Comment=Giochi Windows (.exe), Retrogaming DOS, Emulazione e Turbo Boost
 Exec=/usr/bin/terminal -geometry 75x20 -T 'OSify Gaming' -e /usr/bin/osify-games
 Icon=/usr/share/pixmaps/osify-games.png

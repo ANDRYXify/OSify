@@ -52,7 +52,7 @@ ${C_WHITE}   OSify — Sistema Operativo Universale & Resurrezione Hardware${C_R
 EOF
 
 echo ""
-echo " ${C_GREEN}👋 $GREETING${C_RESET}"
+echo " ${C_GREEN}$GREETING${C_RESET}"
 echo "${C_BOLD}┌────────────────────────────────────────────────────────────────────────┐${C_RESET}"
 printf "│ ${C_CYAN}%-14s${C_RESET} : %-55s │\n" "Host / Utente" "$(whoami) @ $(cat /etc/hostname 2>/dev/null || echo osify)"
 printf "│ ${C_CYAN}%-14s${C_RESET} : %-55s │\n" "Edizione" "OSify $(cat /etc/osify-version 2>/dev/null || echo '1.5.0') Vintage Edition"
@@ -62,18 +62,18 @@ printf "│ ${C_CYAN}%-14s${C_RESET} : %-55s │\n" "Memoria RAM" "${RAM_USED_MB
 printf "│ ${C_CYAN}%-14s${C_RESET} : %-55s │\n" "Risoluzione" "$RES_INFO (Pannello Netbook WSVGA)"
 echo "${C_BOLD}└────────────────────────────────────────────────────────────────────────┘${C_RESET}"
 echo ""
-echo " ${C_YELLOW}⚡ Comandi Inediti OSify (Pronti all'uso):${C_RESET}"
+echo " ${C_YELLOW}Comandi Principali OSify:${C_RESET}"
 echo "    ${C_WHITE}osify${C_RESET}          -> Apre la Dashboard Interattiva a 360°"
-echo "    ${C_WHITE}osify turbo${C_RESET}    -> Spinge la CPU a 1.66GHz e attiva zRAM LZ4"
-echo "    ${C_WHITE}osify pulisci${C_RESET}  -> Libera istantaneamente RAM e cache di sistema"
-echo "    ${C_WHITE}osify wifi${C_RESET}     -> Scansione e connessione rapida alle reti wireless"
-echo "    ${C_WHITE}osify schermo${C_RESET}  -> Risoluzioni: 1024x600, 1280x768 (Virtual HD) o HDMI"
-echo "    ${C_WHITE}osify installa${C_RESET} -> Installatore guidato su disco fisso HDD/SSD"
+echo "    ${C_WHITE}osify turbo${C_RESET}    -> Prestazioni massime CPU e zRAM"
+echo "    ${C_WHITE}osify pulisci${C_RESET}  -> Libera istantaneamente RAM e cache"
+echo "    ${C_WHITE}osify wifi${C_RESET}     -> Scansione e connessione alle reti wireless"
+echo "    ${C_WHITE}osify schermo${C_RESET}  -> Risoluzioni: 1024x600, 1280x768 o HDMI"
+echo "    ${C_WHITE}osify installa${C_RESET} -> Installatore guidato su disco fisso"
 echo "    ${C_WHITE}osify aiuto${C_RESET}    -> Manuale completo e scorciatoie da tastiera"
 echo ""
 
 # Prompt Cyber-OSify personalizzato
-export PS1="${C_CYAN}⚡ [OSify:${C_GREEN}\u${C_CYAN}@${C_MAGENTA}\h ${C_YELLOW}\W${C_CYAN}]\\$ ${C_RESET}"
+export PS1="${C_CYAN}[OSify:${C_GREEN}\u${C_CYAN}@${C_MAGENTA}\h ${C_YELLOW}\W${C_CYAN}]\\$ ${C_RESET}"
 
 # Avvia la shell dell'utente in modalità interattiva
 if [ -x /bin/bash ]; then

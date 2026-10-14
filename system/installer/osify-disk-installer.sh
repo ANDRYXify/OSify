@@ -119,23 +119,23 @@ user_setup_wizard() {
                     REAL_NAME="$FOUND_NAME"
                     NEW_USER="$FOUND_USER"
                     USER_PASS="$FOUND_PASS"
-                    [ -z "$REAL_NAME" ] && REAL_NAME="Andrea Taliento"
-                    [ -z "$NEW_USER" ] && NEW_USER="andrea"
+                    [ -z "$REAL_NAME" ] && REAL_NAME="Utente OSify"
+                    [ -z "$NEW_USER" ] && NEW_USER="utente"
                     ;;
             esac
         fi
     fi
 
     while [ -z "$REAL_NAME" ]; do
-        printf "Nome Completo (es. Andrea Taliento): "
+        printf "Nome Completo: "
         read -r REAL_NAME
-        [ -z "$REAL_NAME" ] && REAL_NAME="Andrea"
+        [ -z "$REAL_NAME" ] && REAL_NAME="Utente"
     done
 
     while [ -z "$NEW_USER" ]; do
         # Proponi username derivato dal nome completo
         default_user=$(echo "$REAL_NAME" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9' | cut -c1-12)
-        [ -z "$default_user" ] && default_user="andrea"
+        [ -z "$default_user" ] && default_user="utente"
         printf "Nome Utente per il Login [Predefinito: %s]: " "$default_user"
         read -r input_user
         if [ -z "$input_user" ]; then

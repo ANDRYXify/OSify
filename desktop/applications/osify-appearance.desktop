@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Name=🎨 Personalizzazione & Aspetto
+Name=Personalizzazione & Aspetto
 Comment=Sfondi Automatici, Avatar, Virtual Scaler per Netbook e Temi
 Exec=/usr/bin/osify-appearance
 Icon=/usr/share/pixmaps/osify-appearance.png

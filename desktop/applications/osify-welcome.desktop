@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Name=👋 Benvenuto in OSify
+Name=Benvenuto in OSify
 Comment=Esperienza di Primo Avvio e Diagnostica Netbook
 Exec=/usr/bin/osify-welcome
 Icon=preferences-desktop

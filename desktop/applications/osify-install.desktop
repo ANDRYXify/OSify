@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Name=💾 Installa OSify su Disco
+Name=Installa OSify su Disco
 Comment=Installatore Guidato su Disco Fisso con Migrazione Dati Live
 Exec=/usr/bin/osify-install
 Icon=/usr/share/pixmaps/osify-install.png

@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Name=💻 Terminale Cyber
+Name=Terminale Cyber
 Comment=Terminale con Fastfetch e Diagnostica Hardware
 Exec=/usr/bin/terminal
 Icon=/usr/share/pixmaps/osify-terminal.png

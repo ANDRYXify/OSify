@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Name=👥 Gestione Multiutenza
+Name=Gestione Multiutenza
 Comment=Crea, modifica ed elimina account utenti e permessi di amministrazione
 Exec=/usr/bin/osify-users
 Icon=/usr/share/pixmaps/osify-users.png

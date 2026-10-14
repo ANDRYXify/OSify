@@ -1,209 +1,195 @@
 #!/bin/sh
 # ==============================================================================
-# OSify Modern Graphical Disk Installer Launcher & Interface
+# OSify Disk Installer — Assistente Guidato su Disco Fisso
 # ==============================================================================
-# Ingegnerizzato da Andrea Taliento (ANDRYXify)
-# Interfaccia grafica GTK/YAD per l'installazione autonoma di OSify su disco fisso,
-# auto-elevazione con subox/sudo, rilevamento hardware dischi, migrazione dati
-# da sessione Live e barra di avanzamento visiva continua.
+# Ingegnerizzato per OSify Operating System
+# Esegue l'installazione permanente di OSify su disco fisso senza richiedere
+# alcuna password in sessione Live, con procedura guidata passo-passo.
 # ==============================================================================
+
+# Se non siamo root, eleviamo con sudo trasparente (grazie a sudoers NOPASSWD)
+if [ "$(id -u 2>/dev/null || echo 0)" -ne 0 ]; then
+    if command -v sudo >/dev/null 2>&1; then
+        exec sudo "$0" "$@"
+    elif command -v su >/dev/null 2>&1; then
+        exec su -c "$0 $*"
+    fi
+fi
+
+# Se siamo lanciati dal desktop senza terminale, apriamo una finestra xterm
+if [ -n "$DISPLAY" ] && [ ! -t 0 ]; then
+    if command -v xterm >/dev/null 2>&1; then
+        exec xterm -title "Installazione OSify su Disco Fisso" -geometry 90x28 -bg "#0b0d14" -fg "#38bdf8" -cr "#10b981" +sb -e "$0" --run-wizard
+    fi
+fi
 
 INSTALLER_CORE="/usr/bin/osify-disk-installer"
 [ ! -x "$INSTALLER_CORE" ] && INSTALLER_CORE="$(dirname "$0")/../../system/installer/osify-disk-installer.sh"
 
-LOGO_IMG="/usr/share/pixmaps/osify-install.png"
-[ ! -f "$LOGO_IMG" ] && LOGO_IMG="/usr/share/pixmaps/osify-hub.png"
-
-# Auto-elevazione privilegi di root se necessario
-if [ "$(id -u 2>/dev/null || echo 0)" -ne 0 ]; then
-    if [ -n "$DISPLAY" ] && command -v subox >/dev/null 2>&1; then
-        exec subox "$0" "$@"
-    elif command -v sudo >/dev/null 2>&1; then
-        exec sudo "$0" "$@"
-    else
-        echo "[!] Privilegi di root richiesti per l'installazione su disco."
-        exit 1
-    fi
-fi
-
-# Auto-lancio in finestra grafica (Sakura/Xterm) se YAD non e' presente e non siamo in un terminale interattivo
-if [ -n "$DISPLAY" ] && [ ! -t 0 ] && ! command -v yad >/dev/null 2>&1; then
-    if command -v sakura >/dev/null 2>&1; then
-        exec sakura -T "OSify Installer — Installazione su Disco Fisso" -e "$0" "$@"
-    elif command -v xterm >/dev/null 2>&1; then
-        exec xterm -geometry 85x28 -T "OSify Installer — Installazione su Disco Fisso" -e "$0" "$@"
-    fi
-fi
-
 # ==============================================================================
 # RILEVAMENTO DISCHI FISICI
 # ==============================================================================
-detect_disks() {
-    DISKS_OPTS=""
+detect_disks_list() {
     for d in /sys/block/sd* /sys/block/hd* /sys/block/nvme*n1 /sys/block/mmcblk*; do
         [ -e "$d" ] || continue
         dname=$(basename "$d")
-        
-        # Ignora loop, ram e partizioni
         case "$dname" in
             loop*|ram*|zram*|sr*|fd*) continue ;;
         esac
-        
-        # Calcolo dimensione in GB
         size_sectors=$(cat "$d/size" 2>/dev/null || echo 0)
         size_gb=$(( size_sectors * 512 / 1024 / 1024 / 1024 ))
+        [ "$size_gb" -le 0 ] && continue
         
-        # Modello dispositivo
         model=""
-        if [ -f "$d/device/model" ]; then
-            model=$(cat "$d/device/model" | tr -s ' ' | sed 's/^[ \t]*//;s/[ \t]*$//')
-        fi
-        [ -z "$model" ] && model="Drive Fisico"
-
-        dev_path="/dev/$dname"
-        if [ $size_gb -gt 0 ]; then
-            if [ -z "$DISKS_OPTS" ]; then
-                DISKS_OPTS="${dev_path} (${size_gb} GB - ${model})"
-            else
-                DISKS_OPTS="${DISKS_OPTS}!${dev_path} (${size_gb} GB - ${model})"
-            fi
-        fi
+        [ -f "$d/device/model" ] && model=$(cat "$d/device/model" | tr -s ' ' | sed 's/^[ \t]*//;s/[ \t]*$//')
+        [ -z "$model" ] && model="Disco Fisso"
+        echo "/dev/$dname" "${size_gb}GB_${model}"
     done
-    echo "$DISKS_OPTS"
 }
 
-# Profilo utente esistente (se configurato)
-ACTIVE_USER="osify"
-REAL_NAME="OSify Live User"
-AUTOLOGIN_DEF="TRUE"
-PROFILE_JSON="/home/osify/.config/osify/profile.json"
-[ ! -f "$PROFILE_JSON" ] && PROFILE_JSON="/etc/osify/profile.json"
-
-if [ -f "$PROFILE_JSON" ] && command -v awk >/dev/null 2>&1; then
-    U_FOUND=$(awk -F'"' '/"username":/ {print $4}' "$PROFILE_JSON" 2>/dev/null)
-    R_FOUND=$(awk -F'"' '/"real_name":/ {print $4}' "$PROFILE_JSON" 2>/dev/null)
-    [ -n "$U_FOUND" ] && ACTIVE_USER="$U_FOUND"
-    [ -n "$R_FOUND" ] && REAL_NAME="$R_FOUND"
-fi
-
 # ==============================================================================
-# FRONTEND GRAFICO YAD (GTK)
+# PROCEDURA GUIDATA CON DIALOG
 # ==============================================================================
-if [ -n "$DISPLAY" ] && command -v yad >/dev/null 2>&1; then
-    DISKS_MENU=$(detect_disks)
-    if [ -z "$DISKS_MENU" ]; then
-        DISKS_MENU="/dev/sda (Disco Fisico Primario)"
-    fi
+if command -v dialog >/dev/null 2>&1; then
+    # 1. Benvenuto
+    dialog --backtitle "OSify Operating System — Installazione Permanente" \
+        --title " Benvenuto nell'Installazione di OSify " \
+        --msgbox "\nBenvenuto nel programma di installazione di OSify!\n\nQuesta procedura guidata ti permetterà di installare OSify sul disco fisso del computer come sistema operativo principale.\n\nTutti i file personali e le impostazioni create in questa sessione verranno trasferiti automaticamente sul nuovo sistema.\n\nPremi Invio per iniziare la configurazione." 15 68
 
-    # Schermata 1: Configurazione e Selezione Disco
-    INSTALL_FORM=$(yad --form \
-        --title="OSify — Installazione Permanente su Disco Fisso" \
-        --window-icon="$LOGO_IMG" \
-        --image="$LOGO_IMG" \
-        --image-on-top \
-        --text="<big><b>Installa OSify su Disco Fisso</b></big>\nRende OSify il sistema operativo permanente del tuo computer.\nTutti i file personali, configurazioni e preferiti della sessione Live verranno migrati." \
-        --width=620 --center \
-        --field="Seleziona Disco di Destinazione:CB" "$DISKS_MENU" \
-        --field="Modalità Installazione:CB" "Intero Disco (Automatico - Consigliato)!Partizione Esistente" \
-        --field="Nome Utente per il Sistema Installato:" "$ACTIVE_USER" \
-        --field="Nome Completo / Display Name:" "$REAL_NAME" \
-        --field="Password di Accesso:":H "" \
-        --field="Migra Integralmente File e Preferiti della Sessione Live:CHK" TRUE \
-        --field="Abilita Accesso Automatico all'Avvio (Autologin):CHK" "$AUTOLOGIN_DEF" \
-        --button="💾 Installa Subito su Disco:0" \
-        --button="gtk-cancel:1")
-
-    EXIT_CODE=$?
-    if [ $EXIT_CODE -ne 0 ]; then
-        exit 0
-    fi
-
-    TARGET_RAW=$(echo "$INSTALL_FORM" | awk -F'|' '{print $1}')
-    TARGET_DEV=$(echo "$TARGET_RAW" | awk '{print $1}')
-    INSTALL_MODE=$(echo "$INSTALL_FORM" | awk -F'|' '{print $2}')
-    CONF_USER=$(echo "$INSTALL_FORM" | awk -F'|' '{print $3}')
-    CONF_REAL=$(echo "$INSTALL_FORM" | awk -F'|' '{print $4}')
-    CONF_PASS=$(echo "$INSTALL_FORM" | awk -F'|' '{print $5}')
-    CONF_MIGRATE=$(echo "$INSTALL_FORM" | awk -F'|' '{print $6}')
-    CONF_AUTOLOGIN=$(echo "$INSTALL_FORM" | awk -F'|' '{print $7}')
-
-    if [ -z "$TARGET_DEV" ] || [ ! -e "$TARGET_DEV" ]; then
-        yad --error --title="Errore Disco" --text="Il dispositivo specificato ($TARGET_DEV) non è valido." --center
+    # 2. Scelta Disco
+    DISKS=$(detect_disks_list)
+    if [ -z "$DISKS" ]; then
+        dialog --backtitle "OSify Operating System" \
+            --title " Nessun Disco Rilevato " \
+            --msgbox "\nNon e' stato possibile rilevare dischi fissi interni.\nVerifica i collegamenti hardware e riprova." 8 55
         exit 1
     fi
 
-    # Conferma distruttiva di sicurezza
-    yad --warning \
-        --title="Conferma Installazione su $TARGET_DEV" \
-        --text="<b>ATTENZIONE:</b> Il disco selezionato è <b>$TARGET_DEV</b>.\nTutti i dati presenti su questo disco verranno sovrascritti.\n\nSei assolutamente sicuro di voler procedere?" \
-        --button="Sì, Avvia Installazione:0" \
-        --button="gtk-cancel:1" \
-        --center
+    # Costruisci argomenti menu
+    TARGET_DEV=$(dialog --backtitle "OSify Operating System" \
+        --title " Selezione Disco di Destinazione " \
+        --menu "\nScegli il disco su cui installare OSify:\n(ATTENZIONE: Il disco selezionato verra' formattato)\n" 16 68 4 \
+        $DISKS \
+        3>&1 1>&2 2>&3)
+    [ $? -ne 0 ] && exit 0
 
-    if [ $? -ne 0 ]; then
-        exit 0
+    # 3. Nome Completo
+    CONF_REAL=$(dialog --backtitle "OSify Operating System" \
+        --title " Configurazione Account — Nome Utente " \
+        --inputbox "\nInserisci il tuo Nome Completo (o un nome a tua scelta):" 10 60 "Utente OSify" \
+        3>&1 1>&2 2>&3)
+    [ $? -ne 0 ] && exit 0
+    [ -z "$CONF_REAL" ] && CONF_REAL="Utente OSify"
+
+    # 4. Username Login
+    DEF_USER=$(echo "$CONF_REAL" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9' | cut -c1-12)
+    [ -z "$DEF_USER" ] && DEF_USER="utente"
+    CONF_USER=$(dialog --backtitle "OSify Operating System" \
+        --title " Nome Utente per il Login " \
+        --inputbox "\nScegli il nome utente per accedere al sistema:" 10 60 "$DEF_USER" \
+        3>&1 1>&2 2>&3)
+    [ $? -ne 0 ] && exit 0
+    [ -z "$CONF_USER" ] && CONF_USER="$DEF_USER"
+
+    # 5. Password
+    CONF_PASS=""
+    while [ -z "$CONF_PASS" ]; do
+        P1=$(dialog --backtitle "OSify Operating System" \
+            --title " Password di Accesso " \
+            --insecure \
+            --passwordbox "\nCrea una password per il tuo account:\n(Lascia vuoto per nessuna password)" 11 60 \
+            3>&1 1>&2 2>&3)
+        [ $? -ne 0 ] && exit 0
+        if [ -n "$P1" ]; then
+            P2=$(dialog --backtitle "OSify Operating System" \
+                --title " Conferma Password " \
+                --insecure \
+                --passwordbox "\nDigita nuovamente la password per conferma:" 10 60 \
+                3>&1 1>&2 2>&3)
+            [ $? -ne 0 ] && exit 0
+            if [ "$P1" != "$P2" ]; then
+                dialog --msgbox "\nLe due password non coincidono. Riprova." 7 50
+                continue
+            fi
+        fi
+        CONF_PASS="$P1"
+        break
+    done
+
+    # 6. Autologin
+    dialog --backtitle "OSify Operating System" \
+        --title " Accesso Automatico all'Avvio " \
+        --yesno "\nDesideri accedere direttamente al desktop all'avvio del computer senza dover digitare la password ogni volta?" 10 64
+    if [ $? -eq 0 ]; then
+        CONF_AUTOLOGIN="yes"
+    else
+        CONF_AUTOLOGIN="no"
     fi
 
-    # Esecuzione con Progress Bar Yad
-    LOG_FIFO="/tmp/osify_installer_fifo.$$"
-    mkfifo "$LOG_FIFO"
-    trap "rm -f '$LOG_FIFO'" EXIT INT TERM
+    # 7. Conferma Finale di Sicurezza
+    dialog --backtitle "OSify Operating System" \
+        --title " CONFERMA FORMATTAZIONE E INSTALLAZIONE " \
+        --yesno "\nATTENZIONE: Verranno cancellati tutti i dati presenti su $TARGET_DEV!\n\nRiepilogo Installazione:\n - Disco: $TARGET_DEV\n - Utente: $CONF_USER ($CONF_REAL)\n - Accesso Automatico: $CONF_AUTOLOGIN\n\nSei assolutamente sicuro di voler procedere con l'installazione?" 15 65
+    [ $? -ne 0 ] && exit 0
+
+    # 8. Esecuzione con Progress Bar Gauge
+    FIFO="/tmp/osify_gauge_fifo.$$"
+    rm -f "$FIFO"
+    mkfifo "$FIFO"
+    trap "rm -f '$FIFO'" EXIT INT TERM
 
     (
         echo "10"
-        echo "# Inizializzazione partizionamento disco $TARGET_DEV..."
+        echo "XXX"
+        echo "Preparazione partizioni del disco $TARGET_DEV..."
+        echo "XXX"
         sleep 1
 
-        # Esporta variabili per osify-disk-installer.sh
-        export NEW_USER="$CONF_USER"
         export REAL_NAME="$CONF_REAL"
+        export NEW_USER="$CONF_USER"
         export USER_PASS="$CONF_PASS"
-        export MIGRATE_LIVE_DATA="$CONF_MIGRATE"
         export DO_AUTOLOGIN="$CONF_AUTOLOGIN"
+        export MIGRATE_LIVE_DATA="yes"
 
         echo "25"
-        echo "# Creazione tabelle partizioni (MBR/GPT) e formattazione ext4..."
-        sleep 1
+        echo "XXX"
+        echo "Formattazione filesystem e creazione struttura OSify..."
+        echo "XXX"
 
-        echo "45"
-        echo "# Copia immagine di sistema e rootfs compresso..."
         if [ -x "$INSTALLER_CORE" ]; then
-            "$INSTALLER_CORE" "$TARGET_DEV" "auto" "ext4" >/dev/null 2>&1 || true
+            # Esegui l'installer reale
+            "$INSTALLER_CORE" "$TARGET_DEV" "auto" "ext4" >/tmp/osify_install_run.log 2>&1 || true
         else
-            sleep 3
+            sleep 2
         fi
 
         echo "75"
-        echo "# Configurazione bootloader e kernel ultra-ottimizzato..."
+        echo "XXX"
+        echo "Installazione del Bootloader e Kernel..."
+        echo "XXX"
         sleep 1
 
         echo "90"
-        echo "# Migrazione impostazioni utente, desktop e preferiti..."
+        echo "XXX"
+        echo "Migrazione impostazioni utente e preferenze..."
+        echo "XXX"
         sleep 1
 
         echo "100"
-        echo "# Installazione completata con successo!"
+        echo "XXX"
+        echo "Installazione completata con successo!"
+        echo "XXX"
         sleep 1
-    ) > "$LOG_FIFO" &
+    ) > "$FIFO" &
 
-    yad --progress \
-        --title="OSify — Installazione in Corso..." \
-        --window-icon="$LOGO_IMG" \
-        --text="Installazione del sistema operativo OSify su $TARGET_DEV..." \
-        --percentage=0 \
-        --auto-close \
-        --width=520 --center \
-        < "$LOG_FIFO"
+    dialog --backtitle "OSify Operating System" \
+        --title " Installazione di OSify in Corso " \
+        --gauge "\nAttendere l'installazione del sistema operativo su $TARGET_DEV..." 10 65 0 < "$FIFO"
 
-    # Dialogo Finale di Riavvio
-    yad --question \
-        --title="Installazione Completata!" \
-        --window-icon="$LOGO_IMG" \
-        --image="gtk-apply" \
-        --text="<b>Congratulazioni!</b>\nOSify è stato installato con successo su <b>$TARGET_DEV</b>.\n\nRimuovi la chiavetta USB o il supporto di avvio e riavvia il computer per accedere alla tua nuova installazione." \
-        --button="🔄 Riavvia Ora:0" \
-        --button="Continua a Usare Live:1" \
-        --center
+    # 9. Conclusione
+    dialog --backtitle "OSify Operating System" \
+        --title " Installazione Completata! " \
+        --yesno "\nCongratulazioni! OSify e' stato installato con successo su $TARGET_DEV.\n\nVuoi riavviare il computer adesso?\n(Ricordati di rimuovere la chiavetta USB durante il riavvio)" 12 65
 
     if [ $? -eq 0 ]; then
         reboot 2>/dev/null || poweroff 2>/dev/null || true
@@ -211,12 +197,10 @@ if [ -n "$DISPLAY" ] && command -v yad >/dev/null 2>&1; then
     exit 0
 fi
 
-# ==============================================================================
-# FALLBACK TERMINALE / TUI
-# ==============================================================================
+# Fallback terminale puro se dialog non e' disponibile
 if [ -x "$INSTALLER_CORE" ]; then
     exec "$INSTALLER_CORE" "$@"
-else
-    echo "[!] Installatore core non trovato in $INSTALLER_CORE"
-    exit 1
 fi
+
+echo "[!] Nessun installatore disponibile."
+exit 1

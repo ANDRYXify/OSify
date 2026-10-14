@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Name=🖥️ Uscite Video & Multi-Monitor
+Name= Uscite Video & Multi-Monitor
 Comment=Gestione Display Esterni HDMI/VGA: Clona, Estendi o Solo TV
 Exec=/usr/bin/osify-display
 Icon=/usr/share/pixmaps/osify-appearance.png

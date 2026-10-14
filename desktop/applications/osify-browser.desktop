@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Name=🌐 Navigatore Web
+Name=Navigatore Web
 Comment=Naviga su Internet con rendering grafico completo e Adblock integrato
 Exec=/usr/bin/osify-browser
 Icon=/usr/share/pixmaps/osify-browser.png

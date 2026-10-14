@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Name=🔄 Aggiorna OSify
+Name=Aggiorna OSify
 Comment=Verifica e installa aggiornamenti ufficiali a caldo
 Exec=/usr/bin/osify-update --gui
 Icon=/usr/share/pixmaps/osify-update.png
