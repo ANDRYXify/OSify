@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Alimentazione e Spegnimento
+Comment=Spegni, Riavvia, Sospendi o gestisci la Batteria e il Risparmio Energetico
+Exec=/usr/bin/osify-power
+Icon=/usr/share/pixmaps/osify-power.png
+Terminal=false
+Categories=System;Settings;

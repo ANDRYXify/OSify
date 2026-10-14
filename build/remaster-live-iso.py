@@ -215,9 +215,30 @@ sort_type=0
 sort_by=2
 """
 
+LIBFM_CONF = """# OSify LibFM Desktop & File Manager Configuration
+[config]
+quick_exec=1
+terminal=terminal
+single_click=0
+use_trash=1
+confirm_del=1
+show_thumbnail=1
+thumbnail_max=8192
+show_internal_volumes=1
+auto_selection_delay=600
+
+[ui]
+big_icon_size=48
+small_icon_size=24
+pane_icon_size=24
+thumbnail_size=128
+show_statusbar=1
+"""
+
 OPENBOX_AUTOSTART = """#!/bin/sh
 # OSify Openbox Session Autostart
 [ -x /usr/bin/osify-input-setup ] && /usr/bin/osify-input-setup &
+[ -x /usr/bin/osify-superkey ] && (/usr/bin/osify-superkey >/dev/null 2>&1) &
 [ -x /usr/bin/osify-storage-governor ] && /usr/bin/osify-storage-governor --tune &
 [ -x /usr/bin/osify-automount ] && (/usr/bin/osify-automount daemon >/dev/null 2>&1) &
 [ -x /usr/bin/osify-first-boot ] && (sleep 1.5 && /usr/bin/osify-first-boot) &
@@ -250,28 +271,43 @@ OSIFY_OPENBOX_MENU = """<?xml version="1.0" encoding="UTF-8"?>
     <item label="Gestione File" icon="/usr/share/pixmaps/osify-files.png">
       <action name="Execute"><command>pcmanfm</command></action>
     </item>
+    <item label="Cattura Schermo" icon="/usr/share/pixmaps/osify-appearance.png">
+      <action name="Execute"><command>/usr/bin/osify-screenshot --gui</command></action>
+    </item>
     <item label="Gaming Hub" icon="/usr/share/pixmaps/osify-games.png">
       <action name="Execute"><command>/usr/bin/terminal -geometry 75x20 -T 'Gaming Hub' -e /usr/bin/osify-games</command></action>
     </item>
-    <item label="Acquisizione Video HDMI" icon="/usr/share/pixmaps/osify-games.png">
+    <item label="Acquisizione Video HDMI" icon="/usr/share/pixmaps/osify-capture.png">
       <action name="Execute"><command>/usr/bin/osify-capture</command></action>
     </item>
-    <item label="Mirroring Smartphone" icon="/usr/share/pixmaps/osify-hub.png">
+    <item label="Mirroring Smartphone" icon="/usr/share/pixmaps/osify-phone.png">
       <action name="Execute"><command>/usr/bin/osify-phone</command></action>
     </item>
     <separator/>
-    <separator label="Strumenti e Hardware"/>
+    <separator label="Hardware e Connettivita"/>
+    <item label="Audio e Volume" icon="/usr/share/pixmaps/osify-audio.png">
+      <action name="Execute"><command>/usr/bin/osify-audio gui</command></action>
+    </item>
+    <item label="Connessione Wi-Fi" icon="/usr/share/pixmaps/osify-wifi.png">
+      <action name="Execute"><command>/usr/bin/terminal -geometry 75x20 -T 'Connessione Wi-Fi' -e /usr/bin/osify-wifi</command></action>
+    </item>
+    <item label="Connessione Bluetooth" icon="/usr/share/pixmaps/osify-bluetooth.png">
+      <action name="Execute"><command>/usr/bin/terminal -geometry 75x20 -T 'Connessione Bluetooth' -e /usr/bin/osify-bluetooth</command></action>
+    </item>
+    <item label="Diagnostica Rete" icon="/usr/share/pixmaps/osify-wifi.png">
+      <action name="Execute"><command>/usr/bin/terminal -geometry 75x20 -T 'Diagnostica Rete' -e /usr/bin/osify-net-check</command></action>
+    </item>
+    <item label="Schermo e Risoluzioni" icon="/usr/share/pixmaps/osify-appearance.png">
+      <action name="Execute"><command>/usr/bin/osify-display</command></action>
+    </item>
+    <item label="Luminosita Display" icon="/usr/share/pixmaps/osify-appearance.png">
+      <action name="Execute"><command>/usr/bin/osify-brightness gui</command></action>
+    </item>
     <item label="Modalita Turbo" icon="/usr/share/pixmaps/osify-hub.png">
       <action name="Execute"><command>/usr/bin/osify turbo</command></action>
     </item>
     <item label="Pulizia Memoria RAM" icon="/usr/share/pixmaps/osify-hub.png">
       <action name="Execute"><command>/usr/bin/osify pulisci</command></action>
-    </item>
-    <item label="Connessione Wi-Fi" icon="/usr/share/pixmaps/osify-wifi.png">
-      <action name="Execute"><command>/usr/bin/terminal -geometry 75x20 -T 'Connessione Wi-Fi' -e /usr/bin/osify-wifi</command></action>
-    </item>
-    <item label="Schermo e Risoluzioni" icon="/usr/share/pixmaps/osify-appearance.png">
-      <action name="Execute"><command>/usr/bin/osify-display</command></action>
     </item>
     <item label="Gestione Attivita" icon="/usr/share/pixmaps/osify-taskmanager.png">
       <action name="Execute"><command>/usr/bin/osify-taskmanager</command></action>
@@ -280,7 +316,10 @@ OSIFY_OPENBOX_MENU = """<?xml version="1.0" encoding="UTF-8"?>
       <action name="Execute"><command>/usr/bin/osify-settings</command></action>
     </item>
     <separator/>
-    <separator label="Sistema e Installazione"/>
+    <separator label="Sistema e Sicurezza"/>
+    <item label="Punti di Ripristino (Snapshot)" icon="/usr/share/pixmaps/osify-snapshot.png">
+      <action name="Execute"><command>/usr/bin/terminal -geometry 75x20 -T 'Punti di Ripristino' -e /usr/bin/osify-snapshot</command></action>
+    </item>
     <item label="Installa OSify su Disco" icon="/usr/share/pixmaps/osify-install.png">
       <action name="Execute"><command>/usr/bin/osify-install</command></action>
     </item>
@@ -291,13 +330,16 @@ OSIFY_OPENBOX_MENU = """<?xml version="1.0" encoding="UTF-8"?>
       <action name="Execute"><command>/usr/bin/terminal -T 'Aggiornamento Sistema' -e /usr/bin/osify-update</command></action>
     </item>
     <separator/>
-    <item label="Spegni Computer" icon="/usr/share/pixmaps/osify-taskmanager.png">
-      <action name="Execute"><command>/usr/bin/osify-power off</command></action>
+    <item label="Alimentazione e Spegnimento" icon="/usr/share/pixmaps/osify-power.png">
+      <action name="Execute"><command>/usr/bin/osify-power gui</command></action>
     </item>
-    <item label="Riavvia Computer" icon="/usr/share/pixmaps/osify-update.png">
+    <item label="Spegni Computer" icon="/usr/share/pixmaps/osify-power.png">
+      <action name="Execute"><command>/usr/bin/osify-power poweroff</command></action>
+    </item>
+    <item label="Riavvia Computer" icon="/usr/share/pixmaps/osify-power.png">
       <action name="Execute"><command>/usr/bin/osify-power reboot</command></action>
     </item>
-    <item label="Chiudi Sessione Desktop" icon="/usr/share/pixmaps/osify-settings.png">
+    <item label="Chiudi Sessione Desktop" icon="/usr/share/pixmaps/osify-power.png">
       <action name="Execute"><command>/usr/bin/osify-power logout</command></action>
     </item>
   </menu>
@@ -742,6 +784,20 @@ Plugin {
     <keybind key="W-w"><action name="Execute"><command>/usr/bin/osify-browser</command></action></keybind>
     <keybind key="W-i"><action name="Execute"><command>/usr/bin/osify-install</command></action></keybind>
     <keybind key="W-p"><action name="Execute"><command>/usr/bin/osify-profile-setup --force</command></action></keybind>
+    <!-- Controlli Multimediali e Hardware -->
+    <keybind key="XF86AudioRaiseVolume"><action name="Execute"><command>/usr/bin/osify-audio up</command></action></keybind>
+    <keybind key="XF86AudioLowerVolume"><action name="Execute"><command>/usr/bin/osify-audio down</command></action></keybind>
+    <keybind key="XF86AudioMute"><action name="Execute"><command>/usr/bin/osify-audio mute</command></action></keybind>
+    <keybind key="XF86MonBrightnessUp"><action name="Execute"><command>/usr/bin/osify-brightness up</command></action></keybind>
+    <keybind key="XF86MonBrightnessDown"><action name="Execute"><command>/usr/bin/osify-brightness down</command></action></keybind>
+    <!-- Screenshot Istantaneo -->
+    <keybind key="Print"><action name="Execute"><command>/usr/bin/osify-screenshot instant</command></action></keybind>
+    <keybind key="A-Print"><action name="Execute"><command>/usr/bin/osify-screenshot window</command></action></keybind>
+    <keybind key="W-s"><action name="Execute"><command>/usr/bin/osify-screenshot --gui</command></action></keybind>
+    <!-- Gestione Desktop e Finestre -->
+    <keybind key="W-d"><action name="ToggleShowDesktop"/></keybind>
+    <keybind key="W-l"><action name="Execute"><command>/usr/bin/osify-power</command></action></keybind>
+    <keybind key="W-q"><action name="Close"/></keybind>
 """
         if "</keyboard>" in rc_content:
             rc_content = rc_content.replace("</keyboard>", f"{custom_keys}\n  </keyboard>")
@@ -780,6 +836,19 @@ Plugin {
         os.makedirs(os.path.dirname(full_pfm), exist_ok=True)
         with open(full_pfm, "w") as f:
             f.write(PCMANFM_CONF)
+
+    # 5b. Configurazione nativa LibFM (quick_exec=1 per esecuzione immediata al doppio click e miniature immagini)
+    for lfm_p in [
+        "etc/xdg/libfm/libfm.conf",
+        "etc/skel/.config/libfm/libfm.conf",
+        "home/osify/.config/libfm/libfm.conf",
+        "home/tux/.config/libfm/libfm.conf",
+        "root/.config/libfm/libfm.conf"
+    ]:
+        full_lfm = os.path.join(r3_work, lfm_p)
+        os.makedirs(os.path.dirname(full_lfm), exist_ok=True)
+        with open(full_lfm, "w") as f:
+            f.write(LIBFM_CONF)
 
     # 6. Openbox Autostart Suite
     for as_p in [
@@ -1055,11 +1124,21 @@ LABEL memtest
     shutil.copy2(os.path.join(REPO_ROOT, "system/session/osify-session.sh"), os.path.join(bin_dir, "osify-session"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/session/osify-first-boot.sh"), os.path.join(bin_dir, "osify-first-boot"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/session/osify-first-boot.sh"), os.path.join(r4_work, "usr/local/bin/osify-first-boot"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-superkey.sh"), os.path.join(bin_dir, "osify-superkey"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-superkey.sh"), os.path.join(r4_work, "usr/local/bin/osify-superkey"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/storage/osify-automount.sh"), os.path.join(bin_dir, "osify-automount"))
     shutil.copy2(os.path.join(REPO_ROOT, "network/osify-bluetooth.sh"), os.path.join(bin_dir, "osify-bluetooth"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/snapshot/osify-snapshot.sh"), os.path.join(bin_dir, "osify-snapshot"))
     shutil.copy2(os.path.join(REPO_ROOT, "network/osify-net-check.sh"), os.path.join(bin_dir, "osify-net-check"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/updater/osify-live-updater.sh"), os.path.join(bin_dir, "osify-update"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/display/osify-brightness.sh"), os.path.join(bin_dir, "osify-brightness"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/display/osify-brightness.sh"), os.path.join(r4_work, "usr/local/bin/osify-brightness"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-power.sh"), os.path.join(bin_dir, "osify-power"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-power.sh"), os.path.join(r4_work, "usr/local/bin/osify-power"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-screenshot.sh"), os.path.join(bin_dir, "osify-screenshot"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-screenshot.sh"), os.path.join(r4_work, "usr/local/bin/osify-screenshot"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-image-viewer.sh"), os.path.join(bin_dir, "osify-image-viewer"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-image-viewer.sh"), os.path.join(r4_work, "usr/local/bin/osify-image-viewer"))
     for f in os.listdir(bin_dir):
         p = os.path.join(bin_dir, f)
         if not os.path.islink(p) and os.path.isfile(p):
@@ -1340,6 +1419,17 @@ WINDOW_MANAGER="openbox"
         with open(full_pfm, "w") as f:
             f.write(PCMANFM_CONF)
 
+    for lfm_p in [
+        "etc/xdg/libfm/libfm.conf",
+        "etc/skel/.config/libfm/libfm.conf",
+        "home/osify/.config/libfm/libfm.conf",
+        "root/.config/libfm/libfm.conf"
+    ]:
+        full_lfm = os.path.join(r4_work, lfm_p)
+        os.makedirs(os.path.dirname(full_lfm), exist_ok=True)
+        with open(full_lfm, "w") as f:
+            f.write(LIBFM_CONF)
+
     for as_p in [
         "etc/xdg/openbox/autostart",
         "etc/skel/.config/openbox/autostart",
@@ -1553,6 +1643,77 @@ WINDOW_MANAGER="openbox"
             "Icon=/usr/share/pixmaps/osify-hub.png\n"
             "Terminal=false\n"
             "Categories=System;\n"
+        ),
+        "osify-audio.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Controllo Audio e Volume\n"
+            "Comment=Regola il volume master, mixer e canali audio ALSA/PipeWire\n"
+            "Exec=/usr/bin/osify-audio gui\n"
+            "Icon=/usr/share/pixmaps/osify-audio.png\n"
+            "Terminal=false\n"
+            "Categories=AudioVideo;Audio;Settings;\n"
+        ),
+        "osify-bluetooth.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Gestione Bluetooth\n"
+            "Comment=Scansione e connessione cuffie wireless, controller e periferiche\n"
+            "Exec=/usr/bin/terminal -geometry 75x20 -T 'Connessione Bluetooth' -e /usr/bin/osify-bluetooth\n"
+            "Icon=/usr/share/pixmaps/osify-bluetooth.png\n"
+            "Terminal=false\n"
+            "Categories=Network;Settings;HardwareSettings;\n"
+        ),
+        "osify-snapshot.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Punti di Ripristino (Snapshot)\n"
+            "Comment=Crea e ripristina istantanee atomiche di sistema e configurazioni\n"
+            "Exec=/usr/bin/terminal -geometry 75x20 -T 'Punti di Ripristino' -e /usr/bin/osify-snapshot\n"
+            "Icon=/usr/share/pixmaps/osify-snapshot.png\n"
+            "Terminal=false\n"
+            "Categories=System;Utility;\n"
+        ),
+        "osify-power.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Alimentazione e Spegnimento\n"
+            "Comment=Spegni, Riavvia, Sospendi o gestisci la Batteria e il Risparmio Energetico\n"
+            "Exec=/usr/bin/osify-power gui\n"
+            "Icon=/usr/share/pixmaps/osify-power.png\n"
+            "Terminal=false\n"
+            "Categories=System;Settings;\n"
+        ),
+        "osify-screenshot.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Cattura Schermo\n"
+            "Comment=Cattura schermate del desktop o di finestre a risoluzione nativa\n"
+            "Exec=/usr/bin/osify-screenshot --gui\n"
+            "Icon=/usr/share/pixmaps/osify-appearance.png\n"
+            "Terminal=false\n"
+            "Categories=Utility;Graphics;\n"
+        ),
+        "osify-image-viewer.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Visualizzatore Immagini\n"
+            "Comment=Visualizza immagini e foto a schermo intero o a finestra\n"
+            "Exec=/usr/bin/osify-image-viewer %f\n"
+            "Icon=/usr/share/pixmaps/osify-appearance.png\n"
+            "Terminal=false\n"
+            "MimeType=image/jpeg;image/png;image/gif;image/bmp;image/webp;\n"
+            "Categories=Graphics;Viewer;\n"
+        ),
+        "osify-brightness.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Luminosita Schermo\n"
+            "Comment=Regola la luminosita del display su notebook e monitor\n"
+            "Exec=/usr/bin/osify-brightness gui\n"
+            "Icon=/usr/share/pixmaps/osify-appearance.png\n"
+            "Terminal=false\n"
+            "Categories=Settings;HardwareSettings;\n"
         )
     }
 
@@ -1617,6 +1778,24 @@ WINDOW_MANAGER="openbox"
         os.makedirs(os.path.dirname(full_m), exist_ok=True)
         with open(full_m, "w") as f:
             f.write(OSIFY_OPENBOX_MENU)
+
+    # Iniezione deterministica Openbox rc.xml con Hotkey Hardware anche in rootfs4
+    src_rc = os.path.join(r3_work, "etc/xdg/openbox/rc.xml")
+    if os.path.exists(src_rc):
+        with open(src_rc, "r") as f:
+            r4_rc_content = f.read()
+        for r4_ob in [
+            "etc/xdg/openbox/rc.xml",
+            "etc/skel/.config/openbox/rc.xml",
+            "home/osify/.config/openbox/rc.xml",
+            "home/tux/.config/openbox/rc.xml",
+            "root/.config/openbox/rc.xml"
+        ]:
+            full_r4_ob = os.path.join(r4_work, r4_ob)
+            os.makedirs(os.path.dirname(full_r4_ob), exist_ok=True)
+            with open(full_r4_ob, "w") as f:
+                f.write(r4_rc_content)
+
 
     # Scrittura Ambiente Shell, Prompt Cyber-OSify e Alias in rootfs4
     os.makedirs(os.path.join(r4_work, "etc/profile.d"), exist_ok=True)

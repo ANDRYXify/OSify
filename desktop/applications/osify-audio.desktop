@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Controllo Audio e Uscite
+Comment=Regolazione volume master, mute e commutazione altoparlanti, cuffie o HDMI
+Exec=/usr/bin/osify audio
+Icon=/usr/share/pixmaps/osify-audio.png
+Terminal=false
+Categories=AudioVideo;Audio;Mixer;
+Keywords=audio;sound;volume;speaker;headphone;hdmi;cuffie;altoparlanti;

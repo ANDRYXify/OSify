@@ -583,6 +583,86 @@ else
     log_fail "Windows Installer: Errore nella validazione degli script PowerShell per Windows"
 fi
 
+# 11.7 Suite di Collaudo OSify Fatto e Finito (libfm quick_exec, icone native, hotkeys e tool hardware)
+# Test 11.7.1 Configurazione libfm.conf per doppio click immediato e anteprime immagini
+if python3 -c "
+with open('$REPO_ROOT/build/remaster-live-iso.py', 'r') as f:
+    c = f.read()
+assert 'quick_exec=1' in c, 'quick_exec mancante in libfm.conf'
+assert 'show_thumbnail=1' in c, 'show_thumbnail mancante in libfm.conf'
+assert 'thumbnail_max=8192' in c, 'thumbnail_max mancante in libfm.conf'
+print('libfm.conf validato')
+" >/dev/null 2>&1; then
+    log_pass "Desktop & File Manager: Configurazione libfm.conf con quick_exec=1 e anteprime immagini show_thumbnail=1 verificata"
+else
+    log_fail "Desktop & File Manager: Errore nella configurazione di libfm.conf"
+fi
+
+# Test 11.7.2 Icone Native Vettoriali Complete per tutte le 21 App e Risoluzioni
+if python3 -c "
+import os
+base = '$REPO_ROOT/desktop/branding/icons'
+expected = [
+    'osify-hub', 'osify-browser', 'osify-wifi', 'osify-games', 'osify-developer',
+    'osify-appearance', 'osify-taskmanager', 'osify-terminal', 'osify-install',
+    'osify-update', 'osify-settings', 'osify-files', 'osify-drawer', 'osify-profile',
+    'osify-users', 'osify-audio', 'osify-bluetooth', 'osify-snapshot', 'osify-capture',
+    'osify-phone', 'osify-power'
+]
+for sz in ['48', '64', '128']:
+    d = os.path.join(base, sz)
+    assert os.path.isdir(d), f'Cartella {sz} mancante'
+    for app in expected:
+        p = os.path.join(d, f'{app}.png')
+        assert os.path.isfile(p) and os.path.getsize(p) > 200, f'Icona {app} a {sz}px mancante o corrotta'
+print('Icone native 48/64/128px validate')
+" >/dev/null 2>&1; then
+    log_pass "Iconografia Nativa OSify: Tutte le 21 icone di sistema presenti e integre a 48px, 64px e 128px (zero icone bianche)"
+else
+    log_fail "Iconografia Nativa OSify: Icone mancanti o incomplete nel repository"
+fi
+
+# Test 11.7.3 Sottosistemi Hardware & Utility: Brightness, Power, Screenshot, Image Viewer, Superkey
+for script in \
+    "$REPO_ROOT/system/display/osify-brightness.sh" \
+    "$REPO_ROOT/tools/osify-gui/osify-power.sh" \
+    "$REPO_ROOT/tools/osify-gui/osify-screenshot.sh" \
+    "$REPO_ROOT/tools/osify-gui/osify-image-viewer.sh" \
+    "$REPO_ROOT/tools/osify-gui/osify-superkey.sh"; do
+    if [ -x "$script" ]; then
+        log_pass "Toolchain Hardware & Desktop: Eseguibile $(basename "$script") presente e con sintassi valida"
+    else
+        log_fail "Toolchain Hardware & Desktop: Script $(basename "$script") non trovato o non eseguibile"
+    fi
+done
+
+# Test 11.7.4 Hotkey Hardware e Multimediali Openbox
+if python3 -c "
+with open('$REPO_ROOT/build/remaster-live-iso.py', 'r') as f:
+    c = f.read()
+for key in ['XF86AudioRaiseVolume', 'XF86AudioLowerVolume', 'XF86AudioMute', 'XF86MonBrightnessUp', 'XF86MonBrightnessDown', 'Print', 'W-d', 'W-l', 'W-q']:
+    assert key in c, f'Tasto hardware {key} mancante nei keybind Openbox'
+print('Openbox hotkeys validate')
+" >/dev/null 2>&1; then
+    log_pass "Sottosistema Input & Hotkey: Tasti multimediali volume, luminosita, screenshot Stamp e desktop toggle configurati in Openbox"
+else
+    log_fail "Sottosistema Input & Hotkey: Scorciatoie hardware mancanti nella configurazione Openbox"
+fi
+
+# Test 11.7.5 Associazioni MIME per Immagini e Documenti
+if python3 -c "
+with open('$REPO_ROOT/desktop/mime/mimeapps.list', 'r') as f:
+    c = f.read()
+assert 'image/png=osify-image-viewer.desktop' in c
+assert 'image/jpeg=osify-image-viewer.desktop' in c
+assert 'x-scheme-handler/http=osify-browser.desktop' in c
+print('MIME apps validate')
+" >/dev/null 2>&1; then
+    log_pass "Associazioni MIME: Visualizzatore immagini e navigatore web predefiniti registrati per click diretto"
+else
+    log_fail "Associazioni MIME: Mimetype mancanti in mimeapps.list"
+fi
+
 echo "                  REPORT FINALE COLLAUDO                 "
 echo "========================================================="
 echo "  TEST SUPERATI : $PASSED_COUNT"

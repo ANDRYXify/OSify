@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Cattura Schermo
+Comment=Cattura schermate del desktop o di finestre a risoluzione nativa
+Exec=/usr/bin/osify-screenshot --gui
+Icon=/usr/share/pixmaps/osify-appearance.png
+Terminal=false
+Categories=Utility;Graphics;

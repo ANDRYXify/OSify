@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Visualizzatore Immagini
+Comment=Visualizza immagini e foto a schermo intero o a finestra
+Exec=/usr/bin/osify-image-viewer %f
+Icon=/usr/share/pixmaps/osify-appearance.png
+Terminal=false
+MimeType=image/jpeg;image/png;image/gif;image/bmp;image/webp;image/x-xpixmap;
+Categories=Graphics;Viewer;

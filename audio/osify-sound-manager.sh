@@ -109,7 +109,67 @@ list_devices() {
     fi
 }
 
-case "${1:-get}" in
+launch_gui() {
+    local cur
+    cur="$(get_volume)"
+    
+    if command -v yad >/dev/null 2>&1 && [ -n "${DISPLAY:-}" ]; then
+        local action
+        action="$(yad --form --title="Controllo Volume e Audio OSify" \
+            --text="<b>Gestione Canali Audio & Mixer di Sistema</b>" \
+            --window-icon="/usr/share/pixmaps/osify-audio.png" \
+            --width=420 --center \
+            --field="Livello Volume (0-100):NUM" "${cur}!0..100!5" \
+            --field="Dispositivo Output:CB" "Altoparlanti!Cuffie Jack!HDMI Digitale" \
+            --field="Muto/Attiva:CHK" "FALSE" \
+            --button="Test Audio:2" \
+            --button="Mixer Avanzato:3" \
+            --button="Applica:0" \
+            --button="Chiudi:1" 2>/dev/null || echo "")"
+        local ret=$?
+
+        if [ "$ret" -eq 2 ]; then
+            test_sound
+            launch_gui
+            return 0
+        elif [ "$ret" -eq 3 ]; then
+            if command -v terminal >/dev/null 2>&1; then
+                terminal -e alsamixer &
+            elif command -v xterm >/dev/null 2>&1; then
+                xterm -e alsamixer &
+            fi
+            return 0
+        fi
+
+        if [ "$ret" -eq 0 ] && [ -n "$action" ]; then
+            local n_vol n_dev n_mute
+            n_vol="$(echo "$action" | cut -d'|' -f1 | cut -d',' -f1 | cut -d'.' -f1)"
+            n_dev="$(echo "$action" | cut -d'|' -f2)"
+            n_mute="$(echo "$action" | cut -d'|' -f3)"
+
+            if [ -n "$n_vol" ]; then set_volume "$n_vol"; fi
+            case "$n_dev" in
+                *Cuffie*) switch_output headphone ;;
+                *HDMI*) switch_output hdmi ;;
+                *) switch_output speakers ;;
+            esac
+            if [ "$n_mute" = "TRUE" ]; then toggle_mute; else unmute; fi
+        fi
+    elif [ -n "${DISPLAY:-}" ] && command -v alsamixer >/dev/null 2>&1; then
+        if command -v terminal >/dev/null 2>&1; then
+            exec terminal -geometry 80x24 -T "Mixer Audio ALSA" -e alsamixer
+        else
+            exec alsamixer
+        fi
+    else
+        get_volume
+    fi
+}
+
+case "${1:-gui}" in
+    gui|--gui)
+        launch_gui
+        ;;
     get)
         get_volume
         ;;
@@ -138,7 +198,8 @@ case "${1:-get}" in
         list_devices
         ;;
     *)
-        echo "Uso: $0 {get|set <0-100>|up|down|mute|unmute|switch <hdmi|cuffie|altoparlanti>|test|list}"
+        echo "Uso: $0 {gui|get|set <0-100>|up|down|mute|unmute|switch <hdmi|cuffie|altoparlanti>|test|list}"
         exit 1
         ;;
 esac
+

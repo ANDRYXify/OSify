@@ -241,6 +241,68 @@ def sym_users(d, sz, col, sc):
     d.ellipse([cx - sc * 2, cy - int(sz * 0.16), cx + int(sz * 0.20), cy + int(sz * 0.06)], fill=col)
     d.pieslice([cx - int(sz * 0.14), cy + sc * 4, cx + int(sz * 0.28), cy + int(sz * 0.38)], start=180, end=360, fill=col)
 
+def sym_audio(d, sz, col, sc):
+    cx, cy = sz // 2, sz // 2
+    # Cono altoparlante
+    d.polygon([(cx - int(sz * 0.18), cy - int(sz * 0.08)),
+               (cx - int(sz * 0.08), cy - int(sz * 0.08)),
+               (cx + int(sz * 0.06), cy - int(sz * 0.20)),
+               (cx + int(sz * 0.06), cy + int(sz * 0.20)),
+               (cx - int(sz * 0.08), cy + int(sz * 0.08)),
+               (cx - int(sz * 0.18), cy + int(sz * 0.08))], fill=col)
+    # Onde sonore
+    d.arc([cx, cy - int(sz * 0.16), cx + int(sz * 0.24), cy + int(sz * 0.16)], start=-60, end=60, fill="#ffffff", width=sc * 2)
+
+def sym_bluetooth(d, sz, col, sc):
+    cx, cy = sz // 2, sz // 2
+    h = int(sz * 0.25)
+    w = int(sz * 0.14)
+    # Linea verticale centrale
+    d.line([(cx, cy - h), (cx, cy + h)], fill=col, width=sc * 3)
+    # Triangoli runici incrociati
+    d.line([(cx - w, cy - int(h * 0.5)), (cx + w, cy + int(h * 0.5))], fill=col, width=sc * 2)
+    d.line([(cx + w, cy + int(h * 0.5)), (cx, cy)], fill=col, width=sc * 2)
+    d.line([(cx, cy), (cx + w, cy - int(h * 0.5))], fill=col, width=sc * 2)
+    d.line([(cx + w, cy - int(h * 0.5)), (cx - w, cy + int(h * 0.5))], fill=col, width=sc * 2)
+
+def sym_snapshot(d, sz, col, sc):
+    cx, cy = sz // 2, sz // 2
+    r = int(sz * 0.22)
+    d.ellipse([cx - r, cy - r, cx + r, cy + r], outline=col, width=sc * 2)
+    # Lancette orologio Time Machine
+    d.line([(cx, cy), (cx, cy - int(r * 0.65))], fill="#ffffff", width=sc * 2)
+    d.line([(cx, cy), (cx + int(r * 0.50), cy)], fill="#ffffff", width=sc * 2)
+    # Arco di rotazione rollback
+    d.arc([cx - r - sc * 4, cy - r - sc * 4, cx + r + sc * 4, cy + r + sc * 4], start=220, end=350, fill=col, width=sc * 2)
+
+def sym_capture(d, sz, col, sc):
+    cx, cy = sz // 2, sz // 2
+    w = int(sz * 0.26)
+    h = int(sz * 0.18)
+    d.rounded_rectangle([cx - w, cy - h, cx + w, cy + h], radius=sc * 3, outline=col, width=sc * 2)
+    # Cerchio lente / HDMI stream
+    d.ellipse([cx - int(sz * 0.08), cy - int(sz * 0.08), cx + int(sz * 0.08), cy + int(sz * 0.08)], fill=col)
+
+def sym_phone(d, sz, col, sc):
+    cx, cy = sz // 2, sz // 2
+    w = int(sz * 0.15)
+    h = int(sz * 0.27)
+    d.rounded_rectangle([cx - w, cy - h, cx + w, cy + h], radius=sc * 4, outline=col, width=sc * 2)
+    # Schermo
+    d.rounded_rectangle([cx - w + sc * 3, cy - h + sc * 6, cx + w - sc * 3, cy + h - sc * 8], radius=sc * 2, fill="#1e293b")
+    # Home button / barra
+    d.ellipse([cx - sc * 3, cy + h - sc * 6, cx + sc * 3, cy + h - sc * 2], fill=col)
+
+def sym_power(d, sz, col, sc):
+    # Simbolo Power universale (cerchio aperto in alto con linea verticale)
+    cx, cy = sz // 2, sz // 2
+    r = int(sz * 0.22)
+    lw = sc * 3
+    # Arco di cerchio aperto in alto (da -60 a 240 gradi)
+    d.arc([cx - r, cy - r + sc * 2, cx + r, cy + r + sc * 2], start=-55, end=235, fill=col, width=lw)
+    # Linea verticale superiore
+    d.line([(cx, cy - r - sc * 4), (cx, cy + sc * 2)], fill="#ffffff", width=lw)
+
 ICONS_REGISTRY = {
     "osify-hub": (sym_hub, COLOR_HUB),
     "osify-browser": (sym_browser, COLOR_BROWSER),
@@ -257,6 +319,12 @@ ICONS_REGISTRY = {
     "osify-drawer": (sym_drawer, COLOR_DRAWER),
     "osify-profile": (sym_profile, "#06b6d4"),
     "osify-users": (sym_users, "#3b82f6"),
+    "osify-audio": (sym_audio, COLOR_AUDIO),
+    "osify-bluetooth": (sym_bluetooth, COLOR_WIFI),
+    "osify-snapshot": (sym_snapshot, "#10b981"),
+    "osify-capture": (sym_capture, "#f43f5e"),
+    "osify-phone": (sym_phone, "#38bdf8"),
+    "osify-power": (sym_power, "#ef4444"),
 }
 
 def main():

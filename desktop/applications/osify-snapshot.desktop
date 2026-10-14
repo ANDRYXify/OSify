@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Punti di Ripristino (Time Machine)
+Comment=Salva o ripristina lo stato delle configurazioni e del sistema operativo
+Exec=/usr/bin/osify-snapshot
+Icon=/usr/share/pixmaps/osify-snapshot.png
+Terminal=false
+Categories=System;Settings;
+Keywords=snapshot;restore;backup;recovery;ripristino;salvataggio;
