@@ -50,9 +50,9 @@ get_local_version() {
     if [ -f "$VERSION_FILE" ]; then
         head -n1 "$VERSION_FILE" | tr -d ' \r\n'
     elif [ -d "$REPO_ROOT/.git" ]; then
-        (cd "$REPO_ROOT" && git describe --tags --always 2>/dev/null || git rev-parse --short HEAD 2>/dev/null || echo "1.2.0")
+        (cd "$REPO_ROOT" && git describe --tags --always 2>/dev/null || git rev-parse --short HEAD 2>/dev/null || echo "1.3.0")
     else
-        echo "1.2.0"
+        echo "1.3.0"
     fi
 }
 
@@ -106,7 +106,7 @@ get_remote_version() {
     if [ -z "$remote_ver" ] && command -v wget >/dev/null 2>&1; then
         remote_ver=$(wget -qO- --timeout=5 "$RAW_VERSION_URL" 2>/dev/null | tr -d ' \r\n' | sed 's/^v//' || true)
     fi
-    echo "${remote_ver:-1.2.0}"
+    echo "${remote_ver:-1.3.0}"
 }
 
 # ------------------------------------------------------------------------------
