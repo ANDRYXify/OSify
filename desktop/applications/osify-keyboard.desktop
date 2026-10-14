@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Mappatura Tastiera
+Comment=Imposta o cambia il layout della tastiera (Italiana, USA, UK, Tedesca, Francese)
+Exec=/usr/bin/osify-keyboard gui
+Icon=/usr/share/pixmaps/osify-keyboard.png
+Terminal=false
+Categories=Settings;HardwareSettings;

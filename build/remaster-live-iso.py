@@ -274,6 +274,18 @@ OSIFY_OPENBOX_MENU = """<?xml version="1.0" encoding="UTF-8"?>
     <item label="Cattura Schermo" icon="/usr/share/pixmaps/osify-appearance.png">
       <action name="Execute"><command>/usr/bin/osify-screenshot --gui</command></action>
     </item>
+    <item label="Blocco Note ed Editor" icon="/usr/share/pixmaps/osify-notepad.png">
+      <action name="Execute"><command>/usr/bin/osify-notepad</command></action>
+    </item>
+    <item label="Calcolatrice" icon="/usr/share/pixmaps/osify-calculator.png">
+      <action name="Execute"><command>/usr/bin/osify-calculator</command></action>
+    </item>
+    <item label="Gestore Archivi" icon="/usr/share/pixmaps/osify-archive.png">
+      <action name="Execute"><command>/usr/bin/osify-archive-manager</command></action>
+    </item>
+    <item label="Lettore Multimediale" icon="/usr/share/pixmaps/osify-audio.png">
+      <action name="Execute"><command>/usr/bin/osify-media-player</command></action>
+    </item>
     <item label="Gaming Hub" icon="/usr/share/pixmaps/osify-games.png">
       <action name="Execute"><command>/usr/bin/terminal -geometry 75x20 -T 'Gaming Hub' -e /usr/bin/osify-games</command></action>
     </item>
@@ -282,6 +294,9 @@ OSIFY_OPENBOX_MENU = """<?xml version="1.0" encoding="UTF-8"?>
     </item>
     <item label="Mirroring Smartphone" icon="/usr/share/pixmaps/osify-phone.png">
       <action name="Execute"><command>/usr/bin/osify-phone</command></action>
+    </item>
+    <item label="Tastiera a Schermo" icon="/usr/share/pixmaps/osify-keyboard.png">
+      <action name="Execute"><command>/usr/bin/osify-onboard</command></action>
     </item>
     <separator/>
     <separator label="Hardware e Connettivita"/>
@@ -311,6 +326,12 @@ OSIFY_OPENBOX_MENU = """<?xml version="1.0" encoding="UTF-8"?>
     </item>
     <item label="Gestione Attivita" icon="/usr/share/pixmaps/osify-taskmanager.png">
       <action name="Execute"><command>/usr/bin/osify-taskmanager</command></action>
+    </item>
+    <item label="Mappatura Tastiera" icon="/usr/share/pixmaps/osify-keyboard.png">
+      <action name="Execute"><command>/usr/bin/osify-keyboard gui</command></action>
+    </item>
+    <item label="Salute e Diagnostica Dischi" icon="/usr/share/pixmaps/osify-files.png">
+      <action name="Execute"><command>/usr/bin/osify-disk-health</command></action>
     </item>
     <item label="Centro di Controllo" icon="/usr/share/pixmaps/osify-settings.png">
       <action name="Execute"><command>/usr/bin/osify-settings</command></action>
@@ -1139,6 +1160,24 @@ LABEL memtest
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-screenshot.sh"), os.path.join(r4_work, "usr/local/bin/osify-screenshot"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-image-viewer.sh"), os.path.join(bin_dir, "osify-image-viewer"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-image-viewer.sh"), os.path.join(r4_work, "usr/local/bin/osify-image-viewer"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-archive-manager.sh"), os.path.join(bin_dir, "osify-archive-manager"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-archive-manager.sh"), os.path.join(bin_dir, "osify-archive"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-archive-manager.sh"), os.path.join(r4_work, "usr/local/bin/osify-archive-manager"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-notepad.sh"), os.path.join(bin_dir, "osify-notepad"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-notepad.sh"), os.path.join(r4_work, "usr/local/bin/osify-notepad"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-pdf-viewer.sh"), os.path.join(bin_dir, "osify-pdf-viewer"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-pdf-viewer.sh"), os.path.join(r4_work, "usr/local/bin/osify-pdf-viewer"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-calculator.sh"), os.path.join(bin_dir, "osify-calculator"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-calculator.sh"), os.path.join(r4_work, "usr/local/bin/osify-calculator"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-media-player.sh"), os.path.join(bin_dir, "osify-media-player"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-media-player.sh"), os.path.join(r4_work, "usr/local/bin/osify-media-player"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-keyboard.sh"), os.path.join(bin_dir, "osify-keyboard"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-keyboard.sh"), os.path.join(r4_work, "usr/local/bin/osify-keyboard"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-onboard.sh"), os.path.join(bin_dir, "osify-onboard"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-onboard.sh"), os.path.join(r4_work, "usr/local/bin/osify-onboard"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/storage/osify-disk-health.sh"), os.path.join(bin_dir, "osify-disk-health"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/storage/osify-disk-health.sh"), os.path.join(r4_work, "usr/local/bin/osify-disk-health"))
+
     for f in os.listdir(bin_dir):
         p = os.path.join(bin_dir, f)
         if not os.path.islink(p) and os.path.isfile(p):
@@ -1714,6 +1753,90 @@ WINDOW_MANAGER="openbox"
             "Icon=/usr/share/pixmaps/osify-appearance.png\n"
             "Terminal=false\n"
             "Categories=Settings;HardwareSettings;\n"
+        ),
+        "osify-archive-manager.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Gestore Archivi\n"
+            "Comment=Estrai e crea archivi compressi ZIP, TAR, GZ, XZ e 7Z con un click\n"
+            "Exec=/usr/bin/osify-archive-manager %f\n"
+            "Icon=/usr/share/pixmaps/osify-archive.png\n"
+            "Terminal=false\n"
+            "MimeType=application/zip;application/x-zip-compressed;application/x-tar;application/x-gzip;application/x-bzip2;application/x-xz;application/x-7z-compressed;\n"
+            "Categories=Utility;Archiving;\n"
+        ),
+        "osify-notepad.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Blocco Note ed Editor\n"
+            "Comment=Editor di testo leggero e veloce per documenti, appunti e file di sistema\n"
+            "Exec=/usr/bin/osify-notepad %f\n"
+            "Icon=/usr/share/pixmaps/osify-notepad.png\n"
+            "Terminal=false\n"
+            "MimeType=text/plain;text/x-log;text/x-sh;text/markdown;\n"
+            "Categories=Utility;TextEditor;\n"
+        ),
+        "osify-pdf-viewer.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Lettore Documenti PDF\n"
+            "Comment=Visualizza e consulta documenti e manuali in formato PDF\n"
+            "Exec=/usr/bin/osify-pdf-viewer %f\n"
+            "Icon=/usr/share/pixmaps/osify-files.png\n"
+            "Terminal=false\n"
+            "MimeType=application/pdf;application/x-pdf;\n"
+            "Categories=Office;Viewer;\n"
+        ),
+        "osify-calculator.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Calcolatrice\n"
+            "Comment=Esegui calcoli aritmetici, percentuali, scientifici e conversioni\n"
+            "Exec=/usr/bin/osify-calculator\n"
+            "Icon=/usr/share/pixmaps/osify-calculator.png\n"
+            "Terminal=false\n"
+            "Categories=Utility;Calculator;\n"
+        ),
+        "osify-media-player.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Lettore Multimediale\n"
+            "Comment=Riproduci file musicali e video MP3, WAV, FLAC, MP4, MKV e OGG\n"
+            "Exec=/usr/bin/osify-media-player %f\n"
+            "Icon=/usr/share/pixmaps/osify-audio.png\n"
+            "Terminal=false\n"
+            "MimeType=audio/mpeg;audio/x-wav;audio/ogg;audio/flac;video/mp4;video/x-matroska;\n"
+            "Categories=AudioVideo;Audio;Video;Player;\n"
+        ),
+        "osify-keyboard.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Mappatura Tastiera\n"
+            "Comment=Imposta o cambia il layout della tastiera (Italiana, USA, UK, Tedesca, Francese)\n"
+            "Exec=/usr/bin/osify-keyboard gui\n"
+            "Icon=/usr/share/pixmaps/osify-keyboard.png\n"
+            "Terminal=false\n"
+            "Categories=Settings;HardwareSettings;\n"
+        ),
+        "osify-onboard.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Tastiera a Schermo\n"
+            "Comment=Digita testi, password e comandi a schermo con mouse o touchpad\n"
+            "Exec=/usr/bin/osify-onboard\n"
+            "Icon=/usr/share/pixmaps/osify-keyboard.png\n"
+            "Terminal=false\n"
+            "Categories=Utility;Accessibility;\n"
+        ),
+        "osify-disk-health.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Salute e Diagnostica Dischi\n"
+            "Comment=Controlla lo spazio su disco, partizioni, usura e stato SMART dell'hardware\n"
+            "Exec=/usr/bin/osify-disk-health\n"
+            "Icon=/usr/share/pixmaps/osify-files.png\n"
+            "Terminal=false\n"
+            "Categories=System;HardwareSettings;\n"
         )
     }
 

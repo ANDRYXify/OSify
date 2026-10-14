@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Gestore Archivi
+Comment=Estrai e crea archivi compressi ZIP, TAR, GZ, XZ e 7Z con un click
+Exec=/usr/bin/osify-archive-manager %f
+Icon=/usr/share/pixmaps/osify-archive.png
+Terminal=false
+MimeType=application/zip;application/x-zip-compressed;application/x-tar;application/x-gzip;application/x-bzip2;application/x-xz;application/x-7z-compressed;
+Categories=Utility;Archiving;Compression;

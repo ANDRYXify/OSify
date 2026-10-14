@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Lettore Documenti PDF
+Comment=Visualizza e consulta documenti e manuali in formato PDF
+Exec=/usr/bin/osify-pdf-viewer %f
+Icon=/usr/share/pixmaps/osify-files.png
+Terminal=false
+MimeType=application/pdf;application/x-pdf;
+Categories=Office;Viewer;

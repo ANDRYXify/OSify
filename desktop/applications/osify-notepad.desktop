@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Blocco Note ed Editor
+Comment=Editor di testo leggero e veloce per documenti, appunti e file di sistema
+Exec=/usr/bin/osify-notepad %f
+Icon=/usr/share/pixmaps/osify-notepad.png
+Terminal=false
+MimeType=text/plain;text/x-log;text/x-sh;text/markdown;text/x-python;text/x-c;
+Categories=Utility;TextEditor;

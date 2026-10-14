@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Salute e Diagnostica Dischi
+Comment=Controlla lo spazio su disco, partizioni, usura e stato SMART dell'hardware
+Exec=/usr/bin/osify-disk-health
+Icon=/usr/share/pixmaps/osify-files.png
+Terminal=false
+Categories=System;HardwareSettings;

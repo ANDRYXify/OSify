@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Lettore Multimediale
+Comment=Riproduci file musicali e video MP3, WAV, FLAC, MP4, MKV e OGG
+Exec=/usr/bin/osify-media-player %f
+Icon=/usr/share/pixmaps/osify-audio.png
+Terminal=false
+MimeType=audio/mpeg;audio/x-wav;audio/ogg;audio/flac;video/mp4;video/x-matroska;video/x-msvideo;
+Categories=AudioVideo;Audio;Video;Player;

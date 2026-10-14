@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Calcolatrice
+Comment=Esegui calcoli aritmetici, percentuali, scientifici e conversioni
+Exec=/usr/bin/osify-calculator
+Icon=/usr/share/pixmaps/osify-calculator.png
+Terminal=false
+Categories=Utility;Calculator;

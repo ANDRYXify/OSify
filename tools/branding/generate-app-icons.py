@@ -303,6 +303,49 @@ def sym_power(d, sz, col, sc):
     # Linea verticale superiore
     d.line([(cx, cy - r - sc * 4), (cx, cy + sc * 2)], fill="#ffffff", width=lw)
 
+def sym_notepad(d, sz, col, sc):
+    # Foglio di testo con righe
+    cx, cy = sz // 2, sz // 2
+    w = int(sz * 0.22)
+    h = int(sz * 0.28)
+    d.rounded_rectangle([cx - w, cy - h, cx + w, cy + h], radius=sc * 3, outline=col, width=sc * 2)
+    # Righe di testo
+    for y_off in [-sc * 8, 0, sc * 8, sc * 16]:
+        d.line([(cx - w + sc * 6, cy + y_off), (cx + w - sc * 6, cy + y_off)], fill="#ffffff", width=sc * 2)
+
+def sym_calculator(d, sz, col, sc):
+    # Calcolatrice con schermo e tasti
+    cx, cy = sz // 2, sz // 2
+    w = int(sz * 0.22)
+    h = int(sz * 0.28)
+    d.rounded_rectangle([cx - w, cy - h, cx + w, cy + h], radius=sc * 4, outline=col, width=sc * 2)
+    # Display LCD
+    d.rounded_rectangle([cx - w + sc * 4, cy - h + sc * 4, cx + w - sc * 4, cy - h + sc * 14], radius=sc * 2, fill="#0284c7")
+    # Tasti
+    for ry in [0, sc * 8, sc * 16]:
+        for rx in [-sc * 7, 0, sc * 7]:
+            d.rectangle([cx + rx - sc * 2, cy + ry - sc * 2, cx + rx + sc * 2, cy + ry + sc * 2], fill=col)
+
+def sym_keyboard(d, sz, col, sc):
+    # Tastiera orizzontale
+    cx, cy = sz // 2, sz // 2
+    w = int(sz * 0.32)
+    h = int(sz * 0.18)
+    d.rounded_rectangle([cx - w, cy - h, cx + w, cy + h], radius=sc * 4, outline=col, width=sc * 2)
+    for ry in [-sc * 4, sc * 4]:
+        for rx in [-sc * 18, -sc * 9, 0, sc * 9, sc * 18]:
+            d.rectangle([cx + rx - sc * 2, cy + ry - sc * 2, cx + rx + sc * 2, cy + ry + sc * 2], fill=col)
+
+def sym_archive(d, sz, col, sc):
+    # Scatola / cartella con cerniera
+    cx, cy = sz // 2, sz // 2
+    w = int(sz * 0.26)
+    h = int(sz * 0.22)
+    d.rounded_rectangle([cx - w, cy - h, cx + w, cy + h], radius=sc * 3, outline=col, width=sc * 2)
+    # Cerniera verticale
+    d.line([(cx, cy - h), (cx, cy + h)], fill="#f59e0b", width=sc * 2)
+    d.rectangle([cx - sc * 4, cy - sc * 3, cx + sc * 4, cy + sc * 3], fill=col)
+
 ICONS_REGISTRY = {
     "osify-hub": (sym_hub, COLOR_HUB),
     "osify-browser": (sym_browser, COLOR_BROWSER),
@@ -325,6 +368,10 @@ ICONS_REGISTRY = {
     "osify-capture": (sym_capture, "#f43f5e"),
     "osify-phone": (sym_phone, "#38bdf8"),
     "osify-power": (sym_power, "#ef4444"),
+    "osify-notepad": (sym_notepad, "#38bdf8"),
+    "osify-calculator": (sym_calculator, "#10b981"),
+    "osify-keyboard": (sym_keyboard, "#a855f7"),
+    "osify-archive": (sym_archive, "#f59e0b"),
 }
 
 def main():

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Tastiera a Schermo
+Comment=Digita testi, password e comandi a schermo con mouse, touchpad o touch screen
+Exec=/usr/bin/osify-onboard
+Icon=/usr/share/pixmaps/osify-terminal.png
+Terminal=false
+Categories=Utility;Accessibility;
