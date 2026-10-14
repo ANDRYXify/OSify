@@ -3,6 +3,6 @@ Type=Application
 Name=Benvenuto in OSify
 Comment=Esperienza di Primo Avvio e Diagnostica Netbook
 Exec=/usr/bin/osify-welcome
-Icon=preferences-desktop
+Icon=/usr/share/pixmaps/osify-hub.png
 Terminal=false
 Categories=System;

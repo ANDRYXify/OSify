@@ -3,6 +3,6 @@ Type=Application
 Name=OSify Quick Access HUD
 Comment=Pannello Rapido Prestazioni, zRAM e Virtual Scaler 1280x768
 Exec=/usr/bin/osify-hud
-Icon=preferences-system
+Icon=/usr/share/pixmaps/osify-settings.png
 Terminal=false
 Categories=System;Settings;

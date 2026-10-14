@@ -75,6 +75,10 @@ detect_live_home() {
 
 generate_password_hash() {
     raw_pass="$1"
+    if [ -z "$raw_pass" ]; then
+        echo ""
+        return 0
+    fi
     # Prova con python3 crypt
     if command -v python3 >/dev/null 2>&1; then
         python3 -c "import crypt; print(crypt.crypt('$raw_pass', crypt.mksalt(crypt.METHOD_SHA512)))" 2>/dev/null && return
@@ -790,9 +794,9 @@ main() {
             err "Il target '$TARGET_DISK' non è un dispositivo a blocchi valido."
             exit 1
         fi
-        [ -z "$NEW_USER" ] && NEW_USER="andrea"
-        [ -z "$REAL_NAME" ] && REAL_NAME="Andrea"
-        [ -z "$USER_PASS" ] && USER_PASS="osify"
+        [ -z "$NEW_USER" ] && NEW_USER="utente"
+        [ -z "$REAL_NAME" ] && REAL_NAME="Utente OSify"
+        [ -z "$USER_PASS" ] && USER_PASS=""
     fi
 
     fw="$(detect_firmware_mode)"

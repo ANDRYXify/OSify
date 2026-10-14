@@ -178,7 +178,7 @@ if [ -n "$DISPLAY" ] && command -v yad >/dev/null 2>&1; then
         --image-on-top \
         --text="<big><b>Benvenuto in OSify</b></big>\nConfigura il tuo account personale, le credenziali e le preferenze del sistema." \
         --width=580 --center \
-        --field="Nome e Cognome (Display Name):" "Andrea Taliento" \
+        --field="Nome e Cognome (Display Name):" "Utente OSify" \
         --field="Nome Utente di Sistema (Username):" "osify" \
         --field="Password di Accesso:":H "" \
         --field="Conferma Password:":H "" \
@@ -224,10 +224,10 @@ fi
 # ==============================================================================
 if command -v dialog >/dev/null 2>&1; then
     TMP_ANS="/tmp/osify_profile_ans.$$"
-    dialog --backtitle "OSify Operating System — Ingegnerizzato da Andrea Taliento" \
+    dialog --backtitle "OSify Operating System" \
         --title " Configurazione Iniziale Profilo Utente " \
         --form "\nInserisci i dati del tuo profilo personale:\n" 18 64 0 \
-        "Nome Completo:"     1 1 "Andrea Taliento"  1 20 36 0 \
+        "Nome Completo:"     1 1 "Utente OSify"     1 20 36 0 \
         "Username:"          2 1 "osify"            2 20 20 0 \
         "Password:"          3 1 ""                 3 20 20 0 \
         "Amministratore (s/n):" 4 1 "s"             4 20 5 0 \
@@ -258,5 +258,5 @@ fi
 # FRONTEND 3: CLI SEMPLICE FALLBACK
 # ==============================================================================
 printf "\033[1;36m=== OSify Profile Initial Setup ===\033[0m\n"
-apply_profile "Andrea Taliento" "osify" "" "TRUE" "TRUE" "" "FALSE" "TRUE" "session"
+apply_profile "Utente OSify" "osify" "" "TRUE" "TRUE" "" "FALSE" "TRUE" "session"
 exit 0
