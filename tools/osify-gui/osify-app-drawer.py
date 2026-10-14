@@ -138,6 +138,36 @@ APPLICATIONS = [
         "color": "#22c55e"
     },
     {
+        "id": "capture",
+        "name": "Acquisizione HDMI & Console",
+        "category": "Gaming",
+        "desc": "Usa OSify come schermo a latenza zero per Nintendo Switch, PS5, Xbox o reflex",
+        "cmd": ["/usr/bin/osify-capture"],
+        "icon": "/usr/share/pixmaps/osify-games.png",
+        "badge": "🎥 CATTURA",
+        "color": "#ef4444"
+    },
+    {
+        "id": "phone",
+        "name": "Mirroring Telefono",
+        "category": "Internet",
+        "desc": "Duplica e controlla smartphone Android (mouse/tastiera) e iPhone via AirPlay",
+        "cmd": ["/usr/bin/osify-phone-companion"],
+        "icon": "/usr/share/pixmaps/osify-hub.png",
+        "badge": "📱 MIRROR",
+        "color": "#06b6d4"
+    },
+    {
+        "id": "display",
+        "name": "Uscite Video & Multi-Monitor",
+        "category": "Aspetto",
+        "desc": "Gestione uscite video HDMI/VGA: Clona, Estendi (Dual Monitor) o Solo TV",
+        "cmd": ["/usr/bin/osify-display"],
+        "icon": "/usr/share/pixmaps/osify-appearance.png",
+        "badge": "🖥️ MONITOR",
+        "color": "#3b82f6"
+    },
+    {
         "id": "update",
         "name": "Aggiorna OSify",
         "category": "Sistema",

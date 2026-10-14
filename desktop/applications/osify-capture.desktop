@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=🎥 Acquisizione HDMI & Console
+Comment=Usa lo schermo di OSify per giocare con Switch, PS5, Xbox o reflex a latenza zero
+Exec=/usr/bin/osify-capture
+Icon=/usr/share/pixmaps/osify-games.png
+Terminal=false
+Categories=AudioVideo;Video;Game;
+Keywords=capture;hdmi;console;switch;ps5;xbox;camera;uvc;video;

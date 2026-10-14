@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=📱 Mirroring Telefono Android & iOS
+Comment=Duplica e controlla il tuo smartphone Android o iPhone direttamente dal PC
+Exec=/usr/bin/osify-phone-companion
+Icon=/usr/share/pixmaps/osify-hub.png
+Terminal=false
+Categories=Utility;Network;
+Keywords=phone;mirror;android;ios;iphone;airplay;scrcpy;adb;screen;

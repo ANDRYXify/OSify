@@ -866,6 +866,14 @@ LABEL memtest
     shutil.copy2(os.path.join(REPO_ROOT, "network/osify-wifi-gui.sh"), os.path.join(bin_dir, "osify-wifi"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-games.sh"), os.path.join(bin_dir, "osify-games"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-developer.sh"), os.path.join(bin_dir, "osify-developer"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/storage/osify-storage-governor.sh"), os.path.join(bin_dir, "osify-storage-governor"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/storage/osify-storage-governor.sh"), os.path.join(bin_dir, "osify-eject"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-video-capture.sh"), os.path.join(bin_dir, "osify-capture"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-video-capture.sh"), os.path.join(bin_dir, "osify-video-capture"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-phone-companion.sh"), os.path.join(bin_dir, "osify-phone-companion"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-phone-companion.sh"), os.path.join(bin_dir, "osify-phone"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-display-switch.sh"), os.path.join(bin_dir, "osify-display"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-display-switch.sh"), os.path.join(bin_dir, "osify-display-switch"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-smart-customizer.sh"), os.path.join(bin_dir, "osify-appearance"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-smart-customizer.sh"), os.path.join(bin_dir, "osify-customizer"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-media-processor.py"), os.path.join(bin_dir, "osify-media-processor"))
@@ -1215,6 +1223,36 @@ WINDOW_MANAGER="openbox"
             "Icon=/usr/share/pixmaps/osify-settings.png\n"
             "Terminal=false\n"
             "Categories=Settings;\n"
+        ),
+        "osify-capture.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=🎥 Acquisizione HDMI & Console\n"
+            "Comment=Usa lo schermo di OSify per giocare con Switch, PS5, Xbox o reflex a latenza zero\n"
+            "Exec=/usr/bin/osify-capture\n"
+            "Icon=/usr/share/pixmaps/osify-games.png\n"
+            "Terminal=false\n"
+            "Categories=AudioVideo;Video;Game;\n"
+        ),
+        "osify-phone.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=📱 Mirroring Telefono Android & iOS\n"
+            "Comment=Duplica e controlla il tuo smartphone Android o iPhone direttamente dal PC\n"
+            "Exec=/usr/bin/osify-phone-companion\n"
+            "Icon=/usr/share/pixmaps/osify-hub.png\n"
+            "Terminal=false\n"
+            "Categories=Utility;Network;\n"
+        ),
+        "osify-display.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=🖥️ Uscite Video & Multi-Monitor\n"
+            "Comment=Gestione Display Esterni HDMI/VGA: Clona, Estendi o Solo TV\n"
+            "Exec=/usr/bin/osify-display\n"
+            "Icon=/usr/share/pixmaps/osify-appearance.png\n"
+            "Terminal=false\n"
+            "Categories=Settings;HardwareSettings;\n"
         ),
         "osify-welcome.desktop": (
             "[Desktop Entry]\n"

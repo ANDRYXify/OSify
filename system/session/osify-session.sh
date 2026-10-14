@@ -29,7 +29,21 @@ if [ -x /usr/bin/osify-input-setup ]; then
     /usr/bin/osify-input-setup &
 fi
 
-# 4. Sfondo Root Window Cyber-Dark
+# 4. Calibrazione Adattiva I/O Storage & USB Anti-Freeze Governor
+if [ -x /usr/bin/osify-storage-governor ]; then
+    /usr/bin/osify-storage-governor --tune &
+fi
+
+# 5. Intercettazione Diretta Modalità Installazione da Bootloader (Opzione 4 ISO)
+# Se l'utente ha scelto 'Installa OSify su Disco Fisso' al menu di avvio USB,
+# si lancia SUBITO l'installatore guidato a schermo intero:
+if grep -qE "osify\.install=1|osify_mode=install|install_mode=1" /proc/cmdline 2>/dev/null; then
+    if [ -x /usr/bin/osify-install ]; then
+        exec /usr/bin/osify-install
+    fi
+fi
+
+# 6. Sfondo Root Window Cyber-Dark
 if command -v xsetroot >/dev/null 2>&1; then
     xsetroot -solid "#0b0d14" 2>/dev/null &
 fi
