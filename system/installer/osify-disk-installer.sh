@@ -101,6 +101,31 @@ user_setup_wizard() {
     echo "Crea il tuo profilo personale che userai sul computer installato."
     echo ""
 
+    # Controllo se esiste già un profilo configurato nella sessione Live
+    PROFILE_JSON="/home/osify/.config/osify/profile.json"
+    [ ! -f "$PROFILE_JSON" ] && PROFILE_JSON="/etc/osify/profile.json"
+    if [ -f "$PROFILE_JSON" ] && [ -z "$REAL_NAME" ]; then
+        FOUND_NAME=$(awk -F'"' '/"real_name":/ {print $4}' "$PROFILE_JSON" 2>/dev/null)
+        FOUND_USER=$(awk -F'"' '/"username":/ {print $4}' "$PROFILE_JSON" 2>/dev/null)
+        FOUND_PASS=$(awk -F'"' '/"password":/ {print $4}' "$PROFILE_JSON" 2>/dev/null)
+        if [ -n "$FOUND_USER" ]; then
+            printf "\033[1;32m[✓] Rilevato profilo già configurato nella sessione di prova:\033[0m\n"
+            printf "    Nome: \033[1m%s\033[0m  |  Username: \033[1m%s\033[0m\n" "$FOUND_NAME" "$FOUND_USER"
+            printf "Desideri usare direttamente questo profilo per l'installazione? [S/n]: "
+            read -r ans_prof
+            case "$ans_prof" in
+                [Nn]*) ;;
+                *)
+                    REAL_NAME="$FOUND_NAME"
+                    NEW_USER="$FOUND_USER"
+                    USER_PASS="$FOUND_PASS"
+                    [ -z "$REAL_NAME" ] && REAL_NAME="Andrea Taliento"
+                    [ -z "$NEW_USER" ] && NEW_USER="andrea"
+                    ;;
+            esac
+        fi
+    fi
+
     while [ -z "$REAL_NAME" ]; do
         printf "Nome Completo (es. Andrea Taliento): "
         read -r REAL_NAME
@@ -600,7 +625,43 @@ EOF
     
     disks_file="/tmp/osify_disks.txt"
     rm -f "$disks_file"
-    lsblk -d -n -o NAME,SIZE,MODEL,TRAN,TYPE 2>/dev/null | grep -E "disk" | grep -v "loop" > "$disks_file" || true
+
+    # Rilevamento della partizione e del disco da cui si e' avviata la Live USB per proteggerla
+    boot_mount=$(awk '$2 ~ /^\/(mnt\/live|live|run\/archiso)/ {print $1}' /proc/mounts 2>/dev/null | head -n1)
+    [ -z "$boot_mount" ] && boot_mount=$(awk '$3 ~ /(iso9660|squashfs)/ {print $1}' /proc/mounts 2>/dev/null | head -n1)
+    BOOT_DEV_BASE=""
+    if [ -n "$boot_mount" ]; then
+        BOOT_DEV_BASE=$(basename "$boot_mount" | sed -E 's/[0-9]+$//; s/p$//')
+    fi
+
+    # Scansione accurata /sys/block per drive fisici (SATA, IDE, NVMe, eMMC, USB)
+    for d in /sys/block/sd* /sys/block/hd* /sys/block/nvme*n1 /sys/block/mmcblk*; do
+        [ -e "$d" ] || continue
+        dname=$(basename "$d")
+        case "$dname" in
+            loop*|ram*|zram*|sr*|fd*) continue ;;
+        esac
+        size_sectors=$(cat "$d/size" 2>/dev/null || echo 0)
+        size_gb=$(( size_sectors * 512 / 1024 / 1024 / 1024 ))
+        [ $size_gb -le 0 ] && continue
+
+        model=""
+        [ -f "$d/device/model" ] && model=$(cat "$d/device/model" | tr -s ' ' | sed 's/^[ \t]*//;s/[ \t]*$//')
+        [ -z "$model" ] && [ -f "$d/device/name" ] && model=$(cat "$d/device/name" 2>/dev/null)
+        [ -z "$model" ] && model="Disco Rigido Interno"
+
+        is_boot=0
+        [ -n "$BOOT_DEV_BASE" ] && [ "$dname" = "$BOOT_DEV_BASE" ] && is_boot=1
+
+        echo "$dname|$size_gb GB|$model|$is_boot" >> "$disks_file"
+    done
+
+    # Fallback con lsblk se /sys/block era vuoto
+    if [ ! -s "$disks_file" ] && command -v lsblk >/dev/null 2>&1; then
+        lsblk -d -n -o NAME,SIZE,MODEL 2>/dev/null | grep -v "loop" | while read -r n s m; do
+            echo "$n|$s|$m|0" >> "$disks_file"
+        done
+    fi
 
     if [ ! -s "$disks_file" ]; then
         err "Nessun disco fisso rilevato nel sistema."
@@ -610,12 +671,13 @@ EOF
     fi
 
     idx=1
-    while IFS= read -r line; do
-        if [ -n "$line" ]; then
-            dname="$(echo "$line" | awk '{print $1}')"
-            dsize="$(echo "$line" | awk '{print $2}')"
-            dmodel="$(echo "$line" | cut -d' ' -f3-)"
-            printf "  \033[1;32m[%d]\033[0m \033[1m/dev/%s\033[0m  —  Dimensione: \033[1;33m%s\033[0m  (Modello: %s)\n" "$idx" "$dname" "$dsize" "$dmodel"
+    while IFS='|' read -r dname dsize dmodel is_boot; do
+        if [ -n "$dname" ]; then
+            if [ "$is_boot" = "1" ]; then
+                printf "  \033[1;30m[%d]\033[0m /dev/%s  —  %s  (%s)  \033[1;33m[CHIAVETTA LIVE USB - PROTETTA]\033[0m\n" "$idx" "$dname" "$dsize" "$dmodel"
+            else
+                printf "  \033[1;32m[%d]\033[0m \033[1m/dev/%s\033[0m  —  Dimensione: \033[1;33m%s\033[0m  (Modello: \033[1;37m%s\033[0m)\n" "$idx" "$dname" "$dsize" "$dmodel"
+            fi
             idx=$((idx + 1))
         fi
     done < "$disks_file"
@@ -648,7 +710,20 @@ EOF
     fi
 
     selected_line="$(sed -n "${choice}p" "$disks_file")"
-    selected_name="$(echo "$selected_line" | awk '{print $1}')"
+    selected_name="$(echo "$selected_line" | awk -F'|' '{print $1}')"
+    is_live_usb="$(echo "$selected_line" | awk -F'|' '{print $4}')"
+
+    if [ "$is_live_usb" = "1" ]; then
+        printf "\n\033[1;31m[!] ATTENZIONE: Hai selezionato il supporto USB Live da cui è avviato OSify!\033[0m\n"
+        printf "    Per preservare la chiavetta, seleziona l'Hard Disk interno del computer.\n"
+        printf "Sei VERAMENTE sicuro di voler procedere su questo dispositivo? [s/N]: "
+        read -r usb_conf
+        case "$usb_conf" in
+            [Ss]*) ;;
+            *) echo "Scelta annullata."; rm -f "$disks_file"; exit 0 ;;
+        esac
+    fi
+
     TARGET_DISK="/dev/$selected_name"
     rm -f "$disks_file"
 
