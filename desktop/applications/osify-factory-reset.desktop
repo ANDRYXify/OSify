@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Ripristino Aspetto Originale
+Comment=Ripristina la barra delle applicazioni, menu e icone alle impostazioni di fabbrica
+Exec=/opt/osify/bin/osify-factory-reset gui
+Icon=osify-appearance
+Categories=Settings;DesktopSettings;
+Terminal=false
+Keywords=reset;ripristino;fabbrica;desktop;pannello;icona;tema;aspetto;

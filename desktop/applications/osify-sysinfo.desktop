@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Scheda Tecnica Hardware
+Comment=Visualizza specifiche dettagliate di CPU, RAM, GPU, batteria, dischi e BIOS
+Exec=/opt/osify/bin/osify-sysinfo gui
+Icon=osify-settings
+Categories=System;HardwareSettings;Utility;
+Terminal=false
+Keywords=sysinfo;hardware;cpu;ram;gpu;scheda;tecnica;batteria;bios;diagnostica;

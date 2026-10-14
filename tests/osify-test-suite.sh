@@ -655,7 +655,11 @@ for script in \
     "$REPO_ROOT/tools/osify-gui/osify-backup.sh" \
     "$REPO_ROOT/tools/osify-gui/osify-voice-recorder.sh" \
     "$REPO_ROOT/tools/osify-gui/osify-camera.sh" \
-    "$REPO_ROOT/network/osify-hotspot.sh"; do
+    "$REPO_ROOT/network/osify-hotspot.sh" \
+    "$REPO_ROOT/tools/osify-gui/osify-package-installer.sh" \
+    "$REPO_ROOT/system/power/osify-lid.sh" \
+    "$REPO_ROOT/tools/osify-gui/osify-sysinfo.sh" \
+    "$REPO_ROOT/tools/osify-gui/osify-factory-reset.sh"; do
     if [ -x "$script" ] && bash -n "$script" 2>/dev/null; then
         log_pass "Toolchain Hardware & Desktop: Eseguibile $(basename "$script") presente e con sintassi valida"
     else

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Coperchio e Sospensione
+Comment=Configura cosa fa il portatile alla chiusura dello schermo (Sleep o Schermo spento)
+Exec=/opt/osify/bin/osify-lid gui
+Icon=osify-power
+Categories=Settings;HardwareSettings;
+Terminal=false
+Keywords=lid;coperchio;sleep;sospensione;schermo;standby;batteria;portatile;

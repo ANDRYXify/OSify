@@ -371,6 +371,18 @@ OSIFY_OPENBOX_MENU = """<?xml version="1.0" encoding="UTF-8"?>
     <item label="Salute e Diagnostica Dischi" icon="/usr/share/pixmaps/osify-files.png">
       <action name="Execute"><command>/usr/bin/osify-disk-health</command></action>
     </item>
+    <item label="Scheda Tecnica Hardware" icon="/usr/share/pixmaps/osify-settings.png">
+      <action name="Execute"><command>/usr/bin/osify-sysinfo gui</command></action>
+    </item>
+    <item label="Coperchio e Sospensione" icon="/usr/share/pixmaps/osify-power.png">
+      <action name="Execute"><command>/usr/bin/osify-lid gui</command></action>
+    </item>
+    <item label="Installatore Pacchetti (.deb/.tazpkg)" icon="/usr/share/pixmaps/osify-install.png">
+      <action name="Execute"><command>/usr/bin/osify-package-installer</command></action>
+    </item>
+    <item label="Ripristino Aspetto di Fabbrica" icon="/usr/share/pixmaps/osify-appearance.png">
+      <action name="Execute"><command>/usr/bin/osify-factory-reset gui</command></action>
+    </item>
     <item label="Centro di Controllo" icon="/usr/share/pixmaps/osify-settings.png">
       <action name="Execute"><command>/usr/bin/osify-settings</command></action>
     </item>
@@ -1258,6 +1270,14 @@ LABEL memtest
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-camera.sh"), os.path.join(r4_work, "usr/local/bin/osify-camera"))
     shutil.copy2(os.path.join(REPO_ROOT, "network/osify-hotspot.sh"), os.path.join(bin_dir, "osify-hotspot"))
     shutil.copy2(os.path.join(REPO_ROOT, "network/osify-hotspot.sh"), os.path.join(r4_work, "usr/local/bin/osify-hotspot"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-package-installer.sh"), os.path.join(bin_dir, "osify-package-installer"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-package-installer.sh"), os.path.join(r4_work, "usr/local/bin/osify-package-installer"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/power/osify-lid.sh"), os.path.join(bin_dir, "osify-lid"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/power/osify-lid.sh"), os.path.join(r4_work, "usr/local/bin/osify-lid"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-sysinfo.sh"), os.path.join(bin_dir, "osify-sysinfo"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-sysinfo.sh"), os.path.join(r4_work, "usr/local/bin/osify-sysinfo"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-factory-reset.sh"), os.path.join(bin_dir, "osify-factory-reset"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-factory-reset.sh"), os.path.join(r4_work, "usr/local/bin/osify-factory-reset"))
 
 
 
@@ -2070,6 +2090,46 @@ WINDOW_MANAGER="openbox"
             "Icon=/usr/share/pixmaps/osify-hotspot.png\n"
             "Terminal=false\n"
             "Categories=Network;Settings;HardwareSettings;\n"
+        ),
+        "osify-package-installer.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Installatore Pacchetti\n"
+            "Comment=Installa con un click pacchetti tazpkg, deb e applicazioni AppImage\n"
+            "Exec=/usr/bin/osify-package-installer\n"
+            "Icon=/usr/share/pixmaps/osify-install.png\n"
+            "Terminal=false\n"
+            "Categories=System;PackageManager;\n"
+        ),
+        "osify-lid.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Coperchio e Sospensione\n"
+            "Comment=Configura cosa fa il portatile alla chiusura dello schermo (Sleep o Schermo spento)\n"
+            "Exec=/usr/bin/osify-lid gui\n"
+            "Icon=/usr/share/pixmaps/osify-power.png\n"
+            "Terminal=false\n"
+            "Categories=Settings;HardwareSettings;\n"
+        ),
+        "osify-sysinfo.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Scheda Tecnica Hardware\n"
+            "Comment=Visualizza specifiche dettagliate di CPU, RAM, GPU, batteria, dischi e BIOS\n"
+            "Exec=/usr/bin/osify-sysinfo gui\n"
+            "Icon=/usr/share/pixmaps/osify-settings.png\n"
+            "Terminal=false\n"
+            "Categories=System;HardwareSettings;Utility;\n"
+        ),
+        "osify-factory-reset.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Ripristino Aspetto Originale\n"
+            "Comment=Ripristina la barra delle applicazioni, menu e icone alle impostazioni di fabbrica\n"
+            "Exec=/usr/bin/osify-factory-reset gui\n"
+            "Icon=/usr/share/pixmaps/osify-appearance.png\n"
+            "Terminal=false\n"
+            "Categories=Settings;DesktopSettings;\n"
         )
     }
 
@@ -2136,10 +2196,17 @@ WINDOW_MANAGER="openbox"
             f.write(OSIFY_OPENBOX_MENU)
 
     # Iniezione deterministica Openbox rc.xml con Hotkey Hardware anche in rootfs4
-    src_rc = os.path.join(r3_work, "etc/xdg/openbox/rc.xml")
+    r3_dir = os.path.join(work_dir, "rootfs3")
+    src_rc = os.path.join(r3_dir, "etc/xdg/openbox/rc.xml")
+    r4_rc_content = None
     if os.path.exists(src_rc):
         with open(src_rc, "r") as f:
             r4_rc_content = f.read()
+    elif os.path.exists(os.path.join(r4_work, "etc/xdg/openbox/rc.xml")):
+        with open(os.path.join(r4_work, "etc/xdg/openbox/rc.xml"), "r") as f:
+            r4_rc_content = f.read()
+
+    if r4_rc_content:
         for r4_ob in [
             "etc/xdg/openbox/rc.xml",
             "etc/skel/.config/openbox/rc.xml",

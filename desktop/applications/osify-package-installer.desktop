@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Installatore Pacchetti
+Comment=Installa con un click pacchetti tazpkg, deb e applicazioni AppImage
+Exec=/opt/osify/bin/osify-package-installer %f
+Icon=osify-install
+Categories=System;PackageManager;
+Terminal=false
+MimeType=application/x-tazpkg;application/vnd.debian.binary-package;application/x-deb;application/x-appimage;application/x-executable;
+Keywords=package;install;tazpkg;deb;appimage;installer;software;
