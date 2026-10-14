@@ -346,6 +346,64 @@ def sym_archive(d, sz, col, sc):
     d.line([(cx, cy - h), (cx, cy + h)], fill="#f59e0b", width=sc * 2)
     d.rectangle([cx - sc * 4, cy - sc * 3, cx + sc * 4, cy + sc * 3], fill=col)
 
+def sym_printer(d, sz, col, sc):
+    # Stampante con foglio superiore
+    cx, cy = sz // 2, sz // 2
+    w = int(sz * 0.28)
+    h = int(sz * 0.16)
+    # Corpo stampante
+    d.rounded_rectangle([cx - w, cy - h + sc * 4, cx + w, cy + h + sc * 4], radius=sc * 3, outline=col, width=sc * 2)
+    # Foglio superiore
+    d.rounded_rectangle([cx - w + sc * 8, cy - h - sc * 12, cx + w - sc * 8, cy - h + sc * 4], radius=sc * 2, fill="#ffffff")
+    # Fessura carta inferiore
+    d.line([(cx - w + sc * 6, cy + sc * 6), (cx + w - sc * 6, cy + sc * 6)], fill=col, width=sc * 2)
+
+def sym_share(d, sz, col, sc):
+    # 3 nodi di rete connessi (AirDrop-like)
+    cx, cy = sz // 2, sz // 2
+    r = sc * 5
+    # Nodo centrale e due periferici
+    d.line([(cx - sc * 12, cy), (cx + sc * 12, cy - sc * 10)], fill=col, width=sc * 2)
+    d.line([(cx - sc * 12, cy), (cx + sc * 12, cy + sc * 10)], fill=col, width=sc * 2)
+    d.ellipse([cx - sc * 12 - r, cy - r, cx - sc * 12 + r, cy + r], fill="#38bdf8")
+    d.ellipse([cx + sc * 12 - r, cy - sc * 10 - r, cx + sc * 12 + r, cy - sc * 10 + r], fill="#10b981")
+    d.ellipse([cx + sc * 12 - r, cy + sc * 10 - r, cx + sc * 12 + r, cy + sc * 10 + r], fill="#f59e0b")
+
+def sym_thermal(d, sz, col, sc):
+    # Termometro graduato
+    cx, cy = sz // 2, sz // 2
+    r = sc * 7
+    # Bulbo inferiore
+    d.ellipse([cx - r, cy + sc * 6 - r, cx + r, cy + sc * 6 + r], fill=col)
+    # Tubo verticale
+    d.rounded_rectangle([cx - sc * 3, cy - sc * 18, cx + sc * 3, cy + sc * 6], radius=sc * 2, outline=col, width=sc * 2)
+    d.line([(cx, cy - sc * 14), (cx, cy + sc * 6)], fill="#ffffff", width=sc * 2)
+
+def sym_benchmark(d, sz, col, sc):
+    # Tachimetro circolare con lancetta
+    cx, cy = sz // 2, sz // 2
+    r = int(sz * 0.26)
+    d.arc([cx - r, cy - r, cx + r, cy + r], start=140, end=400, fill=col, width=sc * 3)
+    # Lancetta verso l'alto a destra (alte prestazioni)
+    d.line([(cx, cy), (cx + sc * 12, cy - sc * 12)], fill="#ef4444", width=sc * 3)
+    d.ellipse([cx - sc * 4, cy - sc * 4, cx + sc * 4, cy + sc * 4], fill="#ffffff")
+
+def sym_firewall(d, sz, col, sc):
+    # Scudo di rete perimetrale
+    cx, cy = sz // 2, sz // 2
+    w = int(sz * 0.24)
+    h = int(sz * 0.26)
+    pts = [
+        (cx - w, cy - h),
+        (cx + w, cy - h),
+        (cx + w, cy),
+        (cx, cy + h),
+        (cx - w, cy)
+    ]
+    d.polygon(pts, outline=col, fill="#0f172a")
+    d.line([(cx - w + sc * 6, cy - sc * 4), (cx + w - sc * 6, cy - sc * 4)], fill="#ef4444", width=sc * 2)
+    d.line([(cx, cy - h + sc * 4), (cx, cy + h - sc * 6)], fill="#ef4444", width=sc * 2)
+
 ICONS_REGISTRY = {
     "osify-hub": (sym_hub, COLOR_HUB),
     "osify-browser": (sym_browser, COLOR_BROWSER),
@@ -372,6 +430,11 @@ ICONS_REGISTRY = {
     "osify-calculator": (sym_calculator, "#10b981"),
     "osify-keyboard": (sym_keyboard, "#a855f7"),
     "osify-archive": (sym_archive, "#f59e0b"),
+    "osify-printer": (sym_printer, "#6366f1"),
+    "osify-share": (sym_share, "#0ea5e9"),
+    "osify-thermal": (sym_thermal, "#f97316"),
+    "osify-benchmark": (sym_benchmark, "#ec4899"),
+    "osify-firewall": (sym_firewall, "#ef4444"),
 }
 
 def main():

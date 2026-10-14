@@ -598,7 +598,7 @@ else
     log_fail "Desktop & File Manager: Errore nella configurazione di libfm.conf"
 fi
 
-# Test 11.7.2 Icone Native Vettoriali Complete per tutte le 25 App e Risoluzioni
+# Test 11.7.2 Icone Native Vettoriali Complete per tutte le 30 App e Risoluzioni
 if python3 -c "
 import os
 base = '$REPO_ROOT/desktop/branding/icons'
@@ -607,7 +607,8 @@ expected = [
     'osify-appearance', 'osify-taskmanager', 'osify-terminal', 'osify-install',
     'osify-update', 'osify-settings', 'osify-files', 'osify-drawer', 'osify-profile',
     'osify-users', 'osify-audio', 'osify-bluetooth', 'osify-snapshot', 'osify-capture',
-    'osify-phone', 'osify-power', 'osify-notepad', 'osify-calculator', 'osify-keyboard', 'osify-archive'
+    'osify-phone', 'osify-power', 'osify-notepad', 'osify-calculator', 'osify-keyboard',
+    'osify-archive', 'osify-printer', 'osify-share', 'osify-thermal', 'osify-benchmark', 'osify-firewall'
 ]
 for sz in ['48', '64', '128']:
     d = os.path.join(base, sz)
@@ -617,12 +618,12 @@ for sz in ['48', '64', '128']:
         assert os.path.isfile(p) and os.path.getsize(p) > 200, f'Icona {app} a {sz}px mancante o corrotta'
 print('Icone native 48/64/128px validate')
 " >/dev/null 2>&1; then
-    log_pass "Iconografia Nativa OSify: Tutte le 25 icone di sistema presenti e integre a 48px, 64px e 128px (zero icone bianche)"
+    log_pass "Iconografia Nativa OSify: Tutte le 30 icone di sistema presenti e integre a 48px, 64px e 128px (zero icone bianche)"
 else
     log_fail "Iconografia Nativa OSify: Icone mancanti o incomplete nel repository"
 fi
 
-# Test 11.7.3 Sottosistemi Hardware & Utility: Brightness, Power, Screenshot, Image Viewer, Superkey, Notepad, Calc, Archive, Media, Keyboard, Disk
+# Test 11.7.3 Sottosistemi Hardware & Utility: Brightness, Power, Screenshot, Image Viewer, Superkey, Notepad, Calc, Archive, Media, Keyboard, Disk, Share, Printer, Thermal, Benchmark, Firewall
 for script in \
     "$REPO_ROOT/system/display/osify-brightness.sh" \
     "$REPO_ROOT/tools/osify-gui/osify-power.sh" \
@@ -636,7 +637,12 @@ for script in \
     "$REPO_ROOT/tools/osify-gui/osify-media-player.sh" \
     "$REPO_ROOT/tools/osify-gui/osify-keyboard.sh" \
     "$REPO_ROOT/tools/osify-gui/osify-onboard.sh" \
-    "$REPO_ROOT/system/storage/osify-disk-health.sh"; do
+    "$REPO_ROOT/system/storage/osify-disk-health.sh" \
+    "$REPO_ROOT/network/osify-share.sh" \
+    "$REPO_ROOT/system/printing/osify-printer.sh" \
+    "$REPO_ROOT/system/power/osify-thermal-monitor.sh" \
+    "$REPO_ROOT/tools/osify-gui/osify-benchmark.sh" \
+    "$REPO_ROOT/network/osify-firewall.sh"; do
     if [ -x "$script" ]; then
         log_pass "Toolchain Hardware & Desktop: Eseguibile $(basename "$script") presente e con sintassi valida"
     else

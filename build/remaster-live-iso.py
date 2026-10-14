@@ -327,6 +327,18 @@ OSIFY_OPENBOX_MENU = """<?xml version="1.0" encoding="UTF-8"?>
     <item label="Gestione Attivita" icon="/usr/share/pixmaps/osify-taskmanager.png">
       <action name="Execute"><command>/usr/bin/osify-taskmanager</command></action>
     </item>
+    <item label="Condivisione Rete e Smartphone" icon="/usr/share/pixmaps/osify-share.png">
+      <action name="Execute"><command>/usr/bin/osify-share gui</command></action>
+    </item>
+    <item label="Gestione Stampanti e PDF" icon="/usr/share/pixmaps/osify-printer.png">
+      <action name="Execute"><command>/usr/bin/osify-printer gui</command></action>
+    </item>
+    <item label="Monitor Termico e Ventole" icon="/usr/share/pixmaps/osify-thermal.png">
+      <action name="Execute"><command>/usr/bin/osify-thermal-monitor gui</command></action>
+    </item>
+    <item label="Benchmark Prestazioni" icon="/usr/share/pixmaps/osify-benchmark.png">
+      <action name="Execute"><command>/usr/bin/osify-benchmark gui</command></action>
+    </item>
     <item label="Mappatura Tastiera" icon="/usr/share/pixmaps/osify-keyboard.png">
       <action name="Execute"><command>/usr/bin/osify-keyboard gui</command></action>
     </item>
@@ -338,6 +350,9 @@ OSIFY_OPENBOX_MENU = """<?xml version="1.0" encoding="UTF-8"?>
     </item>
     <separator/>
     <separator label="Sistema e Sicurezza"/>
+    <item label="Firewall e Sicurezza Rete" icon="/usr/share/pixmaps/osify-firewall.png">
+      <action name="Execute"><command>/usr/bin/osify-firewall gui</command></action>
+    </item>
     <item label="Punti di Ripristino (Snapshot)" icon="/usr/share/pixmaps/osify-snapshot.png">
       <action name="Execute"><command>/usr/bin/terminal -geometry 75x20 -T 'Punti di Ripristino' -e /usr/bin/osify-snapshot</command></action>
     </item>
@@ -1177,6 +1192,18 @@ LABEL memtest
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-onboard.sh"), os.path.join(r4_work, "usr/local/bin/osify-onboard"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/storage/osify-disk-health.sh"), os.path.join(bin_dir, "osify-disk-health"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/storage/osify-disk-health.sh"), os.path.join(r4_work, "usr/local/bin/osify-disk-health"))
+    shutil.copy2(os.path.join(REPO_ROOT, "network/osify-share.sh"), os.path.join(bin_dir, "osify-share"))
+    shutil.copy2(os.path.join(REPO_ROOT, "network/osify-share.sh"), os.path.join(r4_work, "usr/local/bin/osify-share"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/printing/osify-printer.sh"), os.path.join(bin_dir, "osify-printer"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/printing/osify-printer.sh"), os.path.join(r4_work, "usr/local/bin/osify-printer"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/power/osify-thermal-monitor.sh"), os.path.join(bin_dir, "osify-thermal-monitor"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/power/osify-thermal-monitor.sh"), os.path.join(bin_dir, "osify-thermal"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/power/osify-thermal-monitor.sh"), os.path.join(r4_work, "usr/local/bin/osify-thermal-monitor"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-benchmark.sh"), os.path.join(bin_dir, "osify-benchmark"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-benchmark.sh"), os.path.join(r4_work, "usr/local/bin/osify-benchmark"))
+    shutil.copy2(os.path.join(REPO_ROOT, "network/osify-firewall.sh"), os.path.join(bin_dir, "osify-firewall"))
+    shutil.copy2(os.path.join(REPO_ROOT, "network/osify-firewall.sh"), os.path.join(r4_work, "usr/local/bin/osify-firewall"))
+
 
     for f in os.listdir(bin_dir):
         p = os.path.join(bin_dir, f)
@@ -1837,6 +1864,56 @@ WINDOW_MANAGER="openbox"
             "Icon=/usr/share/pixmaps/osify-files.png\n"
             "Terminal=false\n"
             "Categories=System;HardwareSettings;\n"
+        ),
+        "osify-share.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Condivisione Rete e Smartphone\n"
+            "Comment=Condividi file e cartelle via Wi-Fi con smartphone o altri computer all'istante\n"
+            "Exec=/usr/bin/osify-share gui\n"
+            "Icon=/usr/share/pixmaps/osify-share.png\n"
+            "Terminal=false\n"
+            "Categories=Network;FileTransfer;\n"
+        ),
+        "osify-printer.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Gestione Stampanti e PDF\n"
+            "Comment=Gestisci stampanti locali, code di stampa e crea documenti PDF\n"
+            "Exec=/usr/bin/osify-printer gui\n"
+            "Icon=/usr/share/pixmaps/osify-printer.png\n"
+            "Terminal=false\n"
+            "Categories=System;Printing;Settings;\n"
+        ),
+        "osify-thermal-monitor.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Monitor Termico e Ventole\n"
+            "Comment=Controlla la temperatura della CPU, ventole e previeni il surriscaldamento\n"
+            "Exec=/usr/bin/osify-thermal-monitor gui\n"
+            "Icon=/usr/share/pixmaps/osify-thermal.png\n"
+            "Terminal=false\n"
+            "Categories=System;HardwareSettings;\n"
+        ),
+        "osify-benchmark.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Benchmark Prestazioni\n"
+            "Comment=Misura la velocita della CPU, memoria RAM e disco fisso con punteggio sintetico\n"
+            "Exec=/usr/bin/osify-benchmark gui\n"
+            "Icon=/usr/share/pixmaps/osify-benchmark.png\n"
+            "Terminal=false\n"
+            "Categories=System;Utility;\n"
+        ),
+        "osify-firewall.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Firewall e Sicurezza Rete\n"
+            "Comment=Gestisci la protezione perimetrale, porte aperte e isolamento stealth del PC\n"
+            "Exec=/usr/bin/osify-firewall gui\n"
+            "Icon=/usr/share/pixmaps/osify-firewall.png\n"
+            "Terminal=false\n"
+            "Categories=System;Security;Settings;\n"
         )
     }
 

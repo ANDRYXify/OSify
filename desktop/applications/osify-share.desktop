@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Condivisione Rete e Smartphone
+Comment=Condividi file e cartelle via Wi-Fi con smartphone o altri computer all'istante
+Exec=/usr/bin/osify-share gui
+Icon=/usr/share/pixmaps/osify-share.png
+Terminal=false
+Categories=Network;FileTransfer;

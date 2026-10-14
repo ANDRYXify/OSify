@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Monitor Termico e Ventole
+Comment=Controlla la temperatura della CPU, ventole e previeni il surriscaldamento
+Exec=/usr/bin/osify-thermal-monitor gui
+Icon=/usr/share/pixmaps/osify-thermal.png
+Terminal=false
+Categories=System;HardwareSettings;

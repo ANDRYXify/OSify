@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Gestione Stampanti e PDF
+Comment=Gestisci stampanti locali, code di stampa e crea documenti PDF
+Exec=/usr/bin/osify-printer gui
+Icon=/usr/share/pixmaps/osify-printer.png
+Terminal=false
+Categories=System;Printing;Settings;

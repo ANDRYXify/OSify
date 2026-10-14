@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Benchmark Prestazioni
+Comment=Misura la velocita della CPU, memoria RAM e disco fisso con punteggio sintetico
+Exec=/usr/bin/osify-benchmark gui
+Icon=/usr/share/pixmaps/osify-benchmark.png
+Terminal=false
+Categories=System;Utility;

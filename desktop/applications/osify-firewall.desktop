@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Firewall e Sicurezza Rete
+Comment=Gestisci la protezione perimetrale, porte aperte e isolamento stealth del PC
+Exec=/usr/bin/osify-firewall gui
+Icon=/usr/share/pixmaps/osify-firewall.png
+Terminal=false
+Categories=System;Security;Settings;
