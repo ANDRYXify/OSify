@@ -13,19 +13,19 @@
 
 <p align="center">
   <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-NoUSB-Windows-Installer.zip">
-    <img src="https://img.shields.io/badge/Installer_Windows-Senza_USB_(v1.3.0)-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Installer Windows Senza USB"/>
+    <img src="https://img.shields.io/badge/Installer_Windows-Senza_USB_(v1.4.0)-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Installer Windows Senza USB"/>
   </a>
   &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-x86_64-v3.iso">
-    <img src="https://img.shields.io/badge/ISO_Standard-x86--64--v3_(v1.3.0)-7C3AED?style=for-the-badge&logo=linux&logoColor=white" alt="ISO Standard x86_64-v3"/>
+    <img src="https://img.shields.io/badge/ISO_Standard-x86--64--v3_(v1.4.0)-7C3AED?style=for-the-badge&logo=linux&logoColor=white" alt="ISO Standard x86_64-v3"/>
   </a>
   &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-Vintage-i686.iso">
-    <img src="https://img.shields.io/badge/ISO_Vintage-32--bit_i686_(v1.3.0)-10B981?style=for-the-badge&logo=linux&logoColor=white" alt="ISO Vintage 32-bit i686"/>
+    <img src="https://img.shields.io/badge/ISO_Vintage-32--bit_i686_(v1.4.0)-10B981?style=for-the-badge&logo=linux&logoColor=white" alt="ISO Vintage 32-bit i686"/>
   </a>
   &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/releases/latest">
-    <img src="https://img.shields.io/badge/Release-v1.3.0_Latest-22C55E?style=for-the-badge&logo=github&logoColor=white" alt="Official Release"/>
+    <img src="https://img.shields.io/badge/Release-v1.4.0_Latest-22C55E?style=for-the-badge&logo=github&logoColor=white" alt="Official Release"/>
   </a>
 </p>
 
@@ -55,6 +55,21 @@ OSify è un sistema operativo basato su Linux ingegnerizzato su due target archi
 
 1. **OSify Standard (x86-64-v3)**: Dedicato a postazioni moderne da gaming, creazione di contenuti e live streaming ad alto bitrate. Compilato con istruzioni vettoriali avanzate (AVX, AVX2, FMA) e kernel Linux BORE a latenza deterministica.
 2. **OSify Vintage (i686 / 32-bit)**: Dedicato a computer storici e netbook ultra-compatti (es. Toshiba Dynabook NB200 con Intel Atom N280 e GPU Intel GMA 950). Ottimizzato per operare con un footprint di memoria a riposo di ~115-125 MB, gestendo nativamente schermi WSVGA a bassa risoluzione (1024x600).
+
+---
+
+## 🌟 Esperienza a 360° Out-Of-The-Box & Live-to-Disk Persistence (v1.4.0)
+
+OSify non è un clone o una derivata generica: è un sistema operativo con un'architettura completa progettata per consentire all'utente di lavorare, programmare, giocare e personalizzare ogni aspetto fin dal primo secondo.
+
+* **Identità Nativa e Personale (Zero Residui Tux)**: L'utente configura il proprio profilo reale (Nome, Username, Password crittografata SHA-512, Hostname). L'ambiente Live opera sotto l'utente ufficiale `osify`.
+* **Live-to-Disk Profile & Data Persistence**: Durante l'installazione su disco fisso (`osify-install`), il sistema preserva e migra **integralmente** sul nuovo account tutti i file salvati, documenti, cronologia e configurazioni create durante la sessione Live. Nessun dato va perso.
+* **🌐 Web & Connettività Wi-Fi**: Browser nativo ultra-veloce (`osify-browser`) e gestore reti wireless guidato (`osify-wifi`) con scansione SSID, WPA2/WPA3, DHCP immediato e protezione DNS anti-leak.
+* **🎮 Gaming & Retrogaming Hub**: Lanciatore integrato (`osify-games`) per giochi Windows (.exe tramite Wine/DirectX), retrogaming DOS (DOSBox) ed emulazione universale (UEM runner per Android .apk e iOS .ipa).
+* **💻 Developer & Coding Suite**: Ambiente per programmatori (`osify-developer`) con Python 3 interattivo (REPL), compilatore C rapido (TinyCC / GCC), Git manager, editor con colorazione sintassi e template di progetto pronti in `~/Progetti`.
+* **📁 Lavoro & Produttività**: File manager reattivo con schede, visualizzatore documenti PDF, gestore archivi compressi (.zip, .tar.gz, .7z) e screenshot tool istantaneo.
+* **🎨 Personalizzazione & Virtual Scaler**: Centro aspetto (`osify-appearance`) con Virtual Scaler Netbook (1024x600 ↔ 1280x768 per visualizzare finestre alte senza tagli verticali) e sfondi Cyber Dark ad alta definizione.
+* **⚡ Turbo Boost Hardware Adattivo**: Riconoscimento automatico dell'hardware (Standard, Pro o Riesumare Antichi) con sblocco governor CPU `performance`, 1 GB di swap compresso zRAM LZ4 e calibrazione touchpad universale `evdev`.
 
 ---
 

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=🚀 OSify Hub
+Comment=Centro di Controllo, Prestazioni e Launchpad di OSify
+Exec=terminal -geometry 74x20 -T 'OSify Hub' -e /usr/bin/osify-hub
+Icon=/usr/share/pixmaps/osify.png
+Terminal=false
+Categories=System;Utility;

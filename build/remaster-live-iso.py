@@ -232,7 +232,7 @@ authfile            /var/run/slim.auth
 hidecursor          true
 login_cmd           exec /bin/sh -l /usr/bin/osify-session
 auto_login          yes
-default_user        tux
+default_user        osify
 current_theme       osify
 lockfile            /var/lock/slim.lock
 logfile             /var/log/slim.log
@@ -241,16 +241,61 @@ logfile             /var/log/slim.log
     with open(slim_conf, "w") as f:
         f.write(slim_content)
 
+    # Scrittura account utente ufficiale OSify (UID 1000) e rimozione totale residui tux
+    passwd_file = os.path.join(r3_work, "etc/passwd")
+    shadow_file = os.path.join(r3_work, "etc/shadow")
+    group_file = os.path.join(r3_work, "etc/group")
+    sudoers_file = os.path.join(r3_work, "etc/sudoers")
+    hostname_file = os.path.join(r3_work, "etc/hostname")
+
+    with open(passwd_file, "w") as f:
+        f.write("root:x:0:0:root:/root:/bin/sh\n"
+                "osify:x:1000:1000:OSify Live User:/home/osify:/bin/sh\n"
+                "nobody:x:65534:65534:nobody:/tmp:/bin/false\n"
+                "messagebus:x:25:25:messagebus:/var/run/dbus:/bin/false\n")
+    with open(shadow_file, "w") as f:
+        f.write("root::14000:0:99999:7:::\n"
+                "osify::14000:0:99999:7:::\n"
+                "nobody:*:14000:0:99999:7:::\n")
+    with open(group_file, "w") as f:
+        f.write("root:x:0:\n"
+                "osify:x:1000:\n"
+                "wheel:x:10:root,osify\n"
+                "sudo:x:27:root,osify\n"
+                "audio:x:29:osify\n"
+                "video:x:44:osify\n"
+                "cdrom:x:24:osify\n"
+                "dialout:x:20:osify\n"
+                "disk:x:6:osify\n"
+                "storage:x:26:osify\n"
+                "input:x:97:osify\n"
+                "users:x:100:osify\n")
+    with open(sudoers_file, "w") as f:
+        f.write("root ALL=(ALL) ALL\n"
+                "osify ALL=(ALL) NOPASSWD: ALL\n")
+    with open(hostname_file, "w") as f:
+        f.write("osify-system\n")
+
     # Scrittura diretta e deterministica di .xinitrc con permessi 755
-    for rc_path in ["etc/skel/.xinitrc", "root/.xinitrc", "home/tux/.xinitrc", "etc/X11/xinit/xinitrc"]:
+    for rc_path in ["etc/skel/.xinitrc", "root/.xinitrc", "home/osify/.xinitrc", "etc/X11/xinit/xinitrc"]:
         full_rc = os.path.join(r3_work, rc_path)
         os.makedirs(os.path.dirname(full_rc), exist_ok=True)
         with open(full_rc, "w") as f:
             f.write(CLEAN_XINITRC)
         os.chmod(full_rc, 0o755)
-    tux_home_r3 = os.path.join(r3_work, "home/tux")
-    os.makedirs(tux_home_r3, exist_ok=True)
-    os.chmod(tux_home_r3, 0o777)
+
+    osify_home_r3 = os.path.join(r3_work, "home/osify")
+    os.makedirs(osify_home_r3, exist_ok=True)
+    os.chmod(osify_home_r3, 0o777)
+    for udir in ["Desktop", "Documenti", "Download", "Musica", "Video", "Progetti", "Giochi"]:
+        os.makedirs(os.path.join(osify_home_r3, udir), exist_ok=True)
+
+    # Pulizia residui tux e symlink invisibile di retrocompatibilità
+    tux_dir = os.path.join(r3_work, "home/tux")
+    if os.path.exists(tux_dir) and not os.path.islink(tux_dir):
+        shutil.rmtree(tux_dir, ignore_errors=True)
+    if not os.path.exists(tux_dir):
+        os.symlink("osify", tux_dir)
 
     # 2. Sostituzione temi SLIM: cancellazione totale del ragno di SliTaz
     blank_panel = Image.new("RGBA", (1, 1), (0, 0, 0, 0))
@@ -503,7 +548,7 @@ Plugin {
 """
     for p_path in [
         "etc/skel/.config/lxpanel/slitaz/panels/panel",
-        "home/tux/.config/lxpanel/slitaz/panels/panel",
+        "home/osify/.config/lxpanel/slitaz/panels/panel",
         "etc/lxpanel/slitaz/panels/panel",
         "etc/lxpanel/default/panels/panel",
         "etc/xdg/lxpanel/default/panels/panel",
@@ -521,7 +566,7 @@ Plugin {
             rc_content = f.read()
         custom_keys = """
     <!-- OSify Universali Hotkeys -->
-    <keybind key="W-a"><action name="Execute"><command>/usr/bin/osify-hud</command></action></keybind>
+    <keybind key="W-a"><action name="Execute"><command>/usr/bin/osify-hub</command></action></keybind>
     <keybind key="C-S-Escape"><action name="Execute"><command>/usr/bin/osify-taskmanager</command></action></keybind>
     <keybind key="W-F10"><action name="Execute"><command>/usr/bin/osify-hud --toggle-scale</command></action></keybind>
     <keybind key="W-t"><action name="Execute"><command>/usr/bin/osify-terminal</command></action></keybind>
@@ -533,7 +578,7 @@ Plugin {
             rc_content = rc_content.replace("</keyboard>", f"{custom_keys}\n  </keyboard>")
             with open(rc_xml, "w") as f:
                 f.write(rc_content)
-            for ob_p in ["etc/skel/.config/openbox/rc.xml", "home/tux/.config/openbox/rc.xml", "root/.config/openbox/rc.xml"]:
+            for ob_p in ["etc/skel/.config/openbox/rc.xml", "home/osify/.config/openbox/rc.xml", "root/.config/openbox/rc.xml"]:
                 full_ob = os.path.join(r3_work, ob_p)
                 os.makedirs(os.path.dirname(full_ob), exist_ok=True)
                 with open(full_ob, "w") as f:
@@ -543,7 +588,7 @@ Plugin {
     for pfm_p in [
         "etc/xdg/pcmanfm/default/pcmanfm.conf",
         "etc/skel/.config/pcmanfm/default/pcmanfm.conf",
-        "home/tux/.config/pcmanfm/default/pcmanfm.conf",
+        "home/osify/.config/pcmanfm/default/pcmanfm.conf",
         "root/.config/pcmanfm/default/pcmanfm.conf"
     ]:
         full_pfm = os.path.join(r3_work, pfm_p)
@@ -555,7 +600,7 @@ Plugin {
     for as_p in [
         "etc/xdg/openbox/autostart",
         "etc/skel/.config/openbox/autostart",
-        "home/tux/.config/openbox/autostart",
+        "home/osify/.config/openbox/autostart",
         "root/.config/openbox/autostart"
     ]:
         full_as = os.path.join(r3_work, as_p)
@@ -759,6 +804,10 @@ LABEL memtest
     shutil.copy2(os.path.join(REPO_ROOT, "uem/runners/osify-cross-runner.sh"), os.path.join(bin_dir, "osify-cross-runner"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-hub.sh"), os.path.join(bin_dir, "osify-hub"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-browser.sh"), os.path.join(bin_dir, "osify-browser"))
+    shutil.copy2(os.path.join(REPO_ROOT, "network/osify-wifi-gui.sh"), os.path.join(bin_dir, "osify-wifi"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-games.sh"), os.path.join(bin_dir, "osify-games"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-developer.sh"), os.path.join(bin_dir, "osify-developer"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-appearance.sh"), os.path.join(bin_dir, "osify-appearance"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/input/osify-input-setup.sh"), os.path.join(bin_dir, "osify-input-setup"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/session/osify-session.sh"), os.path.join(bin_dir, "osify-session"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/updater/osify-live-updater.sh"), os.path.join(bin_dir, "osify-update"))
@@ -897,28 +946,38 @@ EDITOR="nano"
 TERMINAL="terminal"
 WINDOW_MANAGER="openbox"
 """
-    for ac_path in ["etc/slitaz/applications.conf", "etc/skel/.config/slitaz/applications.conf", "home/tux/.config/slitaz/applications.conf"]:
+    for ac_path in ["etc/slitaz/applications.conf", "etc/skel/.config/slitaz/applications.conf", "home/osify/.config/slitaz/applications.conf"]:
         full_ac = os.path.join(r4_work, ac_path)
         os.makedirs(os.path.dirname(full_ac), exist_ok=True)
         with open(full_ac, "w") as f:
             f.write(app_conf)
 
     # Iniezione deterministica di .xinitrc con permessi 755 in rootfs4
-    for rc_path in ["etc/skel/.xinitrc", "root/.xinitrc", "home/tux/.xinitrc", "etc/X11/xinit/xinitrc"]:
+    for rc_path in ["etc/skel/.xinitrc", "root/.xinitrc", "home/osify/.xinitrc", "etc/X11/xinit/xinitrc"]:
         full_rc = os.path.join(r4_work, rc_path)
         os.makedirs(os.path.dirname(full_rc), exist_ok=True)
         with open(full_rc, "w") as f:
             f.write(CLEAN_XINITRC)
         os.chmod(full_rc, 0o755)
-    tux_home_r4 = os.path.join(r4_work, "home/tux")
-    os.makedirs(tux_home_r4, exist_ok=True)
-    os.chmod(tux_home_r4, 0o777)
+
+    osify_home_r4 = os.path.join(r4_work, "home/osify")
+    os.makedirs(osify_home_r4, exist_ok=True)
+    os.chmod(osify_home_r4, 0o777)
+    for udir in ["Desktop", "Documenti", "Download", "Musica", "Video", "Progetti", "Giochi"]:
+        os.makedirs(os.path.join(osify_home_r4, udir), exist_ok=True)
+
+    # Symlink di sicurezza retrocompatibile per tux
+    tux_r4 = os.path.join(r4_work, "home/tux")
+    if os.path.exists(tux_r4) and not os.path.islink(tux_r4):
+        shutil.rmtree(tux_r4, ignore_errors=True)
+    if not os.path.exists(tux_r4):
+        os.symlink("osify", tux_r4)
 
     # Configurazione nativa PCManFM Desktop Manager e Openbox Autostart in rootfs4
     for pfm_p in [
         "etc/xdg/pcmanfm/default/pcmanfm.conf",
         "etc/skel/.config/pcmanfm/default/pcmanfm.conf",
-        "home/tux/.config/pcmanfm/default/pcmanfm.conf",
+        "home/osify/.config/pcmanfm/default/pcmanfm.conf",
         "root/.config/pcmanfm/default/pcmanfm.conf"
     ]:
         full_pfm = os.path.join(r4_work, pfm_p)
@@ -929,7 +988,7 @@ WINDOW_MANAGER="openbox"
     for as_p in [
         "etc/xdg/openbox/autostart",
         "etc/skel/.config/openbox/autostart",
-        "home/tux/.config/openbox/autostart",
+        "home/osify/.config/openbox/autostart",
         "root/.config/openbox/autostart"
     ]:
         full_as = os.path.join(r4_work, as_p)
@@ -1020,6 +1079,46 @@ WINDOW_MANAGER="openbox"
             "Terminal=false\n"
             "Categories=System;\n"
         ),
+        "osify-wifi.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=📡 Connessione Wi-Fi\n"
+            "Comment=Scansione reti wireless, inserimento password e connessione immediata\n"
+            "Exec=terminal -geometry 75x20 -T 'OSify Wi-Fi' -e /usr/bin/osify-wifi\n"
+            "Icon=network-wireless\n"
+            "Terminal=false\n"
+            "Categories=Network;Settings;\n"
+        ),
+        "osify-games.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=🎮 Gaming Hub\n"
+            "Comment=Giochi Windows (.exe), Retrogaming DOS, Emulazione e Turbo Boost\n"
+            "Exec=terminal -geometry 75x20 -T 'OSify Gaming' -e /usr/bin/osify-games\n"
+            "Icon=applications-games\n"
+            "Terminal=false\n"
+            "Categories=Game;\n"
+        ),
+        "osify-developer.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=💻 Sviluppo & Codice\n"
+            "Comment=Suite di Programmazione: Python 3, C, Git, Editor e Progetti\n"
+            "Exec=terminal -geometry 75x20 -T 'OSify Developer' -e /usr/bin/osify-developer\n"
+            "Icon=applications-development\n"
+            "Terminal=false\n"
+            "Categories=Development;\n"
+        ),
+        "osify-appearance.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=🎨 Personalizzazione & Scaler\n"
+            "Comment=Virtual Scaler Netbook 1280x768, Sfondi Cyber Dark e Risoluzioni\n"
+            "Exec=terminal -geometry 75x20 -T 'OSify Appearance' -e /usr/bin/osify-appearance\n"
+            "Icon=preferences-desktop-theme\n"
+            "Terminal=false\n"
+            "Categories=Settings;\n"
+        ),
         "osify-update.desktop": (
             "[Desktop Entry]\n"
             "Type=Application\n"
@@ -1049,12 +1148,17 @@ WINDOW_MANAGER="openbox"
         with open(os.path.join(apps_sys, name), "w") as f:
             f.write(content)
 
-    for dpath in ["root/Desktop", "home/tux/Desktop", "etc/skel/Desktop"]:
+    for dpath in ["root/Desktop", "home/osify/Desktop", "etc/skel/Desktop"]:
         full_d = os.path.join(r4_work, dpath)
         os.makedirs(full_d, exist_ok=True)
         for name, content in app_entries.items():
             with open(os.path.join(full_d, name), "w") as f:
                 f.write(content)
+
+    # Permessi corretti proprietario osify (UID 1000) su home
+    osify_full = os.path.join(r4_work, "home/osify")
+    if os.path.exists(osify_full):
+        run(f"chmod -R 755 '{osify_full}' 2>/dev/null || true")
 
     # Autostart automatico XDG
     autostart_dir = os.path.join(r4_work, "etc/xdg/autostart")

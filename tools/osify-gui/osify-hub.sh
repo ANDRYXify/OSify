@@ -1,10 +1,10 @@
 #!/bin/sh
 # ==============================================================================
-# OSify Hub — Il Centro di Controllo e Launchpad Ufficiale di OSify
+# OSify Hub — Il Centro di Controllo e Launchpad Ufficiale a 360°
 # ==============================================================================
 # Ingegnerizzato da Andrea Taliento (ANDRYXify)
-# Interfaccia nativa, autonoma e ultra-reattiva specifica per OSify.
-# Funziona al 100% senza dipendenze pesanti, consuma meno di 2MB di RAM.
+# Centro operativo omnicomprensivo: Web, Gaming, Sviluppo, Ufficio,
+# Personalizzazione, Ottimizzazione Hardware e Installatore su Disco Fisso.
 # ==============================================================================
 
 # Rilevamento Hardware in tempo reale
@@ -17,18 +17,25 @@ RAM_AVAIL=$(awk '/MemAvailable/ {print int($2/1024)" MB"}' /proc/meminfo 2>/dev/
 SWAP_TOTAL=$(awk '/SwapTotal/ {print int($2/1024)" MB"}' /proc/meminfo 2>/dev/null || echo "0 MB")
 
 GPU_NAME=$(lspci 2>/dev/null | grep -iE 'vga|display|3d' | head -n1 | cut -d: -f3 | sed 's/^[ \t]*//')
-[ -z "$GPU_NAME" ] && GPU_NAME="Controller Standard"
+[ -z "$GPU_NAME" ] && GPU_NAME="Controller Grafico Integrato"
 
 DISP_RES=$(xrandr 2>/dev/null | grep -o '[0-9]\+x[0-9]\+' | head -n1 || echo "1024x600")
 
-# Funzioni Operative 1-Click
+# Classificazione Edizione OSify
+TOTAL_MEM_KB=$(awk '/MemTotal/ {print $2}' /proc/meminfo 2>/dev/null || echo 1048576)
+if [ "$TOTAL_MEM_KB" -lt 2500000 ] || [ "$(uname -m)" = "i686" ]; then
+    OSIFY_TIER="Riesumare Antichi (Vintage 32-bit Edition)"
+elif [ "$TOTAL_MEM_KB" -gt 12000000 ]; then
+    OSIFY_TIER="OSify Pro Station (64-bit Performance)"
+else
+    OSIFY_TIER="OSify Standard Edition (Universal 64-bit)"
+fi
+
+# Funzioni Operative
 boost_system() {
-    # 1. Attiva Governor Performance su tutti i core CPU
     for gov in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
         [ -f "$gov" ] && echo "performance" > "$gov" 2>/dev/null || true
     done
-
-    # 2. Inizializzazione zRAM Compressa LZ4 (Raddoppio virtuale RAM)
     modprobe -q zram 2>/dev/null || true
     if [ -b /dev/zram0 ]; then
         echo lz4 > /sys/block/zram0/comp_algorithm 2>/dev/null || echo lzo > /sys/block/zram0/comp_algorithm 2>/dev/null || true
@@ -37,8 +44,6 @@ boost_system() {
         swapon -p 100 /dev/zram0 2>/dev/null || true
         sysctl -w vm.swappiness=70 vm.vfs_cache_pressure=50 >/dev/null 2>&1 || true
     fi
-
-    # 3. Pulizia cache e sincronizzazione filesystem
     sync
     echo 3 > /proc/sys/vm/drop_caches 2>/dev/null || true
 
@@ -73,73 +78,109 @@ open_browser() {
         /usr/bin/osify-browser &
     elif command -v dillo >/dev/null 2>&1; then
         dillo &
-    elif command -v falkon >/dev/null 2>&1; then
-        falkon &
     elif command -v firefox >/dev/null 2>&1; then
         firefox &
     fi
 }
 
-launch_uem_picker() {
-    clear
-    echo "========================================================="
-    echo "   OSify Universal Application Runner (UEM)              "
-    echo "========================================================="
-    echo "Inserisci il percorso completo del file da eseguire:"
-    echo "(Supportati: .exe, .apk, .ipa, .app, .deb, .wasm, .jar)"
-    echo "Oppure trascina il file qui dentro e premi INVIO:"
-    read -r TARGET_FILE
-    if [ -n "$TARGET_FILE" ] && [ -e "$TARGET_FILE" ]; then
-        echo "[+] Avvio con OSify Dispatcher..."
-        /usr/bin/osify-exec "$TARGET_FILE"
-    else
-        echo "[!] File non valido o inesistente."
-        sleep 2
+open_wifi_manager() {
+    if [ -x /usr/bin/osify-wifi ]; then
+        terminal -geometry 75x20 -T "OSify Wi-Fi Manager" -e /usr/bin/osify-wifi &
+    elif [ -x /opt/osify/network/osify-wifi-gui.sh ]; then
+        terminal -geometry 75x20 -T "OSify Wi-Fi Manager" -e /opt/osify/network/osify-wifi-gui.sh &
     fi
 }
 
-# Menu Interattivo Principale
+open_gaming_hub() {
+    if [ -x /usr/bin/osify-games ]; then
+        terminal -geometry 75x20 -T "OSify Gaming Hub" -e /usr/bin/osify-games &
+    elif [ -x /opt/osify/tools/osify-gui/osify-games.sh ]; then
+        terminal -geometry 75x20 -T "OSify Gaming Hub" -e /opt/osify/tools/osify-gui/osify-games.sh &
+    fi
+}
+
+open_developer_suite() {
+    if [ -x /usr/bin/osify-developer ]; then
+        terminal -geometry 75x20 -T "OSify Developer Suite" -e /usr/bin/osify-developer &
+    elif [ -x /opt/osify/tools/osify-gui/osify-developer.sh ]; then
+        terminal -geometry 75x20 -T "OSify Developer Suite" -e /opt/osify/tools/osify-gui/osify-developer.sh &
+    fi
+}
+
+open_appearance_mgr() {
+    if [ -x /usr/bin/osify-appearance ]; then
+        terminal -geometry 75x20 -T "OSify Appearance Manager" -e /usr/bin/osify-appearance &
+    elif [ -x /opt/osify/tools/osify-gui/osify-appearance.sh ]; then
+        terminal -geometry 75x20 -T "OSify Appearance Manager" -e /opt/osify/tools/osify-gui/osify-appearance.sh &
+    fi
+}
+
+take_screenshot() {
+    mkdir -p "$HOME/Immagini/Screenshot"
+    sfile="$HOME/Immagini/Screenshot/screenshot_$(date +%Y%m%d_%H%M%S).png"
+    if command -v import >/dev/null 2>&1; then
+        import -window root "$sfile" 2>/dev/null || true
+    elif command -v scrot >/dev/null 2>&1; then
+        scrot "$sfile" 2>/dev/null || true
+    fi
+    if command -v dialog >/dev/null 2>&1; then
+        dialog --title "Screenshot Catturato" --msgbox "\nSchermata salvata in:\n$sfile\n" 8 50
+    fi
+}
+
+# Loop Menu Principale
 while true; do
     if command -v dialog >/dev/null 2>&1; then
-        CHOICE=$(dialog --stdout --backtitle "OSify Operating System — Ingegnerizzato da Andrea Taliento" \
-            --title " 🚀 OSify Hub — Pannello di Controllo & Launchpad " \
-            --menu "Hardware: $CPU_MODEL ($CPU_CORES Core) | RAM: $RAM_AVAIL liberi su $RAM_TOTAL\nDisplay: $DISP_RES | GPU: $GPU_NAME\n\nSeleziona l'azione desiderata:" 19 72 8 \
-            "1" "🌐  Navigatore Web Grafico (con Blocco Pubblicità e Script)" \
-            "2" "🎮  Esegui Qualsiasi Applicazione (Windows, Android, iOS, Mac, Linux)" \
-            "3" "⚡  Turbo Boost Netbook (CPU Performance + Raddoppio zRAM 1GB)" \
-            "4" "🖱️  Ripristina Touchpad (Tap-To-Click & Scorrimento Lati)" \
-            "5" "🔊  Sblocca e Calibra Audio ALSA (Alza volume al 90%)" \
-            "6" "💻  Apri Cyber-Terminal OSify con Telemetria Hardware" \
-            "7" "💾  Installa OSify su Disco Fisso (HDD / SSD)" \
-            "0" "❌  Chiudi Pannello ed esci al Desktop" 2>/dev/null || echo "0")
+        CHOICE=$(dialog --stdout --backtitle "OSify Operating System — Ingegnerizzato da Andrea Taliento (ANDRYXify)" \
+            --title " 🚀 OSify Hub — Il Tuo Sistema Operativo a 360° " \
+            --menu "Edizione: $OSIFY_TIER\nCPU: $CPU_MODEL ($CPU_CORES Core) | RAM: $RAM_AVAIL / $RAM_TOTAL\nDisplay: $DISP_RES | GPU: $GPU_NAME\n\nCosa desideri fare?" 22 75 11 \
+            "1" "🌐  Naviga su Internet (Browser Web Grafico Veloce)" \
+            "2" "📡  Connettiti al Wi-Fi (Scansione Reti & Password)" \
+            "3" "🎮  Gaming & Retrogaming Hub (Windows .exe, DOS, Emulazione)" \
+            "4" "💻  Programma & Sviluppa (Python 3, C/TCC, Git, Nano, Progetti)" \
+            "5" "📁  Lavoro & Produttività (File Manager, PDF, Archivi, Cattura)" \
+            "6" "🎨  Personalizzazione (Virtual Scaler 1280x768, Sfondi, Temi)" \
+            "7" "⚡  Turbo Boost Hardware (CPU Performance + zRAM 1GB + Touchpad)" \
+            "8" "🔊  Audio & Calibrazione Suono (Sblocca Master/PCM al 90%)" \
+            "9" "📊  Task Manager & Monitor Risorse (Processi in tempo reale)" \
+            "10" "💾  Installa OSify su Disco Fisso (con migrazione profilo Live)" \
+            "0" "❌  Torna al Desktop" 2>/dev/null || echo "0")
     else
         clear
         echo "========================================================="
-        echo "   🚀 OSify Hub — Centro di Controllo & Launchpad         "
+        echo "   🚀 OSify Hub — Il Tuo Sistema Operativo a 360°        "
         echo "========================================================="
-        echo " CPU: $CPU_MODEL ($CPU_CORES Core) | RAM: $RAM_AVAIL / $RAM_TOTAL"
-        echo " GPU: $GPU_NAME | Display: $DISP_RES"
+        echo " Edizione : $OSIFY_TIER"
+        echo " CPU      : $CPU_MODEL ($CPU_CORES Core)"
+        echo " RAM      : $RAM_AVAIL liberi su $RAM_TOTAL"
+        echo " Display  : $DISP_RES | GPU: $GPU_NAME"
         echo "---------------------------------------------------------"
-        echo " 1) 🌐 Navigatore Web Grafico"
-        echo " 2) 🎮 Esegui Qualsiasi App (Windows, Android, iOS, Mac, Linux)"
-        echo " 3) ⚡ Turbo Boost (CPU Performance + zRAM 1GB)"
-        echo " 4) 🖱️ Calibra Touchpad (Tap-To-Click & Scroll)"
-        echo " 5) 🔊 Sblocca Audio ALSA"
-        echo " 6) 💻 Cyber Terminal OSify"
-        echo " 7) 💾 Installa su Disco Fisso"
-        echo " 0) ❌ Esci al Desktop"
+        echo "  1) 🌐 Naviga su Internet (Browser Web Grafico)"
+        echo "  2) 📡 Connettiti al Wi-Fi (Scansione reti wireless)"
+        echo "  3) 🎮 Gaming & Retrogaming (Windows .exe, DOS, Emulazione)"
+        echo "  4) 💻 Programma & Sviluppa (Python 3, C, Git, Nano)"
+        echo "  5) 📁 Lavoro & File (File Manager, PDF, Archivi)"
+        echo "  6) 🎨 Personalizzazione (Scaler 1280x768, Sfondi, Temi)"
+        echo "  7) ⚡ Turbo Boost (CPU Performance + zRAM 1GB)"
+        echo "  8) 🔊 Sblocca Audio ALSA"
+        echo "  9) 📊 Task Manager & Monitor Processi"
+        echo " 10) 💾 Installa OSify su Disco Fisso (con migrazione Live)"
+        echo "  0) ❌ Esci al Desktop"
         echo "========================================================="
-        read -rp "Selezione [0-7]: " CHOICE
+        read -rp "Selezione [0-10]: " CHOICE
     fi
 
     case "$CHOICE" in
         1) open_browser ;;
-        2) launch_uem_picker ;;
-        3) boost_system ;;
-        4) fix_touchpad ;;
-        5) unmute_audio ;;
-        6) terminal -geometry 95x26 -T 'OSify Cyber Terminal' -e /usr/bin/osify-terminal & ;;
-        7) terminal -geometry 95x26 -T 'OSify Installer' -e /usr/bin/osify-install & ;;
+        2) open_wifi_manager ;;
+        3) open_gaming_hub ;;
+        4) open_developer_suite ;;
+        5) pcmanfm "$HOME" & ;;
+        6) open_appearance_mgr ;;
+        7) boost_system ;;
+        8) unmute_audio ;;
+        9) terminal -geometry 95x26 -T 'OSify Task Manager' -e /usr/bin/osify-taskmanager & ;;
+        10) terminal -geometry 95x28 -T 'OSify Bare-Metal Installer' -e /usr/bin/osify-install & ;;
         0|"") clear; exit 0 ;;
         *) clear; exit 0 ;;
     esac

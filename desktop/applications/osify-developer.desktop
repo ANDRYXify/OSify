@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=💻 Sviluppo & Codice
+Comment=Suite di Programmazione: Python 3, C, Git, Editor e Progetti
+Exec=terminal -geometry 75x20 -T 'OSify Developer' -e /usr/bin/osify-developer
+Icon=applications-development
+Terminal=false
+Categories=Development;

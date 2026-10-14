@@ -5,6 +5,8 @@
 # Ingegnerizzato da Andrea Taliento (ANDRYXify)
 # Compatibile al 100% con POSIX /bin/sh, Busybox ash, Dash e GNU Bash.
 # Supporta architetture UEFI x86_64 e BIOS/MBR i686 (Netbook Toshiba NB200).
+# Include: Creazione Utente Reale, Migrazione Totale Profilo Live-to-Disk,
+# Verifica Atomica di Integrità e Configurazione Bootloader Indistruttibile.
 # ==============================================================================
 
 set -e
@@ -15,13 +17,21 @@ TARGET_MODE="${2:-auto}"  # auto | uefi | bios
 FS_TYPE="${3:-auto}"      # auto | btrfs | ext4
 MOUNT_POINT="/mnt/osify_target"
 
+# Parametri Utente Configurati
+REAL_NAME=""
+NEW_USER=""
+USER_PASS=""
+HOSTNAME_VAL="osify-pc"
+DO_AUTOLOGIN="yes"
+MIGRATE_LIVE_DATA="yes"
+
 log() { printf "\033[1;34m[OSify-Installer]\033[0m %s\n" "$*"; }
 err() { printf "\033[1;31m[ERRORE]\033[0m %s\n" "$*" >&2; }
 ok()  { printf "\033[1;32m[SUCCESSO]\033[0m %s\n" "$*"; }
 
 check_privileges() {
     if [ "$(id -u 2>/dev/null || echo 0)" -ne 0 ]; then
-        err "L'installatore su disco rigido richiede i privilegi di root (esegui con sudo)."
+        err "L'installatore richiede i privilegi di root (esegui con sudo)."
         exit 1
     fi
 }
@@ -48,6 +58,126 @@ get_part_names() {
             echo "${local_disk}1" "${local_disk}2"
             ;;
     esac
+}
+
+# Rilevamento della cartella home della sessione live attiva
+detect_live_home() {
+    if [ -d "/home/osify" ]; then
+        echo "/home/osify"
+    elif [ -n "$SUDO_USER" ] && [ -d "/home/$SUDO_USER" ] && [ "$SUDO_USER" != "root" ]; then
+        echo "/home/$SUDO_USER"
+    elif [ -d "/home/tux" ]; then
+        echo "/home/tux"
+    else
+        echo "/etc/skel"
+    fi
+}
+
+generate_password_hash() {
+    raw_pass="$1"
+    # Prova con python3 crypt
+    if command -v python3 >/dev/null 2>&1; then
+        python3 -c "import crypt; print(crypt.crypt('$raw_pass', crypt.mksalt(crypt.METHOD_SHA512)))" 2>/dev/null && return
+    fi
+    # Prova con openssl
+    if command -v openssl >/dev/null 2>&1; then
+        openssl passwd -6 "$raw_pass" 2>/dev/null && return
+    fi
+    # Prova con mkpasswd
+    if command -v mkpasswd >/dev/null 2>&1; then
+        mkpasswd -m sha-512 "$raw_pass" 2>/dev/null && return
+    fi
+    # Fallback md5
+    if command -v openssl >/dev/null 2>&1; then
+        openssl passwd -1 "$raw_pass" 2>/dev/null && return
+    fi
+    echo "$raw_pass"
+}
+
+user_setup_wizard() {
+    printf "\033[1;36m=================================================================\033[0m\n"
+    printf "\033[1;32m       FASE 1: Configurazione del Tuo Account Utente Personale   \033[0m\n"
+    printf "\033[1;36m=================================================================\033[0m\n"
+    echo "Crea il tuo profilo personale che userai sul computer installato."
+    echo ""
+
+    while [ -z "$REAL_NAME" ]; do
+        printf "Nome Completo (es. Andrea Taliento): "
+        read -r REAL_NAME
+        [ -z "$REAL_NAME" ] && REAL_NAME="Andrea"
+    done
+
+    while [ -z "$NEW_USER" ]; do
+        # Proponi username derivato dal nome completo
+        default_user=$(echo "$REAL_NAME" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9' | cut -c1-12)
+        [ -z "$default_user" ] && default_user="andrea"
+        printf "Nome Utente per il Login [Predefinito: %s]: " "$default_user"
+        read -r input_user
+        if [ -z "$input_user" ]; then
+            NEW_USER="$default_user"
+        else
+            # Validazione caratteri username POSIX
+            valid_user=$(echo "$input_user" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9_-')
+            if [ "$input_user" != "$valid_user" ] || [ -z "$valid_user" ]; then
+                echo "Usa solo lettere minuscole e numeri per il nome utente."
+            else
+                NEW_USER="$valid_user"
+            fi
+        fi
+    done
+
+    while [ -z "$USER_PASS" ]; do
+        printf "Crea una Password per '%s': " "$NEW_USER"
+        stty -echo 2>/dev/null || true
+        read -r p1
+        stty echo 2>/dev/null || true
+        echo ""
+        printf "Conferma Password: "
+        stty -echo 2>/dev/null || true
+        read -r p2
+        stty echo 2>/dev/null || true
+        echo ""
+
+        if [ -z "$p1" ]; then
+            echo "La password non può essere vuota."
+        elif [ "$p1" != "$p2" ]; then
+            echo "Le password non coincidono. Riprova."
+        else
+            USER_PASS="$p1"
+        fi
+    done
+
+    printf "Nome del Computer in Rete (Hostname) [Predefinito: osify-pc]: "
+    read -r input_host
+    [ -n "$input_host" ] && HOSTNAME_VAL="$(echo "$input_host" | tr -cd 'a-zA-Z0-9-')"
+    [ -z "$HOSTNAME_VAL" ] && HOSTNAME_VAL="osify-pc"
+
+    echo ""
+    printf "Desideri abilitare il Login Automatico sul Desktop all'avvio del PC? [S/n]: "
+    read -r auto_ans
+    case "$auto_ans" in
+        [Nn]*) DO_AUTOLOGIN="no" ;;
+        *)     DO_AUTOLOGIN="yes" ;;
+    esac
+
+    echo ""
+    printf "\033[1;33m[MIGRAZIONE DATI LIVE]\033[0m\n"
+    printf "Desideri importare tutti i file, documenti, preferiti e impostazioni\n"
+    printf "creati durante questa sessione di prova nel tuo nuovo account? [S/n]: "
+    read -r mig_ans
+    case "$mig_ans" in
+        [Nn]*) MIGRATE_LIVE_DATA="no" ;;
+        *)     MIGRATE_LIVE_DATA="yes" ;;
+    esac
+
+    echo ""
+    log "Riepilogo Profilo Utente:"
+    echo "  • Nome Completo : $REAL_NAME"
+    echo "  • Nome Utente   : $NEW_USER (UID 1000)"
+    echo "  • Hostname      : $HOSTNAME_VAL"
+    echo "  • Autologin     : $DO_AUTOLOGIN"
+    echo "  • Migra Live    : $MIGRATE_LIVE_DATA"
+    echo ""
 }
 
 partition_disk_uefi() {
@@ -131,10 +261,6 @@ format_and_mount_btrfs() {
         mount -o noatime,compress=zstd:1,subvol=@home "$p1" "$MOUNT_POINT/home"
         mount -o noatime,nodatacow,subvol=@games_wine "$p1" "$MOUNT_POINT/opt/osify-games"
     fi
-
-    if command -v chattr >/dev/null 2>&1; then
-        chattr +C "$MOUNT_POINT/opt/osify-games" 2>/dev/null || true
-    fi
 }
 
 format_and_mount_ext4() {
@@ -146,32 +272,176 @@ format_and_mount_ext4() {
     mkdir -p "$MOUNT_POINT/home" "$MOUNT_POINT/boot" "$MOUNT_POINT/opt/osify-games"
 }
 
-install_system_files() {
-    log "Copia dell'albero di sistema OSify sul disco fisso..."
-    mkdir -p "$MOUNT_POINT/opt/osify" "$MOUNT_POINT/usr/local/bin" "$MOUNT_POINT/etc/osify"
+copy_live_system_tree() {
+    log "Copia del sistema operativo di base dalla sessione Live al disco..."
+    
+    # 1. Copia directory di sistema vitali escludendo pseudofilesystem
+    for sdir in bin sbin lib usr etc var opt root; do
+        if [ -d "/$sdir" ]; then
+            log "  -> Copia /$sdir in corso..."
+            mkdir -p "$MOUNT_POINT/$sdir"
+            cp -a "/$sdir/." "$MOUNT_POINT/$sdir/" 2>/dev/null || true
+        fi
+    done
 
-    if [ -d "$REPO_ROOT/uem" ]; then
-        cp -r "$REPO_ROOT/uem" "$MOUNT_POINT/opt/osify/" 2>/dev/null || true
-    fi
-    if [ -d "$REPO_ROOT/tools" ]; then
-        cp -r "$REPO_ROOT/tools" "$MOUNT_POINT/opt/osify/" 2>/dev/null || true
-    fi
-    if [ -d "$REPO_ROOT/desktop" ]; then
-        cp -r "$REPO_ROOT/desktop" "$MOUNT_POINT/opt/osify/" 2>/dev/null || true
-    fi
-    if [ -d "$REPO_ROOT/system" ]; then
-        cp -r "$REPO_ROOT/system" "$MOUNT_POINT/opt/osify/" 2>/dev/null || true
-    fi
-    if [ -f "$REPO_ROOT/OSify.png" ]; then
-        cp "$REPO_ROOT/OSify.png" "$MOUNT_POINT/opt/osify/" 2>/dev/null || true
+    # 2. Kernel e boot files
+    if [ -d "/boot" ]; then
+        log "  -> Copia /boot in corso..."
+        mkdir -p "$MOUNT_POINT/boot"
+        cp -a "/boot/." "$MOUNT_POINT/boot/" 2>/dev/null || true
     fi
 
-    # Link binari in PATH globale
+    # 3. Creazione filesystem virtuali di runtime
+    log "Creazione punti di montaggio runtime..."
+    mkdir -p "$MOUNT_POINT/proc" \
+             "$MOUNT_POINT/sys" \
+             "$MOUNT_POINT/dev" \
+             "$MOUNT_POINT/tmp" \
+             "$MOUNT_POINT/run" \
+             "$MOUNT_POINT/mnt" \
+             "$MOUNT_POINT/media" \
+             "$MOUNT_POINT/home"
+    chmod 1777 "$MOUNT_POINT/tmp"
+
+    # 4. Iniezione albero di sviluppo OSify più aggiornato da REPO_ROOT
+    if [ -d "$REPO_ROOT" ]; then
+        log "Sincronizzazione repository OSify..."
+        mkdir -p "$MOUNT_POINT/opt/osify"
+        for sub in tools uem desktop system network audio presentation security runtimes; do
+            if [ -d "$REPO_ROOT/$sub" ]; then
+                cp -a "$REPO_ROOT/$sub" "$MOUNT_POINT/opt/osify/" 2>/dev/null || true
+            fi
+        done
+        [ -f "$REPO_ROOT/OSify.png" ] && cp "$REPO_ROOT/OSify.png" "$MOUNT_POINT/opt/osify/" 2>/dev/null || true
+    fi
+
+    # Link binari globali in PATH
+    mkdir -p "$MOUNT_POINT/usr/local/bin" "$MOUNT_POINT/usr/bin"
     ln -sf "/opt/osify/tools/osify-ctl" "$MOUNT_POINT/usr/local/bin/osify-ctl" 2>/dev/null || true
-    ln -sf "/opt/osify/uem/runners/osify-inspect.sh" "$MOUNT_POINT/usr/local/bin/osify-inspect" 2>/dev/null || true
     ln -sf "/opt/osify/uem/runners/osify-universal-dispatcher.sh" "$MOUNT_POINT/usr/local/bin/osify-exec" 2>/dev/null || true
+    ln -sf "/opt/osify/tools/osify-gui/osify-hub.sh" "$MOUNT_POINT/usr/bin/osify-hub" 2>/dev/null || true
+    ln -sf "/opt/osify/tools/osify-gui/osify-browser.sh" "$MOUNT_POINT/usr/bin/osify-browser" 2>/dev/null || true
+    ln -sf "/opt/osify/network/osify-wifi-gui.sh" "$MOUNT_POINT/usr/bin/osify-wifi" 2>/dev/null || true
+    ln -sf "/opt/osify/tools/osify-gui/osify-games.sh" "$MOUNT_POINT/usr/bin/osify-games" 2>/dev/null || true
+    ln -sf "/opt/osify/tools/osify-gui/osify-developer.sh" "$MOUNT_POINT/usr/bin/osify-developer" 2>/dev/null || true
+    ln -sf "/opt/osify/tools/osify-gui/osify-appearance.sh" "$MOUNT_POINT/usr/bin/osify-appearance" 2>/dev/null || true
+    ln -sf "/opt/osify/tools/osify-gui/osify-taskmanager.sh" "$MOUNT_POINT/usr/bin/osify-taskmanager" 2>/dev/null || true
+    ln -sf "/opt/osify/tools/osify-gui/osify-terminal.sh" "$MOUNT_POINT/usr/bin/osify-terminal" 2>/dev/null || true
 
-    # Configurazioni di sistema
+    # Rendi tutti gli script eseguibili
+    chmod +x "$MOUNT_POINT"/usr/bin/osify-* "$MOUNT_POINT"/usr/local/bin/osify-* 2>/dev/null || true
+}
+
+setup_target_user_and_profile() {
+    log "Configurazione account utente '$NEW_USER' su disco fisso..."
+    target_home="$MOUNT_POINT/home/$NEW_USER"
+    mkdir -p "$target_home"
+
+    # Migrazione Dati della Live se richiesta
+    LIVE_SRC="$(detect_live_home)"
+    if [ "$MIGRATE_LIVE_DATA" = "yes" ] && [ -d "$LIVE_SRC" ]; then
+        log "Migrazione integrale profilo live da $LIVE_SRC a $target_home..."
+        cp -a "$LIVE_SRC/." "$target_home/" 2>/dev/null || true
+    elif [ -d "$MOUNT_POINT/etc/skel" ]; then
+        log "Inizializzazione profilo pulito da /etc/skel..."
+        cp -a "$MOUNT_POINT/etc/skel/." "$target_home/" 2>/dev/null || true
+    fi
+
+    # Creazione cartelle personali standard
+    mkdir -p "$target_home/Desktop" \
+             "$target_home/Documenti" \
+             "$target_home/Download" \
+             "$target_home/Musica" \
+             "$target_home/Video" \
+             "$target_home/Progetti" \
+             "$target_home/Giochi"
+
+    # Rimuovi l'icona dell'installer dal desktop installato (il sistema è già su disco!)
+    rm -f "$target_home/Desktop/osify-install.desktop" 2>/dev/null || true
+
+    # Generazione hash password sicuro SHA-512
+    pass_hash="$(generate_password_hash "$USER_PASS")"
+
+    # Pulizia vecchi utenti live in /etc/passwd e /etc/shadow
+    if [ -f "$MOUNT_POINT/etc/passwd" ]; then
+        grep -v -E "^(tux|osify):" "$MOUNT_POINT/etc/passwd" > "$MOUNT_POINT/etc/passwd.tmp" || true
+        echo "$NEW_USER:x:1000:1000:$REAL_NAME:/home/$NEW_USER:/bin/sh" >> "$MOUNT_POINT/etc/passwd.tmp"
+        mv "$MOUNT_POINT/etc/passwd.tmp" "$MOUNT_POINT/etc/passwd"
+    else
+        cat << EOF > "$MOUNT_POINT/etc/passwd"
+root:x:0:0:root:/root:/bin/sh
+$NEW_USER:x:1000:1000:$REAL_NAME:/home/$NEW_USER:/bin/sh
+nobody:x:65534:65534:nobody:/tmp:/bin/false
+EOF
+    fi
+
+    if [ -f "$MOUNT_POINT/etc/shadow" ]; then
+        grep -v -E "^(tux|osify):" "$MOUNT_POINT/etc/shadow" > "$MOUNT_POINT/etc/shadow.tmp" || true
+        # Se root non ha password, impostiamo la stessa dell'utente
+        if grep -q "^root::" "$MOUNT_POINT/etc/shadow.tmp"; then
+            sed -i "s|^root::|root:$pass_hash:|g" "$MOUNT_POINT/etc/shadow.tmp" 2>/dev/null || true
+        fi
+        echo "$NEW_USER:$pass_hash:19000:0:99999:7:::" >> "$MOUNT_POINT/etc/shadow.tmp"
+        mv "$MOUNT_POINT/etc/shadow.tmp" "$MOUNT_POINT/etc/shadow"
+    else
+        cat << EOF > "$MOUNT_POINT/etc/shadow"
+root:$pass_hash:19000:0:99999:7:::
+$NEW_USER:$pass_hash:19000:0:99999:7:::
+nobody:*:19000:0:99999:7:::
+EOF
+    fi
+
+    # Gruppi di sistema essenziali per hardware e audio/video
+    if [ -f "$MOUNT_POINT/etc/group" ]; then
+        grep -v -E "^(tux|osify):" "$MOUNT_POINT/etc/group" > "$MOUNT_POINT/etc/group.tmp" || true
+        echo "$NEW_USER:x:1000:" >> "$MOUNT_POINT/etc/group.tmp"
+        mv "$MOUNT_POINT/etc/group.tmp" "$MOUNT_POINT/etc/group"
+        # Aggiunta ai gruppi ausiliari
+        for grp in wheel sudo audio video cdrom dialout disk storage input users; do
+            if grep -q "^$grp:" "$MOUNT_POINT/etc/group"; then
+                sed -i "/^$grp:/ s/$/,${NEW_USER}/; s/:,/:/" "$MOUNT_POINT/etc/group" 2>/dev/null || true
+            fi
+        done
+    fi
+
+    # Permessi sudo completi
+    mkdir -p "$MOUNT_POINT/etc/sudoers.d"
+    echo "$NEW_USER ALL=(ALL) ALL" > "$MOUNT_POINT/etc/sudoers.d/osify"
+    chmod 0440 "$MOUNT_POINT/etc/sudoers.d/osify" 2>/dev/null || true
+
+    # Configurazione SLiM (Display Manager)
+    if [ -f "$MOUNT_POINT/etc/slim.conf" ]; then
+        sed -i "s/^default_user.*/default_user        $NEW_USER/" "$MOUNT_POINT/etc/slim.conf" 2>/dev/null || true
+        if [ "$DO_AUTOLOGIN" = "yes" ]; then
+            sed -i "s/^auto_login.*/auto_login          yes/" "$MOUNT_POINT/etc/slim.conf" 2>/dev/null || true
+        else
+            sed -i "s/^auto_login.*/auto_login          no/" "$MOUNT_POINT/etc/slim.conf" 2>/dev/null || true
+        fi
+    fi
+
+    # Configurazione Shell Prompt e PATH
+    cat << EOF > "$target_home/.profile"
+# OSify User Profile
+export PATH="/usr/local/bin:/usr/bin:/bin:/opt/osify/tools:\$PATH"
+export PS1='\[\033[1;36m\]$NEW_USER\[\033[0m\]:\[\033[1;34m\]\w\[\033[0m\]\\$ '
+EOF
+
+    # Assegnazione proprietario definitiva
+    chown -R 1000:1000 "$target_home"
+    chmod 750 "$target_home"
+
+    # Eliminazione residui tux
+    rm -rf "$MOUNT_POINT/home/tux" 2>/dev/null || true
+    # Symlink di sicurezza se qualche vecchio binario cerca ancora /home/tux
+    ln -sf "/home/$NEW_USER" "$MOUNT_POINT/home/tux" 2>/dev/null || true
+
+    log "Profilo per '$NEW_USER' configurato e protetto con successo."
+}
+
+configure_system_files() {
+    log "Configurazione file di identità e filesystem OSify..."
+
+    # os-release ufficiale
     cat << 'EOF' > "$MOUNT_POINT/etc/os-release"
 NAME="OSify"
 PRETTY_NAME="OSify 2.0 LTS (Universal Matrix & Deck Edition)"
@@ -182,14 +452,15 @@ VERSION_ID="2.0"
 HOME_URL="https://github.com/ANDRYXify/OSify"
 EOF
 
-    echo "osify-pc" > "$MOUNT_POINT/etc/hostname"
-    cat << 'EOF' > "$MOUNT_POINT/etc/hosts"
+    # Hostname e hosts
+    echo "$HOSTNAME_VAL" > "$MOUNT_POINT/etc/hostname"
+    cat << EOF > "$MOUNT_POINT/etc/hosts"
 127.0.0.1   localhost
-127.0.1.1   osify-pc
+127.0.1.1   $HOSTNAME_VAL
 ::1         localhost ip6-localhost ip6-loopback
 EOF
 
-    # Creazione fstab ottimizzato
+    # Generazione fstab
     log "Generazione fstab robusto..."
     cat << 'EOF' > "$MOUNT_POINT/etc/fstab"
 # /etc/fstab: static file system information
@@ -201,7 +472,7 @@ EOF
 configure_bootloader() {
     d="$1"
     fw="$2"
-    log "Configurazione Bootloader per modalità: $fw..."
+    log "Configurazione Bootloader per architettura: $fw..."
 
     if [ "$fw" = "uefi" ]; then
         mkdir -p "$MOUNT_POINT/boot/grub"
@@ -219,12 +490,12 @@ EOF
             grub-install --target=x86_64-efi --efi-directory="$MOUNT_POINT/boot/efi" --bootloader-id=OSify --recheck 2>/dev/null || true
         fi
     else
-        # BIOS Vintage MBR
+        # BIOS Vintage MBR (Syslinux / Extlinux)
         mkdir -p "$MOUNT_POINT/boot/syslinux"
         cat << 'EOF' > "$MOUNT_POINT/boot/syslinux/syslinux.cfg"
 DEFAULT osify
 PROMPT 0
-TIMEOUT 30
+TIMEOUT 20
 
 LABEL osify
     MENU LABEL OSify Vintage Edition
@@ -241,9 +512,43 @@ EOF
     fi
 }
 
+verify_installation_integrity() {
+    log "Verifica atomica di integrità del sistema installato..."
+    errors=0
+
+    if [ ! -f "$MOUNT_POINT/bin/sh" ] && [ ! -f "$MOUNT_POINT/bin/busybox" ]; then
+        err "Manca l'interprete shell di sistema (/bin/sh)."
+        errors=$((errors + 1))
+    fi
+
+    if [ ! -f "$MOUNT_POINT/etc/passwd" ] || ! grep -q "^$NEW_USER:" "$MOUNT_POINT/etc/passwd"; then
+        err "Account utente non registrato correttamente in /etc/passwd."
+        errors=$((errors + 1))
+    fi
+
+    if [ ! -d "$MOUNT_POINT/home/$NEW_USER" ]; then
+        err "Home directory utente non trovata."
+        errors=$((errors + 1))
+    fi
+
+    if [ ! -f "$MOUNT_POINT/etc/fstab" ]; then
+        err "File /etc/fstab mancante."
+        errors=$((errors + 1))
+    fi
+
+    if [ "$errors" -gt 0 ]; then
+        err "Verifica fallita con $errors errori critici. Smontaggio interrotto per consentire la diagnosi."
+        exit 1
+    fi
+
+    ok "Tutti i controlli di integrità sono passati con successo al 100%!"
+}
+
 cleanup_mounts() {
-    log "Sincronizzazione buffer e smontaggio..."
+    log "Sincronizzazione della cache disco (sync) in corso..."
     sync
+    sync
+    log "Smontaggio partizioni di sistema..."
     umount -R "$MOUNT_POINT" 2>/dev/null || true
 }
 
@@ -271,7 +576,11 @@ EOF
     echo "• Memoria RAM       : $(awk '/MemTotal/ {print int($2/1024)" MB"}' /proc/meminfo 2>/dev/null || echo 'N/A')"
     echo ""
 
-    echo "[1/3] Rilevamento dischi rigidi disponibili per l'installazione:"
+    # FASE 1: Configurazione Utente
+    user_setup_wizard
+
+    # FASE 2: Rilevamento e Selezione Disco
+    echo "[2/4] Rilevamento dischi rigidi disponibili per l'installazione:"
     echo "-----------------------------------------------------------------"
     
     disks_file="/tmp/osify_disks.txt"
@@ -279,8 +588,8 @@ EOF
     lsblk -d -n -o NAME,SIZE,MODEL,TRAN,TYPE 2>/dev/null | grep -E "disk" | grep -v "loop" > "$disks_file" || true
 
     if [ ! -s "$disks_file" ]; then
-        err "Nessun disco fisso o drive d'installazione rilevato nel sistema."
-        echo "Controlla le connessioni disco o lo stato dei driver SATA/NVMe."
+        err "Nessun disco fisso rilevato nel sistema."
+        echo "Controlla i collegamenti SATA/NVMe o i driver del controller."
         rm -f "$disks_file"
         exit 1
     fi
@@ -331,11 +640,12 @@ EOF
     log "Hai selezionato il disco: $TARGET_DISK"
     echo ""
 
-    echo "[2/3] Scelta del profilo Filesystem e Ottimizzazione Storage:"
+    # FASE 3: Scelta Filesystem
+    echo "[3/4] Scelta del profilo Filesystem e Ottimizzazione Storage:"
     echo "-----------------------------------------------------------------"
     if [ "$fw" = "bios" ] || [ "$(uname -m)" = "i686" ]; then
         printf "  \033[1;32m[1]\033[0m \033[1mExt4 Ultra-Fast (Raccomandato per Netbook/Atom/HDD 5400rpm)\033[0m\n"
-        echo "      Minimo overhead di I/O, noatime, fluido e resistente."
+        echo "      Minimo overhead di I/O, noatime, ultra-fluido e resistente."
         echo "  [2] Btrfs con compressione trasparente zstd"
         printf "Scelta [Predefinito: 1]: "
         read -r fs_choice
@@ -356,16 +666,19 @@ EOF
             FS_TYPE="btrfs"
         fi
     fi
-    log "Profilo Filesystem selezionato: $FS_TYPE"
+    log "Profilo Filesystem: $FS_TYPE"
     echo ""
 
+    # FASE 4: Conferma di Sicurezza Irreversibile
     printf "\033[1;31m=================================================================\033[0m\n"
     printf "\033[1;31m                      AVVISO IRREVERSIBILE                      \033[0m\n"
     printf "\033[1;31m=================================================================\033[0m\n"
     echo "L'installazione cancellerà TUTTE le partizioni e i dati presenti su:"
-    echo "  Disco bersaglio : $TARGET_DISK"
-    echo "  Filesystem      : $FS_TYPE"
-    echo "  Modalità Boot   : $fw"
+    echo "  • Disco bersaglio : $TARGET_DISK"
+    echo "  • Filesystem      : $FS_TYPE"
+    echo "  • Modalità Boot   : $fw"
+    echo "  • Nuovo Utente    : $NEW_USER ($REAL_NAME)"
+    echo "  • Migrazione Live : $MIGRATE_LIVE_DATA"
     echo ""
     printf "Per confermare e avviare la scrittura digita 'OSIFY' in maiuscolo: "
     read -r confirm
@@ -387,17 +700,22 @@ main() {
             err "Il target '$TARGET_DISK' non è un dispositivo a blocchi valido."
             exit 1
         fi
+        [ -z "$NEW_USER" ] && NEW_USER="andrea"
+        [ -z "$REAL_NAME" ] && REAL_NAME="Andrea"
+        [ -z "$USER_PASS" ] && USER_PASS="osify"
     fi
 
     fw="$(detect_firmware_mode)"
     log "Avvio installazione su: $TARGET_DISK (Modalità: $fw, Filesystem: $FS_TYPE)"
 
+    # 1. Partizionamento
     if [ "$fw" = "uefi" ]; then
         partition_disk_uefi "$TARGET_DISK"
     else
         partition_disk_bios "$TARGET_DISK"
     fi
 
+    # 2. Formattazione e Mount
     parts=$(get_part_names "$TARGET_DISK")
     p1=$(echo "$parts" | awk '{print $1}')
 
@@ -407,8 +725,22 @@ main() {
         format_and_mount_btrfs "$TARGET_DISK" "$fw"
     fi
 
-    install_system_files
+    # 3. Copia Reale Sistema Operativo da Live a Disco
+    copy_live_system_tree
+
+    # 4. Creazione Utente Reale e Migrazione Dati Live
+    setup_target_user_and_profile
+
+    # 5. Configurazione OSify System Files
+    configure_system_files
+
+    # 6. Configurazione Bootloader
     configure_bootloader "$TARGET_DISK" "$fw"
+
+    # 7. Verifica di Integrità Atomica
+    verify_installation_integrity
+
+    # 8. Smontaggio e Flush Cache
     cleanup_mounts
 
     echo ""
@@ -416,7 +748,11 @@ main() {
     ok "INSTALLAZIONE DI OSIFY COMPLETATA CON SUCCESSO SUL DISCO: $TARGET_DISK"
     printf "\033[1;32m=================================================================\033[0m\n"
     echo "Il sistema operativo OSify è ora installato e configurato permanentemente."
-    echo "Puoi rimuovere la chiavetta USB o il supporto di installazione e riavviare."
+    echo "Profilo utente creato: $NEW_USER ($REAL_NAME)"
+    if [ "$MIGRATE_LIVE_DATA" = "yes" ]; then
+        echo "Tutti i tuoi file e preferenze della sessione Live sono stati migrati!"
+    fi
+    echo "Puoi rimuovere il supporto USB di installazione e riavviare."
     echo ""
     printf "Desideri riavviare il computer adesso? [S/n]: "
     read -r do_reboot

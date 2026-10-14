@@ -15,7 +15,7 @@ KERNEL_INFO=$(uname -srm)
 RAM_INFO=$(awk '/MemTotal/ {print int($2/1024)" MB"}' /proc/meminfo 2>/dev/null || echo "1024 MB")
 UPTIME_INFO=$(uptime 2>/dev/null | sed 's/.*up \([^,]*\), .*/\1/' || echo "Attivo")
 
-OSIFY_VER=$(cat /etc/osify-version 2>/dev/null || echo "1.3.0")
+OSIFY_VER=$(cat /etc/osify-version 2>/dev/null || echo "1.4.0")
 
 # Finestra Notebook a Schede
 RESP=$(yad --form \

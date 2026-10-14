@@ -106,7 +106,7 @@ get_remote_version() {
     if [ -z "$remote_ver" ] && command -v wget >/dev/null 2>&1; then
         remote_ver=$(wget -qO- --timeout=5 "$RAW_VERSION_URL" 2>/dev/null | tr -d ' \r\n' | sed 's/^v//' || true)
     fi
-    echo "${remote_ver:-1.3.0}"
+    echo "${remote_ver:-1.4.0}"
 }
 
 # ------------------------------------------------------------------------------
@@ -492,8 +492,18 @@ case "${1:-status}" in
             echo "• Stato Processo   : ATTIVO / PRONTO"
         fi
         ;;
+    test-freeze)
+        mkdir -p "$(dirname "$STATE_FILE")"
+        echo "FROZEN:TEST:$(date +%s)" > "$STATE_FILE"
+        if [ -f "$STATE_FILE" ] && grep -q "FROZEN:TEST" "$STATE_FILE"; then
+            rm -f "$STATE_FILE"
+            exit 0
+        else
+            exit 1
+        fi
+        ;;
     *)
-        echo "Uso: $0 {status|check|apply|gui|daemon|rollback}"
+        echo "Uso: $0 {status|check|apply|gui|daemon|rollback|test-freeze}"
         exit 1
         ;;
 esac

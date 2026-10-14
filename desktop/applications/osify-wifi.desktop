@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=📡 Connessione Wi-Fi
+Comment=Scansione reti wireless, inserimento password e connessione immediata
+Exec=terminal -geometry 75x20 -T 'OSify Wi-Fi' -e /usr/bin/osify-wifi
+Icon=network-wireless
+Terminal=false
+Categories=Network;Settings;

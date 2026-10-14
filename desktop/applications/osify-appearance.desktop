@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=🎨 Personalizzazione & Scaler
+Comment=Virtual Scaler Netbook 1280x768, Sfondi Cyber Dark e Risoluzioni
+Exec=terminal -geometry 75x20 -T 'OSify Appearance' -e /usr/bin/osify-appearance
+Icon=preferences-desktop-theme
+Terminal=false
+Categories=Settings;
