@@ -174,32 +174,37 @@ fi
 [ -z "$WINDOW_MANAGER" ] && WINDOW_MANAGER="openbox"
 [ -n "$1" ] && WINDOW_MANAGER="$1"
 
-# 2. Aggiorna menu applicazioni di sistema
+# 2. Pulizia root window e colore solido Cyber-Dark
+if command -v xsetroot >/dev/null 2>&1; then
+    xsetroot -solid "#0b0d14" 2>/dev/null &
+fi
+
+# 3. Avvio Gestore Scrivania PCManFM (Desktop Manager) per sfondo e icone
+if command -v pcmanfm >/dev/null 2>&1; then
+    (sleep 0.5 && pgrep -f "pcmanfm --desktop" >/dev/null || pcmanfm --desktop) 2>/dev/null &
+fi
+
+# 4. Aggiorna menu applicazioni di sistema
 if command -v tazbox >/dev/null 2>&1; then
     tazbox mkmenu 2>/dev/null &
 fi
 
-# 3. Imposta wallpaper OSify con pcmanfm
-if command -v pcmanfm >/dev/null 2>&1; then
-    (pcmanfm --set-wallpaper=/usr/share/images/osify-wallpaper.jpg --wallpaper-mode=fit) 2>/dev/null &
-fi
-
-# 4. Driver Touchpad Synaptics/Alps (Tap e Scorrimento Bordo)
+# 5. Driver Touchpad Synaptics/Alps (Tap e Scorrimento Bordo)
 if command -v synclient >/dev/null 2>&1; then
     (synclient TapButton1=1 TapButton2=3 TapButton3=2 VertEdgeScroll=1 HorizEdgeScroll=1) 2>/dev/null &
 fi
 
-# 5. OSify First-Boot Wizard & Quick Diagnostic
-if [ -x /usr/bin/osify-welcome ]; then
-    (sleep 1 && /usr/bin/osify-welcome) 2>/dev/null &
-fi
-
-# 6. Avvio LXPanel se non gia attivo
+# 6. Avvio LXPanel Cyber-Bar se non gia attivo
 if command -v lxpanel >/dev/null 2>&1; then
     (sleep 1 && pgrep -x lxpanel >/dev/null || lxpanel --profile slitaz) 2>/dev/null &
 fi
 
-# 7. Wrapper D-Bus / ConsoleKit per permessi utente
+# 7. OSify First-Boot Wizard & Quick Diagnostic
+if [ -x /usr/bin/osify-welcome ]; then
+    (sleep 1.5 && /usr/bin/osify-welcome) 2>/dev/null &
+fi
+
+# 8. Wrapper D-Bus / ConsoleKit per permessi utente
 if [ -f '/usr/bin/ck-launch-session' ]; then
     EXEC="exec ck-launch-session dbus-launch --sh-syntax --exit-with-session"
 elif command -v dbus-launch >/dev/null 2>&1; then
@@ -208,13 +213,13 @@ else
     EXEC="exec"
 fi
 
-# 8. Keymap layout italiano se configurato
+# 9. Keymap layout italiano se configurato
 if [ -f /etc/keymap.conf ]; then
     kmaplang=$(cat /etc/keymap.conf | awk -F'-' '{print $1}')
     [ -n "$kmaplang" ] && setxkbmap "$kmaplang" 2>/dev/null
 fi
 
-# 9. Esecuzione Window Manager
+# 10. Esecuzione Window Manager
 case "$WINDOW_MANAGER" in
     openbox|openbox-session)
         $EXEC openbox-session
@@ -232,6 +237,62 @@ case "$WINDOW_MANAGER" in
         fi
         ;;
 esac
+"""
+
+PCMANFM_CONF = """[config]
+bm_open_method=0
+su_cmd=subox %s
+
+[volume]
+mount_on_startup=0
+mount_removable=1
+autorun=1
+
+[desktop]
+wallpaper_mode=stretch
+wallpaper=/usr/share/images/osify-wallpaper.jpg
+desktop_bg=#0b0d14
+desktop_fg=#ffffff
+desktop_shadow=#000000
+desktop_font=Sans 10
+show_wm_menu=1
+show_documents=1
+show_trash=0
+show_mounts=1
+
+[ui]
+close_on_unmount=0
+focus_previous=1
+always_show_tabs=0
+max_tab_chars=32
+win_width=640
+win_height=480
+splitter_pos=150
+side_pane_mode=1
+view_mode=0
+show_hidden=0
+sort_type=0
+sort_by=2
+"""
+
+OPENBOX_AUTOSTART = """#!/bin/sh
+# OSify Openbox Session Autostart
+# Ingegnerizzato da Andrea Taliento (ANDRYXify)
+
+# 1. Pulizia schermo con colore solido Cyber-Dark
+xsetroot -solid "#0b0d14" 2>/dev/null &
+
+# 2. Gestore Scrivania PCManFM (Sfondo nativo e Icone Desktop)
+(sleep 0.5 && pgrep -f "pcmanfm --desktop" >/dev/null || pcmanfm --desktop) 2>/dev/null &
+
+# 3. OSify Cyber-Bar (LXPanel)
+(sleep 1 && pgrep -x lxpanel >/dev/null || lxpanel --profile slitaz) 2>/dev/null &
+
+# 4. Driver Touchpad Synaptics/Alps (Tap e Scorrimento Bordo)
+synclient TapButton1=1 TapButton2=3 TapButton3=2 VertEdgeScroll=1 HorizEdgeScroll=1 2>/dev/null &
+
+# 5. OSify First-Boot Welcome Wizard
+(sleep 1.5 && /usr/bin/osify-welcome) 2>/dev/null &
 """
 
 def remaster_rootfs3(work_dir, iso_root, wallpaper_jpg):
@@ -550,6 +611,31 @@ Plugin {
                 with open(full_ob, "w") as f:
                     f.write(rc_content)
 
+    # 5. Configurazione nativa PCManFM Desktop Manager (Sfondo ed icone)
+    for pfm_p in [
+        "etc/xdg/pcmanfm/default/pcmanfm.conf",
+        "etc/skel/.config/pcmanfm/default/pcmanfm.conf",
+        "home/tux/.config/pcmanfm/default/pcmanfm.conf",
+        "root/.config/pcmanfm/default/pcmanfm.conf"
+    ]:
+        full_pfm = os.path.join(r3_work, pfm_p)
+        os.makedirs(os.path.dirname(full_pfm), exist_ok=True)
+        with open(full_pfm, "w") as f:
+            f.write(PCMANFM_CONF)
+
+    # 6. Openbox Autostart Suite
+    for as_p in [
+        "etc/xdg/openbox/autostart",
+        "etc/skel/.config/openbox/autostart",
+        "home/tux/.config/openbox/autostart",
+        "root/.config/openbox/autostart"
+    ]:
+        full_as = os.path.join(r3_work, as_p)
+        os.makedirs(os.path.dirname(full_as), exist_ok=True)
+        with open(full_as, "w") as f:
+            f.write(OPENBOX_AUTOSTART)
+        os.chmod(full_as, 0o755)
+
     os.remove(r3_gz)
     run(f"(cd '{r3_work}' && find . -print0 | cpio --null -ov -H newc) | python3 -c \"import lzma, sys; sys.stdout.buffer.write(lzma.compress(sys.stdin.buffer.read(), format=lzma.FORMAT_ALONE))\" > '{r3_gz}'")
     print(f"[✓] rootfs3 ricompatto con successo ({os.path.getsize(r3_gz)/(1024*1024):.1f} MB)")
@@ -796,6 +882,30 @@ EndSection
     tux_home_r4 = os.path.join(r4_work, "home/tux")
     os.makedirs(tux_home_r4, exist_ok=True)
     os.chmod(tux_home_r4, 0o777)
+
+    # Configurazione nativa PCManFM Desktop Manager e Openbox Autostart in rootfs4
+    for pfm_p in [
+        "etc/xdg/pcmanfm/default/pcmanfm.conf",
+        "etc/skel/.config/pcmanfm/default/pcmanfm.conf",
+        "home/tux/.config/pcmanfm/default/pcmanfm.conf",
+        "root/.config/pcmanfm/default/pcmanfm.conf"
+    ]:
+        full_pfm = os.path.join(r4_work, pfm_p)
+        os.makedirs(os.path.dirname(full_pfm), exist_ok=True)
+        with open(full_pfm, "w") as f:
+            f.write(PCMANFM_CONF)
+
+    for as_p in [
+        "etc/xdg/openbox/autostart",
+        "etc/skel/.config/openbox/autostart",
+        "home/tux/.config/openbox/autostart",
+        "root/.config/openbox/autostart"
+    ]:
+        full_as = os.path.join(r4_work, as_p)
+        os.makedirs(os.path.dirname(full_as), exist_ok=True)
+        with open(full_as, "w") as f:
+            f.write(OPENBOX_AUTOSTART)
+        os.chmod(full_as, 0o755)
 
     with open(os.path.join(r4_work, "etc/issue"), "w") as f:
         f.write("OSify Operating System (32-bit Vintage Edition — by Andrea Taliento)\\n\\l\n")
