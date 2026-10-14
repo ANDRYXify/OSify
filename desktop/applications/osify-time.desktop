@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Data, Ora e Fuso Orario
+Comment=Configura data, orologio, fuso orario e sincronizzazione automatica Internet
+Exec=/usr/bin/osify-time-sync gui
+Icon=/usr/share/pixmaps/osify-time.png
+Terminal=false
+Categories=Settings;HardwareSettings;

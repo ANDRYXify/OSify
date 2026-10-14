@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Cerca File
+Comment=Trova rapidamente file, documenti e immagini nel sistema
+Exec=/usr/bin/osify-search
+Icon=/usr/share/pixmaps/osify-search.png
+Terminal=false
+Categories=Utility;FileManager;

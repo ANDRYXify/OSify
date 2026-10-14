@@ -404,6 +404,44 @@ def sym_firewall(d, sz, col, sc):
     d.line([(cx - w + sc * 6, cy - sc * 4), (cx + w - sc * 6, cy - sc * 4)], fill="#ef4444", width=sc * 2)
     d.line([(cx, cy - h + sc * 4), (cx, cy + h - sc * 6)], fill="#ef4444", width=sc * 2)
 
+def sym_time(d, sz, col, sc):
+    # Orologio analogico circolare
+    cx, cy = sz // 2, sz // 2
+    r = int(sz * 0.26)
+    d.ellipse([cx - r, cy - r, cx + r, cy + r], outline=col, width=sc * 3)
+    # Lancette (10:10)
+    d.line([(cx, cy), (cx - sc * 8, cy - sc * 12)], fill="#ffffff", width=sc * 2)
+    d.line([(cx, cy), (cx + sc * 14, cy - sc * 6)], fill="#38bdf8", width=sc * 2)
+    d.ellipse([cx - sc * 3, cy - sc * 3, cx + sc * 3, cy + sc * 3], fill=col)
+
+def sym_touchpad(d, sz, col, sc):
+    # Touchpad rettangolare con tasti sinistro/destro
+    cx, cy = sz // 2, sz // 2
+    w = int(sz * 0.28)
+    h = int(sz * 0.22)
+    d.rounded_rectangle([cx - w, cy - h, cx + w, cy + h], radius=sc * 3, outline=col, width=sc * 2)
+    # Linea divisoria tasti inferiori
+    d.line([(cx - w + sc * 4, cy + h - sc * 10), (cx + w - sc * 4, cy + h - sc * 10)], fill=col, width=sc * 2)
+    d.line([(cx, cy + h - sc * 10), (cx, cy + h - sc * 2)], fill=col, width=sc * 2)
+
+def sym_search(d, sz, col, sc):
+    # Lente d'ingrandimento
+    cx, cy = sz // 2 - sc * 4, sz // 2 - sc * 4
+    r = int(sz * 0.18)
+    d.ellipse([cx - r, cy - r, cx + r, cy + r], outline=col, width=sc * 3)
+    # Manico inclinato a 45 gradi
+    d.line([(cx + int(r * 0.7), cy + int(r * 0.7)), (cx + r + sc * 16, cy + r + sc * 16)], fill="#38bdf8", width=sc * 4)
+
+def sym_usb(d, sz, col, sc):
+    # Chiavetta USB con connettore metallico
+    cx, cy = sz // 2, sz // 2
+    w = int(sz * 0.16)
+    h = int(sz * 0.24)
+    # Corpo
+    d.rounded_rectangle([cx - w, cy - h + sc * 10, cx + w, cy + h], radius=sc * 3, fill=col)
+    # Connettore
+    d.rectangle([cx - w + sc * 4, cy - h, cx + w - sc * 4, cy - h + sc * 10], outline="#ffffff", width=sc * 2)
+
 ICONS_REGISTRY = {
     "osify-hub": (sym_hub, COLOR_HUB),
     "osify-browser": (sym_browser, COLOR_BROWSER),
@@ -435,6 +473,10 @@ ICONS_REGISTRY = {
     "osify-thermal": (sym_thermal, "#f97316"),
     "osify-benchmark": (sym_benchmark, "#ec4899"),
     "osify-firewall": (sym_firewall, "#ef4444"),
+    "osify-time": (sym_time, "#38bdf8"),
+    "osify-touchpad": (sym_touchpad, "#06b6d4"),
+    "osify-search": (sym_search, "#f59e0b"),
+    "osify-usb": (sym_usb, "#10b981"),
 }
 
 def main():

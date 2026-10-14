@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Touchpad e Mouse
+Comment=Calibra il tocco, la velocita del puntatore e la protezione del palmo
+Exec=/usr/bin/osify-touchpad gui
+Icon=/usr/share/pixmaps/osify-touchpad.png
+Terminal=false
+Categories=Settings;HardwareSettings;

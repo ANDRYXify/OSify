@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Scrittore USB Avviabile
+Comment=Crea chiavette USB avviabili da immagini ISO o IMG
+Exec=/usr/bin/osify-usb-writer gui
+Icon=/usr/share/pixmaps/osify-usb.png
+Terminal=false
+Categories=System;Utility;

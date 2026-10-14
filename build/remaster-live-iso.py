@@ -237,6 +237,8 @@ show_statusbar=1
 
 OPENBOX_AUTOSTART = """#!/bin/sh
 # OSify Openbox Session Autostart
+[ -x /usr/bin/osify-time-sync ] && (/usr/bin/osify-time-sync check >/dev/null 2>&1 &)
+[ -x /usr/bin/osify-touchpad ] && /usr/bin/osify-touchpad auto &
 [ -x /usr/bin/osify-input-setup ] && /usr/bin/osify-input-setup &
 [ -x /usr/bin/osify-superkey ] && (/usr/bin/osify-superkey >/dev/null 2>&1) &
 [ -x /usr/bin/osify-storage-governor ] && /usr/bin/osify-storage-governor --tune &
@@ -342,6 +344,12 @@ OSIFY_OPENBOX_MENU = """<?xml version="1.0" encoding="UTF-8"?>
     <item label="Mappatura Tastiera" icon="/usr/share/pixmaps/osify-keyboard.png">
       <action name="Execute"><command>/usr/bin/osify-keyboard gui</command></action>
     </item>
+    <item label="Touchpad e Mouse" icon="/usr/share/pixmaps/osify-touchpad.png">
+      <action name="Execute"><command>/usr/bin/osify-touchpad gui</command></action>
+    </item>
+    <item label="Data, Ora e Fuso Orario" icon="/usr/share/pixmaps/osify-time.png">
+      <action name="Execute"><command>/usr/bin/osify-time-sync gui</command></action>
+    </item>
     <item label="Salute e Diagnostica Dischi" icon="/usr/share/pixmaps/osify-files.png">
       <action name="Execute"><command>/usr/bin/osify-disk-health</command></action>
     </item>
@@ -350,6 +358,9 @@ OSIFY_OPENBOX_MENU = """<?xml version="1.0" encoding="UTF-8"?>
     </item>
     <separator/>
     <separator label="Sistema e Sicurezza"/>
+    <item label="Scrittore USB Avviabile" icon="/usr/share/pixmaps/osify-usb.png">
+      <action name="Execute"><command>/usr/bin/osify-usb-writer gui</command></action>
+    </item>
     <item label="Firewall e Sicurezza Rete" icon="/usr/share/pixmaps/osify-firewall.png">
       <action name="Execute"><command>/usr/bin/osify-firewall gui</command></action>
     </item>
@@ -1203,6 +1214,17 @@ LABEL memtest
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-benchmark.sh"), os.path.join(r4_work, "usr/local/bin/osify-benchmark"))
     shutil.copy2(os.path.join(REPO_ROOT, "network/osify-firewall.sh"), os.path.join(bin_dir, "osify-firewall"))
     shutil.copy2(os.path.join(REPO_ROOT, "network/osify-firewall.sh"), os.path.join(r4_work, "usr/local/bin/osify-firewall"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/time/osify-time-sync.sh"), os.path.join(bin_dir, "osify-time-sync"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/time/osify-time-sync.sh"), os.path.join(bin_dir, "osify-time"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/time/osify-time-sync.sh"), os.path.join(r4_work, "usr/local/bin/osify-time-sync"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/input/osify-touchpad.sh"), os.path.join(bin_dir, "osify-touchpad"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/input/osify-touchpad.sh"), os.path.join(r4_work, "usr/local/bin/osify-touchpad"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-search.sh"), os.path.join(bin_dir, "osify-search"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-search.sh"), os.path.join(r4_work, "usr/local/bin/osify-search"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-usb-writer.sh"), os.path.join(bin_dir, "osify-usb-writer"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-usb-writer.sh"), os.path.join(bin_dir, "osify-usb"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-usb-writer.sh"), os.path.join(r4_work, "usr/local/bin/osify-usb-writer"))
+
 
 
     for f in os.listdir(bin_dir):
@@ -1914,6 +1936,46 @@ WINDOW_MANAGER="openbox"
             "Icon=/usr/share/pixmaps/osify-firewall.png\n"
             "Terminal=false\n"
             "Categories=System;Security;Settings;\n"
+        ),
+        "osify-time.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Data, Ora e Fuso Orario\n"
+            "Comment=Configura data, orologio, fuso orario e sincronizzazione automatica Internet\n"
+            "Exec=/usr/bin/osify-time-sync gui\n"
+            "Icon=/usr/share/pixmaps/osify-time.png\n"
+            "Terminal=false\n"
+            "Categories=Settings;HardwareSettings;\n"
+        ),
+        "osify-touchpad.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Touchpad e Mouse\n"
+            "Comment=Calibra il tocco, la velocita del puntatore e la protezione del palmo\n"
+            "Exec=/usr/bin/osify-touchpad gui\n"
+            "Icon=/usr/share/pixmaps/osify-touchpad.png\n"
+            "Terminal=false\n"
+            "Categories=Settings;HardwareSettings;\n"
+        ),
+        "osify-search.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Cerca File\n"
+            "Comment=Trova rapidamente file, documenti e immagini nel sistema\n"
+            "Exec=/usr/bin/osify-search\n"
+            "Icon=/usr/share/pixmaps/osify-search.png\n"
+            "Terminal=false\n"
+            "Categories=Utility;FileManager;\n"
+        ),
+        "osify-usb-writer.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Scrittore USB Avviabile\n"
+            "Comment=Crea chiavette USB avviabili da immagini ISO o IMG\n"
+            "Exec=/usr/bin/osify-usb-writer gui\n"
+            "Icon=/usr/share/pixmaps/osify-usb.png\n"
+            "Terminal=false\n"
+            "Categories=System;Utility;\n"
         )
     }
 
