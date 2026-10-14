@@ -2,7 +2,7 @@
 Type=Application
 Name=💻 Terminale Cyber
 Comment=Terminale con Fastfetch e Diagnostica Hardware
-Exec=terminal -geometry 95x26 -T 'OSify Terminal' -e /usr/bin/osify-terminal
+Exec=/usr/bin/terminal
 Icon=/usr/share/pixmaps/osify-terminal.png
 Terminal=false
 Categories=System;

@@ -221,6 +221,26 @@ def sym_drawer(d, sz, col, sc):
             y = cy + dy
             d.rounded_rectangle([x - r, y - r, x + r, y + r], radius=sc, fill=col)
 
+def sym_profile(d, sz, col, sc):
+    # Sagoma utente stilizzata: testa + spalle
+    cx, cy = sz // 2, sz // 2
+    r_head = int(sz * 0.12)
+    # Testa
+    d.ellipse([cx - r_head, cy - int(sz * 0.22), cx + r_head, cy - int(sz * 0.22) + r_head * 2], fill=col)
+    # Spalle (arco / calotta arrotondata)
+    w_body = int(sz * 0.26)
+    d.pieslice([cx - w_body, cy - sc * 2, cx + w_body, cy + int(sz * 0.36)], start=180, end=360, fill=col)
+
+def sym_users(d, sz, col, sc):
+    # Due sagome utenti affiancate (Multiutenza)
+    cx, cy = sz // 2, sz // 2
+    # Utente sinistro (più piccolo, dietro)
+    d.ellipse([cx - int(sz * 0.22), cy - int(sz * 0.20), cx - int(sz * 0.06), cy - int(sz * 0.04)], fill="#64748b")
+    d.pieslice([cx - int(sz * 0.32), cy, cx + int(sz * 0.04), cy + int(sz * 0.32)], start=180, end=360, fill="#64748b")
+    # Utente destro (in primo piano, accento)
+    d.ellipse([cx - sc * 2, cy - int(sz * 0.16), cx + int(sz * 0.20), cy + int(sz * 0.06)], fill=col)
+    d.pieslice([cx - int(sz * 0.14), cy + sc * 4, cx + int(sz * 0.28), cy + int(sz * 0.38)], start=180, end=360, fill=col)
+
 ICONS_REGISTRY = {
     "osify-hub": (sym_hub, COLOR_HUB),
     "osify-browser": (sym_browser, COLOR_BROWSER),
@@ -235,6 +255,8 @@ ICONS_REGISTRY = {
     "osify-settings": (sym_settings, COLOR_SETTINGS),
     "osify-files": (sym_files, COLOR_FILES),
     "osify-drawer": (sym_drawer, COLOR_DRAWER),
+    "osify-profile": (sym_profile, "#06b6d4"),
+    "osify-users": (sym_users, "#3b82f6"),
 }
 
 def main():

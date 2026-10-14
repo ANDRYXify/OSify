@@ -36,18 +36,36 @@ fi
 
 # 5. Gestore Scrivania PCManFM (Sfondo nativo HD ed Icone Desktop)
 if command -v pcmanfm >/dev/null 2>&1; then
-    (sleep 0.5 && pgrep -f "pcmanfm --desktop" >/dev/null || pcmanfm --desktop) 2>/dev/null &
+    (sleep 0.4 && pgrep -f "pcmanfm --desktop" >/dev/null || pcmanfm --desktop) 2>/dev/null &
 fi
 
-# 6. OSify Cyber-Bar (LXPanel Dock Moderno)
-if command -v lxpanel >/dev/null 2>&1; then
-    (sleep 0.8 && pgrep -x lxpanel >/dev/null || lxpanel --profile slitaz) 2>/dev/null &
-fi
+# 6. OSify Cyber-Bar (LXPanel Dock Moderno con Supervisore Resiliente)
+(
+    sleep 0.6
+    if ! pgrep -x lxpanel >/dev/null 2>&1; then
+        if command -v lxpanel >/dev/null 2>&1; then
+            lxpanel --profile default 2>/dev/null || lxpanel --profile slitaz 2>/dev/null || lxpanel 2>/dev/null || true
+        fi
+    fi
+    # Fallback se lxpanel non dovesse partire
+    sleep 1.0
+    if ! pgrep -x lxpanel >/dev/null 2>&1; then
+        [ -x /usr/bin/osify-cyber-dock ] && /usr/bin/osify-cyber-dock &
+    fi
+) &
 
-# 7. OSify Hub — Launchpad & Centro di Controllo
-if [ -x /usr/bin/osify-hub ]; then
-    (sleep 1.2 && terminal -geometry 74x20+140+100 -T 'OSify Hub' -e /usr/bin/osify-hub) 2>/dev/null &
-fi
+# 7. OSify Profile & Multi-User Setup (OOBE al Primo Avvio Garantito)
+# Sia in versione Live che installata, se l'utente non ha ancora configurato
+# il profilo, si avvia il wizard in primo piano:
+(
+    sleep 1.0
+    FLAG_CONF="${HOME:-/home/osify}/.config/osify/profile_configured"
+    if [ ! -f "$FLAG_CONF" ]; then
+        if [ -x /usr/bin/osify-profile-setup ]; then
+            /usr/bin/osify-profile-setup
+        fi
+    fi
+) &
 
 # 8. Loop di Vigilanza Indistruttibile del Window Manager (Supervisor)
 # Se Openbox dovesse avere un'eccezione o crashare, viene riavviato istantaneamente

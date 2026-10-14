@@ -360,9 +360,26 @@ Plugin {
         separator {
         }
         item {
+            name=👤 Profilo & Identità Utente
+            image=/usr/share/pixmaps/osify-settings.png
+            action=/usr/bin/osify-profile-setup --force
+        }
+        item {
+            name=👥 Gestione Multiutenza
+            image=/usr/share/pixmaps/osify-settings.png
+            action=/usr/bin/osify-users
+        }
+        item {
+            name=💾 Installa OSify su Disco Fisso
+            image=/usr/share/pixmaps/osify-install.png
+            action=/usr/bin/osify-install
+        }
+        separator {
+        }
+        item {
             name=🚀 OSify Hub & Launchpad
             image=/usr/share/pixmaps/osify-hub.png
-            action=terminal -geometry 74x20 -T 'OSify Hub' -e /usr/bin/osify-hub
+            action=/usr/bin/terminal -geometry 74x20 -T 'OSify Hub' -e /usr/bin/osify-hub
         }
         item {
             name=🌐 Navigatore Web OSify
@@ -372,22 +389,22 @@ Plugin {
         item {
             name=📡 Connessione Wi-Fi
             image=/usr/share/pixmaps/osify-wifi.png
-            action=terminal -geometry 75x20 -T 'OSify Wi-Fi' -e /usr/bin/osify-wifi
+            action=/usr/bin/terminal -geometry 75x20 -T 'OSify Wi-Fi' -e /usr/bin/osify-wifi
         }
         item {
             name=🎮 Gaming & Retrogaming Hub
             image=/usr/share/pixmaps/osify-games.png
-            action=terminal -geometry 75x20 -T 'OSify Gaming' -e /usr/bin/osify-games
+            action=/usr/bin/terminal -geometry 75x20 -T 'OSify Gaming' -e /usr/bin/osify-games
         }
         item {
             name=💻 Sviluppo & Codice
             image=/usr/share/pixmaps/osify-developer.png
-            action=terminal -geometry 75x20 -T 'OSify Developer' -e /usr/bin/osify-developer
+            action=/usr/bin/terminal -geometry 75x20 -T 'OSify Developer' -e /usr/bin/osify-developer
         }
         item {
-            name=🎨 Personalizzazione & Scaler
+            name=🎨 Personalizzazione & Aspetto
             image=/usr/share/pixmaps/osify-appearance.png
-            action=terminal -geometry 75x20 -T 'OSify Appearance' -e /usr/bin/osify-appearance
+            action=/usr/bin/osify-appearance
         }
         item {
             name=📊 Task Manager & Risorse
@@ -399,17 +416,12 @@ Plugin {
             image=/usr/share/pixmaps/osify-settings.png
             action=/usr/bin/osify-settings
         }
-        item {
-            name=💾 Installa OSify su Disco Fisso
-            image=/usr/share/pixmaps/osify-install.png
-            action=terminal -geometry 95x28 -T 'OSify Installer' -e /usr/bin/osify-install
-        }
         separator {
         }
         item {
             name=Terminale Cyber
             image=/usr/share/pixmaps/osify-terminal.png
-            action=/usr/bin/osify-terminal
+            action=/usr/bin/terminal
         }
         item {
             name=Gestore File
@@ -440,31 +452,34 @@ Plugin {
     type = launchbar
     Config {
         Button {
-            id=/usr/share/applications/osify-drawer.desktop
+            id=osify-drawer.desktop
         }
         Button {
-            id=/usr/share/applications/osify-hub.desktop
+            id=osify-hub.desktop
         }
         Button {
-            id=/usr/share/applications/osify-browser.desktop
+            id=osify-browser.desktop
         }
         Button {
-            id=/usr/share/applications/osify-wifi.desktop
+            id=osify-wifi.desktop
         }
         Button {
-            id=/usr/share/applications/osify-games.desktop
+            id=osify-games.desktop
         }
         Button {
-            id=/usr/share/applications/osify-developer.desktop
+            id=osify-developer.desktop
         }
         Button {
-            id=/usr/share/applications/pcmanfm.desktop
+            id=osify-appearance.desktop
         }
         Button {
-            id=/usr/share/applications/osify-terminal.desktop
+            id=pcmanfm.desktop
         }
         Button {
-            id=/usr/share/applications/osify-install.desktop
+            id=osify-terminal.desktop
+        }
+        Button {
+            id=osify-install.desktop
         }
     }
 }
@@ -511,7 +526,7 @@ Plugin {
 }
 
 Plugin {
-    type = volumealsa
+    type = volume
 }
 
 Plugin {
@@ -567,11 +582,16 @@ Plugin {
 """
     for p_path in [
         "etc/skel/.config/lxpanel/slitaz/panels/panel",
+        "etc/skel/.config/lxpanel/default/panels/panel",
         "home/osify/.config/lxpanel/slitaz/panels/panel",
+        "home/osify/.config/lxpanel/default/panels/panel",
         "etc/lxpanel/slitaz/panels/panel",
         "etc/lxpanel/default/panels/panel",
         "etc/xdg/lxpanel/default/panels/panel",
-        "etc/xdg/lxpanel/original/panels/panel"
+        "etc/xdg/lxpanel/slitaz/panels/panel",
+        "etc/xdg/lxpanel/original/panels/panel",
+        "root/.config/lxpanel/default/panels/panel",
+        "root/.config/lxpanel/slitaz/panels/panel"
     ]:
         full_p = os.path.join(r3_work, p_path)
         os.makedirs(os.path.dirname(full_p), exist_ok=True)
@@ -589,13 +609,16 @@ Plugin {
     <keybind key="W-a"><action name="Execute"><command>/usr/bin/osify-app-drawer</command></action></keybind>
     <keybind key="Super_L"><action name="Execute"><command>/usr/bin/osify-app-drawer</command></action></keybind>
     <keybind key="F1"><action name="Execute"><command>/usr/bin/osify-app-drawer</command></action></keybind>
+    <keybind key="A-F1"><action name="Execute"><command>/usr/bin/osify-app-drawer</command></action></keybind>
     <keybind key="W-h"><action name="Execute"><command>/usr/bin/osify-hub</command></action></keybind>
     <keybind key="C-S-Escape"><action name="Execute"><command>/usr/bin/osify-taskmanager</command></action></keybind>
     <keybind key="W-F10"><action name="Execute"><command>/usr/bin/osify-hud --toggle-scale</command></action></keybind>
-    <keybind key="W-t"><action name="Execute"><command>/usr/bin/osify-terminal</command></action></keybind>
-    <keybind key="C-A-t"><action name="Execute"><command>/usr/bin/osify-terminal</command></action></keybind>
+    <keybind key="W-t"><action name="Execute"><command>/usr/bin/terminal</command></action></keybind>
+    <keybind key="C-A-t"><action name="Execute"><command>/usr/bin/terminal</command></action></keybind>
     <keybind key="W-e"><action name="Execute"><command>pcmanfm</command></action></keybind>
     <keybind key="W-w"><action name="Execute"><command>/usr/bin/osify-browser</command></action></keybind>
+    <keybind key="W-i"><action name="Execute"><command>/usr/bin/osify-install</command></action></keybind>
+    <keybind key="W-p"><action name="Execute"><command>/usr/bin/osify-profile-setup --force</command></action></keybind>
 """
         if "</keyboard>" in rc_content:
             rc_content = rc_content.replace("</keyboard>", f"{custom_keys}\n  </keyboard>")
@@ -803,14 +826,27 @@ LABEL memtest
 
     bin_dir = os.path.join(r4_work, "usr/bin")
     os.makedirs(bin_dir, exist_ok=True)
+    os.makedirs(os.path.join(r4_work, "usr/local/bin"), exist_ok=True)
+
+    # Universal Terminal Wrapper per Sakura/Xterm/LXTerminal
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-terminal-wrapper.sh"), os.path.join(bin_dir, "terminal"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-terminal-wrapper.sh"), os.path.join(r4_work, "usr/local/bin/terminal"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-terminal-wrapper.sh"), os.path.join(bin_dir, "x-terminal-emulator"))
+
+    # Toolchain Ufficiale OSify & Gestione Sistema
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-ctl"), os.path.join(bin_dir, "osify-ctl"))
     shutil.copy2(os.path.join(REPO_ROOT, "uem/runners/osify-inspect.sh"), os.path.join(bin_dir, "osify-inspect"))
     shutil.copy2(os.path.join(REPO_ROOT, "uem/runners/osify-universal-dispatcher.sh"), os.path.join(bin_dir, "osify-exec"))
-    shutil.copy2(os.path.join(REPO_ROOT, "system/installer/osify-disk-installer.sh"), os.path.join(bin_dir, "osify-install"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-install-gui.sh"), os.path.join(bin_dir, "osify-install"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-install-gui.sh"), os.path.join(bin_dir, "osify-install-gui"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/installer/osify-disk-installer.sh"), os.path.join(bin_dir, "osify-disk-installer"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/autotune/osify-autotune.sh"), os.path.join(bin_dir, "osify-autotune"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/storage/osify-memory-cleaner.sh"), os.path.join(bin_dir, "osify-cleanmem"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-welcome.sh"), os.path.join(bin_dir, "osify-welcome"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-welcome-wizard.py"), os.path.join(bin_dir, "osify-welcome-wizard.py"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-profile-setup.sh"), os.path.join(bin_dir, "osify-profile-setup"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-user-manager.sh"), os.path.join(bin_dir, "osify-users"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-user-manager.sh"), os.path.join(bin_dir, "osify-user-manager"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/input/osify-input-manager.sh"), os.path.join(bin_dir, "osify-input"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/autotune/osify-hw-probe.sh"), os.path.join(bin_dir, "osify-hw-probe"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-hud.sh"), os.path.join(bin_dir, "osify-hud"))
@@ -830,14 +866,17 @@ LABEL memtest
     shutil.copy2(os.path.join(REPO_ROOT, "network/osify-wifi-gui.sh"), os.path.join(bin_dir, "osify-wifi"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-games.sh"), os.path.join(bin_dir, "osify-games"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-developer.sh"), os.path.join(bin_dir, "osify-developer"))
-    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-appearance.sh"), os.path.join(bin_dir, "osify-appearance"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-smart-customizer.sh"), os.path.join(bin_dir, "osify-appearance"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-smart-customizer.sh"), os.path.join(bin_dir, "osify-customizer"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-media-processor.py"), os.path.join(bin_dir, "osify-media-processor"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-cyber-dock.sh"), os.path.join(bin_dir, "osify-cyber-dock"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-app-drawer.py"), os.path.join(bin_dir, "osify-app-drawer.py"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-app-drawer.sh"), os.path.join(bin_dir, "osify-app-drawer"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-app-drawer.sh"), os.path.join(bin_dir, "osify-drawer"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/input/osify-input-setup.sh"), os.path.join(bin_dir, "osify-input-setup"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/session/osify-session.sh"), os.path.join(bin_dir, "osify-session"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/updater/osify-live-updater.sh"), os.path.join(bin_dir, "osify-update"))
-    run(f"chmod +x '{bin_dir}'/osify-*")
+    run(f"chmod +x '{bin_dir}'/*")
 
     # Iniezione Browser Grafico Nativo Dillo (i686) per Navigazione Istantanea
     dillo_cache = os.path.join(REPO_ROOT, "build/cache/dillo-3.0.5.tazpkg")
@@ -1052,7 +1091,7 @@ WINDOW_MANAGER="openbox"
             "Type=Application\n"
             "Name=🚀 OSify Hub\n"
             "Comment=Centro di Controllo, Prestazioni e Launchpad di OSify\n"
-            "Exec=terminal -geometry 74x20 -T 'OSify Hub' -e /usr/bin/osify-hub\n"
+            "Exec=/usr/bin/terminal -geometry 74x20 -T 'OSify Hub' -e /usr/bin/osify-hub\n"
             "Icon=/usr/share/pixmaps/osify-hub.png\n"
             "Terminal=false\n"
             "Categories=System;Utility;\n"
@@ -1072,7 +1111,7 @@ WINDOW_MANAGER="openbox"
             "Type=Application\n"
             "Name=📡 Connessione Wi-Fi\n"
             "Comment=Scansione reti wireless, inserimento password e connessione immediata\n"
-            "Exec=terminal -geometry 75x20 -T 'OSify Wi-Fi' -e /usr/bin/osify-wifi\n"
+            "Exec=/usr/bin/terminal -geometry 75x20 -T 'OSify Wi-Fi' -e /usr/bin/osify-wifi\n"
             "Icon=/usr/share/pixmaps/osify-wifi.png\n"
             "Terminal=false\n"
             "Categories=Network;Settings;\n"
@@ -1082,7 +1121,7 @@ WINDOW_MANAGER="openbox"
             "Type=Application\n"
             "Name=🎮 Gaming Hub\n"
             "Comment=Giochi Windows (.exe), Retrogaming DOS, Emulazione e Turbo Boost\n"
-            "Exec=terminal -geometry 75x20 -T 'OSify Gaming' -e /usr/bin/osify-games\n"
+            "Exec=/usr/bin/terminal -geometry 75x20 -T 'OSify Gaming' -e /usr/bin/osify-games\n"
             "Icon=/usr/share/pixmaps/osify-games.png\n"
             "Terminal=false\n"
             "Categories=Game;\n"
@@ -1092,7 +1131,7 @@ WINDOW_MANAGER="openbox"
             "Type=Application\n"
             "Name=💻 Sviluppo & Codice\n"
             "Comment=Suite di Programmazione: Python 3, C, Git, Editor e Progetti\n"
-            "Exec=terminal -geometry 75x20 -T 'OSify Developer' -e /usr/bin/osify-developer\n"
+            "Exec=/usr/bin/terminal -geometry 75x20 -T 'OSify Developer' -e /usr/bin/osify-developer\n"
             "Icon=/usr/share/pixmaps/osify-developer.png\n"
             "Terminal=false\n"
             "Categories=Development;\n"
@@ -1100,9 +1139,9 @@ WINDOW_MANAGER="openbox"
         "osify-appearance.desktop": (
             "[Desktop Entry]\n"
             "Type=Application\n"
-            "Name=🎨 Personalizzazione & Scaler\n"
+            "Name=🎨 Personalizzazione & Aspetto\n"
             "Comment=Virtual Scaler Netbook 1280x768, Sfondi Cyber Dark e Risoluzioni\n"
-            "Exec=terminal -geometry 75x20 -T 'OSify Appearance' -e /usr/bin/osify-appearance\n"
+            "Exec=/usr/bin/osify-appearance\n"
             "Icon=/usr/share/pixmaps/osify-appearance.png\n"
             "Terminal=false\n"
             "Categories=Settings;\n"
@@ -1122,7 +1161,7 @@ WINDOW_MANAGER="openbox"
             "Type=Application\n"
             "Name=💻 Terminale Cyber\n"
             "Comment=Terminale con Fastfetch e Diagnostica Hardware\n"
-            "Exec=terminal -geometry 95x26 -T 'OSify Terminal' -e /usr/bin/osify-terminal\n"
+            "Exec=/usr/bin/terminal\n"
             "Icon=/usr/share/pixmaps/osify-terminal.png\n"
             "Terminal=false\n"
             "Categories=System;\n"
@@ -1132,10 +1171,30 @@ WINDOW_MANAGER="openbox"
             "Type=Application\n"
             "Name=💾 Installa OSify su Disco\n"
             "Comment=Installatore Guidato su Disco Fisso con Migrazione Dati Live\n"
-            "Exec=terminal -geometry 95x28 -T 'OSify Installer' -e /usr/bin/osify-install\n"
+            "Exec=/usr/bin/osify-install\n"
             "Icon=/usr/share/pixmaps/osify-install.png\n"
             "Terminal=false\n"
             "Categories=System;\n"
+        ),
+        "osify-profile.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=👤 Profilo & Identità Utente\n"
+            "Comment=Configura Account, Password, Avatar e Preferenze Sistema\n"
+            "Exec=/usr/bin/osify-profile-setup --force\n"
+            "Icon=/usr/share/pixmaps/osify-profile.png\n"
+            "Terminal=false\n"
+            "Categories=Settings;System;\n"
+        ),
+        "osify-users.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=👥 Gestione Multiutenza\n"
+            "Comment=Crea, modifica ed elimina account utenti e permessi di amministrazione\n"
+            "Exec=/usr/bin/osify-users\n"
+            "Icon=/usr/share/pixmaps/osify-users.png\n"
+            "Terminal=false\n"
+            "Categories=Settings;System;\n"
         ),
         "osify-update.desktop": (
             "[Desktop Entry]\n"
@@ -1169,19 +1228,42 @@ WINDOW_MANAGER="openbox"
         )
     }
 
-    # Scrittura in usr/share/applications e sui Desktop utente
+    # Scrittura in usr/share/applications e sui Desktop utente con permessi di esecuzione garantiti
     apps_sys = os.path.join(r4_work, "usr/share/applications")
     os.makedirs(apps_sys, exist_ok=True)
     for name, content in app_entries.items():
-        with open(os.path.join(apps_sys, name), "w") as f:
+        dest_f = os.path.join(apps_sys, name)
+        with open(dest_f, "w") as f:
             f.write(content)
+        os.chmod(dest_f, 0o755)
 
     for dpath in ["root/Desktop", "home/osify/Desktop", "etc/skel/Desktop"]:
         full_d = os.path.join(r4_work, dpath)
         os.makedirs(full_d, exist_ok=True)
         for name, content in app_entries.items():
-            with open(os.path.join(full_d, name), "w") as f:
+            dest_f = os.path.join(full_d, name)
+            with open(dest_f, "w") as f:
                 f.write(content)
+            os.chmod(dest_f, 0o755)
+
+    # Scrittura LXPanel Cyber-Bar anche in rootfs4 per integrità garantita
+    for p_path in [
+        "etc/skel/.config/lxpanel/slitaz/panels/panel",
+        "etc/skel/.config/lxpanel/default/panels/panel",
+        "home/osify/.config/lxpanel/slitaz/panels/panel",
+        "home/osify/.config/lxpanel/default/panels/panel",
+        "etc/lxpanel/slitaz/panels/panel",
+        "etc/lxpanel/default/panels/panel",
+        "etc/xdg/lxpanel/default/panels/panel",
+        "etc/xdg/lxpanel/slitaz/panels/panel",
+        "etc/xdg/lxpanel/original/panels/panel",
+        "root/.config/lxpanel/default/panels/panel",
+        "root/.config/lxpanel/slitaz/panels/panel"
+    ]:
+        full_p = os.path.join(r4_work, p_path)
+        os.makedirs(os.path.dirname(full_p), exist_ok=True)
+        with open(full_p, "w") as f:
+            f.write(lxpanel_cfg)
 
     # Permessi corretti proprietario osify (UID 1000) su home
     osify_full = os.path.join(r4_work, "home/osify")

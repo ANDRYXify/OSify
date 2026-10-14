@@ -2,8 +2,8 @@
 Type=Application
 Name=💾 Installa OSify su Disco
 Comment=Installatore Guidato su Disco Fisso con Migrazione Dati Live
-Exec=terminal -geometry 95x28 -T 'OSify Installer' -e /usr/bin/osify-install
+Exec=/usr/bin/osify-install
 Icon=/usr/share/pixmaps/osify-install.png
 Terminal=false
 Categories=System;
-Keywords=install;installer;disk;drive;setup;
+Keywords=install;installer;disk;drive;setup;live;

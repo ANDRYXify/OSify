@@ -22,10 +22,40 @@ APPLICATIONS = [
         "name": "OSify Hub",
         "category": "Sistema",
         "desc": "Centro di controllo, prestazioni e launchpad a 360°",
-        "cmd": ["terminal", "-geometry", "74x20", "-T", "OSify Hub", "-e", "/usr/bin/osify-hub"],
+        "cmd": ["/usr/bin/terminal", "-geometry", "74x20", "-T", "OSify Hub", "-e", "/usr/bin/osify-hub"],
         "icon": "/usr/share/pixmaps/osify-hub.png",
         "badge": "🚀 HUB",
         "color": "#8b5cf6"
+    },
+    {
+        "id": "profile",
+        "name": "Profilo & Identità",
+        "category": "Sistema",
+        "desc": "Configura account, password crittografata, avatar e preferenze",
+        "cmd": ["/usr/bin/osify-profile-setup", "--force"],
+        "icon": "/usr/share/pixmaps/osify-profile.png",
+        "badge": "👤 PROFILO",
+        "color": "#06b6d4"
+    },
+    {
+        "id": "users",
+        "name": "Gestione Multiutenza",
+        "category": "Sistema",
+        "desc": "Gestione multiutente: crea, elimina utenti e permessi amministrativi",
+        "cmd": ["/usr/bin/osify-users"],
+        "icon": "/usr/share/pixmaps/osify-users.png",
+        "badge": "👥 UTENTI",
+        "color": "#3b82f6"
+    },
+    {
+        "id": "installer",
+        "name": "Installa OSify su Disco",
+        "category": "Installazione",
+        "desc": "Procedura guidata di installazione con migrazione profilo Live",
+        "cmd": ["/usr/bin/osify-install"],
+        "icon": "/usr/share/pixmaps/osify-install.png",
+        "badge": "💾 DISCO",
+        "color": "#10b981"
     },
     {
         "id": "browser",
@@ -42,7 +72,7 @@ APPLICATIONS = [
         "name": "Connessione Wi-Fi",
         "category": "Internet",
         "desc": "Scansione frequenze wireless, password e connessione rapida",
-        "cmd": ["terminal", "-geometry", "75x20", "-T", "OSify Wi-Fi", "-e", "/usr/bin/osify-wifi"],
+        "cmd": ["/usr/bin/terminal", "-geometry", "75x20", "-T", "OSify Wi-Fi", "-e", "/usr/bin/osify-wifi"],
         "icon": "/usr/share/pixmaps/osify-wifi.png",
         "badge": "📡 WI-FI",
         "color": "#10b981"
@@ -52,7 +82,7 @@ APPLICATIONS = [
         "name": "Gaming Hub",
         "category": "Gaming",
         "desc": "Giochi Windows (.exe con Wine/DirectX), DOSBox e UEM",
-        "cmd": ["terminal", "-geometry", "75x20", "-T", "OSify Gaming", "-e", "/usr/bin/osify-games"],
+        "cmd": ["/usr/bin/terminal", "-geometry", "75x20", "-T", "OSify Gaming", "-e", "/usr/bin/osify-games"],
         "icon": "/usr/share/pixmaps/osify-games.png",
         "badge": "🎮 GIOCHI",
         "color": "#a855f7"
@@ -62,7 +92,7 @@ APPLICATIONS = [
         "name": "Sviluppo & Codice",
         "category": "Sviluppo",
         "desc": "Python 3 REPL, TinyCC/GCC, Git manager, Nano e template progetti",
-        "cmd": ["terminal", "-geometry", "75x20", "-T", "OSify Developer", "-e", "/usr/bin/osify-developer"],
+        "cmd": ["/usr/bin/terminal", "-geometry", "75x20", "-T", "OSify Developer", "-e", "/usr/bin/osify-developer"],
         "icon": "/usr/share/pixmaps/osify-developer.png",
         "badge": "💻 CODING",
         "color": "#f59e0b"
@@ -79,10 +109,10 @@ APPLICATIONS = [
     },
     {
         "id": "appearance",
-        "name": "Personalizzazione & Scaler",
+        "name": "Personalizzazione & Aspetto",
         "category": "Aspetto",
-        "desc": "Virtual Scaler 1280x768 per Netbook, sfondi Cyber Dark e temi",
-        "cmd": ["terminal", "-geometry", "75x20", "-T", "OSify Appearance", "-e", "/usr/bin/osify-appearance"],
+        "desc": "Sfondi automatici a zero distorsione, avatar, Virtual Scaler per Netbook",
+        "cmd": ["/usr/bin/osify-appearance"],
         "icon": "/usr/share/pixmaps/osify-appearance.png",
         "badge": "🎨 ASPETTO",
         "color": "#ec4899"
@@ -92,7 +122,7 @@ APPLICATIONS = [
         "name": "Task Manager",
         "category": "Sistema",
         "desc": "Telemetria hardware, processi attivi e monitor memoria",
-        "cmd": ["terminal", "-geometry", "95x26", "-T", "OSify Task Manager", "-e", "/usr/bin/osify-taskmanager"],
+        "cmd": ["/usr/bin/osify-taskmanager"],
         "icon": "/usr/share/pixmaps/osify-taskmanager.png",
         "badge": "📊 RISORSE",
         "color": "#ef4444"
@@ -102,20 +132,10 @@ APPLICATIONS = [
         "name": "Cyber Terminal",
         "category": "Sviluppo",
         "desc": "Terminale interattivo con diagnostica Fastfetch hardware",
-        "cmd": ["terminal", "-geometry", "95x26", "-T", "OSify Terminal", "-e", "/usr/bin/osify-terminal"],
+        "cmd": ["/usr/bin/terminal"],
         "icon": "/usr/share/pixmaps/osify-terminal.png",
         "badge": "💻 SHELL",
         "color": "#22c55e"
-    },
-    {
-        "id": "installer",
-        "name": "Installa OSify su Disco",
-        "category": "Installazione",
-        "desc": "Procedura guidata di installazione con migrazione profilo Live",
-        "cmd": ["terminal", "-geometry", "95x28", "-T", "OSify Installer", "-e", "/usr/bin/osify-install"],
-        "icon": "/usr/share/pixmaps/osify-install.png",
-        "badge": "💾 DISCO",
-        "color": "#10b981"
     },
     {
         "id": "update",

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=👤 Profilo & Identità Utente
+Comment=Configura Account, Password, Avatar e Preferenze Sistema
+Exec=/usr/bin/osify-profile-setup --force
+Icon=/usr/share/pixmaps/osify-profile.png
+Terminal=false
+Categories=Settings;System;
+Keywords=profile;user;account;password;avatar;setup;oobe;
