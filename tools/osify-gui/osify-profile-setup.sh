@@ -25,6 +25,15 @@ if [ $FORCE -eq 0 ] && [ -f "$FLAG_FILE" ]; then
     exit 0
 fi
 
+# Auto-lancio in finestra grafica (Sakura/Xterm) se YAD non e' presente e non siamo in un terminale interattivo
+if [ -n "$DISPLAY" ] && [ ! -t 0 ] && ! command -v yad >/dev/null 2>&1; then
+    if command -v sakura >/dev/null 2>&1; then
+        exec sakura -T "OSify — Configurazione Profilo Iniziale" -e "$0" "$@"
+    elif command -v xterm >/dev/null 2>&1; then
+        exec xterm -geometry 80x25 -T "OSify — Configurazione Profilo Iniziale" -e "$0" "$@"
+    fi
+fi
+
 # Rilevamento ambiente e risoluzione
 IS_LIVE=0
 if grep -q "boot=live\|isolinux\|slitaz" /proc/cmdline 2>/dev/null || [ -d "/home/osify" ] || [ "$(whoami)" = "osify" ]; then

@@ -17,9 +17,19 @@ UPTIME_INFO=$(uptime 2>/dev/null | sed 's/.*up \([^,]*\), .*/\1/' || echo "Attiv
 
 OSIFY_VER=$(cat /etc/osify-version 2>/dev/null || echo "1.5.0")
 
-# Finestra Notebook a Schede
-RESP=$(yad --form \
-    --title="OSify Control Center — Impostazioni di Sistema" \
+# Auto-lancio in finestra grafica (Sakura/Xterm) se YAD non e' presente e non siamo in un terminale interattivo
+if [ -n "$DISPLAY" ] && [ ! -t 0 ] && ! command -v yad >/dev/null 2>&1; then
+    if command -v sakura >/dev/null 2>&1; then
+        exec sakura -T "OSify Control Center — Impostazioni" -e "$0" "$@"
+    elif command -v xterm >/dev/null 2>&1; then
+        exec xterm -geometry 80x25 -T "OSify Control Center — Impostazioni" -e "$0" "$@"
+    fi
+fi
+
+# Finestra Notebook a Schede YAD se disponibile
+if command -v yad >/dev/null 2>&1; then
+    RESP=$(yad --form \
+        --title="OSify Control Center — Impostazioni di Sistema" \
     --window-icon="preferences-desktop" \
     --width=540 \
     --height=480 \
@@ -104,4 +114,43 @@ if [ "$RET" -eq 0 ]; then
     fi
 
     yad --notification --text="✅ Impostazioni OSify applicate con successo!" --timeout=3 2>/dev/null &
+    fi
+elif command -v dialog >/dev/null 2>&1; then
+    OPT=$(dialog --backtitle "OSify Operating System — Ingegnerizzato da Andrea Taliento" \
+        --title " OSify Control Center — Impostazioni di Sistema " \
+        --menu "\nSeleziona l'impostazione da configurare:\n" 16 65 5 \
+        "1" "Attiva Virtual Scaler 1280x768 (risolve finestre tagliate)" \
+        "2" "Ripristina Risoluzione Nativa 1024x600" \
+        "3" "Attiva Touchpad Tap-to-Click e Scorrimento su Bordo" \
+        "4" "Imposta Volume Audio al 100% e Sblocca ALSA" \
+        "5" "Informazioni Hardware e Versione OSify" \
+        3>&1 1>&2 2>&3)
+    case "$OPT" in
+        1)
+            disp=$(xrandr 2>/dev/null | grep " connected" | awk '{print $1}' | head -n1)
+            [ -n "$disp" ] && xrandr --output "$disp" --scale 1.25x1.28 --panning 1280x768 2>/dev/null || true
+            dialog --msgbox "\nVirtual Scaler 1280x768 attivato con successo!" 7 50
+            ;;
+        2)
+            disp=$(xrandr 2>/dev/null | grep " connected" | awk '{print $1}' | head -n1)
+            [ -n "$disp" ] && xrandr --output "$disp" --scale 1.0x1.0 --panning 1024x600 2>/dev/null || true
+            dialog --msgbox "\nRisoluzione nativa 1024x600 ripristinata!" 7 50
+            ;;
+        3)
+            if command -v synclient >/dev/null 2>&1; then
+                synclient TapButton1=1 TapButton2=3 TapButton3=2 VertEdgeScroll=1 HorizEdgeScroll=1 2>/dev/null || true
+            fi
+            dialog --msgbox "\nTouchpad configurato: Tap-to-click e Edge Scroll attivi!" 7 55
+            ;;
+        4)
+            if command -v amixer >/dev/null 2>&1; then
+                amixer set Master unmute 2>/dev/null || true
+                amixer set Master 100% 2>/dev/null || true
+            fi
+            dialog --msgbox "\nAudio sbloccato e volume impostato al 100%!" 7 50
+            ;;
+        5)
+            dialog --msgbox "\nOSify Versione: $OSIFY_VER\nCPU: $CPU_INFO\nRAM: $RAM_INFO\nKernel: $KERNEL_INFO" 10 55
+            ;;
+    esac
 fi

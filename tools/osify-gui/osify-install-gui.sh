@@ -26,6 +26,15 @@ if [ "$(id -u 2>/dev/null || echo 0)" -ne 0 ]; then
     fi
 fi
 
+# Auto-lancio in finestra grafica (Sakura/Xterm) se YAD non e' presente e non siamo in un terminale interattivo
+if [ -n "$DISPLAY" ] && [ ! -t 0 ] && ! command -v yad >/dev/null 2>&1; then
+    if command -v sakura >/dev/null 2>&1; then
+        exec sakura -T "OSify Installer — Installazione su Disco Fisso" -e "$0" "$@"
+    elif command -v xterm >/dev/null 2>&1; then
+        exec xterm -geometry 85x28 -T "OSify Installer — Installazione su Disco Fisso" -e "$0" "$@"
+    fi
+fi
+
 # ==============================================================================
 # RILEVAMENTO DISCHI FISICI
 # ==============================================================================

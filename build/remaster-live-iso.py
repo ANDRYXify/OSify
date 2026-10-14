@@ -124,6 +124,135 @@ def inject_osify_tree(dest_iso_root):
         shutil.copy2(version_file, os.path.join(dest_iso_root, "VERSION"))
         shutil.copy2(version_file, os.path.join(osify_tree, "VERSION"))
 
+def remaster_rootfs1(work_dir, iso_root, lxpanel_cfg, app_entries):
+    print("[i] Remastering rootfs1 (Master Desktop, Icone Native Garantite, Permessi e Taskbar)...")
+    r1_work = os.path.join(work_dir, "rootfs1")
+    os.makedirs(r1_work, exist_ok=True)
+    r1_gz = os.path.join(iso_root, "boot/rootfs1.gz")
+    
+    with open(r1_gz, "rb") as f:
+        r1_data = lzma.decompress(f.read(), format=lzma.FORMAT_ALONE)
+    n_files = extract_cpio_archive(r1_data, r1_work)
+    print(f"[✓] Decompressi {n_files} file da rootfs1.gz")
+
+    # Iniezione Icone Native OSify in usr/share/pixmaps e hicolor
+    pixmaps_dir = os.path.join(r1_work, "usr/share/pixmaps")
+    os.makedirs(pixmaps_dir, exist_ok=True)
+    hicolor_dir = os.path.join(r1_work, "usr/share/icons/hicolor/48x48/apps")
+    os.makedirs(hicolor_dir, exist_ok=True)
+
+    icons_src_dir = os.path.join(REPO_ROOT, "desktop/branding/icons/48")
+    if os.path.exists(icons_src_dir):
+        for icon_file in os.listdir(icons_src_dir):
+            if icon_file.endswith(".png"):
+                src_icon = os.path.join(icons_src_dir, icon_file)
+                shutil.copy2(src_icon, os.path.join(pixmaps_dir, icon_file))
+                shutil.copy2(src_icon, os.path.join(hicolor_dir, icon_file))
+
+    osify_png = os.path.join(REPO_ROOT, "OSify.png")
+    if os.path.exists(osify_png):
+        shutil.copy2(osify_png, os.path.join(pixmaps_dir, "osify.png"))
+
+    # Iniezione binari OSify in /usr/bin/ di rootfs1
+    bin_dir = os.path.join(r1_work, "usr/bin")
+    os.makedirs(bin_dir, exist_ok=True)
+    bin_map = [
+        ("tools/osify-gui/osify-terminal-wrapper.sh", "terminal"),
+        ("tools/osify-gui/osify-terminal-wrapper.sh", "x-terminal-emulator"),
+        ("tools/osify-ctl", "osify-ctl"),
+        ("uem/runners/osify-inspect.sh", "osify-inspect"),
+        ("uem/runners/osify-universal-dispatcher.sh", "osify-exec"),
+        ("tools/osify-gui/osify-install-gui.sh", "osify-install"),
+        ("tools/osify-gui/osify-install-gui.sh", "osify-install-gui"),
+        ("system/installer/osify-disk-installer.sh", "osify-disk-installer"),
+        ("system/autotune/osify-autotune.sh", "osify-autotune"),
+        ("system/storage/osify-memory-cleaner.sh", "osify-cleanmem"),
+        ("tools/osify-gui/osify-welcome.sh", "osify-welcome"),
+        ("tools/osify-gui/osify-profile-setup.sh", "osify-profile-setup"),
+        ("tools/osify-gui/osify-user-manager.sh", "osify-users"),
+        ("tools/osify-gui/osify-user-manager.sh", "osify-user-manager"),
+        ("system/storage/osify-storage-governor.sh", "osify-storage-governor"),
+        ("system/storage/osify-storage-governor.sh", "osify-eject"),
+        ("tools/osify-gui/osify-video-capture.sh", "osify-capture"),
+        ("tools/osify-gui/osify-video-capture.sh", "osify-video-capture"),
+        ("tools/osify-gui/osify-phone-companion.sh", "osify-phone-companion"),
+        ("tools/osify-gui/osify-phone-companion.sh", "osify-phone"),
+        ("tools/osify-gui/osify-display-switch.sh", "osify-display"),
+        ("tools/osify-gui/osify-display-switch.sh", "osify-display-switch"),
+        ("tools/osify-gui/osify-smart-customizer.sh", "osify-appearance"),
+        ("tools/osify-gui/osify-smart-customizer.sh", "osify-customizer"),
+        ("tools/osify-gui/osify-media-processor.py", "osify-media-processor"),
+        ("tools/osify-gui/osify-cyber-dock.sh", "osify-cyber-dock"),
+        ("tools/osify-gui/osify-app-drawer.sh", "osify-app-drawer"),
+        ("tools/osify-gui/osify-app-drawer.sh", "osify-drawer"),
+        ("system/input/osify-input-setup.sh", "osify-input-setup"),
+        ("system/session/osify-session.sh", "osify-session"),
+        ("system/updater/osify-live-updater.sh", "osify-update"),
+    ]
+    for src_rel, dst_name in bin_map:
+        sp = os.path.join(REPO_ROOT, src_rel)
+        if os.path.exists(sp):
+            dp = os.path.join(bin_dir, dst_name)
+            shutil.copy2(sp, dp)
+            os.chmod(dp, 0o755)
+
+    # Scrittura .desktop in usr/share/applications e sui Desktop di rootfs1
+    apps_sys = os.path.join(r1_work, "usr/share/applications")
+    os.makedirs(apps_sys, exist_ok=True)
+    for name, content in app_entries.items():
+        dest_f = os.path.join(apps_sys, name)
+        with open(dest_f, "w") as f:
+            f.write(content)
+        os.chmod(dest_f, 0o755)
+
+    # Rimozione vecchi desktop legacy SliTaz
+    for old_d in ["tazpanel.desktop", "slitaz-doc.desktop"]:
+        old_p = os.path.join(apps_sys, old_d)
+        if os.path.exists(old_p):
+            os.remove(old_p)
+
+    for dpath in ["root/Desktop", "home/osify/Desktop", "etc/skel/Desktop", "home/slitaz/Desktop"]:
+        full_d = os.path.join(r1_work, dpath)
+        if os.path.exists(full_d):
+            shutil.rmtree(full_d, ignore_errors=True)
+        os.makedirs(full_d, exist_ok=True)
+        for name, content in app_entries.items():
+            dest_f = os.path.join(full_d, name)
+            with open(dest_f, "w") as f:
+                f.write(content)
+            os.chmod(dest_f, 0o755)
+
+    # LXPanel Cyber-Bar in rootfs1
+    for p_path in [
+        "etc/skel/.config/lxpanel/slitaz/panels/panel",
+        "etc/skel/.config/lxpanel/default/panels/panel",
+        "home/osify/.config/lxpanel/slitaz/panels/panel",
+        "home/osify/.config/lxpanel/default/panels/panel",
+        "etc/lxpanel/slitaz/panels/panel",
+        "etc/lxpanel/default/panels/panel",
+        "etc/xdg/lxpanel/default/panels/panel",
+        "etc/xdg/lxpanel/slitaz/panels/panel",
+        "etc/xdg/lxpanel/original/panels/panel",
+        "root/.config/lxpanel/default/panels/panel",
+        "root/.config/lxpanel/slitaz/panels/panel"
+    ]:
+        full_p = os.path.join(r1_work, p_path)
+        os.makedirs(os.path.dirname(full_p), exist_ok=True)
+        with open(full_p, "w") as f:
+            f.write(lxpanel_cfg)
+
+    # Identita e Branding OSify in rootfs1
+    with open(os.path.join(r1_work, "etc/osify-version"), "w") as f:
+        f.write(f"{OSIFY_VERSION}\n")
+
+    osify_full = os.path.join(r1_work, "home/osify")
+    if os.path.exists(osify_full):
+        run(f"chmod -R 755 '{osify_full}' 2>/dev/null || true")
+
+    os.remove(r1_gz)
+    run(f"(cd '{r1_work}' && find . -print0 | cpio --null -ov -H newc) | python3 -c \"import lzma, sys; sys.stdout.buffer.write(lzma.compress(sys.stdin.buffer.read(), format=lzma.FORMAT_ALONE, preset=3))\" > '{r1_gz}'")
+    print(f"[✓] rootfs1 ricompatto con successo ({os.path.getsize(r1_gz)/(1024*1024):.1f} MB)")
+
 def build_vintage_i686():
     print("=========================================================")
     print(" [1/2] Costruzione OSify Vintage 32-bit (Intel Atom/NB200)")
@@ -895,7 +1024,13 @@ LABEL memtest
     shutil.copy2(os.path.join(REPO_ROOT, "system/input/osify-input-setup.sh"), os.path.join(bin_dir, "osify-input-setup"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/session/osify-session.sh"), os.path.join(bin_dir, "osify-session"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/updater/osify-live-updater.sh"), os.path.join(bin_dir, "osify-update"))
-    run(f"chmod +x '{bin_dir}'/*")
+    for f in os.listdir(bin_dir):
+        p = os.path.join(bin_dir, f)
+        if not os.path.islink(p) and os.path.isfile(p):
+            try:
+                os.chmod(p, 0o755)
+            except Exception:
+                pass
 
     # Iniezione Browser Grafico Nativo Dillo (i686) per Navigazione Istantanea
     dillo_cache = os.path.join(REPO_ROOT, "build/cache/dillo-3.0.5.tazpkg")
@@ -1327,6 +1462,9 @@ WINDOW_MANAGER="openbox"
 
     os.remove(r4_gz)
     run(f"(cd '{r4_work}' && find . -print0 | cpio --null -ov -H newc) | python3 -c \"import lzma, sys; sys.stdout.buffer.write(lzma.compress(sys.stdin.buffer.read(), format=lzma.FORMAT_ALONE))\" > '{r4_gz}'")
+
+    # Remastering di rootfs1 (Master Desktop, Icone e Binari) per garantire che vinca l'estrazione kernel
+    remaster_rootfs1(work_dir, iso_root, lxpanel_cfg, app_entries)
 
     # Iniezione Windows Installer e albero OSify
     inject_windows_installer(iso_root)
