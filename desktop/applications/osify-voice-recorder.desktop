@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Registratore Vocale
+Comment=Memo vocali e collaudo microfono integrato a bassissima latenza
+Exec=/opt/osify/bin/osify-voice-recorder.sh gui
+Icon=osify-voice
+Categories=AudioVideo;Audio;Recorder;
+Terminal=false
+Keywords=voice;recorder;audio;mic;microfono;registra;suono;memo;

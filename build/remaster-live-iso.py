@@ -276,6 +276,9 @@ OSIFY_OPENBOX_MENU = """<?xml version="1.0" encoding="UTF-8"?>
     <item label="Cattura Schermo" icon="/usr/share/pixmaps/osify-appearance.png">
       <action name="Execute"><command>/usr/bin/osify-screenshot --gui</command></action>
     </item>
+    <item label="Cerca File" icon="/usr/share/pixmaps/osify-search.png">
+      <action name="Execute"><command>/usr/bin/osify-search</command></action>
+    </item>
     <item label="Blocco Note ed Editor" icon="/usr/share/pixmaps/osify-notepad.png">
       <action name="Execute"><command>/usr/bin/osify-notepad</command></action>
     </item>
@@ -287,6 +290,12 @@ OSIFY_OPENBOX_MENU = """<?xml version="1.0" encoding="UTF-8"?>
     </item>
     <item label="Lettore Multimediale" icon="/usr/share/pixmaps/osify-audio.png">
       <action name="Execute"><command>/usr/bin/osify-media-player</command></action>
+    </item>
+    <item label="Registratore Vocale" icon="/usr/share/pixmaps/osify-voice.png">
+      <action name="Execute"><command>/usr/bin/osify-voice gui</command></action>
+    </item>
+    <item label="Fotocamera e Webcam" icon="/usr/share/pixmaps/osify-camera.png">
+      <action name="Execute"><command>/usr/bin/osify-camera gui</command></action>
     </item>
     <item label="Gaming Hub" icon="/usr/share/pixmaps/osify-games.png">
       <action name="Execute"><command>/usr/bin/terminal -geometry 75x20 -T 'Gaming Hub' -e /usr/bin/osify-games</command></action>
@@ -300,6 +309,9 @@ OSIFY_OPENBOX_MENU = """<?xml version="1.0" encoding="UTF-8"?>
     <item label="Tastiera a Schermo" icon="/usr/share/pixmaps/osify-keyboard.png">
       <action name="Execute"><command>/usr/bin/osify-onboard</command></action>
     </item>
+    <item label="Accessibilita e Comfort Visivo" icon="/usr/share/pixmaps/osify-accessibility.png">
+      <action name="Execute"><command>/usr/bin/osify-accessibility gui</command></action>
+    </item>
     <separator/>
     <separator label="Hardware e Connettivita"/>
     <item label="Audio e Volume" icon="/usr/share/pixmaps/osify-audio.png">
@@ -307,6 +319,9 @@ OSIFY_OPENBOX_MENU = """<?xml version="1.0" encoding="UTF-8"?>
     </item>
     <item label="Connessione Wi-Fi" icon="/usr/share/pixmaps/osify-wifi.png">
       <action name="Execute"><command>/usr/bin/terminal -geometry 75x20 -T 'Connessione Wi-Fi' -e /usr/bin/osify-wifi</command></action>
+    </item>
+    <item label="Hotspot Wi-Fi" icon="/usr/share/pixmaps/osify-hotspot.png">
+      <action name="Execute"><command>/usr/bin/osify-hotspot gui</command></action>
     </item>
     <item label="Connessione Bluetooth" icon="/usr/share/pixmaps/osify-bluetooth.png">
       <action name="Execute"><command>/usr/bin/terminal -geometry 75x20 -T 'Connessione Bluetooth' -e /usr/bin/osify-bluetooth</command></action>
@@ -316,6 +331,9 @@ OSIFY_OPENBOX_MENU = """<?xml version="1.0" encoding="UTF-8"?>
     </item>
     <item label="Schermo e Risoluzioni" icon="/usr/share/pixmaps/osify-appearance.png">
       <action name="Execute"><command>/usr/bin/osify-display</command></action>
+    </item>
+    <item label="Luce Notturna (Filtro Blu)" icon="/usr/share/pixmaps/osify-nightlight.png">
+      <action name="Execute"><command>/usr/bin/osify-nightlight gui</command></action>
     </item>
     <item label="Luminosita Display" icon="/usr/share/pixmaps/osify-appearance.png">
       <action name="Execute"><command>/usr/bin/osify-brightness gui</command></action>
@@ -358,6 +376,9 @@ OSIFY_OPENBOX_MENU = """<?xml version="1.0" encoding="UTF-8"?>
     </item>
     <separator/>
     <separator label="Sistema e Sicurezza"/>
+    <item label="Backup e Ripristino Dati" icon="/usr/share/pixmaps/osify-backup.png">
+      <action name="Execute"><command>/usr/bin/osify-backup gui</command></action>
+    </item>
     <item label="Scrittore USB Avviabile" icon="/usr/share/pixmaps/osify-usb.png">
       <action name="Execute"><command>/usr/bin/osify-usb-writer gui</command></action>
     </item>
@@ -1224,6 +1245,19 @@ LABEL memtest
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-usb-writer.sh"), os.path.join(bin_dir, "osify-usb-writer"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-usb-writer.sh"), os.path.join(bin_dir, "osify-usb"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-usb-writer.sh"), os.path.join(r4_work, "usr/local/bin/osify-usb-writer"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/display/osify-nightlight.sh"), os.path.join(bin_dir, "osify-nightlight"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/display/osify-nightlight.sh"), os.path.join(r4_work, "usr/local/bin/osify-nightlight"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-accessibility.sh"), os.path.join(bin_dir, "osify-accessibility"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-accessibility.sh"), os.path.join(r4_work, "usr/local/bin/osify-accessibility"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-backup.sh"), os.path.join(bin_dir, "osify-backup"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-backup.sh"), os.path.join(r4_work, "usr/local/bin/osify-backup"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-voice-recorder.sh"), os.path.join(bin_dir, "osify-voice-recorder"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-voice-recorder.sh"), os.path.join(bin_dir, "osify-voice"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-voice-recorder.sh"), os.path.join(r4_work, "usr/local/bin/osify-voice-recorder"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-camera.sh"), os.path.join(bin_dir, "osify-camera"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-camera.sh"), os.path.join(r4_work, "usr/local/bin/osify-camera"))
+    shutil.copy2(os.path.join(REPO_ROOT, "network/osify-hotspot.sh"), os.path.join(bin_dir, "osify-hotspot"))
+    shutil.copy2(os.path.join(REPO_ROOT, "network/osify-hotspot.sh"), os.path.join(r4_work, "usr/local/bin/osify-hotspot"))
 
 
 
@@ -1976,6 +2010,66 @@ WINDOW_MANAGER="openbox"
             "Icon=/usr/share/pixmaps/osify-usb.png\n"
             "Terminal=false\n"
             "Categories=System;Utility;\n"
+        ),
+        "osify-nightlight.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Luce Notturna\n"
+            "Comment=Filtro luce blu e temperatura colore per protezione visiva\n"
+            "Exec=/usr/bin/osify-nightlight gui\n"
+            "Icon=/usr/share/pixmaps/osify-nightlight.png\n"
+            "Terminal=false\n"
+            "Categories=Settings;HardwareSettings;\n"
+        ),
+        "osify-accessibility.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Accessibilita\n"
+            "Comment=Centro aiuti visivi, ingranditore schermo e scaling caratteri\n"
+            "Exec=/usr/bin/osify-accessibility gui\n"
+            "Icon=/usr/share/pixmaps/osify-accessibility.png\n"
+            "Terminal=false\n"
+            "Categories=Settings;Accessibility;\n"
+        ),
+        "osify-backup.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Backup Personale\n"
+            "Comment=Salvataggio e ripristino di documenti, foto e configurazioni su USB\n"
+            "Exec=/usr/bin/osify-backup gui\n"
+            "Icon=/usr/share/pixmaps/osify-backup.png\n"
+            "Terminal=false\n"
+            "Categories=System;Archiving;Utility;\n"
+        ),
+        "osify-voice-recorder.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Registratore Vocale\n"
+            "Comment=Memo vocali e collaudo microfono integrato a bassissima latenza\n"
+            "Exec=/usr/bin/osify-voice gui\n"
+            "Icon=/usr/share/pixmaps/osify-voice.png\n"
+            "Terminal=false\n"
+            "Categories=AudioVideo;Audio;Recorder;\n"
+        ),
+        "osify-camera.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Fotocamera\n"
+            "Comment=Visualizzatore webcam integrata e scatto foto istantaneo\n"
+            "Exec=/usr/bin/osify-camera gui\n"
+            "Icon=/usr/share/pixmaps/osify-camera.png\n"
+            "Terminal=false\n"
+            "Categories=AudioVideo;Video;Photography;\n"
+        ),
+        "osify-hotspot.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Hotspot Wi-Fi\n"
+            "Comment=Condivisione connessione e creazione punto di accesso wireless\n"
+            "Exec=/usr/bin/osify-hotspot gui\n"
+            "Icon=/usr/share/pixmaps/osify-hotspot.png\n"
+            "Terminal=false\n"
+            "Categories=Network;Settings;HardwareSettings;\n"
         )
     }
 

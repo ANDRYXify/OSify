@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Fotocamera
+Comment=Visualizzatore webcam integrata e scatto foto istantaneo
+Exec=/opt/osify/bin/osify-camera.sh gui
+Icon=osify-camera
+Categories=AudioVideo;Video;Photography;
+Terminal=false
+Keywords=camera;webcam;fotocamera;video;foto;snapshot;uvc;

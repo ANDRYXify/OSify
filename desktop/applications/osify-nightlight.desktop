@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Luce Notturna
+Comment=Filtro luce blu e temperatura colore per protezione visiva
+Exec=/opt/osify/bin/osify-nightlight.sh gui
+Icon=osify-nightlight
+Categories=Settings;HardwareSettings;
+Terminal=false
+Keywords=night;light;blue;filter;gamma;eye;screen;schermo;riposo;

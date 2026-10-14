@@ -598,7 +598,7 @@ else
     log_fail "Desktop & File Manager: Errore nella configurazione di libfm.conf"
 fi
 
-# Test 11.7.2 Icone Native Vettoriali Complete per tutte le 34 App e Risoluzioni
+# Test 11.7.2 Icone Native Vettoriali Complete per tutte le 40 App e Risoluzioni
 if python3 -c "
 import os
 base = '$REPO_ROOT/desktop/branding/icons'
@@ -609,7 +609,9 @@ expected = [
     'osify-users', 'osify-audio', 'osify-bluetooth', 'osify-snapshot', 'osify-capture',
     'osify-phone', 'osify-power', 'osify-notepad', 'osify-calculator', 'osify-keyboard',
     'osify-archive', 'osify-printer', 'osify-share', 'osify-thermal', 'osify-benchmark',
-    'osify-firewall', 'osify-time', 'osify-touchpad', 'osify-search', 'osify-usb'
+    'osify-firewall', 'osify-time', 'osify-touchpad', 'osify-search', 'osify-usb',
+    'osify-nightlight', 'osify-accessibility', 'osify-backup', 'osify-voice',
+    'osify-camera', 'osify-hotspot'
 ]
 for sz in ['48', '64', '128']:
     d = os.path.join(base, sz)
@@ -619,12 +621,12 @@ for sz in ['48', '64', '128']:
         assert os.path.isfile(p) and os.path.getsize(p) > 200, f'Icona {app} a {sz}px mancante o corrotta'
 print('Icone native 48/64/128px validate')
 " >/dev/null 2>&1; then
-    log_pass "Iconografia Nativa OSify: Tutte le 34 icone di sistema presenti e integre a 48px, 64px e 128px (zero icone bianche)"
+    log_pass "Iconografia Nativa OSify: Tutte le 40 icone di sistema presenti e integre a 48px, 64px e 128px (zero icone bianche)"
 else
     log_fail "Iconografia Nativa OSify: Icone mancanti o incomplete nel repository"
 fi
 
-# Test 11.7.3 Sottosistemi Hardware & Utility: Brightness, Power, Screenshot, Image Viewer, Superkey, Notepad, Calc, Archive, Media, Keyboard, Disk, Share, Printer, Thermal, Benchmark, Firewall, Time, Touchpad, Search, USB
+# Test 11.7.3 Sottosistemi Hardware & Utility: Brightness, Power, Screenshot, Image Viewer, Superkey, Notepad, Calc, Archive, Media, Keyboard, Disk, Share, Printer, Thermal, Benchmark, Firewall, Time, Touchpad, Search, USB, Nightlight, Accessibility, Backup, Voice, Camera, Hotspot
 for script in \
     "$REPO_ROOT/system/display/osify-brightness.sh" \
     "$REPO_ROOT/tools/osify-gui/osify-power.sh" \
@@ -647,11 +649,17 @@ for script in \
     "$REPO_ROOT/system/time/osify-time-sync.sh" \
     "$REPO_ROOT/system/input/osify-touchpad.sh" \
     "$REPO_ROOT/tools/osify-gui/osify-search.sh" \
-    "$REPO_ROOT/tools/osify-gui/osify-usb-writer.sh"; do
-    if [ -x "$script" ]; then
+    "$REPO_ROOT/tools/osify-gui/osify-usb-writer.sh" \
+    "$REPO_ROOT/system/display/osify-nightlight.sh" \
+    "$REPO_ROOT/tools/osify-gui/osify-accessibility.sh" \
+    "$REPO_ROOT/tools/osify-gui/osify-backup.sh" \
+    "$REPO_ROOT/tools/osify-gui/osify-voice-recorder.sh" \
+    "$REPO_ROOT/tools/osify-gui/osify-camera.sh" \
+    "$REPO_ROOT/network/osify-hotspot.sh"; do
+    if [ -x "$script" ] && bash -n "$script" 2>/dev/null; then
         log_pass "Toolchain Hardware & Desktop: Eseguibile $(basename "$script") presente e con sintassi valida"
     else
-        log_fail "Toolchain Hardware & Desktop: Script $(basename "$script") non trovato o non eseguibile"
+        log_fail "Toolchain Hardware & Desktop: Script $(basename "$script") non trovato o con errore sintassi"
     fi
 done
 

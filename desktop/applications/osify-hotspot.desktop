@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Hotspot Wi-Fi
+Comment=Condivisione connessione e creazione punto di accesso wireless
+Exec=/opt/osify/bin/osify-hotspot.sh gui
+Icon=osify-hotspot
+Categories=Network;Settings;HardwareSettings;
+Terminal=false
+Keywords=wifi;hotspot;tethering;access;point;condivisione;ap;rete;

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Accessibilita
+Comment=Centro aiuti visivi, ingranditore schermo e scaling caratteri
+Exec=/opt/osify/bin/osify-accessibility.sh gui
+Icon=osify-accessibility
+Categories=Settings;Accessibility;
+Terminal=false
+Keywords=accessibility;accessibilita;zoom;magnifier;dpi;font;ipovedenti;contrasto;

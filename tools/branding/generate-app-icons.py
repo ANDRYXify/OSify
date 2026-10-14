@@ -442,6 +442,72 @@ def sym_usb(d, sz, col, sc):
     # Connettore
     d.rectangle([cx - w + sc * 4, cy - h, cx + w - sc * 4, cy - h + sc * 10], outline="#ffffff", width=sc * 2)
 
+def sym_nightlight(d, sz, col, sc):
+    # Luna crescente calda per riposo visivo
+    cx, cy = sz // 2, sz // 2
+    r = int(sz * 0.26)
+    d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=col)
+    # Sottrazione cerchio per formare la mezzaluna
+    d.ellipse([cx - int(r * 0.5), cy - int(r * 1.1), cx + int(r * 1.2), cy + int(r * 0.6)], fill="#121620")
+
+def sym_accessibility(d, sz, col, sc):
+    # Omino universale braccia aperte accessibilita
+    cx, cy = sz // 2, sz // 2
+    hr = int(sz * 0.08)
+    # Testa
+    d.ellipse([cx - hr, cy - int(sz * 0.26) - hr, cx + hr, cy - int(sz * 0.26) + hr], fill=col)
+    # Braccia aperte
+    d.line([(cx - int(sz * 0.26), cy - int(sz * 0.10)), (cx + int(sz * 0.26), cy - int(sz * 0.10))], fill=col, width=sc * 3)
+    # Tronco
+    d.line([(cx, cy - int(sz * 0.10)), (cx, cy + int(sz * 0.10))], fill=col, width=sc * 3)
+    # Gambe divaricate
+    d.line([(cx, cy + int(sz * 0.10)), (cx - int(sz * 0.18), cy + int(sz * 0.28))], fill=col, width=sc * 3)
+    d.line([(cx, cy + int(sz * 0.10)), (cx + int(sz * 0.18), cy + int(sz * 0.28))], fill=col, width=sc * 3)
+
+def sym_backup(d, sz, col, sc):
+    # Cassaforte/Archivio con freccia di salvataggio
+    cx, cy = sz // 2, sz // 2
+    w = int(sz * 0.24)
+    h = int(sz * 0.20)
+    d.rounded_rectangle([cx - w, cy - h, cx + w, cy + h], radius=sc * 3, outline=col, width=sc * 2)
+    # Maniglia/rotella cassaforte
+    d.ellipse([cx - sc * 6, cy - sc * 6, cx + sc * 6, cy + sc * 6], outline="#38bdf8", width=sc * 2)
+    # Freccia orizzontale di archiviazione
+    d.line([(cx - w + sc * 4, cy + h - sc * 4), (cx + w - sc * 4, cy + h - sc * 4)], fill=col, width=sc * 2)
+
+def sym_voice(d, sz, col, sc):
+    # Microfono a capsula verticale con arco
+    cx, cy = sz // 2, sz // 2 - sc * 4
+    mw = int(sz * 0.10)
+    mh = int(sz * 0.18)
+    d.rounded_rectangle([cx - mw, cy - mh, cx + mw, cy + mh], radius=mw, fill=col)
+    # Supporto ad U
+    d.arc([cx - mw - sc * 6, cy - sc * 4, cx + mw + sc * 6, cy + mh + sc * 6], start=0, end=180, fill="#ffffff", width=sc * 2)
+    # Base
+    d.line([(cx, cy + mh + sc * 6), (cx, cy + mh + sc * 14)], fill="#ffffff", width=sc * 2)
+    d.line([(cx - sc * 8, cy + mh + sc * 14), (cx + sc * 8, cy + mh + sc * 14)], fill="#ffffff", width=sc * 2)
+
+def sym_camera(d, sz, col, sc):
+    # Corpo macchina fotografica
+    cx, cy = sz // 2, sz // 2
+    w = int(sz * 0.26)
+    h = int(sz * 0.18)
+    d.rounded_rectangle([cx - w, cy - h + sc * 4, cx + w, cy + h], radius=sc * 3, fill=col)
+    # Flash/mirino superiore
+    d.rounded_rectangle([cx - sc * 8, cy - h, cx + sc * 8, cy - h + sc * 6], radius=sc * 2, fill="#ffffff")
+    # Obiettivo circolare
+    d.ellipse([cx - sc * 12, cy - sc * 8, cx + sc * 12, cy + sc * 16], fill="#121620", outline="#ffffff", width=sc * 2)
+
+def sym_hotspot(d, sz, col, sc):
+    # Antenna broadcast con onde concentriche bilaterali
+    cx, cy = sz // 2, sz // 2
+    # Triangolo antenna
+    d.polygon([(cx, cy - int(sz * 0.16)), (cx - sc * 8, cy + int(sz * 0.18)), (cx + sc * 8, cy + int(sz * 0.18))], fill=col)
+    # Onde laterali
+    for r in [int(sz * 0.14), int(sz * 0.24)]:
+        d.arc([cx - r, cy - r, cx + r, cy + r], start=135, end=225, fill="#38bdf8", width=sc * 2)
+        d.arc([cx - r, cy - r, cx + r, cy + r], start=315, end=405, fill="#38bdf8", width=sc * 2)
+
 ICONS_REGISTRY = {
     "osify-hub": (sym_hub, COLOR_HUB),
     "osify-browser": (sym_browser, COLOR_BROWSER),
@@ -477,6 +543,12 @@ ICONS_REGISTRY = {
     "osify-touchpad": (sym_touchpad, "#06b6d4"),
     "osify-search": (sym_search, "#f59e0b"),
     "osify-usb": (sym_usb, "#10b981"),
+    "osify-nightlight": (sym_nightlight, "#f59e0b"),
+    "osify-accessibility": (sym_accessibility, "#38bdf8"),
+    "osify-backup": (sym_backup, "#10b981"),
+    "osify-voice": (sym_voice, "#ec4899"),
+    "osify-camera": (sym_camera, "#06b6d4"),
+    "osify-hotspot": (sym_hotspot, "#10b981"),
 }
 
 def main():

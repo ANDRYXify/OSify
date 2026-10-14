@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Backup Personale
+Comment=Salvataggio e ripristino di documenti, foto e configurazioni su USB
+Exec=/opt/osify/bin/osify-backup.sh gui
+Icon=osify-backup
+Categories=System;Archiving;Utility;
+Terminal=false
+Keywords=backup;salvataggio;ripristino;restore;usb;chiavetta;dati;tar;
