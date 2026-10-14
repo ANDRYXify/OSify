@@ -1,0 +1,252 @@
+#!/usr/bin/env python3
+"""
+OSify Native Vector App Icon Generator
+=============================================================================
+Ingegnerizzato da Andrea Taliento (ANDRYXify)
+Genera icone PNG native ad altissima risoluzione con super-sampling (antialiasing)
+specifiche per ogni applicativo OSify, eliminando qualsiasi icona bianca generica.
+=============================================================================
+"""
+
+import os
+import math
+from PIL import Image, ImageDraw
+
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+ICONS_BASE = os.path.join(REPO_ROOT, "desktop/branding/icons")
+
+# Palette Ufficiale OSify (Cyber Dark & Neon Accents)
+BG_OBSIDIAN = "#0d1117"
+BG_CARD = "#161b22"
+BORDER_COLOR = "#30363d"
+
+COLOR_HUB = "#8b5cf6"       # Viola Cyber Matrix
+COLOR_BROWSER = "#38bdf8"   # Electric Sky Blue
+COLOR_WIFI = "#10b981"      # Smeraldo / Menta Wireless
+COLOR_GAMES = "#a855f7"     # Viola Neon Gaming
+COLOR_DEV = "#f59e0b"       # Ambra / Oro Coding
+COLOR_APPEARANCE = "#ec4899" # Magenta / Display
+COLOR_TASKMGR = "#ef4444"   # Corallo / Rosso Telemetria
+COLOR_TERM = "#22c55e"      # Verde Matrix Terminale
+COLOR_INSTALL = "#10b981"   # Smeraldo Installazione Disco
+COLOR_UPDATE = "#0ea5e9"    # Azzurro Sincronizzazione
+COLOR_SETTINGS = "#94a3b8"  # Argento / Slate Impostazioni
+COLOR_FILES = "#3b82f6"     # Blu Cobalto File Manager
+COLOR_AUDIO = "#06b6d4"     # Ciano Brillante Suono
+COLOR_DRAWER = "#a855f7"    # Viola App Drawer
+
+def draw_squircle_tile(draw, size, bg_fill, border_color, radius):
+    """Disegna la piastrella di sfondo arrotondata stile icona moderna OS."""
+    draw.rounded_rectangle([2, 2, size - 3, size - 3], radius=radius, fill=bg_fill, outline=border_color, width=max(2, size // 32))
+
+def create_icon(name, draw_symbol_fn, color_accent, size=64):
+    scale = 4
+    hi_size = size * scale
+    im = Image.new("RGBA", (hi_size, hi_size), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+
+    # 1. Piastrella di sfondo stile squircle scura con bordo accento leggero
+    tile_radius = int(hi_size * 0.22)
+    d.rounded_rectangle([4, 4, hi_size - 5, hi_size - 5], radius=tile_radius, fill="#121620", outline="#252d3d", width=scale * 2)
+
+    # 2. Cerchio di bagliore interno colorato (accent glow)
+    glow_pad = int(hi_size * 0.12)
+    d.ellipse([glow_pad, glow_pad, hi_size - glow_pad, hi_size - glow_pad], outline=color_accent, width=max(1, scale))
+
+    # 3. Disegno simbolo specifico vettoriale
+    draw_symbol_fn(d, hi_size, color_accent, scale)
+
+    # 4. Ridimensionamento con super-sampling Lanczos per nitidezza perfetta
+    resampled = im.resize((size, size), Image.Resampling.LANCZOS)
+    return resampled
+
+# --- Simboli Vettoriali Specifici ---
+
+def sym_hub(d, sz, col, sc):
+    # Razzo Cyber Matrix lanciato verso l'alto a destra
+    cx, cy = sz // 2, sz // 2
+    w = sz * 0.35
+    # Corpo razzo (ogiva triangolare arrotondata)
+    pts = [
+        (cx + w * 0.6, cy - w * 0.6),
+        (cx + w * 0.4, cy + w * 0.1),
+        (cx - w * 0.1, cy + w * 0.4),
+        (cx - w * 0.6, cy + w * 0.6),
+        (cx - w * 0.4, cy - w * 0.1),
+        (cx - w * 0.1, cy - w * 0.4),
+    ]
+    d.polygon(pts, fill=col)
+    # Oblò centrale
+    d.ellipse([cx - sc * 4, cy - sc * 4, cx + sc * 4, cy + sc * 4], fill="#ffffff")
+
+def sym_browser(d, sz, col, sc):
+    # Globo con meridiani e paralleli
+    cx, cy = sz // 2, sz // 2
+    r = int(sz * 0.28)
+    lw = sc * 2
+    d.ellipse([cx - r, cy - r, cx + r, cy + r], outline=col, width=lw)
+    d.line([(cx - r, cy), (cx + r, cy)], fill=col, width=lw)
+    # Meridiano
+    d.ellipse([cx - r // 2, cy - r, cx + r // 2, cy + r], outline=col, width=lw)
+
+def sym_wifi(d, sz, col, sc):
+    # Onde radio ad arco concentrico
+    cx = sz // 2
+    by = sz // 2 + int(sz * 0.18)
+    # Punto base
+    d.ellipse([cx - sc * 4, by - sc * 4, cx + sc * 4, by + sc * 4], fill=col)
+    # 2 archi superiori
+    for r in [int(sz * 0.18), int(sz * 0.32)]:
+        d.arc([cx - r, by - r, cx + r, by + r], start=215, end=325, fill=col, width=sc * 3)
+
+def sym_games(d, sz, col, sc):
+    # Gamepad minimalista
+    cx, cy = sz // 2, sz // 2
+    w = int(sz * 0.32)
+    h = int(sz * 0.18)
+    d.rounded_rectangle([cx - w, cy - h, cx + w, cy + h], radius=sc * 6, outline=col, width=sc * 3)
+    # D-pad sinistro
+    d.line([(cx - w + sc * 8, cy), (cx - w + sc * 18, cy)], fill=col, width=sc * 2)
+    d.line([(cx - w + sc * 13, cy - sc * 5), (cx - w + sc * 13, cy + sc * 5)], fill=col, width=sc * 2)
+    # Tasti destra
+    d.ellipse([cx + w - sc * 14, cy - sc * 6, cx + w - sc * 10, cy - sc * 2], fill=col)
+    d.ellipse([cx + w - sc * 8, cy, cx + w - sc * 4, cy + sc * 4], fill=col)
+
+def sym_developer(d, sz, col, sc):
+    # Prompt '</>'
+    cx, cy = sz // 2, sz // 2
+    lw = sc * 3
+    # '<'
+    d.line([(cx - sc * 12, cy), (cx - sc * 22, cy - sc * 10)], fill=col, width=lw)
+    d.line([(cx - sc * 12, cy), (cx - sc * 22, cy + sc * 10)], fill=col, width=lw)
+    # '/'
+    d.line([(cx - sc * 4, cy + sc * 14), (cx + sc * 4, cy - sc * 14)], fill="#ffffff", width=lw)
+    # '>'
+    d.line([(cx + sc * 12, cy), (cx + sc * 22, cy - sc * 10)], fill=col, width=lw)
+    d.line([(cx + sc * 12, cy), (cx + sc * 22, cy + sc * 10)], fill=col, width=lw)
+
+def sym_appearance(d, sz, col, sc):
+    # Monitor e slider regolazione
+    cx, cy = sz // 2, sz // 2
+    w = int(sz * 0.28)
+    h = int(sz * 0.20)
+    d.rounded_rectangle([cx - w, cy - h - sc * 4, cx + w, cy + h - sc * 4], radius=sc * 4, outline=col, width=sc * 2)
+    d.line([(cx, cy + h - sc * 4), (cx, cy + h + sc * 6)], fill=col, width=sc * 2)
+    d.line([(cx - sc * 10, cy + h + sc * 6), (cx + sc * 10, cy + h + sc * 6)], fill=col, width=sc * 2)
+    # Pennello / slider interno
+    d.line([(cx - sc * 12, cy - sc * 4), (cx + sc * 12, cy - sc * 4)], fill="#ffffff", width=sc * 2)
+
+def sym_taskmanager(d, sz, col, sc):
+    # Elettrocardiogramma / telemetria CPU
+    cx, cy = sz // 2, sz // 2
+    w = int(sz * 0.32)
+    lw = sc * 2
+    pts = [
+        (cx - w, cy),
+        (cx - w * 0.5, cy),
+        (cx - w * 0.25, cy - sc * 12),
+        (cx, cy + sc * 16),
+        (cx + w * 0.25, cy - sc * 8),
+        (cx + w * 0.5, cy),
+        (cx + w, cy)
+    ]
+    d.line(pts, fill=col, width=lw, joint="curve")
+
+def sym_terminal(d, sz, col, sc):
+    # Finestra shell con prompt >_
+    cx, cy = sz // 2, sz // 2
+    w = int(sz * 0.30)
+    h = int(sz * 0.22)
+    d.rounded_rectangle([cx - w, cy - h, cx + w, cy + h], radius=sc * 4, outline=col, width=sc * 2)
+    # Prompt >
+    d.line([(cx - w + sc * 6, cy - sc * 6), (cx - w + sc * 14, cy)], fill=col, width=sc * 2)
+    d.line([(cx - w + sc * 14, cy), (cx - w + sc * 6, cy + sc * 6)], fill=col, width=sc * 2)
+    # Underscore _
+    d.line([(cx - w + sc * 18, cy + sc * 6), (cx - w + sc * 28, cy + sc * 6)], fill="#ffffff", width=sc * 2)
+
+def sym_install(d, sz, col, sc):
+    # Disco fisso con freccia rivolta verso il basso
+    cx, cy = sz // 2, sz // 2
+    w = int(sz * 0.28)
+    h = int(sz * 0.12)
+    # Drive HDD
+    d.rounded_rectangle([cx - w, cy + sc * 2, cx + w, cy + sc * 2 + h], radius=sc * 3, outline=col, width=sc * 2)
+    d.ellipse([cx + w - sc * 10, cy + sc * 6, cx + w - sc * 6, cy + sc * 10], fill=col)
+    # Freccia in giù
+    d.line([(cx, cy - sc * 16), (cx, cy - sc * 2)], fill="#ffffff", width=sc * 3)
+    d.line([(cx - sc * 8, cy - sc * 8), (cx, cy - sc * 2)], fill="#ffffff", width=sc * 3)
+    d.line([(cx + sc * 8, cy - sc * 8), (cx, cy - sc * 2)], fill="#ffffff", width=sc * 3)
+
+def sym_update(d, sz, col, sc):
+    # Frecce circolari sincronizzazione
+    cx, cy = sz // 2, sz // 2
+    r = int(sz * 0.24)
+    lw = sc * 3
+    d.arc([cx - r, cy - r, cx + r, cy + r], start=30, end=150, fill=col, width=lw)
+    d.arc([cx - r, cy - r, cx + r, cy + r], start=210, end=330, fill=col, width=lw)
+
+def sym_settings(d, sz, col, sc):
+    # Ingranaggio geometrico
+    cx, cy = sz // 2, sz // 2
+    r_in = int(sz * 0.12)
+    r_out = int(sz * 0.24)
+    lw = sc * 2
+    d.ellipse([cx - r_in, cy - r_in, cx + r_in, cy + r_in], outline=col, width=lw)
+    for deg in range(0, 360, 45):
+        rad = math.radians(deg)
+        x1 = cx + int(r_in * math.cos(rad))
+        y1 = cy + int(r_in * math.sin(rad))
+        x2 = cx + int(r_out * math.cos(rad))
+        y2 = cy + int(r_out * math.sin(rad))
+        d.line([(x1, y1), (x2, y2)], fill=col, width=sc * 3)
+
+def sym_files(d, sz, col, sc):
+    # Cartella documenti con tab
+    cx, cy = sz // 2, sz // 2
+    w = int(sz * 0.30)
+    h = int(sz * 0.20)
+    # Tab
+    d.rounded_rectangle([cx - w, cy - h - sc * 4, cx - w + int(w * 0.8), cy - h + sc * 2], radius=sc * 2, fill=col)
+    # Corpo
+    d.rounded_rectangle([cx - w, cy - h, cx + w, cy + h], radius=sc * 3, outline=col, width=sc * 2)
+
+def sym_drawer(d, sz, col, sc):
+    # Griglia di 9 quadratini (App Drawer / Launchpad)
+    cx, cy = sz // 2, sz // 2
+    step = int(sz * 0.16)
+    r = sc * 4
+    for dx in [-step, 0, step]:
+        for dy in [-step, 0, step]:
+            x = cx + dx
+            y = cy + dy
+            d.rounded_rectangle([x - r, y - r, x + r, y + r], radius=sc, fill=col)
+
+ICONS_REGISTRY = {
+    "osify-hub": (sym_hub, COLOR_HUB),
+    "osify-browser": (sym_browser, COLOR_BROWSER),
+    "osify-wifi": (sym_wifi, COLOR_WIFI),
+    "osify-games": (sym_games, COLOR_GAMES),
+    "osify-developer": (sym_developer, COLOR_DEV),
+    "osify-appearance": (sym_appearance, COLOR_APPEARANCE),
+    "osify-taskmanager": (sym_taskmanager, COLOR_TASKMGR),
+    "osify-terminal": (sym_terminal, COLOR_TERM),
+    "osify-install": (sym_install, COLOR_INSTALL),
+    "osify-update": (sym_update, COLOR_UPDATE),
+    "osify-settings": (sym_settings, COLOR_SETTINGS),
+    "osify-files": (sym_files, COLOR_FILES),
+    "osify-drawer": (sym_drawer, COLOR_DRAWER),
+}
+
+def main():
+    print("[+] Generazione icone native vettoriali OSify in alta risoluzione...")
+    for size in [48, 64, 128]:
+        out_dir = os.path.join(ICONS_BASE, str(size))
+        os.makedirs(out_dir, exist_ok=True)
+        for name, (draw_fn, color) in ICONS_REGISTRY.items():
+            img = create_icon(name, draw_fn, color, size=size)
+            target_path = os.path.join(out_dir, f"{name}.png")
+            img.save(target_path, "PNG")
+    print(f"[✓] Generate con successo {len(ICONS_REGISTRY)} icone per i formati 48px, 64px e 128px!")
+
+if __name__ == "__main__":
+    main()

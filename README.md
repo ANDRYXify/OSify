@@ -62,6 +62,8 @@ OSify è un sistema operativo basato su Linux ingegnerizzato su due target archi
 
 OSify non è un clone o una derivata generica: è un sistema operativo con un'architettura completa progettata per consentire all'utente di lavorare, programmare, giocare e personalizzare ogni aspetto fin dal primo secondo.
 
+* **🚀 OSify App Drawer & Launchpad**: Menu applicazioni universale con barra di ricerca istantanea in tempo reale, suddivisione a schede di categoria (Internet, Gaming, Sviluppo, Ufficio, Aspetto, Sistema), navigazione a tastiera/mouse e scorciatoie globali immediate (`Super`, `Super+Space`, `Super+A`, `F1` o clic sul dock).
+* **🎨 Icone Native Vettoriali Garantite (Zero Icone Bianche)**: Set completo di icone PNG proprietarie disegnate geometricamente con colori specifici ad alto contrasto per ciascuna applicazione (Hub, Web, Wi-Fi, Gaming, Coding, File, Display, Task Manager, Installatore, Update), caricate direttamente tramite percorsi assoluti `/usr/share/pixmaps/`.
 * **Identità Nativa e Personale (Zero Residui Tux)**: L'utente configura il proprio profilo reale (Nome, Username, Password crittografata SHA-512, Hostname). L'ambiente Live opera sotto l'utente ufficiale `osify`.
 * **Live-to-Disk Profile & Data Persistence**: Durante l'installazione su disco fisso (`osify-install`), il sistema preserva e migra **integralmente** sul nuovo account tutti i file salvati, documenti, cronologia e configurazioni create durante la sessione Live. Nessun dato va perso.
 * **🌐 Web & Connettività Wi-Fi**: Browser nativo ultra-veloce (`osify-browser`) e gestore reti wireless guidato (`osify-wifi`) con scansione SSID, WPA2/WPA3, DHCP immediato e protezione DNS anti-leak.

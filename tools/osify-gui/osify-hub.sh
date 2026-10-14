@@ -128,22 +128,33 @@ take_screenshot() {
     fi
 }
 
+open_app_drawer() {
+    if [ -x /usr/bin/osify-app-drawer ]; then
+        /usr/bin/osify-app-drawer &
+    elif [ -f /opt/osify/tools/osify-gui/osify-app-drawer.py ]; then
+        python3 /opt/osify/tools/osify-gui/osify-app-drawer.py &
+    elif [ -f "$(dirname "$0")/osify-app-drawer.py" ]; then
+        python3 "$(dirname "$0")/osify-app-drawer.py" &
+    fi
+}
+
 # Loop Menu Principale
 while true; do
     if command -v dialog >/dev/null 2>&1; then
         CHOICE=$(dialog --stdout --backtitle "OSify Operating System — Ingegnerizzato da Andrea Taliento (ANDRYXify)" \
             --title " 🚀 OSify Hub — Il Tuo Sistema Operativo a 360° " \
-            --menu "Edizione: $OSIFY_TIER\nCPU: $CPU_MODEL ($CPU_CORES Core) | RAM: $RAM_AVAIL / $RAM_TOTAL\nDisplay: $DISP_RES | GPU: $GPU_NAME\n\nCosa desideri fare?" 22 75 11 \
-            "1" "🌐  Naviga su Internet (Browser Web Grafico Veloce)" \
-            "2" "📡  Connettiti al Wi-Fi (Scansione Reti & Password)" \
-            "3" "🎮  Gaming & Retrogaming Hub (Windows .exe, DOS, Emulazione)" \
-            "4" "💻  Programma & Sviluppa (Python 3, C/TCC, Git, Nano, Progetti)" \
-            "5" "📁  Lavoro & Produttività (File Manager, PDF, Archivi, Cattura)" \
-            "6" "🎨  Personalizzazione (Virtual Scaler 1280x768, Sfondi, Temi)" \
-            "7" "⚡  Turbo Boost Hardware (CPU Performance + zRAM 1GB + Touchpad)" \
-            "8" "🔊  Audio & Calibrazione Suono (Sblocca Master/PCM al 90%)" \
-            "9" "📊  Task Manager & Monitor Risorse (Processi in tempo reale)" \
-            "10" "💾  Installa OSify su Disco Fisso (con migrazione profilo Live)" \
+            --menu "Edizione: $OSIFY_TIER\nCPU: $CPU_MODEL ($CPU_CORES Core) | RAM: $RAM_AVAIL / $RAM_TOTAL\nDisplay: $DISP_RES | GPU: $GPU_NAME\n\nCosa desideri fare?" 23 75 12 \
+            "1" "🚀  Apri App Drawer (Launchpad con Ricerca Istantanea)" \
+            "2" "🌐  Naviga su Internet (Browser Web Grafico Veloce)" \
+            "3" "📡  Connettiti al Wi-Fi (Scansione Reti & Password)" \
+            "4" "🎮  Gaming & Retrogaming Hub (Windows .exe, DOS, Emulazione)" \
+            "5" "💻  Programma & Sviluppa (Python 3, C/TCC, Git, Nano, Progetti)" \
+            "6" "📁  Lavoro & Produttività (File Manager, PDF, Archivi, Cattura)" \
+            "7" "🎨  Personalizzazione (Virtual Scaler 1280x768, Sfondi, Temi)" \
+            "8" "⚡  Turbo Boost Hardware (CPU Performance + zRAM 1GB + Touchpad)" \
+            "9" "🔊  Audio & Calibrazione Suono (Sblocca Master/PCM al 90%)" \
+            "10" "📊  Task Manager & Monitor Risorse (Processi in tempo reale)" \
+            "11" "💾  Installa OSify su Disco Fisso (con migrazione profilo Live)" \
             "0" "❌  Torna al Desktop" 2>/dev/null || echo "0")
     else
         clear
@@ -155,32 +166,34 @@ while true; do
         echo " RAM      : $RAM_AVAIL liberi su $RAM_TOTAL"
         echo " Display  : $DISP_RES | GPU: $GPU_NAME"
         echo "---------------------------------------------------------"
-        echo "  1) 🌐 Naviga su Internet (Browser Web Grafico)"
-        echo "  2) 📡 Connettiti al Wi-Fi (Scansione reti wireless)"
-        echo "  3) 🎮 Gaming & Retrogaming (Windows .exe, DOS, Emulazione)"
-        echo "  4) 💻 Programma & Sviluppa (Python 3, C, Git, Nano)"
-        echo "  5) 📁 Lavoro & File (File Manager, PDF, Archivi)"
-        echo "  6) 🎨 Personalizzazione (Scaler 1280x768, Sfondi, Temi)"
-        echo "  7) ⚡ Turbo Boost (CPU Performance + zRAM 1GB)"
-        echo "  8) 🔊 Sblocca Audio ALSA"
-        echo "  9) 📊 Task Manager & Monitor Processi"
-        echo " 10) 💾 Installa OSify su Disco Fisso (con migrazione Live)"
+        echo "  1) 🚀 Apri App Drawer (Launchpad con Ricerca Istantanea)"
+        echo "  2) 🌐 Naviga su Internet (Browser Web Grafico)"
+        echo "  3) 📡 Connettiti al Wi-Fi (Scansione reti wireless)"
+        echo "  4) 🎮 Gaming & Retrogaming (Windows .exe, DOS, Emulazione)"
+        echo "  5) 💻 Programma & Sviluppa (Python 3, C, Git, Nano)"
+        echo "  6) 📁 Lavoro & File (File Manager, PDF, Archivi)"
+        echo "  7) 🎨 Personalizzazione (Scaler 1280x768, Sfondi, Temi)"
+        echo "  8) ⚡ Turbo Boost (CPU Performance + zRAM 1GB)"
+        echo "  9) 🔊 Sblocca Audio ALSA"
+        echo " 10) 📊 Task Manager & Monitor Processi"
+        echo " 11) 💾 Installa OSify su Disco Fisso (con migrazione Live)"
         echo "  0) ❌ Esci al Desktop"
         echo "========================================================="
-        read -rp "Selezione [0-10]: " CHOICE
+        read -rp "Selezione [0-11]: " CHOICE
     fi
 
     case "$CHOICE" in
-        1) open_browser ;;
-        2) open_wifi_manager ;;
-        3) open_gaming_hub ;;
-        4) open_developer_suite ;;
-        5) pcmanfm "$HOME" & ;;
-        6) open_appearance_mgr ;;
-        7) boost_system ;;
-        8) unmute_audio ;;
-        9) terminal -geometry 95x26 -T 'OSify Task Manager' -e /usr/bin/osify-taskmanager & ;;
-        10) terminal -geometry 95x28 -T 'OSify Bare-Metal Installer' -e /usr/bin/osify-install & ;;
+        1) open_app_drawer ;;
+        2) open_browser ;;
+        3) open_wifi_manager ;;
+        4) open_gaming_hub ;;
+        5) open_developer_suite ;;
+        6) pcmanfm "$HOME" & ;;
+        7) open_appearance_mgr ;;
+        8) boost_system ;;
+        9) unmute_audio ;;
+        10) terminal -geometry 95x26 -T 'OSify Task Manager' -e /usr/bin/osify-taskmanager & ;;
+        11) terminal -geometry 95x28 -T 'OSify Bare-Metal Installer' -e /usr/bin/osify-install & ;;
         0|"") clear; exit 0 ;;
         *) clear; exit 0 ;;
     esac

@@ -319,6 +319,8 @@ copy_live_system_tree() {
     mkdir -p "$MOUNT_POINT/usr/local/bin" "$MOUNT_POINT/usr/bin"
     ln -sf "/opt/osify/tools/osify-ctl" "$MOUNT_POINT/usr/local/bin/osify-ctl" 2>/dev/null || true
     ln -sf "/opt/osify/uem/runners/osify-universal-dispatcher.sh" "$MOUNT_POINT/usr/local/bin/osify-exec" 2>/dev/null || true
+    ln -sf "/opt/osify/tools/osify-gui/osify-app-drawer.py" "$MOUNT_POINT/usr/bin/osify-app-drawer" 2>/dev/null || true
+    ln -sf "/opt/osify/tools/osify-gui/osify-app-drawer.py" "$MOUNT_POINT/usr/bin/osify-drawer" 2>/dev/null || true
     ln -sf "/opt/osify/tools/osify-gui/osify-hub.sh" "$MOUNT_POINT/usr/bin/osify-hub" 2>/dev/null || true
     ln -sf "/opt/osify/tools/osify-gui/osify-browser.sh" "$MOUNT_POINT/usr/bin/osify-browser" 2>/dev/null || true
     ln -sf "/opt/osify/network/osify-wifi-gui.sh" "$MOUNT_POINT/usr/bin/osify-wifi" 2>/dev/null || true
@@ -327,6 +329,19 @@ copy_live_system_tree() {
     ln -sf "/opt/osify/tools/osify-gui/osify-appearance.sh" "$MOUNT_POINT/usr/bin/osify-appearance" 2>/dev/null || true
     ln -sf "/opt/osify/tools/osify-gui/osify-taskmanager.sh" "$MOUNT_POINT/usr/bin/osify-taskmanager" 2>/dev/null || true
     ln -sf "/opt/osify/tools/osify-gui/osify-terminal.sh" "$MOUNT_POINT/usr/bin/osify-terminal" 2>/dev/null || true
+
+    # Copia Icone Native Vettoriali OSify (Eliminazione Totale Icone Bianche su Disco)
+    mkdir -p "$MOUNT_POINT/usr/share/pixmaps" "$MOUNT_POINT/usr/share/icons/hicolor/48x48/apps"
+    if [ -d "$REPO_ROOT/desktop/branding/icons/48" ]; then
+        cp -a "$REPO_ROOT/desktop/branding/icons/48/"*.png "$MOUNT_POINT/usr/share/pixmaps/" 2>/dev/null || true
+        cp -a "$REPO_ROOT/desktop/branding/icons/48/"*.png "$MOUNT_POINT/usr/share/icons/hicolor/48x48/apps/" 2>/dev/null || true
+    fi
+
+    # Copia Launcher .desktop con Icone Native
+    mkdir -p "$MOUNT_POINT/usr/share/applications"
+    if [ -d "$REPO_ROOT/desktop/applications" ]; then
+        cp -a "$REPO_ROOT/desktop/applications/"*.desktop "$MOUNT_POINT/usr/share/applications/" 2>/dev/null || true
+    fi
 
     # Rendi tutti gli script eseguibili
     chmod +x "$MOUNT_POINT"/usr/bin/osify-* "$MOUNT_POINT"/usr/local/bin/osify-* 2>/dev/null || true

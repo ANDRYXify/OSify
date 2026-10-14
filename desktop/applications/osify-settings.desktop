@@ -1,8 +1,9 @@
 [Desktop Entry]
 Type=Application
-Name=⚙️ OSify Control Center
+Name=⚙️ Centro di Controllo
 Comment=Centro di Controllo Sistema, Rete, Touchpad e Schermo
 Exec=/usr/bin/osify-settings
-Icon=preferences-desktop
+Icon=/usr/share/pixmaps/osify-settings.png
 Terminal=false
 Categories=Settings;
+Keywords=settings;control;config;preferences;

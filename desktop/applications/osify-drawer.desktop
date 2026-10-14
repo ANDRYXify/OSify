@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=🚀 App Drawer (Tutte le App)
+Comment=Pannello Applicazioni e Launchpad con ricerca in tempo reale
+Exec=/usr/bin/osify-app-drawer
+Icon=/usr/share/pixmaps/osify-drawer.png
+Terminal=false
+Categories=System;Utility;
+Keywords=apps;drawer;launchpad;menu;programs;

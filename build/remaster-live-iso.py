@@ -351,73 +351,86 @@ Global {
 Plugin {
     type = menu
     Config {
-        image=/usr/share/pixmaps/osify.png
-        system {
+        image=/usr/share/pixmaps/osify-drawer.png
+        item {
+            name=🚀 App Drawer (Tutte le App)
+            image=/usr/share/pixmaps/osify-drawer.png
+            action=/usr/bin/osify-app-drawer
         }
         separator {
         }
         item {
             name=🚀 OSify Hub & Launchpad
-            image=/usr/share/pixmaps/osify.png
+            image=/usr/share/pixmaps/osify-hub.png
             action=terminal -geometry 74x20 -T 'OSify Hub' -e /usr/bin/osify-hub
         }
         item {
             name=🌐 Navigatore Web OSify
-            image=web-browser
+            image=/usr/share/pixmaps/osify-browser.png
             action=/usr/bin/osify-browser
         }
         item {
-            name=🎮 Universal App Matrix (UEM)
-            image=system-run
-            action=terminal -geometry 74x20 -T 'OSify UEM' -e /usr/bin/osify-hub
+            name=📡 Connessione Wi-Fi
+            image=/usr/share/pixmaps/osify-wifi.png
+            action=terminal -geometry 75x20 -T 'OSify Wi-Fi' -e /usr/bin/osify-wifi
         }
         item {
-            name=⚡ Quick Access HUD
-            image=preferences-system
-            action=/usr/bin/osify-hud
+            name=🎮 Gaming & Retrogaming Hub
+            image=/usr/share/pixmaps/osify-games.png
+            action=terminal -geometry 75x20 -T 'OSify Gaming' -e /usr/bin/osify-games
         }
         item {
-            name=📊 Task Manager & Telemetria
-            image=utilities-system-monitor
+            name=💻 Sviluppo & Codice
+            image=/usr/share/pixmaps/osify-developer.png
+            action=terminal -geometry 75x20 -T 'OSify Developer' -e /usr/bin/osify-developer
+        }
+        item {
+            name=🎨 Personalizzazione & Scaler
+            image=/usr/share/pixmaps/osify-appearance.png
+            action=terminal -geometry 75x20 -T 'OSify Appearance' -e /usr/bin/osify-appearance
+        }
+        item {
+            name=📊 Task Manager & Risorse
+            image=/usr/share/pixmaps/osify-taskmanager.png
             action=/usr/bin/osify-taskmanager
         }
         item {
             name=⚙️ Centro di Controllo
-            image=preferences-desktop
+            image=/usr/share/pixmaps/osify-settings.png
             action=/usr/bin/osify-settings
         }
         item {
-            name=💾 Installa OSify su Hard Disk
-            image=system-software-install
-            action=terminal -geometry 95x26 -T 'OSify Installer' -e /usr/bin/osify-install
+            name=💾 Installa OSify su Disco Fisso
+            image=/usr/share/pixmaps/osify-install.png
+            action=terminal -geometry 95x28 -T 'OSify Installer' -e /usr/bin/osify-install
         }
         separator {
         }
         item {
             name=Terminale Cyber
-            image=terminal
+            image=/usr/share/pixmaps/osify-terminal.png
             action=/usr/bin/osify-terminal
         }
         item {
             name=Gestore File
-            image=system-file-manager
+            image=/usr/share/pixmaps/osify-files.png
             action=pcmanfm
         }
         separator {
         }
         item {
             name=Blocca Schermo
-            image=system-lock-screen
+            image=/usr/share/pixmaps/osify-settings.png
             action=xlock
         }
         item {
             name=Riavvia Computer
-            image=system-reboot-panel
+            image=/usr/share/pixmaps/osify-update.png
             action=reboot
         }
         item {
             name=Spegni Computer
-            image=system-shutdown-panel
+            image=/usr/share/pixmaps/osify-taskmanager.png
             action=poweroff
         }
     }
@@ -427,22 +440,28 @@ Plugin {
     type = launchbar
     Config {
         Button {
+            id=/usr/share/applications/osify-drawer.desktop
+        }
+        Button {
             id=/usr/share/applications/osify-hub.desktop
         }
         Button {
             id=/usr/share/applications/osify-browser.desktop
         }
         Button {
-            id=/usr/share/applications/osify-uem.desktop
+            id=/usr/share/applications/osify-wifi.desktop
+        }
+        Button {
+            id=/usr/share/applications/osify-games.desktop
+        }
+        Button {
+            id=/usr/share/applications/osify-developer.desktop
         }
         Button {
             id=/usr/share/applications/pcmanfm.desktop
         }
         Button {
             id=/usr/share/applications/osify-terminal.desktop
-        }
-        Button {
-            id=/usr/share/applications/osify-settings.desktop
         }
         Button {
             id=/usr/share/applications/osify-install.desktop
@@ -566,13 +585,17 @@ Plugin {
             rc_content = f.read()
         custom_keys = """
     <!-- OSify Universali Hotkeys -->
-    <keybind key="W-a"><action name="Execute"><command>/usr/bin/osify-hub</command></action></keybind>
+    <keybind key="W-space"><action name="Execute"><command>/usr/bin/osify-app-drawer</command></action></keybind>
+    <keybind key="W-a"><action name="Execute"><command>/usr/bin/osify-app-drawer</command></action></keybind>
+    <keybind key="Super_L"><action name="Execute"><command>/usr/bin/osify-app-drawer</command></action></keybind>
+    <keybind key="F1"><action name="Execute"><command>/usr/bin/osify-app-drawer</command></action></keybind>
+    <keybind key="W-h"><action name="Execute"><command>/usr/bin/osify-hub</command></action></keybind>
     <keybind key="C-S-Escape"><action name="Execute"><command>/usr/bin/osify-taskmanager</command></action></keybind>
     <keybind key="W-F10"><action name="Execute"><command>/usr/bin/osify-hud --toggle-scale</command></action></keybind>
     <keybind key="W-t"><action name="Execute"><command>/usr/bin/osify-terminal</command></action></keybind>
     <keybind key="C-A-t"><action name="Execute"><command>/usr/bin/osify-terminal</command></action></keybind>
     <keybind key="W-e"><action name="Execute"><command>pcmanfm</command></action></keybind>
-    <keybind key="W-F1"><action name="Execute"><command>/usr/bin/osify-welcome</command></action></keybind>
+    <keybind key="W-w"><action name="Execute"><command>/usr/bin/osify-browser</command></action></keybind>
 """
         if "</keyboard>" in rc_content:
             rc_content = rc_content.replace("</keyboard>", f"{custom_keys}\n  </keyboard>")
@@ -808,6 +831,9 @@ LABEL memtest
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-games.sh"), os.path.join(bin_dir, "osify-games"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-developer.sh"), os.path.join(bin_dir, "osify-developer"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-appearance.sh"), os.path.join(bin_dir, "osify-appearance"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-app-drawer.py"), os.path.join(bin_dir, "osify-app-drawer.py"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-app-drawer.sh"), os.path.join(bin_dir, "osify-app-drawer"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-app-drawer.sh"), os.path.join(bin_dir, "osify-drawer"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/input/osify-input-setup.sh"), os.path.join(bin_dir, "osify-input-setup"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/session/osify-session.sh"), os.path.join(bin_dir, "osify-session"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/updater/osify-live-updater.sh"), os.path.join(bin_dir, "osify-update"))
@@ -848,9 +874,21 @@ LABEL memtest
     if os.path.exists(binfmt_src):
         shutil.copy2(binfmt_src, os.path.join(binfmt_dir, "99-osify.conf"))
 
-    # Iniezione Icona OSify nel sistema
+    # Iniezione Icone Native Vettoriali OSify (Eliminazione Totale Icone Bianche)
     pixmaps_dir = os.path.join(r4_work, "usr/share/pixmaps")
     os.makedirs(pixmaps_dir, exist_ok=True)
+    hicolor_dir = os.path.join(r4_work, "usr/share/icons/hicolor/48x48/apps")
+    os.makedirs(hicolor_dir, exist_ok=True)
+
+    icons_src_dir = os.path.join(REPO_ROOT, "desktop/branding/icons/48")
+    if os.path.exists(icons_src_dir):
+        for icon_file in os.listdir(icons_src_dir):
+            if icon_file.endswith(".png"):
+                src_icon = os.path.join(icons_src_dir, icon_file)
+                shutil.copy2(src_icon, os.path.join(pixmaps_dir, icon_file))
+                shutil.copy2(src_icon, os.path.join(hicolor_dir, icon_file))
+        print(f"[✓] Copiate {len(os.listdir(icons_src_dir))} icone native in /usr/share/pixmaps/")
+
     osify_png = os.path.join(REPO_ROOT, "OSify.png")
     if os.path.exists(osify_png):
         shutil.copy2(osify_png, os.path.join(pixmaps_dir, "osify.png"))
@@ -997,15 +1035,25 @@ WINDOW_MANAGER="openbox"
             f.write(OPENBOX_AUTOSTART)
         os.chmod(full_as, 0o755)
 
-    # Entry Applicative Ufficiali OSify (.desktop)
+    # Entry Applicative Ufficiali OSify (.desktop) con Icone Native Garantite
     app_entries = {
+        "osify-drawer.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=🚀 App Drawer (Tutte le App)\n"
+            "Comment=Pannello Applicazioni e Launchpad con ricerca in tempo reale\n"
+            "Exec=/usr/bin/osify-app-drawer\n"
+            "Icon=/usr/share/pixmaps/osify-drawer.png\n"
+            "Terminal=false\n"
+            "Categories=System;Utility;\n"
+        ),
         "osify-hub.desktop": (
             "[Desktop Entry]\n"
             "Type=Application\n"
             "Name=🚀 OSify Hub\n"
             "Comment=Centro di Controllo, Prestazioni e Launchpad di OSify\n"
             "Exec=terminal -geometry 74x20 -T 'OSify Hub' -e /usr/bin/osify-hub\n"
-            "Icon=/usr/share/pixmaps/osify.png\n"
+            "Icon=/usr/share/pixmaps/osify-hub.png\n"
             "Terminal=false\n"
             "Categories=System;Utility;\n"
         ),
@@ -1015,69 +1063,9 @@ WINDOW_MANAGER="openbox"
             "Name=🌐 Navigatore Web\n"
             "Comment=Naviga su Internet con rendering grafico completo e Adblock integrato\n"
             "Exec=/usr/bin/osify-browser\n"
-            "Icon=web-browser\n"
+            "Icon=/usr/share/pixmaps/osify-browser.png\n"
             "Terminal=false\n"
             "Categories=Network;WebBrowser;\n"
-        ),
-        "osify-uem.desktop": (
-            "[Desktop Entry]\n"
-            "Type=Application\n"
-            "Name=🎮 Universal App Matrix\n"
-            "Comment=Esegui app Windows (.exe), Android (.apk), iOS (.ipa), Mac (.app)\n"
-            "Exec=terminal -geometry 74x20 -T 'OSify UEM' -e /usr/bin/osify-hub\n"
-            "Icon=system-run\n"
-            "Terminal=false\n"
-            "Categories=System;Utility;\n"
-        ),
-        "osify-hud.desktop": (
-            "[Desktop Entry]\n"
-            "Type=Application\n"
-            "Name=⚡ Quick Access HUD\n"
-            "Comment=Pannello Rapido Prestazioni, zRAM e Virtual Scaler 1280x768\n"
-            "Exec=/usr/bin/osify-hud\n"
-            "Icon=preferences-system\n"
-            "Terminal=false\n"
-            "Categories=System;Settings;\n"
-        ),
-        "osify-taskmanager.desktop": (
-            "[Desktop Entry]\n"
-            "Type=Application\n"
-            "Name=📊 Task Manager\n"
-            "Comment=Task Manager Grafico e Telemetria di Sistema in Tempo Reale\n"
-            "Exec=/usr/bin/osify-taskmanager\n"
-            "Icon=utilities-system-monitor\n"
-            "Terminal=false\n"
-            "Categories=System;\n"
-        ),
-        "osify-settings.desktop": (
-            "[Desktop Entry]\n"
-            "Type=Application\n"
-            "Name=⚙️ Centro di Controllo\n"
-            "Comment=Centro di Controllo Sistema, Rete, Touchpad e Schermo\n"
-            "Exec=/usr/bin/osify-settings\n"
-            "Icon=preferences-desktop\n"
-            "Terminal=false\n"
-            "Categories=Settings;\n"
-        ),
-        "osify-terminal.desktop": (
-            "[Desktop Entry]\n"
-            "Type=Application\n"
-            "Name=💻 Terminale Cyber\n"
-            "Comment=Terminale con Fastfetch e Diagnostica Hardware\n"
-            "Exec=terminal -geometry 95x26 -T 'OSify Terminal' -e /usr/bin/osify-terminal\n"
-            "Icon=terminal\n"
-            "Terminal=false\n"
-            "Categories=System;\n"
-        ),
-        "osify-install.desktop": (
-            "[Desktop Entry]\n"
-            "Type=Application\n"
-            "Name=💾 Installa OSify su Disco\n"
-            "Comment=Installatore Guidato su Disco Fisso (HDD / SSD)\n"
-            "Exec=terminal -geometry 95x26 -T 'OSify Installer' -e /usr/bin/osify-install\n"
-            "Icon=system-software-install\n"
-            "Terminal=false\n"
-            "Categories=System;\n"
         ),
         "osify-wifi.desktop": (
             "[Desktop Entry]\n"
@@ -1085,7 +1073,7 @@ WINDOW_MANAGER="openbox"
             "Name=📡 Connessione Wi-Fi\n"
             "Comment=Scansione reti wireless, inserimento password e connessione immediata\n"
             "Exec=terminal -geometry 75x20 -T 'OSify Wi-Fi' -e /usr/bin/osify-wifi\n"
-            "Icon=network-wireless\n"
+            "Icon=/usr/share/pixmaps/osify-wifi.png\n"
             "Terminal=false\n"
             "Categories=Network;Settings;\n"
         ),
@@ -1095,7 +1083,7 @@ WINDOW_MANAGER="openbox"
             "Name=🎮 Gaming Hub\n"
             "Comment=Giochi Windows (.exe), Retrogaming DOS, Emulazione e Turbo Boost\n"
             "Exec=terminal -geometry 75x20 -T 'OSify Gaming' -e /usr/bin/osify-games\n"
-            "Icon=applications-games\n"
+            "Icon=/usr/share/pixmaps/osify-games.png\n"
             "Terminal=false\n"
             "Categories=Game;\n"
         ),
@@ -1105,7 +1093,7 @@ WINDOW_MANAGER="openbox"
             "Name=💻 Sviluppo & Codice\n"
             "Comment=Suite di Programmazione: Python 3, C, Git, Editor e Progetti\n"
             "Exec=terminal -geometry 75x20 -T 'OSify Developer' -e /usr/bin/osify-developer\n"
-            "Icon=applications-development\n"
+            "Icon=/usr/share/pixmaps/osify-developer.png\n"
             "Terminal=false\n"
             "Categories=Development;\n"
         ),
@@ -1115,9 +1103,39 @@ WINDOW_MANAGER="openbox"
             "Name=🎨 Personalizzazione & Scaler\n"
             "Comment=Virtual Scaler Netbook 1280x768, Sfondi Cyber Dark e Risoluzioni\n"
             "Exec=terminal -geometry 75x20 -T 'OSify Appearance' -e /usr/bin/osify-appearance\n"
-            "Icon=preferences-desktop-theme\n"
+            "Icon=/usr/share/pixmaps/osify-appearance.png\n"
             "Terminal=false\n"
             "Categories=Settings;\n"
+        ),
+        "osify-taskmanager.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=📊 Task Manager\n"
+            "Comment=Task Manager Grafico e Telemetria di Sistema in Tempo Reale\n"
+            "Exec=/usr/bin/osify-taskmanager\n"
+            "Icon=/usr/share/pixmaps/osify-taskmanager.png\n"
+            "Terminal=false\n"
+            "Categories=System;\n"
+        ),
+        "osify-terminal.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=💻 Terminale Cyber\n"
+            "Comment=Terminale con Fastfetch e Diagnostica Hardware\n"
+            "Exec=terminal -geometry 95x26 -T 'OSify Terminal' -e /usr/bin/osify-terminal\n"
+            "Icon=/usr/share/pixmaps/osify-terminal.png\n"
+            "Terminal=false\n"
+            "Categories=System;\n"
+        ),
+        "osify-install.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=💾 Installa OSify su Disco\n"
+            "Comment=Installatore Guidato su Disco Fisso con Migrazione Dati Live\n"
+            "Exec=terminal -geometry 95x28 -T 'OSify Installer' -e /usr/bin/osify-install\n"
+            "Icon=/usr/share/pixmaps/osify-install.png\n"
+            "Terminal=false\n"
+            "Categories=System;\n"
         ),
         "osify-update.desktop": (
             "[Desktop Entry]\n"
@@ -1125,9 +1143,19 @@ WINDOW_MANAGER="openbox"
             "Name=🔄 Aggiorna OSify\n"
             "Comment=Verifica e installa aggiornamenti ufficiali a caldo\n"
             "Exec=/usr/bin/osify-update --gui\n"
-            "Icon=system-software-update\n"
+            "Icon=/usr/share/pixmaps/osify-update.png\n"
             "Terminal=false\n"
             "Categories=System;Settings;PackageManager;\n"
+        ),
+        "osify-settings.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=⚙️ Centro di Controllo\n"
+            "Comment=Centro di Controllo Sistema, Rete, Touchpad e Schermo\n"
+            "Exec=/usr/bin/osify-settings\n"
+            "Icon=/usr/share/pixmaps/osify-settings.png\n"
+            "Terminal=false\n"
+            "Categories=Settings;\n"
         ),
         "osify-welcome.desktop": (
             "[Desktop Entry]\n"
@@ -1135,7 +1163,7 @@ WINDOW_MANAGER="openbox"
             "Name=👋 Benvenuto in OSify\n"
             "Comment=Esperienza di Primo Avvio e Diagnostica Netbook\n"
             "Exec=/usr/bin/osify-hub\n"
-            "Icon=/usr/share/pixmaps/osify.png\n"
+            "Icon=/usr/share/pixmaps/osify-hub.png\n"
             "Terminal=false\n"
             "Categories=System;\n"
         )
