@@ -163,80 +163,7 @@ def create_boot_splash(dest_jpg):
 CLEAN_XINITRC = """#!/bin/sh
 # OSify Universal Desktop Session Manager
 # Ingegnerizzato da Andrea Taliento (ANDRYXify)
-
-# 1. Carica configurazione desktop
-if [ -f "$HOME/.config/slitaz/applications.conf" ]; then
-    . "$HOME/.config/slitaz/applications.conf"
-elif [ -f "/etc/slitaz/applications.conf" ]; then
-    . "/etc/slitaz/applications.conf"
-fi
-
-[ -z "$WINDOW_MANAGER" ] && WINDOW_MANAGER="openbox"
-[ -n "$1" ] && WINDOW_MANAGER="$1"
-
-# 2. Pulizia root window e colore solido Cyber-Dark
-if command -v xsetroot >/dev/null 2>&1; then
-    xsetroot -solid "#0b0d14" 2>/dev/null &
-fi
-
-# 3. Avvio Gestore Scrivania PCManFM (Desktop Manager) per sfondo e icone
-if command -v pcmanfm >/dev/null 2>&1; then
-    (sleep 0.5 && pgrep -f "pcmanfm --desktop" >/dev/null || pcmanfm --desktop) 2>/dev/null &
-fi
-
-# 4. Aggiorna menu applicazioni di sistema
-if command -v tazbox >/dev/null 2>&1; then
-    tazbox mkmenu 2>/dev/null &
-fi
-
-# 5. Driver Touchpad Synaptics/Alps (Tap e Scorrimento Bordo)
-if command -v synclient >/dev/null 2>&1; then
-    (synclient TapButton1=1 TapButton2=3 TapButton3=2 VertEdgeScroll=1 HorizEdgeScroll=1) 2>/dev/null &
-fi
-
-# 6. Avvio LXPanel Cyber-Bar se non gia attivo
-if command -v lxpanel >/dev/null 2>&1; then
-    (sleep 1 && pgrep -x lxpanel >/dev/null || lxpanel --profile slitaz) 2>/dev/null &
-fi
-
-# 7. OSify First-Boot Wizard & Quick Diagnostic
-if [ -x /usr/bin/osify-welcome ]; then
-    (sleep 1.5 && /usr/bin/osify-welcome) 2>/dev/null &
-fi
-
-# 8. Wrapper D-Bus / ConsoleKit per permessi utente
-if [ -f '/usr/bin/ck-launch-session' ]; then
-    EXEC="exec ck-launch-session dbus-launch --sh-syntax --exit-with-session"
-elif command -v dbus-launch >/dev/null 2>&1; then
-    EXEC="exec dbus-launch --sh-syntax --exit-with-session"
-else
-    EXEC="exec"
-fi
-
-# 9. Keymap layout italiano se configurato
-if [ -f /etc/keymap.conf ]; then
-    kmaplang=$(cat /etc/keymap.conf | awk -F'-' '{print $1}')
-    [ -n "$kmaplang" ] && setxkbmap "$kmaplang" 2>/dev/null
-fi
-
-# 10. Esecuzione Window Manager
-case "$WINDOW_MANAGER" in
-    openbox|openbox-session)
-        $EXEC openbox-session
-        ;;
-    lxde*|lxde-session)
-        $EXEC startlxde
-        ;;
-    *)
-        if command -v openbox-session >/dev/null 2>&1; then
-            $EXEC openbox-session
-        elif command -v "$WINDOW_MANAGER" >/dev/null 2>&1; then
-            $EXEC "$WINDOW_MANAGER"
-        else
-            $EXEC openbox
-        fi
-        ;;
-esac
+exec /usr/bin/osify-session
 """
 
 PCMANFM_CONF = """[config]
@@ -278,21 +205,9 @@ sort_by=2
 OPENBOX_AUTOSTART = """#!/bin/sh
 # OSify Openbox Session Autostart
 # Ingegnerizzato da Andrea Taliento (ANDRYXify)
-
-# 1. Pulizia schermo con colore solido Cyber-Dark
-xsetroot -solid "#0b0d14" 2>/dev/null &
-
-# 2. Gestore Scrivania PCManFM (Sfondo nativo e Icone Desktop)
-(sleep 0.5 && pgrep -f "pcmanfm --desktop" >/dev/null || pcmanfm --desktop) 2>/dev/null &
-
-# 3. OSify Cyber-Bar (LXPanel)
-(sleep 1 && pgrep -x lxpanel >/dev/null || lxpanel --profile slitaz) 2>/dev/null &
-
-# 4. Driver Touchpad Synaptics/Alps (Tap e Scorrimento Bordo)
-synclient TapButton1=1 TapButton2=3 TapButton3=2 VertEdgeScroll=1 HorizEdgeScroll=1 2>/dev/null &
-
-# 5. OSify First-Boot Welcome Wizard
-(sleep 1.5 && /usr/bin/osify-welcome) 2>/dev/null &
+if [ -x /usr/bin/osify-input-setup ]; then
+    /usr/bin/osify-input-setup &
+fi
 """
 
 def remaster_rootfs3(work_dir, iso_root, wallpaper_jpg):
@@ -315,7 +230,7 @@ console_cmd         /usr/bin/xterm -C -fg white -bg black +sb -T "Console login"
 xauth_path          /usr/bin/xauth 
 authfile            /var/run/slim.auth
 hidecursor          true
-login_cmd           exec /bin/sh -l -c "if [ -f ~/.xinitrc ]; then exec /bin/sh -l ~/.xinitrc %session; elif [ -f /etc/skel/.xinitrc ]; then exec /bin/sh -l /etc/skel/.xinitrc %session; else exec openbox-session; fi"
+login_cmd           exec /bin/sh -l /usr/bin/osify-session
 auto_login          yes
 default_user        tux
 current_theme       osify
@@ -371,20 +286,20 @@ Global {
     margin=0
     widthtype=percent
     width=100
-    height=24
+    height=32
     transparent=1
-    tintcolor=#0b0d14
-    alpha=240
+    tintcolor=#0a0e17
+    alpha=225
     autohide=0
     heightwhenhidden=2
     setdocktype=1
     setpartialstrut=1
     usefontcolor=1
-    fontsize=9
-    fontcolor=#e2e8f0
+    fontsize=10
+    fontcolor=#38bdf8
     usefontsize=1
     background=0
-    iconsize=20
+    iconsize=24
     loglevel=2
 }
 
@@ -397,39 +312,49 @@ Plugin {
         separator {
         }
         item {
-            name=⚡ OSify Quick Access HUD
+            name=🚀 OSify Hub & Launchpad
+            image=/usr/share/pixmaps/osify.png
+            action=terminal -geometry 74x20 -T 'OSify Hub' -e /usr/bin/osify-hub
+        }
+        item {
+            name=🌐 Navigatore Web OSify
+            image=web-browser
+            action=/usr/bin/osify-browser
+        }
+        item {
+            name=🎮 Universal App Matrix (UEM)
+            image=system-run
+            action=terminal -geometry 74x20 -T 'OSify UEM' -e /usr/bin/osify-hub
+        }
+        item {
+            name=⚡ Quick Access HUD
             image=preferences-system
             action=/usr/bin/osify-hud
         }
         item {
-            name=📊 OSify Process Commander (Task Manager)
+            name=📊 Task Manager & Telemetria
             image=utilities-system-monitor
             action=/usr/bin/osify-taskmanager
         }
         item {
-            name=⚙️ OSify Control Center
+            name=⚙️ Centro di Controllo
             image=preferences-desktop
             action=/usr/bin/osify-settings
         }
         item {
-            name=💾 Installa OSify su Disco
+            name=💾 Installa OSify su Hard Disk
             image=system-software-install
             action=terminal -geometry 95x26 -T 'OSify Installer' -e /usr/bin/osify-install
-        }
-        item {
-            name=🔄 Aggiorna OSify
-            image=system-software-update
-            action=/usr/bin/osify-update --gui
         }
         separator {
         }
         item {
-            name=Terminale OSify
+            name=Terminale Cyber
             image=terminal
             action=/usr/bin/osify-terminal
         }
         item {
-            name=File Manager
+            name=Gestore File
             image=system-file-manager
             action=pcmanfm
         }
@@ -457,10 +382,13 @@ Plugin {
     type = launchbar
     Config {
         Button {
-            id=/usr/share/applications/osify-hud.desktop
+            id=/usr/share/applications/osify-hub.desktop
         }
         Button {
-            id=/usr/share/applications/osify-taskmanager.desktop
+            id=/usr/share/applications/osify-browser.desktop
+        }
+        Button {
+            id=/usr/share/applications/osify-uem.desktop
         }
         Button {
             id=/usr/share/applications/pcmanfm.desktop
@@ -472,7 +400,7 @@ Plugin {
             id=/usr/share/applications/osify-settings.desktop
         }
         Button {
-            id=/usr/share/applications/osify-update.desktop
+            id=/usr/share/applications/osify-install.desktop
         }
     }
 }
@@ -829,8 +757,40 @@ LABEL memtest
     shutil.copy2(os.path.join(REPO_ROOT, "uem/runners/osify-wasm-runner.sh"), os.path.join(bin_dir, "osify-wasm-runner"))
     shutil.copy2(os.path.join(REPO_ROOT, "uem/runners/osify-java-runner.sh"), os.path.join(bin_dir, "osify-java-runner"))
     shutil.copy2(os.path.join(REPO_ROOT, "uem/runners/osify-cross-runner.sh"), os.path.join(bin_dir, "osify-cross-runner"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-hub.sh"), os.path.join(bin_dir, "osify-hub"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-browser.sh"), os.path.join(bin_dir, "osify-browser"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/input/osify-input-setup.sh"), os.path.join(bin_dir, "osify-input-setup"))
+    shutil.copy2(os.path.join(REPO_ROOT, "system/session/osify-session.sh"), os.path.join(bin_dir, "osify-session"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/updater/osify-live-updater.sh"), os.path.join(bin_dir, "osify-update"))
     run(f"chmod +x '{bin_dir}'/osify-*")
+
+    # Iniezione Browser Grafico Nativo Dillo (i686) per Navigazione Istantanea
+    dillo_cache = os.path.join(REPO_ROOT, "build/cache/dillo-3.0.5.tazpkg")
+    if not (os.path.exists(dillo_cache) and os.path.getsize(dillo_cache) > 100 * 1024):
+        print("[+] Download browser grafico Dillo per OSify Vintage...")
+        os.makedirs(os.path.dirname(dillo_cache), exist_ok=True)
+        run(f"curl -sL 'https://mirror.slitaz.org/i486/cooking/packages/dillo-3.0.5.tazpkg' -o '{dillo_cache}'")
+    
+    if os.path.exists(dillo_cache):
+        dillo_tmp = "/tmp/osify_dillo_extract"
+        shutil.rmtree(dillo_tmp, ignore_errors=True)
+        os.makedirs(dillo_tmp, exist_ok=True)
+        run(f"cd '{dillo_tmp}' && cpio -idmv < '{dillo_cache}' >/dev/null 2>&1")
+        lzma_cpio = os.path.join(dillo_tmp, "fs.cpio.lzma")
+        if os.path.exists(lzma_cpio):
+            with open(lzma_cpio, "rb") as f:
+                dillo_raw = lzma.decompress(f.read())
+            with open(os.path.join(dillo_tmp, "fs.cpio"), "wb") as f:
+                f.write(dillo_raw)
+            run(f"cd '{dillo_tmp}' && cpio -idmv < fs.cpio >/dev/null 2>&1")
+            dillo_fs = os.path.join(dillo_tmp, "fs")
+            if os.path.exists(dillo_fs):
+                for sub in ["usr/bin", "usr/lib", "usr/share", "etc"]:
+                    src_sub = os.path.join(dillo_fs, sub)
+                    dst_sub = os.path.join(r4_work, sub)
+                    if os.path.exists(src_sub):
+                        shutil.copytree(src_sub, dst_sub, dirs_exist_ok=True)
+                print("[✓] Browser Web Dillo integrato con successo nella rootfs!")
 
     # Iniezione regole binfmt del kernel
     binfmt_dir = os.path.join(r4_work, "etc/binfmt.d")
@@ -868,15 +828,15 @@ nice -n 19 /usr/bin/osify-update daemon >/var/log/osify-autoupdate.log 2>&1 &
 
     # Impronta e Identita Indelebile OSify nel Kernel e User-Space
     with open(os.path.join(r4_work, "etc/osify-version"), "w") as f:
-        f.write("1.2.0\n")
+        f.write("1.3.0\n")
 
     with open(os.path.join(r4_work, "etc/os-release"), "w") as f:
         f.write("""NAME="OSify"
-PRETTY_NAME="OSify 1.2.0 (Vintage Universal Edition)"
+PRETTY_NAME="OSify 1.3.0 (Vintage Universal Edition)"
 ID=osify
 ID_LIKE="slitaz debian linux"
-VERSION="1.2.0"
-VERSION_ID="1.2.0"
+VERSION="1.3.0"
+VERSION_ID="1.3.0"
 HOME_URL="https://github.com/ANDRYXify/OSify"
 BUG_REPORT_URL="https://github.com/ANDRYXify/OSify/issues"
 SUPPORT_URL="https://github.com/ANDRYXify/OSify"
@@ -885,9 +845,9 @@ ANSI_COLOR="0;36"
 
     with open(os.path.join(r4_work, "etc/lsb-release"), "w") as f:
         f.write("""DISTRIB_ID=OSify
-DISTRIB_RELEASE=1.2.0
+DISTRIB_RELEASE=1.3.0
 DISTRIB_CODENAME=vintage
-DISTRIB_DESCRIPTION="OSify 1.2.0 (Vintage Universal Edition)"
+DISTRIB_DESCRIPTION="OSify 1.3.0 (Vintage Universal Edition)"
 """)
 
     with open(os.path.join(r4_work, "etc/hostname"), "w") as f:
@@ -910,17 +870,17 @@ DISTRIB_DESCRIPTION="OSify 1.2.0 (Vintage Universal Edition)"
                         __/ |
                        |___/ 
 \033[0m
- \033[1;37mOSify 1.2.0 (Vintage Universal Edition)\033[0m - Kernel \r (\m)
+ \033[1;37mOSify 1.3.0 (Vintage Universal Edition)\033[0m - Kernel \r (\m)
  Ingegnerizzato da Andrea Taliento (ANDRYXify)
  
 """)
 
     with open(os.path.join(r4_work, "etc/issue.net"), "w") as f:
-        f.write("OSify 1.2.0 (Vintage Universal Edition) - \\r (\\m)\n")
+        f.write("OSify 1.3.0 (Vintage Universal Edition) - \\r (\\m)\n")
 
     with open(os.path.join(r4_work, "etc/motd"), "w") as f:
         f.write(r"""==============================================================================
-   OSify 1.2.0 — Sistema Operativo Universale & Resurrezione Hardware
+   OSify 1.3.0 — Sistema Operativo Universale & Resurrezione Hardware
 ==============================================================================
  Nucleo: Linux (\r \m)
  Identita: OSify (ID: osify)
@@ -929,22 +889,19 @@ DISTRIB_DESCRIPTION="OSify 1.2.0 (Vintage Universal Edition)"
 ==============================================================================
 """)
 
-    # Configurazione Touchpad Synaptics/Alps (Tap-to-click e Scorrimento Bordo)
-    syn_dir = os.path.join(r4_work, "etc/X11/xorg.conf.d")
-    os.makedirs(syn_dir, exist_ok=True)
-    with open(os.path.join(syn_dir, "50-synaptics.conf"), "w") as f:
-        f.write("""Section "InputClass"
-    Identifier "touchpad catchall"
-    Driver "synaptics"
-    MatchIsTouchpad "on"
-    Option "TapButton1" "1"
-    Option "TapButton2" "3"
-    Option "TapButton3" "2"
-    Option "VertEdgeScroll" "on"
-    Option "HorizEdgeScroll" "on"
-    Option "CoastingSpeed" "20"
-EndSection
-""")
+    # Configurazione applicazioni predefinite OSify
+    app_conf = """# OSify default applications configuration
+FILE_MANAGER="pcmanfm"
+BROWSER="osify-browser"
+EDITOR="nano"
+TERMINAL="terminal"
+WINDOW_MANAGER="openbox"
+"""
+    for ac_path in ["etc/slitaz/applications.conf", "etc/skel/.config/slitaz/applications.conf", "home/tux/.config/slitaz/applications.conf"]:
+        full_ac = os.path.join(r4_work, ac_path)
+        os.makedirs(os.path.dirname(full_ac), exist_ok=True)
+        with open(full_ac, "w") as f:
+            f.write(app_conf)
 
     # Iniezione deterministica di .xinitrc con permessi 755 in rootfs4
     for rc_path in ["etc/skel/.xinitrc", "root/.xinitrc", "home/tux/.xinitrc", "etc/X11/xinit/xinitrc"]:
@@ -981,15 +938,42 @@ EndSection
             f.write(OPENBOX_AUTOSTART)
         os.chmod(full_as, 0o755)
 
-    with open(os.path.join(r4_work, "etc/issue"), "w") as f:
-        f.write("OSify Operating System (32-bit Vintage Edition — by Andrea Taliento)\\n\\l\n")
-
     # Entry Applicative Ufficiali OSify (.desktop)
     app_entries = {
+        "osify-hub.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=🚀 OSify Hub\n"
+            "Comment=Centro di Controllo, Prestazioni e Launchpad di OSify\n"
+            "Exec=terminal -geometry 74x20 -T 'OSify Hub' -e /usr/bin/osify-hub\n"
+            "Icon=/usr/share/pixmaps/osify.png\n"
+            "Terminal=false\n"
+            "Categories=System;Utility;\n"
+        ),
+        "osify-browser.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=🌐 Navigatore Web\n"
+            "Comment=Naviga su Internet con rendering grafico completo e Adblock integrato\n"
+            "Exec=/usr/bin/osify-browser\n"
+            "Icon=web-browser\n"
+            "Terminal=false\n"
+            "Categories=Network;WebBrowser;\n"
+        ),
+        "osify-uem.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=🎮 Universal App Matrix\n"
+            "Comment=Esegui app Windows (.exe), Android (.apk), iOS (.ipa), Mac (.app)\n"
+            "Exec=terminal -geometry 74x20 -T 'OSify UEM' -e /usr/bin/osify-hub\n"
+            "Icon=system-run\n"
+            "Terminal=false\n"
+            "Categories=System;Utility;\n"
+        ),
         "osify-hud.desktop": (
             "[Desktop Entry]\n"
             "Type=Application\n"
-            "Name=⚡ OSify Quick Access HUD\n"
+            "Name=⚡ Quick Access HUD\n"
             "Comment=Pannello Rapido Prestazioni, zRAM e Virtual Scaler 1280x768\n"
             "Exec=/usr/bin/osify-hud\n"
             "Icon=preferences-system\n"
@@ -999,8 +983,8 @@ EndSection
         "osify-taskmanager.desktop": (
             "[Desktop Entry]\n"
             "Type=Application\n"
-            "Name=📊 OSify Process Commander\n"
-            "Comment=Task Manager Grafico e Gestione Attività in Tempo Reale\n"
+            "Name=📊 Task Manager\n"
+            "Comment=Task Manager Grafico e Telemetria di Sistema in Tempo Reale\n"
             "Exec=/usr/bin/osify-taskmanager\n"
             "Icon=utilities-system-monitor\n"
             "Terminal=false\n"
@@ -1009,7 +993,7 @@ EndSection
         "osify-settings.desktop": (
             "[Desktop Entry]\n"
             "Type=Application\n"
-            "Name=⚙️ OSify Control Center\n"
+            "Name=⚙️ Centro di Controllo\n"
             "Comment=Centro di Controllo Sistema, Rete, Touchpad e Schermo\n"
             "Exec=/usr/bin/osify-settings\n"
             "Icon=preferences-desktop\n"
@@ -1019,7 +1003,7 @@ EndSection
         "osify-terminal.desktop": (
             "[Desktop Entry]\n"
             "Type=Application\n"
-            "Name=💻 Terminale OSify\n"
+            "Name=💻 Terminale Cyber\n"
             "Comment=Terminale con Fastfetch e Diagnostica Hardware\n"
             "Exec=terminal -geometry 95x26 -T 'OSify Terminal' -e /usr/bin/osify-terminal\n"
             "Icon=terminal\n"
@@ -1030,19 +1014,9 @@ EndSection
             "[Desktop Entry]\n"
             "Type=Application\n"
             "Name=💾 Installa OSify su Disco\n"
-            "Comment=Installatore Guidato su Disco Fisso\n"
+            "Comment=Installatore Guidato su Disco Fisso (HDD / SSD)\n"
             "Exec=terminal -geometry 95x26 -T 'OSify Installer' -e /usr/bin/osify-install\n"
             "Icon=system-software-install\n"
-            "Terminal=false\n"
-            "Categories=System;\n"
-        ),
-        "osify-welcome.desktop": (
-            "[Desktop Entry]\n"
-            "Type=Application\n"
-            "Name=👋 Benvenuto in OSify\n"
-            "Comment=Esperienza di Primo Avvio e Diagnostica Netbook\n"
-            "Exec=/usr/bin/osify-welcome\n"
-            "Icon=preferences-desktop\n"
             "Terminal=false\n"
             "Categories=System;\n"
         ),
