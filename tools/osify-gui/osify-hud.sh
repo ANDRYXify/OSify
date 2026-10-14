@@ -110,6 +110,15 @@ case "$1" in
         ;;
 esac
 
+# Se YAD non e' presente, apri istantaneamente la Dashboard TUI OSify in finestra terminale
+if ! command -v yad >/dev/null 2>&1; then
+    if [ -x /usr/bin/terminal ] && [ -x /usr/bin/osify ]; then
+        exec /usr/bin/terminal -geometry 79x23 -T "OSify Quick Access HUD" -e /usr/bin/osify
+    elif [ -x /usr/bin/osify ]; then
+        exec /usr/bin/osify
+    fi
+fi
+
 # Finestra GUI Principale Quick Access HUD
 CPU_CLOCK=$(get_cpu_mhz)
 MEM_INFO=$(get_mem_stats)
@@ -117,7 +126,7 @@ ACTIVE_GOV=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/nu
 
 RESP=$(yad --form \
     --title="OSify Quick Access HUD" \
-    --window-icon="preferences-system" \
+    --window-icon="/usr/share/pixmaps/osify-hub.png" \
     --width=420 \
     --fixed \
     --center \

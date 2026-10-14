@@ -226,6 +226,102 @@ if command -v lxpanel >/dev/null 2>&1; then
 fi
 """
 
+OSIFY_OPENBOX_MENU = """<?xml version="1.0" encoding="UTF-8"?>
+<openbox_menu xmlns="http://openbox.org/3.4/menu">
+  <menu id="root-menu" label="OSify Menu">
+    <separator label="🚀 OSify Cyber-System"/>
+    <item label="🚀 OSify Dashboard (Control Center)" icon="/usr/share/pixmaps/osify-hub.png">
+      <action name="Execute"><command>/usr/bin/terminal -geometry 80x24 -T 'OSify Master Dashboard' -e /usr/bin/osify</command></action>
+    </item>
+    <item label="⚡ Quick Access HUD" icon="/usr/share/pixmaps/osify-hub.png">
+      <action name="Execute"><command>/usr/bin/osify-hud</command></action>
+    </item>
+    <item label="🚀 App Drawer &amp; Launchpad" icon="/usr/share/pixmaps/osify-drawer.png">
+      <action name="Execute"><command>/usr/bin/osify-app-drawer</command></action>
+    </item>
+    <separator/>
+    <separator label="💻 Applicazioni"/>
+    <item label="💻 Terminale Cyber-OSify" icon="/usr/share/pixmaps/osify-terminal.png">
+      <action name="Execute"><command>/usr/bin/terminal</command></action>
+    </item>
+    <item label="🌐 Navigatore Web" icon="/usr/share/pixmaps/osify-browser.png">
+      <action name="Execute"><command>/usr/bin/osify-browser</command></action>
+    </item>
+    <item label="📁 Gestione File" icon="/usr/share/pixmaps/osify-files.png">
+      <action name="Execute"><command>pcmanfm</command></action>
+    </item>
+    <item label="🎮 Gaming &amp; Retrogaming Hub" icon="/usr/share/pixmaps/osify-games.png">
+      <action name="Execute"><command>/usr/bin/terminal -geometry 75x20 -T 'OSify Gaming' -e /usr/bin/osify-games</command></action>
+    </item>
+    <item label="🎥 Acquisizione HDMI Console" icon="/usr/share/pixmaps/osify-games.png">
+      <action name="Execute"><command>/usr/bin/osify-capture</command></action>
+    </item>
+    <item label="📱 Mirroring Smartphone" icon="/usr/share/pixmaps/osify-hub.png">
+      <action name="Execute"><command>/usr/bin/osify-phone</command></action>
+    </item>
+    <separator/>
+    <separator label="⚙️ Strumenti Hardware"/>
+    <item label="⚡ Modalità Turbo (1.66GHz &amp; zRAM)" icon="/usr/share/pixmaps/osify-hub.png">
+      <action name="Execute"><command>/usr/bin/osify turbo</command></action>
+    </item>
+    <item label="🧹 Pulisci Memoria RAM Subito" icon="/usr/share/pixmaps/osify-hub.png">
+      <action name="Execute"><command>/usr/bin/osify pulisci</command></action>
+    </item>
+    <item label="📡 Connessione Wi-Fi" icon="/usr/share/pixmaps/osify-wifi.png">
+      <action name="Execute"><command>/usr/bin/terminal -geometry 75x20 -T 'OSify Wi-Fi' -e /usr/bin/osify-wifi</command></action>
+    </item>
+    <item label="🖥️ Uscite Video &amp; Scaler 1280x768" icon="/usr/share/pixmaps/osify-appearance.png">
+      <action name="Execute"><command>/usr/bin/osify-display</command></action>
+    </item>
+    <item label="📊 Task Manager &amp; Attività" icon="/usr/share/pixmaps/osify-taskmanager.png">
+      <action name="Execute"><command>/usr/bin/osify-taskmanager</command></action>
+    </item>
+    <item label="⚙️ Centro di Controllo OSify" icon="/usr/share/pixmaps/osify-settings.png">
+      <action name="Execute"><command>/usr/bin/osify-settings</command></action>
+    </item>
+    <separator/>
+    <separator label="💾 Sistema &amp; Installazione"/>
+    <item label="💾 Installa OSify su Disco Fisso" icon="/usr/share/pixmaps/osify-install.png">
+      <action name="Execute"><command>/usr/bin/osify-install</command></action>
+    </item>
+    <item label="👤 Gestione Profilo Utente" icon="/usr/share/pixmaps/osify-profile.png">
+      <action name="Execute"><command>/usr/bin/osify-profile-setup --force</command></action>
+    </item>
+    <item label="🔄 Aggiorna OSify da GitHub" icon="/usr/share/pixmaps/osify-update.png">
+      <action name="Execute"><command>/usr/bin/terminal -T 'Aggiornamento OSify' -e /usr/bin/osify-update</command></action>
+    </item>
+    <separator/>
+    <item label="🚪 Esci / Spegni / Riavvia">
+      <action name="Execute"><command>/usr/bin/terminal -geometry 60x14 -T 'Uscita OSify' -e sh -c 'echo "1) Riavvia  2) Spegni  3) Chiudi sessione"; read -r a; case $a in 1) reboot;; 2) poweroff;; 3) pkill -u $USER;; esac'</command></action>
+    </item>
+  </menu>
+</openbox_menu>
+"""
+
+OSIFY_SHELL_PROFILE = """# OSify Universal Shell Environment & Aliases
+export PS1='\\[\\033[1;36m\\]⚡ [OSify:\\[\\033[1;32m\\]\\u\\[\\033[1;36m\\]@\\[\\033[1;35m\\]\\h \\[\\033[1;33m\\]\\W\\[\\033[1;36m\\]]\\$ \\[\\033[0m\\]'
+alias info='osify info'
+alias stato='osify stato'
+alias status='osify status'
+alias turbo='osify turbo'
+alias eco='osify eco'
+alias pulisci='osify pulisci'
+alias wifi='osify wifi'
+alias rete='osify wifi'
+alias schermo='osify schermo'
+alias display='osify schermo'
+alias installa='osify installa'
+alias install='osify installa'
+alias profilo='osify profilo'
+alias cattura='osify cattura'
+alias telefono='osify telefono'
+alias aggiorna='osify aggiorna'
+alias aiuto='osify aiuto'
+alias help='osify aiuto'
+alias fastfetch='osify-fastfetch'
+alias neofetch='osify-fastfetch'
+"""
+
 lxpanel_cfg = ""
 
 def remaster_rootfs3(work_dir, iso_root, wallpaper_jpg):
@@ -645,17 +741,33 @@ Plugin {
             rc_content = rc_content.replace("</keyboard>", f"{custom_keys}\n  </keyboard>")
             with open(rc_xml, "w") as f:
                 f.write(rc_content)
-            for ob_p in ["etc/skel/.config/openbox/rc.xml", "home/osify/.config/openbox/rc.xml", "root/.config/openbox/rc.xml"]:
+            for ob_p in ["etc/skel/.config/openbox/rc.xml", "home/osify/.config/openbox/rc.xml", "home/tux/.config/openbox/rc.xml", "root/.config/openbox/rc.xml"]:
                 full_ob = os.path.join(r3_work, ob_p)
                 os.makedirs(os.path.dirname(full_ob), exist_ok=True)
                 with open(full_ob, "w") as f:
                     f.write(rc_content)
+
+    # 4b. Menu Contestuale Ufficiale OSify (Click Destro sul Desktop)
+    for m_path in [
+        "etc/xdg/openbox/menu.xml",
+        "etc/xdg/openbox/menu.it.xml",
+        "etc/skel/.config/openbox/menu.xml",
+        "etc/skel/.config/openbox/menu.it.xml",
+        "home/osify/.config/openbox/menu.xml",
+        "home/tux/.config/openbox/menu.xml",
+        "root/.config/openbox/menu.xml"
+    ]:
+        full_m = os.path.join(r3_work, m_path)
+        os.makedirs(os.path.dirname(full_m), exist_ok=True)
+        with open(full_m, "w") as f:
+            f.write(OSIFY_OPENBOX_MENU)
 
     # 5. Configurazione nativa PCManFM Desktop Manager (Sfondo ed icone)
     for pfm_p in [
         "etc/xdg/pcmanfm/default/pcmanfm.conf",
         "etc/skel/.config/pcmanfm/default/pcmanfm.conf",
         "home/osify/.config/pcmanfm/default/pcmanfm.conf",
+        "home/tux/.config/pcmanfm/default/pcmanfm.conf",
         "root/.config/pcmanfm/default/pcmanfm.conf"
     ]:
         full_pfm = os.path.join(r3_work, pfm_p)
@@ -668,6 +780,7 @@ Plugin {
         "etc/xdg/openbox/autostart",
         "etc/skel/.config/openbox/autostart",
         "home/osify/.config/openbox/autostart",
+        "home/tux/.config/openbox/autostart",
         "root/.config/openbox/autostart"
     ]:
         full_as = os.path.join(r3_work, as_p)
@@ -853,6 +966,23 @@ LABEL memtest
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-terminal-wrapper.sh"), os.path.join(bin_dir, "terminal"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-terminal-wrapper.sh"), os.path.join(r4_work, "usr/local/bin/terminal"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-terminal-wrapper.sh"), os.path.join(bin_dir, "x-terminal-emulator"))
+
+    # Master Command OSify (CLI & TUI Dashboard a 360 Gradi)
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify"), os.path.join(bin_dir, "osify"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify"), os.path.join(r4_work, "usr/local/bin/osify"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify"), os.path.join(r4_work, "bin/osify"))
+    os.chmod(os.path.join(bin_dir, "osify"), 0o755)
+
+    # Fastfetch & Neofetch Nativo OSify
+    fastfetch_src = os.path.join(REPO_ROOT, "desktop/branding/fastfetch/osify-fastfetch.sh")
+    if os.path.exists(fastfetch_src):
+        shutil.copy2(fastfetch_src, os.path.join(bin_dir, "fastfetch"))
+        shutil.copy2(fastfetch_src, os.path.join(bin_dir, "neofetch"))
+        shutil.copy2(fastfetch_src, os.path.join(bin_dir, "osify-fastfetch"))
+        shutil.copy2(fastfetch_src, os.path.join(r4_work, "usr/local/bin/fastfetch"))
+        os.chmod(os.path.join(bin_dir, "fastfetch"), 0o755)
+        os.chmod(os.path.join(bin_dir, "neofetch"), 0o755)
+        os.chmod(os.path.join(bin_dir, "osify-fastfetch"), 0o755)
 
     # Toolchain Ufficiale OSify & Gestione Sistema
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-ctl"), os.path.join(bin_dir, "osify-ctl"))
@@ -1111,6 +1241,16 @@ WINDOW_MANAGER="openbox"
 
     # Entry Applicative Ufficiali OSify (.desktop) con Icone Native Garantite
     app_entries = {
+        "osify-dashboard.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=🚀 OSify Master Dashboard\n"
+            "Comment=Centro di Controllo Interattivo a 360° (Hardware, Turbo, Wi-Fi, Schermo, RAM)\n"
+            "Exec=/usr/bin/terminal -geometry 80x24 -T 'OSify Master Dashboard' -e /usr/bin/osify\n"
+            "Icon=/usr/share/pixmaps/osify-hub.png\n"
+            "Terminal=false\n"
+            "Categories=System;Utility;\n"
+        ),
         "osify-drawer.desktop": (
             "[Desktop Entry]\n"
             "Type=Application\n"
@@ -1339,6 +1479,38 @@ WINDOW_MANAGER="openbox"
         full_uh = os.path.join(r4_work, uh)
         if os.path.exists(full_uh):
             run(f"chmod -R 777 '{full_uh}' 2>/dev/null || true")
+
+    # Scrittura Menu Contestuale Openbox OSify anche in rootfs4
+    for m_path in [
+        "etc/xdg/openbox/menu.xml",
+        "etc/xdg/openbox/menu.it.xml",
+        "etc/skel/.config/openbox/menu.xml",
+        "etc/skel/.config/openbox/menu.it.xml",
+        "home/osify/.config/openbox/menu.xml",
+        "home/tux/.config/openbox/menu.xml",
+        "root/.config/openbox/menu.xml"
+    ]:
+        full_m = os.path.join(r4_work, m_path)
+        os.makedirs(os.path.dirname(full_m), exist_ok=True)
+        with open(full_m, "w") as f:
+            f.write(OSIFY_OPENBOX_MENU)
+
+    # Scrittura Ambiente Shell, Prompt Cyber-OSify e Alias in rootfs4
+    os.makedirs(os.path.join(r4_work, "etc/profile.d"), exist_ok=True)
+    with open(os.path.join(r4_work, "etc/profile.d/osify-env.sh"), "w") as f:
+        f.write(OSIFY_SHELL_PROFILE)
+    os.chmod(os.path.join(r4_work, "etc/profile.d/osify-env.sh"), 0o755)
+
+    for rc_path in [
+        "etc/skel/.bashrc", "etc/skel/.profile",
+        "home/osify/.bashrc", "home/osify/.profile",
+        "home/tux/.bashrc", "home/tux/.profile",
+        "root/.bashrc", "root/.profile"
+    ]:
+        full_rc = os.path.join(r4_work, rc_path)
+        os.makedirs(os.path.dirname(full_rc), exist_ok=True)
+        with open(full_rc, "a") as f:
+            f.write(f"\n{OSIFY_SHELL_PROFILE}\n")
 
     # Autostart automatico XDG
     autostart_dir = os.path.join(r4_work, "etc/xdg/autostart")

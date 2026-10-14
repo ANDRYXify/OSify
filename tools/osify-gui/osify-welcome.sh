@@ -95,23 +95,18 @@ action_audio() {
 # Azione: Configurazione Rete Wi-Fi
 action_wifi() {
     rfkill unblock all 2>/dev/null || true
-    if command -v tazpanel >/dev/null 2>&1; then
-        tazpanel network &
-    elif command -v tazwifi >/dev/null 2>&1; then
-        tazwifi &
+    if [ -x /usr/bin/osify-wifi ]; then
+        $TERM_BIN -geometry 78x22 -T "OSify Wi-Fi Manager" -e /usr/bin/osify-wifi &
+    elif [ -x /opt/osify/network/osify-wifi-gui.sh ]; then
+        $TERM_BIN -geometry 78x22 -T "OSify Wi-Fi Manager" -e /opt/osify/network/osify-wifi-gui.sh &
     else
-        $TERM_BIN -geometry 85x24+40+40 -T "Configurazione Rete" -e sh -c '
-            echo "=== Scansione Reti Wireless ==="
-            iwlist wlan0 scan 2>/dev/null | grep -E "(ESSID|Quality|Encryption)" || iwconfig 2>/dev/null
-            echo ""
-            echo "Premi INVIO per chiudere..."; read -r dummy
-        ' &
+        $TERM_BIN -geometry 78x22 -T "OSify Wi-Fi" -e sh -c 'osify wifi; echo ""; echo "Premi INVIO per chiudere..."; read -r dummy' &
     fi
 }
 
 # Azione: Terminale Root
 action_terminal() {
-    $TERM_BIN -geometry 90x24+40+40 -T "Terminale OSify" &
+    $TERM_BIN -geometry 90x24+40+40 -T "Terminale Cyber-OSify" &
 }
 
 # ------------------------------------------------------------------------------
@@ -120,8 +115,9 @@ action_terminal() {
 gui_yad() {
     detect_hw
 
-    TEXT_BANNER="<big><b>Benvenuto in OSify Vintage Edition</b></big>\n\
-<i>Sistema Operativo per Netbook (Intel Atom N280 / GMA 950) e PC x86</i>\n\n\
+    TEXT_BANNER="<big><b>Benvenuto in OSify</b></big>\n\
+<i>Sistema Operativo per Netbook (Intel Atom N280 / GMA 950) e PC Universali</i>\n\
+<i>Ingegnerizzato da Andrea Taliento (ANDRYXify)</i>\n\n\
 • <b>Processore:</b> $CPU_INFO\n\
 • <b>Memoria RAM:</b> $RAM_TOTAL (Disponibile: $RAM_FREE) | <b>Swap:</b> $SWAP_INFO\n\
 • <b>Scheda Video:</b> $GPU_INFO\n\
@@ -129,15 +125,15 @@ gui_yad() {
 Scegli l'operazione da eseguire:"
 
     while true; do
-        CHOICE=$(yad --width=620 --height=440 --center \
-            --title="Benvenuto in OSify — Pannello di Primo Avvio" \
-            --window-icon="preferences-desktop" \
+        CHOICE=$(yad --width=640 --height=460 --center \
+            --title="Benvenuto in OSify — Centro Operativo di Primo Avvio" \
+            --window-icon="/usr/share/pixmaps/osify-hub.png" \
             --text="$TEXT_BANNER" \
-            --button="Installa su Hard Disk!system-software-install:1" \
-            --button="Ottimizza zRAM e Memoria!system-run:2" \
-            --button="Configura Touchpad!input-touchpad:3" \
-            --button="Sblocca Audio!audio-volume-high:4" \
-            --button="Rete Wi-Fi!network-wireless:5" \
+            --button="Installa su Disco Fisso!/usr/share/pixmaps/osify-install.png:1" \
+            --button="Turbo Boost & zRAM!/usr/share/pixmaps/osify-hub.png:2" \
+            --button="Calibra Touchpad!/usr/share/pixmaps/osify-settings.png:3" \
+            --button="Sblocca Audio!/usr/share/pixmaps/osify-games.png:4" \
+            --button="Connessione Wi-Fi!/usr/share/pixmaps/osify-wifi.png:5" \
             --button="Terminale!utilities-terminal:6" \
             --button="Chiudi!window-close:0" \
             2>/dev/null)
