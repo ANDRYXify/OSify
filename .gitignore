@@ -15,6 +15,9 @@ build/cache/
 # Virtual testbed storage images
 tests/sandbox/*.iso
 tests/sandbox/*.qcow2
+*.qcow2
+vm/*.qcow2
 
 # Scratch files
 scratch/
+
