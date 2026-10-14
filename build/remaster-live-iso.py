@@ -1029,6 +1029,16 @@ WINDOW_MANAGER="openbox"
             "Icon=system-software-update\n"
             "Terminal=false\n"
             "Categories=System;Settings;PackageManager;\n"
+        ),
+        "osify-welcome.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=👋 Benvenuto in OSify\n"
+            "Comment=Esperienza di Primo Avvio e Diagnostica Netbook\n"
+            "Exec=/usr/bin/osify-hub\n"
+            "Icon=/usr/share/pixmaps/osify.png\n"
+            "Terminal=false\n"
+            "Categories=System;\n"
         )
     }
 
@@ -1049,8 +1059,8 @@ WINDOW_MANAGER="openbox"
     # Autostart automatico XDG
     autostart_dir = os.path.join(r4_work, "etc/xdg/autostart")
     os.makedirs(autostart_dir, exist_ok=True)
-    with open(os.path.join(autostart_dir, "osify-welcome.desktop"), "w") as f:
-        f.write(app_entries["osify-welcome.desktop"])
+    with open(os.path.join(autostart_dir, "osify-hub.desktop"), "w") as f:
+        f.write(app_entries["osify-hub.desktop"])
 
     os.remove(r4_gz)
     run(f"(cd '{r4_work}' && find . -print0 | cpio --null -ov -H newc) | python3 -c \"import lzma, sys; sys.stdout.buffer.write(lzma.compress(sys.stdin.buffer.read(), format=lzma.FORMAT_ALONE))\" > '{r4_gz}'")
