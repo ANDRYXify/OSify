@@ -821,8 +821,23 @@ LABEL memtest
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-taskmanager.sh"), os.path.join(bin_dir, "osify-taskmanager"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-settings.sh"), os.path.join(bin_dir, "osify-settings"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-terminal.sh"), os.path.join(bin_dir, "osify-terminal"))
+    shutil.copy2(os.path.join(REPO_ROOT, "uem/runners/osify-pe-runner.sh"), os.path.join(bin_dir, "osify-pe-runner"))
+    shutil.copy2(os.path.join(REPO_ROOT, "uem/runners/osify-apk-runner.sh"), os.path.join(bin_dir, "osify-apk-runner"))
+    shutil.copy2(os.path.join(REPO_ROOT, "uem/runners/osify-macho-runner.sh"), os.path.join(bin_dir, "osify-macho-runner"))
+    shutil.copy2(os.path.join(REPO_ROOT, "uem/runners/osify-ipa-runner.sh"), os.path.join(bin_dir, "osify-ipa-runner"))
+    shutil.copy2(os.path.join(REPO_ROOT, "uem/runners/osify-dos-runner.sh"), os.path.join(bin_dir, "osify-dos-runner"))
+    shutil.copy2(os.path.join(REPO_ROOT, "uem/runners/osify-wasm-runner.sh"), os.path.join(bin_dir, "osify-wasm-runner"))
+    shutil.copy2(os.path.join(REPO_ROOT, "uem/runners/osify-java-runner.sh"), os.path.join(bin_dir, "osify-java-runner"))
+    shutil.copy2(os.path.join(REPO_ROOT, "uem/runners/osify-cross-runner.sh"), os.path.join(bin_dir, "osify-cross-runner"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/updater/osify-live-updater.sh"), os.path.join(bin_dir, "osify-update"))
     run(f"chmod +x '{bin_dir}'/osify-*")
+
+    # Iniezione regole binfmt del kernel
+    binfmt_dir = os.path.join(r4_work, "etc/binfmt.d")
+    os.makedirs(binfmt_dir, exist_ok=True)
+    binfmt_src = os.path.join(REPO_ROOT, "uem/binfmt/99-osify-binfmt.conf")
+    if os.path.exists(binfmt_src):
+        shutil.copy2(binfmt_src, os.path.join(binfmt_dir, "99-osify.conf"))
 
     # Iniezione Icona OSify nel sistema
     pixmaps_dir = os.path.join(r4_work, "usr/share/pixmaps")
@@ -851,9 +866,68 @@ LABEL memtest
 nice -n 19 /usr/bin/osify-update daemon >/var/log/osify-autoupdate.log 2>&1 &
 """)
 
-    # Versione di sistema /etc/osify-version
+    # Impronta e Identita Indelebile OSify nel Kernel e User-Space
     with open(os.path.join(r4_work, "etc/osify-version"), "w") as f:
         f.write("1.2.0\n")
+
+    with open(os.path.join(r4_work, "etc/os-release"), "w") as f:
+        f.write("""NAME="OSify"
+PRETTY_NAME="OSify 1.2.0 (Vintage Universal Edition)"
+ID=osify
+ID_LIKE="slitaz debian linux"
+VERSION="1.2.0"
+VERSION_ID="1.2.0"
+HOME_URL="https://github.com/ANDRYXify/OSify"
+BUG_REPORT_URL="https://github.com/ANDRYXify/OSify/issues"
+SUPPORT_URL="https://github.com/ANDRYXify/OSify"
+ANSI_COLOR="0;36"
+""")
+
+    with open(os.path.join(r4_work, "etc/lsb-release"), "w") as f:
+        f.write("""DISTRIB_ID=OSify
+DISTRIB_RELEASE=1.2.0
+DISTRIB_CODENAME=vintage
+DISTRIB_DESCRIPTION="OSify 1.2.0 (Vintage Universal Edition)"
+""")
+
+    with open(os.path.join(r4_work, "etc/hostname"), "w") as f:
+        f.write("osify\n")
+
+    with open(os.path.join(r4_work, "etc/hosts"), "w") as f:
+        f.write("""127.0.0.1   localhost
+127.0.1.1   osify
+::1         localhost ip6-localhost ip6-loopback
+""")
+
+    with open(os.path.join(r4_work, "etc/issue"), "w") as f:
+        f.write(r"""\033[1;36m
+   ____   _____  _  __       
+  / __ \ / ____|(_)/ _|      
+ | |  | | (___   _| |_ _   _ 
+ | |  | |\___ \ | |  _| | | |
+ | |__| |____) || | | | |_| |
+  \____/|_____/ |_|_|  \__, |
+                        __/ |
+                       |___/ 
+\033[0m
+ \033[1;37mOSify 1.2.0 (Vintage Universal Edition)\033[0m - Kernel \r (\m)
+ Ingegnerizzato da Andrea Taliento (ANDRYXify)
+ 
+""")
+
+    with open(os.path.join(r4_work, "etc/issue.net"), "w") as f:
+        f.write("OSify 1.2.0 (Vintage Universal Edition) - \\r (\\m)\n")
+
+    with open(os.path.join(r4_work, "etc/motd"), "w") as f:
+        f.write(r"""==============================================================================
+   OSify 1.2.0 — Sistema Operativo Universale & Resurrezione Hardware
+==============================================================================
+ Nucleo: Linux (\r \m)
+ Identita: OSify (ID: osify)
+ Subsystems: UEM (Win32, APK, Darwin, WASI, DOS, ELF-Cross) attivo
+ Aggiornamenti: OSify Autonomous Auto-Updater attivo
+==============================================================================
+""")
 
     # Configurazione Touchpad Synaptics/Alps (Tap-to-click e Scorrimento Bordo)
     syn_dir = os.path.join(r4_work, "etc/X11/xorg.conf.d")

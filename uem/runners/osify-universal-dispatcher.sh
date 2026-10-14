@@ -27,6 +27,8 @@ if [[ -z "$TARGET" || (! -f "$TARGET" && ! -d "$TARGET") ]]; then
     echo "Esempi:"
     echo "  osify-exec setup.exe           (Esegue con Wine / Proton / DXVK)"
     echo "  osify-exec app.apk             (Esegue in Waydroid LXC)"
+    echo "  osify-exec game.ipa            (Esegue via touchHLE / Darwin / Fallback APK)"
+    echo "  osify-exec app.app             (Esegue via Darling / Mach-O Runner)"
     echo "  osify-exec binary_arm64        (Esegue con Box64 / QEMU-Static)"
     echo "  osify-exec turbo_pascal.exe    (Esegue in ambiente MS-DOS reale)"
     echo "  osify-exec module.wasm         (Esegue via WASI engine)"
@@ -89,6 +91,8 @@ fi
 if [[ "$HEX_MAGIC" =~ ^504b0304 ]]; then
     if [[ "$TARGET" =~ \.apk$ ]] || (command -v unzip >/dev/null 2>&1 && unzip -l "$TARGET" 2>/dev/null | grep -q "AndroidManifest.xml"); then
         exec "$SCRIPT_DIR/osify-apk-runner.sh" "$TARGET" "${@:2}"
+    elif [[ "$TARGET" =~ \.ipa$ ]] || (command -v unzip >/dev/null 2>&1 && unzip -l "$TARGET" 2>/dev/null | grep -qE "Payload/[^/]+\.app"); then
+        exec "$SCRIPT_DIR/osify-ipa-runner.sh" "$TARGET" "${@:2}"
     elif [[ "$TARGET" =~ \.jar$ ]] || (command -v unzip >/dev/null 2>&1 && unzip -l "$TARGET" 2>/dev/null | grep -q "META-INF/MANIFEST.MF"); then
         exec "$SCRIPT_DIR/osify-java-runner.sh" "$TARGET" "${@:2}"
     fi
