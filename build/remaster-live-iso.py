@@ -350,6 +350,8 @@ if [ -x /usr/bin/osify-input-setup ]; then
 fi
 """
 
+lxpanel_cfg = ""
+
 def remaster_rootfs3(work_dir, iso_root, wallpaper_jpg):
     print("[i] Remastering rootfs3 (SLIM autologin 0s, rimozione ragno SliTaz, OSify Cyber-Bar)...")
     r3_work = os.path.join(work_dir, "rootfs3")
@@ -464,6 +466,7 @@ password_msg
 """)
 
     # 3. Configurazione Pannello LXPanel (OSify Cyber-Bar)
+    global lxpanel_cfg
     lxpanel_cfg = """# OSify Cyber-Bar Configuration
 Global {
     edge=bottom
