@@ -1,0 +1,16 @@
+{
+  "id": "com.osify.documenti",
+  "nome": "Documenti",
+  "versione": "2050.1.0",
+  "descrizione": "Lettore di manuali, documenti PDF, schemi tecnici e testi digitali",
+  "categoria": "Ufficio",
+  "icona": "icona.png",
+  "eseguibile": "avvia.sh",
+  "permessi": [
+    "grafica",
+    "input",
+    "disco",
+    "audio"
+  ],
+  "autore": "OSify Systems"
+}

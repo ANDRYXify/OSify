@@ -1,0 +1,16 @@
+{
+  "id": "com.osify.installa",
+  "nome": "Installa OSify",
+  "versione": "2050.1.0",
+  "descrizione": "Installatore guidato e autonomo per rendere permanente OSify sul disco fisso interno",
+  "categoria": "Sistema",
+  "icona": "icona.png",
+  "eseguibile": "avvia.sh",
+  "permessi": [
+    "grafica",
+    "input",
+    "disco",
+    "audio"
+  ],
+  "autore": "OSify Systems"
+}

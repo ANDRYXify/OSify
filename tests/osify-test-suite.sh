@@ -698,6 +698,76 @@ else
     log_fail "Associazioni MIME: Mimetype mancanti in mimeapps.list"
 fi
 
+# === FASE 12: ARCHITETTURA SISTEMA OPERATIVO AUTONOMO 2050 (.IFY, FILE SYSTEM ITALIANO & COMPATIBILITA) ===
+echo ""
+echo "=== FASE 12: ARCHITETTURA SISTEMA OPERATIVO AUTONOMO 2050 (.IFY & SISTEMA) ==="
+
+# Test 12.1 Suite Applicativa Nativa .ify (20 Applicazioni Complete)
+if python3 -c "
+import os, json
+apps = [
+    'Centro OSify', 'Navigatore', 'Esplora', 'Reti', 'Giochi', 'Sviluppo',
+    'Aspetto', 'Monitor', 'Impostazioni', 'Negozio', 'Galleria', 'Musica',
+    'Video', 'Documenti', 'Archivi', 'Cattura', 'Calcolatrice', 'Note',
+    'Aggiornamenti', 'Installa OSify'
+]
+for app in apps:
+    dir_p = os.path.join('$REPO_ROOT', 'applicazioni', f'{app}.ify')
+    assert os.path.isdir(dir_p), f'Directory bundle {app}.ify non trovata'
+    man_p = os.path.join(dir_p, 'manifesto.json')
+    assert os.path.isfile(man_p), f'manifesto.json mancante in {app}.ify'
+    with open(man_p, 'r') as mf:
+        data = json.load(mf)
+        assert data.get('nome'), f'Campo nome mancante in {app}.ify'
+        assert data.get('eseguibile'), f'Campo eseguibile mancante in {app}.ify'
+    ico_p = os.path.join(dir_p, 'icona.png')
+    assert os.path.isfile(ico_p) and os.path.getsize(ico_p) > 200, f'Icona mancante in {app}.ify'
+    exe_p = os.path.join(dir_p, 'avvia.sh')
+    assert os.path.isfile(exe_p) and os.access(exe_p, os.X_OK), f'Eseguibile avvia.sh mancante in {app}.ify'
+print('Tutte le 20 app .ify validate con successo')
+" >/dev/null 2>&1; then
+    log_pass "Suite Applicativa Nativa .ify: Tutte le 20 app native generate, provviste di manifesto.json, icona squircle e avvia.sh eseguibile"
+else
+    log_fail "Suite Applicativa Nativa .ify: Applicazioni .ify mancanti o con manifesti corrotti"
+fi
+
+# Test 12.2 Servizi di Sistema Autonomi .ify (GestorePacchetti.ify e Compatibilità.ify)
+if [ -x "$REPO_ROOT/sistema/servizi/GestorePacchetti.ify" ] && [ -x "$REPO_ROOT/sistema/servizi/Compatibilità.ify" ]; then
+    log_pass "Servizi di Sistema: GestorePacchetti.ify e Compatibilità.ify presenti ed eseguibili"
+else
+    log_fail "Servizi di Sistema: Servizi .ify mancanti o privi di permessi di esecuzione"
+fi
+
+# Test 12.3 Inizializzazione File System Italiano
+if [ -x "$REPO_ROOT/system/session/osify-filesystem-init.sh" ] && bash -n "$REPO_ROOT/system/session/osify-filesystem-init.sh" 2>/dev/null; then
+    log_pass "File System Nativo: Script di inizializzazione percorsi italiani (/Sistema, /Applicazioni, /Utenti) presente e valido"
+else
+    log_fail "File System Nativo: Script di inizializzazione osify-filesystem-init.sh non valido"
+fi
+
+# Test 12.4 Tema Proprietario OSify-2050 Openbox (Dark Glass & Neon Accents)
+if [ -f "$REPO_ROOT/desktop/branding/themes/OSify-2050/openbox-3/themerc" ]; then
+    log_pass "Design System: Tema proprietario OSify-2050 con finiture Obsidian Dark Glass e accenti neon presente"
+else
+    log_fail "Design System: Tema OSify-2050 non trovato in desktop/branding/themes"
+fi
+
+# Test 12.5 Assenza Assoluta di Emoji nel Codice di Avvio e nei Menu
+if python3 -c "
+import re
+with open('$REPO_ROOT/build/remaster-live-iso.py', 'r') as f:
+    c = f.read()
+# Verifica assenza emoji specifici nei menu
+forbidden = ['⚡', '🚀', '🌐', '📶', '📁', '🎮', '🛠️', '💻', '💿', '👤', '🔄']
+for e in forbidden:
+    assert e not in c, f'Emoji {e} presente in remaster-live-iso.py'
+print('Nessuna emoji trovata in remaster-live-iso.py')
+" >/dev/null 2>&1; then
+    log_pass "Codifica Testuale & X11: Zero emoji nel codice di build del remaster ISO e nei menu contestuali"
+else
+    log_fail "Codifica Testuale & X11: Rilevate emoji non permesse in build/remaster-live-iso.py"
+fi
+
 echo "                  REPORT FINALE COLLAUDO                 "
 echo "========================================================="
 echo "  TEST SUPERATI : $PASSED_COUNT"

@@ -25,18 +25,28 @@ if [[ -z "$TARGET" || (! -f "$TARGET" && ! -d "$TARGET") ]]; then
     echo "Uso: osify-exec <qualsiasi-file-o-programma> [argomenti...]"
     echo ""
     echo "Esempi:"
-    echo "  osify-exec setup.exe           (Esegue con Wine / Proton / DXVK)"
-    echo "  osify-exec app.apk             (Esegue in Waydroid LXC)"
-    echo "  osify-exec game.ipa            (Esegue via touchHLE / Darwin / Fallback APK)"
-    echo "  osify-exec app.app             (Esegue via Darling / Mach-O Runner)"
-    echo "  osify-exec binary_arm64        (Esegue con Box64 / QEMU-Static)"
-    echo "  osify-exec turbo_pascal.exe    (Esegue in ambiente MS-DOS reale)"
-    echo "  osify-exec module.wasm         (Esegue via WASI engine)"
-    echo "  osify-exec app.jar             (Esegue via OpenJDK)"
+    echo "  osify-exec setup.exe           (Esegue con Compatibilità.ify Windows)"
+    echo "  osify-exec app.apk             (Esegue con Compatibilità.ify Mobile)"
+    echo "  osify-exec game.ipa            (Esegue con Compatibilità.ify iOS)"
+    echo "  osify-exec app.app             (Esegue con Compatibilità.ify macOS)"
+    echo "  osify-exec programma.ify       (Esegue con GestorePacchetti.ify)"
+    echo "  osify-exec binary_arm64        (Esegue con Compatibilità.ify Cross-Arch)"
+    echo "  osify-exec turbo_pascal.exe    (Esegue con Compatibilità.ify DOS)"
+    echo "  osify-exec module.wasm         (Esegue con Compatibilità.ify WASM)"
+    echo "  osify-exec app.jar             (Esegue con Compatibilità.ify Java)"
     exit 1
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Se e' un pacchetto o bundle nativo OSify (.ify)
+if [[ "$TARGET" =~ \.ify/?$ ]]; then
+    if [ -x "/Sistema/Servizi/GestorePacchetti.ify" ]; then
+        exec "/Sistema/Servizi/GestorePacchetti.ify" "$TARGET" "${@:2}"
+    else
+        exec "$SCRIPT_DIR/../../sistema/servizi/GestorePacchetti.ify" "$TARGET" "${@:2}"
+    fi
+fi
 
 # Se e' una cartella .app di macOS
 if [[ -d "$TARGET" && "$TARGET" =~ \.app/?$ ]]; then

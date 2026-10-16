@@ -1,0 +1,16 @@
+{
+  "id": "com.osify.video",
+  "nome": "Video",
+  "versione": "2050.1.0",
+  "descrizione": "Centro multimediale di riproduzione video e acquisizione dello schermo ad alte prestazioni",
+  "categoria": "Video",
+  "icona": "icona.png",
+  "eseguibile": "avvia.sh",
+  "permessi": [
+    "grafica",
+    "input",
+    "disco",
+    "audio"
+  ],
+  "autore": "OSify Systems"
+}

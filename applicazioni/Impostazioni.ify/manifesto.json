@@ -1,0 +1,16 @@
+{
+  "id": "com.osify.impostazioni",
+  "nome": "Impostazioni",
+  "versione": "2050.1.0",
+  "descrizione": "Pannello di controllo centralizzato per periferiche, audio, schermo, account e sicurezza",
+  "categoria": "Impostazioni",
+  "icona": "icona.png",
+  "eseguibile": "avvia.sh",
+  "permessi": [
+    "grafica",
+    "input",
+    "disco",
+    "audio"
+  ],
+  "autore": "OSify Systems"
+}

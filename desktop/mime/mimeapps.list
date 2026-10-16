@@ -1,4 +1,5 @@
 [Default Applications]
+application/x-osify-package=osify-package-installer.desktop
 application/x-msdos-program=osify-uem-runner.desktop
 application/x-msdownload=osify-uem-runner.desktop
 application/x-msi=osify-uem-runner.desktop

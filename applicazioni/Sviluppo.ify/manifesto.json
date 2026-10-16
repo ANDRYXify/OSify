@@ -1,0 +1,16 @@
+{
+  "id": "com.osify.sviluppo",
+  "nome": "Sviluppo",
+  "versione": "2050.1.0",
+  "descrizione": "Ambiente integrato di ingegneria del software: Python, C, Git e strumenti di sviluppo",
+  "categoria": "Sviluppo",
+  "icona": "icona.png",
+  "eseguibile": "avvia.sh",
+  "permessi": [
+    "grafica",
+    "input",
+    "disco",
+    "audio"
+  ],
+  "autore": "OSify Systems"
+}

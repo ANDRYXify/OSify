@@ -1,0 +1,16 @@
+{
+  "id": "com.osify.musica",
+  "nome": "Musica",
+  "versione": "2050.1.0",
+  "descrizione": "Riproduttore audio ad alta fedeltà con gestione canali e equalizzazione a bassa latenza",
+  "categoria": "Audio",
+  "icona": "icona.png",
+  "eseguibile": "avvia.sh",
+  "permessi": [
+    "grafica",
+    "input",
+    "disco",
+    "audio"
+  ],
+  "autore": "OSify Systems"
+}

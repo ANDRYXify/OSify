@@ -1,0 +1,16 @@
+{
+  "id": "com.osify.archivi",
+  "nome": "Archivi",
+  "versione": "2050.1.0",
+  "descrizione": "Gestore di compressione ed estrazione pacchetti e archivi universali",
+  "categoria": "Utility",
+  "icona": "icona.png",
+  "eseguibile": "avvia.sh",
+  "permessi": [
+    "grafica",
+    "input",
+    "disco",
+    "audio"
+  ],
+  "autore": "OSify Systems"
+}

@@ -1,0 +1,16 @@
+{
+  "id": "com.osify.navigatore",
+  "nome": "Navigatore",
+  "versione": "2050.1.0",
+  "descrizione": "Navigatore Web ultra-veloce con motore di rendering nativo e protezione tracciamento",
+  "categoria": "Rete",
+  "icona": "icona.png",
+  "eseguibile": "avvia.sh",
+  "permessi": [
+    "grafica",
+    "input",
+    "disco",
+    "audio"
+  ],
+  "autore": "OSify Systems"
+}

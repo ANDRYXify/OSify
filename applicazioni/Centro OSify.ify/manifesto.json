@@ -1,0 +1,16 @@
+{
+  "id": "com.osify.centro",
+  "nome": "Centro OSify",
+  "versione": "2050.1.0",
+  "descrizione": "Plancia di comando unificata, telemetria hardware, turbo boost e centro operativo",
+  "categoria": "Sistema",
+  "icona": "icona.png",
+  "eseguibile": "avvia.sh",
+  "permessi": [
+    "grafica",
+    "input",
+    "disco",
+    "audio"
+  ],
+  "autore": "OSify Systems"
+}

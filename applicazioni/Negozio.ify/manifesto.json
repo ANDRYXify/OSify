@@ -1,0 +1,16 @@
+{
+  "id": "com.osify.negozio",
+  "nome": "Negozio",
+  "versione": "2050.1.0",
+  "descrizione": "Catalogo ufficiale per l'installazione e l'aggiornamento sicuro di pacchetti nativi .ify",
+  "categoria": "Sistema",
+  "icona": "icona.png",
+  "eseguibile": "avvia.sh",
+  "permessi": [
+    "grafica",
+    "input",
+    "disco",
+    "audio"
+  ],
+  "autore": "OSify Systems"
+}

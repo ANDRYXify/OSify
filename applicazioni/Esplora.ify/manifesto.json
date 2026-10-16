@@ -1,0 +1,16 @@
+{
+  "id": "com.osify.esplora",
+  "nome": "Esplora",
+  "versione": "2050.1.0",
+  "descrizione": "Gestione e navigazione visuale di dischi, partizioni e cartelle personali in italiano",
+  "categoria": "Sistema",
+  "icona": "icona.png",
+  "eseguibile": "avvia.sh",
+  "permessi": [
+    "grafica",
+    "input",
+    "disco",
+    "audio"
+  ],
+  "autore": "OSify Systems"
+}

@@ -1,0 +1,16 @@
+{
+  "id": "com.osify.note",
+  "nome": "Note",
+  "versione": "2050.1.0",
+  "descrizione": "Taccuino rapido per appunti, documentazione e scrittura di testi",
+  "categoria": "Ufficio",
+  "icona": "icona.png",
+  "eseguibile": "avvia.sh",
+  "permessi": [
+    "grafica",
+    "input",
+    "disco",
+    "audio"
+  ],
+  "autore": "OSify Systems"
+}

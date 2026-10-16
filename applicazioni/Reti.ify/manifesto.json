@@ -1,0 +1,16 @@
+{
+  "id": "com.osify.reti",
+  "nome": "Reti",
+  "versione": "2050.1.0",
+  "descrizione": "Gestione connessioni senza fili Wi-Fi, Ethernet cablata, hotspot e sicurezza WPA2/WPA3",
+  "categoria": "Rete",
+  "icona": "icona.png",
+  "eseguibile": "avvia.sh",
+  "permessi": [
+    "grafica",
+    "input",
+    "disco",
+    "audio"
+  ],
+  "autore": "OSify Systems"
+}

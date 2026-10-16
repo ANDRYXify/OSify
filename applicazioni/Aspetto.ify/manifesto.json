@@ -1,0 +1,16 @@
+{
+  "id": "com.osify.aspetto",
+  "nome": "Aspetto",
+  "versione": "2050.1.0",
+  "descrizione": "Personalizzazione grafica del desktop, temi Dark Obsidian, sfondi ufficiali e Virtual Scaler",
+  "categoria": "Impostazioni",
+  "icona": "icona.png",
+  "eseguibile": "avvia.sh",
+  "permessi": [
+    "grafica",
+    "input",
+    "disco",
+    "audio"
+  ],
+  "autore": "OSify Systems"
+}

@@ -1,0 +1,16 @@
+{
+  "id": "com.osify.monitor",
+  "nome": "Monitor",
+  "versione": "2050.1.0",
+  "descrizione": "Monitoraggio in tempo reale di memoria RAM, carico del processore, temperature e processi attivi",
+  "categoria": "Sistema",
+  "icona": "icona.png",
+  "eseguibile": "avvia.sh",
+  "permessi": [
+    "grafica",
+    "input",
+    "disco",
+    "audio"
+  ],
+  "autore": "OSify Systems"
+}

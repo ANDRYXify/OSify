@@ -1,0 +1,16 @@
+{
+  "id": "com.osify.giochi",
+  "nome": "Giochi",
+  "versione": "2050.1.0",
+  "descrizione": "Piattaforma gaming universale: titoli moderni, retrogaming DOS e ottimizzazione frame rate",
+  "categoria": "Intrattenimento",
+  "icona": "icona.png",
+  "eseguibile": "avvia.sh",
+  "permessi": [
+    "grafica",
+    "input",
+    "disco",
+    "audio"
+  ],
+  "autore": "OSify Systems"
+}

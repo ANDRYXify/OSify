@@ -26,4 +26,8 @@
     <comment>Applicazione iOS IPA (OSify UEM)</comment>
     <glob pattern="*.ipa"/>
   </mime-type>
+  <mime-type type="application/x-osify-package">
+    <comment>Pacchetto Applicativo Nativo OSify (.ify)</comment>
+    <glob pattern="*.ify"/>
+  </mime-type>
 </mime-info>

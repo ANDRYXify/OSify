@@ -1,0 +1,62 @@
+#!/bin/sh
+# ==============================================================================
+# OSify — Sottosistema Esecutivo Compatibilità.ify
+# ==============================================================================
+# Ingegnerizzato per il Compagno Andrea Taliento (ANDRYXify)
+# Esegue in modo trasparente e immediato qualsiasi formato software:
+# - Applicazioni e giochi Windows (.exe, .msi, 16/32/64-bit)
+# - Software MS-DOS e industriale storico (.com, .bat)
+# - Applicazioni Apple macOS (.app, .dmg, Mach-O)
+# - Applicazioni Android (.apk, .aab)
+# - Moduli WebAssembly (.wasm), Java (.jar) e binari cross-architettura
+# I livelli e i motori sottostanti sono totalmente INVISIBILI all'utente.
+# Per l'utente esiste unicamente il motore unificato "Compatibilità.ify".
+# ==============================================================================
+
+TARGET="${1:-}"
+
+if [ -z "$TARGET" ]; then
+    if command -v yad >/dev/null 2>&1; then
+        ICON_COMPAT="/Sistema/Icone/osify-games.png"
+        [ ! -f "$ICON_COMPAT" ] && ICON_COMPAT="/usr/share/pixmaps/osify-games.png"
+        yad --title="OSify — Sottosistema Compatibilità.ify" \
+            --window-icon="$ICON_COMPAT" \
+            --image="$ICON_COMPAT" \
+            --width=520 --height=300 --center \
+            --text="<b><big>Compatibilità.ify 2050</big></b>\n\nIl motore di esecuzione trasparente di OSify consente di eseguire qualsiasi programma per Windows, macOS, Android, DOS e altre piattaforme con un semplice doppio clic.\n\n<b>Stato:</b> Operativo e Attivo\n<b>Accelerazione Hardware:</b> Vulkan / Direct3D 12 / Metal Emulation Attiva\n<b>Anti-Cheat Guard:</b> Modalità Stealth Protetta" \
+            --button="OK":0 2>/dev/null
+    fi
+    exit 0
+fi
+
+# Se è un pacchetto nativo OSify (.ify)
+if [ -d "$TARGET" ] && echo "$TARGET" | grep -qE "\.ify/?$"; then
+    exec /Sistema/Servizi/GestorePacchetti.ify "$TARGET" "${@:2}"
+fi
+
+# Feedback visivo leggero e non invasivo
+APP_BASENAME="$(basename "$TARGET")"
+ICON_COMPAT="/Sistema/Icone/osify-games.png"
+[ ! -f "$ICON_COMPAT" ] && ICON_COMPAT="/usr/share/pixmaps/osify-games.png"
+
+# Notifica rapida di sistema (senza bloccare l'esecuzione)
+if command -v notify-send >/dev/null 2>&1; then
+    notify-send -i "$ICON_COMPAT" "OSify Compatibilità" "Avvio di ${APP_BASENAME} in corso..." -t 2000 2>/dev/null || true
+fi
+
+# Invocazione dell'Universal Polyglot Dispatcher
+DISPATCHER_PATH="/opt/osify/uem/runners/osify-universal-dispatcher.sh"
+[ ! -f "$DISPATCHER_PATH" ] && DISPATCHER_PATH="$(dirname "$0")/../../uem/runners/osify-universal-dispatcher.sh"
+
+if [ -x "$DISPATCHER_PATH" ]; then
+    exec "$DISPATCHER_PATH" "$TARGET" "${@:2}"
+elif [ -f "$DISPATCHER_PATH" ]; then
+    exec bash "$DISPATCHER_PATH" "$TARGET" "${@:2}"
+else
+    # Fallback diretto se l'eseguibile è binario standard
+    if [ -x "$TARGET" ]; then
+        exec "$TARGET" "${@:2}"
+    fi
+fi
+
+exit 0

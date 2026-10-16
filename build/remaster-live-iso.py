@@ -111,7 +111,7 @@ def inject_osify_tree(dest_iso_root):
     if os.path.exists(osify_tree):
         shutil.rmtree(osify_tree)
     os.makedirs(osify_tree, exist_ok=True)
-    for mod in ["kernel", "network", "audio", "desktop", "tools", "security", "system", "uem", "streaming", "services"]:
+    for mod in ["kernel", "network", "audio", "desktop", "tools", "security", "system", "uem", "streaming", "services", "sistema", "applicazioni"]:
         mod_src = os.path.join(REPO_ROOT, mod)
         if os.path.exists(mod_src):
             shutil.copytree(mod_src, os.path.join(osify_tree, mod), dirs_exist_ok=True)
@@ -125,36 +125,6 @@ def inject_osify_tree(dest_iso_root):
         shutil.copy2(version_file, os.path.join(dest_iso_root, "VERSION"))
         shutil.copy2(version_file, os.path.join(osify_tree, "VERSION"))
 
-def build_vintage_i686():
-    print("=========================================================")
-    print(" [1/2] Costruzione OSify Vintage 32-bit (Intel Atom/NB200)")
-    print("=========================================================")
-    
-    src_iso = CACHE_I686
-    if not (os.path.exists(src_iso) and os.path.getsize(src_iso) > 10 * 1024 * 1024):
-        if os.path.exists(SANDBOX_I686) and os.path.getsize(SANDBOX_I686) > 10 * 1024 * 1024:
-            src_iso = SANDBOX_I686
-        else:
-            print("[+] Download base Linux 32-bit (SliTaz Rolling)...")
-            os.makedirs(os.path.dirname(CACHE_I686), exist_ok=True)
-            run(f"curl -L -o '{CACHE_I686}' 'http://mirror.slitaz.org/iso/rolling/slitaz-rolling.iso'")
-            src_iso = CACHE_I686
-
-    work_dir = "/tmp/osify_remaster_i686"
-    if os.path.exists(work_dir):
-        shutil.rmtree(work_dir)
-    os.makedirs(work_dir)
-
-    iso_root = os.path.join(work_dir, "iso_root")
-    os.makedirs(iso_root)
-
-    print("[i] Estrazione base 32-bit...")
-    run(f"7z x -y '{src_iso}' -o'{iso_root}' > /dev/null")
-
-    # Wallpaper e splash
-    src_png = os.path.join(REPO_ROOT, "desktop/branding/wallpapers/osify-netbook-1024x600.png")
-    if not os.path.exists(src_png):
-        src_png = os.path.join(REPO_ROOT, "OSify.png")
 def create_boot_splash(dest_jpg):
     src_splash = os.path.join(REPO_ROOT, "desktop/branding/wallpapers/osify-bootsplash.jpg")
     if os.path.exists(src_splash):
@@ -262,99 +232,90 @@ fi
 
 OSIFY_OPENBOX_MENU = """<?xml version="1.0" encoding="UTF-8"?>
 <openbox_menu xmlns="http://openbox.org/3.4/menu">
-  <menu id="root-menu" label="OSify Menu">
-    <separator label="OSify 2.0 Operating System"/>
-    <item label="⚡ OSify Hub &amp; Dashboard" icon="/usr/share/pixmaps/osify-hub.png">
-      <action name="Execute"><command>/usr/bin/osify-hub</command></action>
+  <menu id="root-menu" label="Menu OSify">
+    <separator label="OSify 2050"/>
+    <item label="Centro OSify.ify" icon="/usr/share/pixmaps/osify-hub.png">
+      <action name="Execute"><command>/Applicazioni/Centro OSify.ify/avvia.sh</command></action>
     </item>
-    <item label="🚀 Tutte le Applicazioni" icon="/usr/share/pixmaps/osify-drawer.png">
+    <item label="Tutte le Applicazioni (.ify)" icon="/usr/share/pixmaps/osify-drawer.png">
       <action name="Execute"><command>/usr/bin/osify-app-drawer</command></action>
     </item>
     <separator/>
-    <separator label="Principali"/>
-    <item label="🌐 Navigatore Web" icon="/usr/share/pixmaps/osify-browser.png">
-      <action name="Execute"><command>/usr/bin/osify-browser</command></action>
+    <separator label="Applicazioni Native"/>
+    <item label="Navigatore.ify" icon="/usr/share/pixmaps/osify-browser.png">
+      <action name="Execute"><command>/Applicazioni/Navigatore.ify/avvia.sh</command></action>
     </item>
-    <item label="📶 Connessione Wi-Fi" icon="/usr/share/pixmaps/osify-wifi.png">
-      <action name="Execute"><command>/usr/bin/osify-wifi</command></action>
+    <item label="Esplora.ify" icon="/usr/share/pixmaps/osify-files.png">
+      <action name="Execute"><command>/Applicazioni/Esplora.ify/avvia.sh</command></action>
     </item>
-    <item label="📁 Gestione File" icon="/usr/share/pixmaps/osify-files.png">
-      <action name="Execute"><command>pcmanfm</command></action>
+    <item label="Reti.ify" icon="/usr/share/pixmaps/osify-wifi.png">
+      <action name="Execute"><command>/Applicazioni/Reti.ify/avvia.sh</command></action>
     </item>
-    <item label="🎮 Gaming &amp; Retrogaming Hub" icon="/usr/share/pixmaps/osify-games.png">
-      <action name="Execute"><command>/usr/bin/osify-games</command></action>
+    <item label="Giochi.ify" icon="/usr/share/pixmaps/osify-games.png">
+      <action name="Execute"><command>/Applicazioni/Giochi.ify/avvia.sh</command></action>
     </item>
-    <item label="🛠️ Sviluppo &amp; Codice" icon="/usr/share/pixmaps/osify-developer.png">
-      <action name="Execute"><command>/usr/bin/osify-developer</command></action>
+    <item label="Sviluppo.ify" icon="/usr/share/pixmaps/osify-developer.png">
+      <action name="Execute"><command>/Applicazioni/Sviluppo.ify/avvia.sh</command></action>
     </item>
-    <item label="💻 Terminale di Sistema" icon="/usr/share/pixmaps/osify-terminal.png">
-      <action name="Execute"><command>/usr/bin/terminal</command></action>
+    <item label="Compatibilità.ify" icon="/usr/share/pixmaps/osify-games.png">
+      <action name="Execute"><command>/Sistema/Servizi/Compatibilità.ify</command></action>
+    </item>
+    <item label="Negozio.ify" icon="/usr/share/pixmaps/osify-install.png">
+      <action name="Execute"><command>/Applicazioni/Negozio.ify/avvia.sh</command></action>
     </item>
     <separator/>
-    <menu id="multimedia-menu" label="Multimedia &amp; Strumenti">
-      <item label="Lettore Multimediale" icon="/usr/share/pixmaps/osify-audio.png">
-        <action name="Execute"><command>/usr/bin/osify-media-player</command></action>
+    <menu id="multimedia-menu" label="Multimedia e Ufficio">
+      <item label="Galleria.ify" icon="/usr/share/pixmaps/osify-appearance.png">
+        <action name="Execute"><command>/Applicazioni/Galleria.ify/avvia.sh</command></action>
       </item>
-      <item label="Cattura Schermo" icon="/usr/share/pixmaps/osify-appearance.png">
-        <action name="Execute"><command>/usr/bin/osify-screenshot --gui</command></action>
+      <item label="Musica.ify" icon="/usr/share/pixmaps/osify-audio.png">
+        <action name="Execute"><command>/Applicazioni/Musica.ify/avvia.sh</command></action>
       </item>
-      <item label="Fotocamera e Webcam" icon="/usr/share/pixmaps/osify-camera.png">
-        <action name="Execute"><command>/usr/bin/osify-camera gui</command></action>
+      <item label="Video.ify" icon="/usr/share/pixmaps/osify-audio.png">
+        <action name="Execute"><command>/Applicazioni/Video.ify/avvia.sh</command></action>
       </item>
-      <item label="Registratore Vocale" icon="/usr/share/pixmaps/osify-voice.png">
-        <action name="Execute"><command>/usr/bin/osify-voice gui</command></action>
+      <item label="Documenti.ify" icon="/usr/share/pixmaps/osify-files.png">
+        <action name="Execute"><command>/Applicazioni/Documenti.ify/avvia.sh</command></action>
       </item>
-      <item label="Blocco Note ed Editor" icon="/usr/share/pixmaps/osify-notepad.png">
-        <action name="Execute"><command>/usr/bin/osify-notepad</command></action>
+      <item label="Archivi.ify" icon="/usr/share/pixmaps/osify-archive.png">
+        <action name="Execute"><command>/Applicazioni/Archivi.ify/avvia.sh</command></action>
       </item>
-      <item label="Calcolatrice" icon="/usr/share/pixmaps/osify-calculator.png">
-        <action name="Execute"><command>/usr/bin/osify-calculator</command></action>
+      <item label="Cattura.ify" icon="/usr/share/pixmaps/osify-appearance.png">
+        <action name="Execute"><command>/Applicazioni/Cattura.ify/avvia.sh</command></action>
       </item>
-      <item label="Gestore Archivi" icon="/usr/share/pixmaps/osify-archive.png">
-        <action name="Execute"><command>/usr/bin/osify-archive-manager</command></action>
+      <item label="Calcolatrice.ify" icon="/usr/share/pixmaps/osify-calculator.png">
+        <action name="Execute"><command>/Applicazioni/Calcolatrice.ify/avvia.sh</command></action>
       </item>
-      <item label="Tastiera a Schermo" icon="/usr/share/pixmaps/osify-keyboard.png">
-        <action name="Execute"><command>/usr/bin/osify-onboard</command></action>
+      <item label="Note.ify" icon="/usr/share/pixmaps/osify-notepad.png">
+        <action name="Execute"><command>/Applicazioni/Note.ify/avvia.sh</command></action>
       </item>
     </menu>
-    <menu id="settings-menu" label="Impostazioni &amp; Hardware">
-      <item label="Centro di Controllo" icon="/usr/share/pixmaps/osify-settings.png">
-        <action name="Execute"><command>/usr/bin/osify-settings</command></action>
+    <menu id="settings-menu" label="Impostazioni e Sistema">
+      <item label="Impostazioni.ify" icon="/usr/share/pixmaps/osify-settings.png">
+        <action name="Execute"><command>/Applicazioni/Impostazioni.ify/avvia.sh</command></action>
       </item>
-      <item label="Personalizzazione &amp; Schermo" icon="/usr/share/pixmaps/osify-appearance.png">
-        <action name="Execute"><command>/usr/bin/osify-appearance</command></action>
+      <item label="Aspetto.ify" icon="/usr/share/pixmaps/osify-appearance.png">
+        <action name="Execute"><command>/Applicazioni/Aspetto.ify/avvia.sh</command></action>
       </item>
-      <item label="Audio e Volume" icon="/usr/share/pixmaps/osify-audio.png">
-        <action name="Execute"><command>/usr/bin/osify-audio gui</command></action>
+      <item label="Monitor.ify" icon="/usr/share/pixmaps/osify-taskmanager.png">
+        <action name="Execute"><command>/Applicazioni/Monitor.ify/avvia.sh</command></action>
       </item>
-      <item label="Hotspot Wi-Fi" icon="/usr/share/pixmaps/osify-hotspot.png">
-        <action name="Execute"><command>/usr/bin/osify-hotspot gui</command></action>
+      <item label="Aggiornamenti.ify" icon="/usr/share/pixmaps/osify-update.png">
+        <action name="Execute"><command>/Applicazioni/Aggiornamenti.ify/avvia.sh</command></action>
       </item>
-      <item label="Bluetooth" icon="/usr/share/pixmaps/osify-bluetooth.png">
-        <action name="Execute"><command>/usr/bin/osify-bluetooth gui</command></action>
-      </item>
-      <item label="Touchpad e Mouse" icon="/usr/share/pixmaps/osify-touchpad.png">
-        <action name="Execute"><command>/usr/bin/osify-touchpad gui</command></action>
-      </item>
-      <item label="Scheda Tecnica Hardware" icon="/usr/share/pixmaps/osify-settings.png">
-        <action name="Execute"><command>/usr/bin/osify-sysinfo gui</command></action>
-      </item>
-      <item label="Gestione Attivita" icon="/usr/share/pixmaps/osify-taskmanager.png">
-        <action name="Execute"><command>/usr/bin/osify-taskmanager</command></action>
+      <item label="Gestore Pacchetti (.ify)" icon="/usr/share/pixmaps/osify-install.png">
+        <action name="Execute"><command>/Sistema/Servizi/GestorePacchetti.ify</command></action>
       </item>
     </menu>
     <separator/>
-    <item label="💿 Installa OSify su Disco" icon="/usr/share/pixmaps/osify-install.png">
-      <action name="Execute"><command>/usr/bin/osify-install</command></action>
-    </item>
-    <item label="👤 Profilo Utente" icon="/usr/share/pixmaps/osify-profile.png">
-      <action name="Execute"><command>/usr/bin/osify-profile-setup --force</command></action>
+    <item label="Installa OSify.ify" icon="/usr/share/pixmaps/osify-install.png">
+      <action name="Execute"><command>/Applicazioni/Installa OSify.ify/avvia.sh</command></action>
     </item>
     <separator/>
-    <item label="⚡ Spegni Computer" icon="/usr/share/pixmaps/osify-power.png">
+    <item label="Spegni Computer" icon="/usr/share/pixmaps/osify-power.png">
       <action name="Execute"><command>/usr/bin/osify-power off</command></action>
     </item>
-    <item label="🔄 Riavvia Computer" icon="/usr/share/pixmaps/osify-power.png">
+    <item label="Riavvia Computer" icon="/usr/share/pixmaps/osify-power.png">
       <action name="Execute"><command>/usr/bin/osify-power reboot</command></action>
     </item>
   </menu>
@@ -530,9 +491,9 @@ Global {
 Plugin {
     type = menu
     Config {
-        image=/usr/share/pixmaps/osify-apple-logo.png
+        image=/usr/share/pixmaps/osify.png
         item {
-            name=Informazioni su questo OSify
+            name=Informazioni su OSify 2050
             image=/usr/share/pixmaps/osify-about.png
             action=/usr/bin/osify-about
         }
@@ -544,17 +505,22 @@ Plugin {
             action=/usr/bin/osify-settings
         }
         item {
-            name=OSify App Store & Hub...
+            name=Centro OSify...
             image=/usr/share/pixmaps/osify-hub.png
             action=/usr/bin/osify-hub
         }
         item {
-            name=Scrivania e Aspetto...
+            name=Compatibilità.ify...
+            image=/usr/share/pixmaps/osify-games.png
+            action=/Sistema/Servizi/Compatibilità.ify
+        }
+        item {
+            name=Aspetto e Risoluzioni...
             image=/usr/share/pixmaps/osify-appearance.png
             action=/usr/bin/osify-appearance
         }
         item {
-            name=Rete e Connessione Wi-Fi...
+            name=Reti e Connessione Wi-Fi...
             image=/usr/share/pixmaps/osify-wifi.png
             action=/usr/bin/osify-wifi
         }
@@ -591,7 +557,7 @@ Plugin {
         name=OSify
         image=/usr/share/pixmaps/transparent.png
         item {
-            name=Informazioni su questo OSify
+            name=Informazioni su OSify 2050
             action=/usr/bin/osify-about
         }
         item {
@@ -599,14 +565,14 @@ Plugin {
             action=/usr/bin/osify-settings
         }
         item {
-            name=Spotlight Search (Super+Spazio)
+            name=Ricerca Globale OSify (Super+Spazio)
             action=/usr/bin/osify-spotlight
         }
         separator {
         }
         item {
-            name=Terminale di Sistema
-            action=/usr/bin/terminal
+            name=Profilo Prestazioni & Turbo
+            action=/usr/bin/osify-hub
         }
     }
 }
@@ -617,15 +583,15 @@ Plugin {
         name=File
         image=/usr/share/pixmaps/transparent.png
         item {
-            name=Nuova Finestra Finder
+            name=Nuova Finestra Esplora
             action=pcmanfm
         }
         item {
-            name=Cartella Utente
+            name=Cartella Utente (/Utenti)
             action=pcmanfm ~
         }
         item {
-            name=Cerca con Spotlight
+            name=Cerca nel Sistema
             action=/usr/bin/osify-spotlight
         }
     }
@@ -637,7 +603,7 @@ Plugin {
         name=Visualizza
         image=/usr/share/pixmaps/transparent.png
         item {
-            name=Tutte le Applicazioni (Launchpad)
+            name=Tutte le Applicazioni (.ify)
             action=/usr/bin/osify-app-drawer
         }
         item {
@@ -645,8 +611,28 @@ Plugin {
             action=/usr/bin/osify-appearance
         }
         item {
-            name=Monitor Risorse
+            name=Monitor di Sistema
             action=/usr/bin/osify-taskmanager
+        }
+    }
+}
+
+Plugin {
+    type = menu
+    Config {
+        name=Strumenti
+        image=/usr/share/pixmaps/transparent.png
+        item {
+            name=Centro OSify
+            action=/usr/bin/osify-hub
+        }
+        item {
+            name=Gestore Compatibilità.ify
+            action=/Sistema/Servizi/Compatibilità.ify
+        }
+        item {
+            name=Strumenti di Sviluppo
+            action=/usr/bin/osify-developer
         }
     }
 }
@@ -657,12 +643,16 @@ Plugin {
         name=Aiuto
         image=/usr/share/pixmaps/transparent.png
         item {
-            name=Guida Rapida e Supporto
+            name=Guida Rapida OSify
             action=/usr/bin/osify-hub
         }
         item {
             name=Specifiche OSify 2050
             action=/usr/bin/osify-about
+        }
+        item {
+            name=Diagnostica Hardware
+            action=/usr/bin/osify-sysinfo
         }
     }
 }
@@ -751,16 +741,16 @@ Plugin {
 }
 """
 
-    lxpanel_dock_cfg = """# OSify Floating Dock (macOS Style 2050)
+    lxpanel_dock_cfg = """# OSify Cyber Dock 2050
 Global {
     edge=bottom
     allign=center
     margin=8
     widthtype=request
-    height=46
+    height=48
     transparent=1
     tintcolor=#0a0e17
-    alpha=215
+    alpha=220
     autohide=0
     setdocktype=1
     setpartialstrut=1
@@ -769,7 +759,7 @@ Global {
     fontcolor=#38bdf8
     usefontsize=1
     background=0
-    iconsize=36
+    iconsize=38
     loglevel=2
 }
 
@@ -786,22 +776,25 @@ Plugin {
             id=osify-browser.desktop
         }
         Button {
-            id=osify-spotlight.desktop
-        }
-        Button {
             id=osify-hub.desktop
         }
         Button {
-            id=osify-terminal.desktop
+            id=osify-package-installer.desktop
         }
         Button {
-            id=osify-developer.desktop
+            id=osify-settings.desktop
         }
         Button {
             id=osify-games.desktop
         }
         Button {
-            id=osify-settings.desktop
+            id=osify-media-player.desktop
+        }
+        Button {
+            id=osify-taskmanager.desktop
+        }
+        Button {
+            id=osify-install.desktop
         }
     }
 }
@@ -1544,6 +1537,42 @@ LABEL memtest
     os.makedirs(os.path.join(home_osify, "Desktop"), exist_ok=True)
     os.makedirs(os.path.join(home_osify, ".config"), exist_ok=True)
 
+    # Albero del File System Nativo OSify in Lingua Italiana
+    r4_sistema = os.path.join(r4_work, "Sistema")
+    os.makedirs(os.path.join(r4_sistema, "Driver"), exist_ok=True)
+    os.makedirs(os.path.join(r4_sistema, "Servizi"), exist_ok=True)
+    os.makedirs(os.path.join(r4_sistema, "Icone"), exist_ok=True)
+    os.makedirs(os.path.join(r4_sistema, "Librerie"), exist_ok=True)
+
+    sistema_src = os.path.join(REPO_ROOT, "sistema")
+    if os.path.exists(sistema_src):
+        shutil.copytree(sistema_src, r4_sistema, dirs_exist_ok=True)
+
+    r4_app = os.path.join(r4_work, "Applicazioni")
+    os.makedirs(r4_app, exist_ok=True)
+    app_src = os.path.join(REPO_ROOT, "applicazioni")
+    if os.path.exists(app_src):
+        shutil.copytree(app_src, r4_app, dirs_exist_ok=True)
+
+    r4_utenti = os.path.join(r4_work, "Utenti")
+    os.makedirs(r4_utenti, exist_ok=True)
+    osify_symlink = os.path.join(r4_utenti, "osify")
+    if not os.path.exists(osify_symlink):
+        try:
+            os.symlink("../home/osify", osify_symlink)
+        except Exception:
+            pass
+
+    for srv_bin in ["GestorePacchetti.ify", "Compatibilità.ify"]:
+        srv_file = os.path.join(r4_sistema, "Servizi", srv_bin)
+        if os.path.exists(srv_file):
+            os.chmod(srv_file, 0o755)
+            w_name = "osify-package-installer" if "GestorePacchetti" in srv_bin else "osify-compatibility"
+            w_path = os.path.join(r4_work, "usr/bin", w_name)
+            with open(w_path, "w") as wf:
+                wf.write(f"#!/bin/sh\nexec /Sistema/Servizi/{srv_bin} \"$@\"\n")
+            os.chmod(w_path, 0o755)
+
     # Iniezione regole binfmt del kernel
     binfmt_dir = os.path.join(r4_work, "etc/binfmt.d")
     os.makedirs(binfmt_dir, exist_ok=True)
@@ -1758,9 +1787,9 @@ WINDOW_MANAGER="openbox"
         "osify-hub.desktop": (
             "[Desktop Entry]\n"
             "Type=Application\n"
-            "Name=OSify Hub\n"
-            "Comment=Centro di Controllo, Prestazioni e Launchpad di OSify\n"
-            "Exec=/usr/bin/osify-hub\n"
+            "Name=Centro OSify.ify\n"
+            "Comment=Centro di Controllo, Prestazioni e Plancia Operativa OSify 2050\n"
+            "Exec=/Applicazioni/Centro\\ OSify.ify/avvia.sh\n"
             "Icon=/usr/share/pixmaps/osify-hub.png\n"
             "Terminal=false\n"
             "Categories=System;Utility;\n"
@@ -1768,9 +1797,9 @@ WINDOW_MANAGER="openbox"
         "osify-browser.desktop": (
             "[Desktop Entry]\n"
             "Type=Application\n"
-            "Name=Navigatore Web\n"
-            "Comment=Naviga su Internet con rendering grafico completo e Adblock integrato\n"
-            "Exec=/usr/bin/osify-browser\n"
+            "Name=Navigatore.ify\n"
+            "Comment=Navigatore Web ultra-veloce con motore di rendering nativo e protezione tracciamento\n"
+            "Exec=/Applicazioni/Navigatore.ify/avvia.sh\n"
             "Icon=/usr/share/pixmaps/osify-browser.png\n"
             "Terminal=false\n"
             "Categories=Network;WebBrowser;\n"
@@ -1778,9 +1807,9 @@ WINDOW_MANAGER="openbox"
         "osify-files.desktop": (
             "[Desktop Entry]\n"
             "Type=Application\n"
-            "Name=Gestione File\n"
-            "Comment=Esplora e gestisci cartelle, dischi e file personali\n"
-            "Exec=pcmanfm\n"
+            "Name=Esplora.ify\n"
+            "Comment=Esplora e gestisci cartelle, dischi e file in /Utenti e /Sistema\n"
+            "Exec=/Applicazioni/Esplora.ify/avvia.sh\n"
             "Icon=/usr/share/pixmaps/osify-files.png\n"
             "Terminal=false\n"
             "Categories=System;Utility;FileManager;\n"
@@ -1788,9 +1817,9 @@ WINDOW_MANAGER="openbox"
         "osify-wifi.desktop": (
             "[Desktop Entry]\n"
             "Type=Application\n"
-            "Name=Connessione Wi-Fi\n"
-            "Comment=Scansione reti wireless, inserimento password e connessione immediata\n"
-            "Exec=/usr/bin/osify-wifi\n"
+            "Name=Reti.ify\n"
+            "Comment=Gestione reti wireless Wi-Fi, Ethernet e sicurezza di connessione\n"
+            "Exec=/Applicazioni/Reti.ify/avvia.sh\n"
             "Icon=/usr/share/pixmaps/osify-wifi.png\n"
             "Terminal=false\n"
             "Categories=Network;Settings;\n"
@@ -1798,9 +1827,9 @@ WINDOW_MANAGER="openbox"
         "osify-games.desktop": (
             "[Desktop Entry]\n"
             "Type=Application\n"
-            "Name=Gaming Hub\n"
-            "Comment=Giochi Windows (.exe), Retrogaming DOS, Emulazione e Turbo Boost\n"
-            "Exec=/usr/bin/osify-games\n"
+            "Name=Giochi.ify\n"
+            "Comment=Piattaforma Giochi con Turbo Boost e compatibilità universale\n"
+            "Exec=/Applicazioni/Giochi.ify/avvia.sh\n"
             "Icon=/usr/share/pixmaps/osify-games.png\n"
             "Terminal=false\n"
             "Categories=Game;\n"
@@ -1808,20 +1837,19 @@ WINDOW_MANAGER="openbox"
         "osify-developer.desktop": (
             "[Desktop Entry]\n"
             "Type=Application\n"
-            "Name=Strumenti di Sviluppo\n"
-            "Comment=Suite di Programmazione: Python, C, Git, Editor e Progetti\n"
-            "Exec=/usr/bin/osify-developer\n"
+            "Name=Sviluppo.ify\n"
+            "Comment=Suite di Programmazione e Strumenti di Sviluppo OSify\n"
+            "Exec=/Applicazioni/Sviluppo.ify/avvia.sh\n"
             "Icon=/usr/share/pixmaps/osify-developer.png\n"
             "Terminal=false\n"
             "Categories=Development;\n"
         ),
-
         "osify-appearance.desktop": (
             "[Desktop Entry]\n"
             "Type=Application\n"
-            "Name=Personalizzazione Schermo\n"
-            "Comment=Virtual Scaler Netbook 1280x768, Sfondi Cyber Dark e Risoluzioni\n"
-            "Exec=/usr/bin/osify-appearance\n"
+            "Name=Aspetto.ify\n"
+            "Comment=Personalizzazione Schermo, Sfondi Cyber Dark e Virtual Scaler Netbook\n"
+            "Exec=/Applicazioni/Aspetto.ify/avvia.sh\n"
             "Icon=/usr/share/pixmaps/osify-appearance.png\n"
             "Terminal=false\n"
             "Categories=Settings;\n"
@@ -1829,29 +1857,19 @@ WINDOW_MANAGER="openbox"
         "osify-taskmanager.desktop": (
             "[Desktop Entry]\n"
             "Type=Application\n"
-            "Name=Gestione Attivita\n"
-            "Comment=Monitor di Processi e Telemetria di Sistema in Tempo Reale\n"
-            "Exec=/usr/bin/osify-taskmanager\n"
+            "Name=Monitor.ify\n"
+            "Comment=Monitoraggio di Processi, Memoria e Telemetria Hardware in Tempo Reale\n"
+            "Exec=/Applicazioni/Monitor.ify/avvia.sh\n"
             "Icon=/usr/share/pixmaps/osify-taskmanager.png\n"
-            "Terminal=false\n"
-            "Categories=System;\n"
-        ),
-        "osify-terminal.desktop": (
-            "[Desktop Entry]\n"
-            "Type=Application\n"
-            "Name=Terminale di Sistema\n"
-            "Comment=Terminale con Fastfetch e Diagnostica Hardware\n"
-            "Exec=/usr/bin/terminal\n"
-            "Icon=/usr/share/pixmaps/osify-terminal.png\n"
             "Terminal=false\n"
             "Categories=System;\n"
         ),
         "osify-install.desktop": (
             "[Desktop Entry]\n"
             "Type=Application\n"
-            "Name=Installa OSify su Disco\n"
+            "Name=Installa OSify.ify\n"
             "Comment=Installatore Guidato su Disco Fisso con Migrazione Dati Live\n"
-            "Exec=/usr/bin/osify-install\n"
+            "Exec=/Applicazioni/Installa\\ OSify.ify/avvia.sh\n"
             "Icon=/usr/share/pixmaps/osify-install.png\n"
             "Terminal=false\n"
             "Categories=System;\n"
@@ -1879,19 +1897,19 @@ WINDOW_MANAGER="openbox"
         "osify-update.desktop": (
             "[Desktop Entry]\n"
             "Type=Application\n"
-            "Name=Aggiornamento Sistema\n"
-            "Comment=Verifica e installa aggiornamenti ufficiali a caldo\n"
-            "Exec=/usr/bin/osify-update --gui\n"
+            "Name=Aggiornamenti.ify\n"
+            "Comment=Verifica e installa aggiornamenti atomici di sistema OSify\n"
+            "Exec=/Applicazioni/Aggiornamenti.ify/avvia.sh\n"
             "Icon=/usr/share/pixmaps/osify-update.png\n"
             "Terminal=false\n"
-            "Categories=System;Settings;PackageManager;\n"
+            "Categories=System;Settings;\n"
         ),
         "osify-settings.desktop": (
             "[Desktop Entry]\n"
             "Type=Application\n"
-            "Name=Centro di Controllo\n"
-            "Comment=Centro di Controllo Sistema, Rete, Touchpad e Schermo\n"
-            "Exec=/usr/bin/osify-settings\n"
+            "Name=Impostazioni.ify\n"
+            "Comment=Centro Impostazioni di Sistema, Display, Periferiche e Risparmio Energetico\n"
+            "Exec=/Applicazioni/Impostazioni.ify/avvia.sh\n"
             "Icon=/usr/share/pixmaps/osify-settings.png\n"
             "Terminal=false\n"
             "Categories=Settings;\n"
@@ -1979,9 +1997,9 @@ WINDOW_MANAGER="openbox"
         "osify-screenshot.desktop": (
             "[Desktop Entry]\n"
             "Type=Application\n"
-            "Name=Cattura Schermo\n"
+            "Name=Cattura.ify\n"
             "Comment=Cattura schermate del desktop o di finestre a risoluzione nativa\n"
-            "Exec=/usr/bin/osify-screenshot --gui\n"
+            "Exec=/Applicazioni/Cattura.ify/avvia.sh\n"
             "Icon=/usr/share/pixmaps/osify-appearance.png\n"
             "Terminal=false\n"
             "Categories=Utility;Graphics;\n"
@@ -1989,9 +2007,9 @@ WINDOW_MANAGER="openbox"
         "osify-image-viewer.desktop": (
             "[Desktop Entry]\n"
             "Type=Application\n"
-            "Name=Visualizzatore Immagini\n"
+            "Name=Galleria.ify\n"
             "Comment=Visualizza immagini e foto a schermo intero o a finestra\n"
-            "Exec=/usr/bin/osify-image-viewer %f\n"
+            "Exec=/Applicazioni/Galleria.ify/avvia.sh %f\n"
             "Icon=/usr/share/pixmaps/osify-appearance.png\n"
             "Terminal=false\n"
             "MimeType=image/jpeg;image/png;image/gif;image/bmp;image/webp;\n"
@@ -2010,9 +2028,9 @@ WINDOW_MANAGER="openbox"
         "osify-archive-manager.desktop": (
             "[Desktop Entry]\n"
             "Type=Application\n"
-            "Name=Gestore Archivi\n"
+            "Name=Archivi.ify\n"
             "Comment=Estrai e crea archivi compressi ZIP, TAR, GZ, XZ e 7Z con un click\n"
-            "Exec=/usr/bin/osify-archive-manager %f\n"
+            "Exec=/Applicazioni/Archivi.ify/avvia.sh %f\n"
             "Icon=/usr/share/pixmaps/osify-archive.png\n"
             "Terminal=false\n"
             "MimeType=application/zip;application/x-zip-compressed;application/x-tar;application/x-gzip;application/x-bzip2;application/x-xz;application/x-7z-compressed;\n"
@@ -2021,9 +2039,9 @@ WINDOW_MANAGER="openbox"
         "osify-notepad.desktop": (
             "[Desktop Entry]\n"
             "Type=Application\n"
-            "Name=Blocco Note ed Editor\n"
+            "Name=Note.ify\n"
             "Comment=Editor di testo leggero e veloce per documenti, appunti e file di sistema\n"
-            "Exec=/usr/bin/osify-notepad %f\n"
+            "Exec=/Applicazioni/Note.ify/avvia.sh %f\n"
             "Icon=/usr/share/pixmaps/osify-notepad.png\n"
             "Terminal=false\n"
             "MimeType=text/plain;text/x-log;text/x-sh;text/markdown;\n"
@@ -2032,9 +2050,9 @@ WINDOW_MANAGER="openbox"
         "osify-pdf-viewer.desktop": (
             "[Desktop Entry]\n"
             "Type=Application\n"
-            "Name=Lettore Documenti PDF\n"
+            "Name=Documenti.ify\n"
             "Comment=Visualizza e consulta documenti e manuali in formato PDF\n"
-            "Exec=/usr/bin/osify-pdf-viewer %f\n"
+            "Exec=/Applicazioni/Documenti.ify/avvia.sh %f\n"
             "Icon=/usr/share/pixmaps/osify-files.png\n"
             "Terminal=false\n"
             "MimeType=application/pdf;application/x-pdf;\n"
@@ -2043,9 +2061,9 @@ WINDOW_MANAGER="openbox"
         "osify-calculator.desktop": (
             "[Desktop Entry]\n"
             "Type=Application\n"
-            "Name=Calcolatrice\n"
+            "Name=Calcolatrice.ify\n"
             "Comment=Esegui calcoli aritmetici, percentuali, scientifici e conversioni\n"
-            "Exec=/usr/bin/osify-calculator\n"
+            "Exec=/Applicazioni/Calcolatrice.ify/avvia.sh\n"
             "Icon=/usr/share/pixmaps/osify-calculator.png\n"
             "Terminal=false\n"
             "Categories=Utility;Calculator;\n"
@@ -2053,13 +2071,44 @@ WINDOW_MANAGER="openbox"
         "osify-media-player.desktop": (
             "[Desktop Entry]\n"
             "Type=Application\n"
-            "Name=Lettore Multimediale\n"
-            "Comment=Riproduci file musicali e video MP3, WAV, FLAC, MP4, MKV e OGG\n"
-            "Exec=/usr/bin/osify-media-player %f\n"
+            "Name=Video.ify\n"
+            "Comment=Riproduci file video MP4, MKV, AVI e filmati ad alta definizione\n"
+            "Exec=/Applicazioni/Video.ify/avvia.sh %f\n"
             "Icon=/usr/share/pixmaps/osify-audio.png\n"
             "Terminal=false\n"
-            "MimeType=audio/mpeg;audio/x-wav;audio/ogg;audio/flac;video/mp4;video/x-matroska;\n"
-            "Categories=AudioVideo;Audio;Video;Player;\n"
+            "MimeType=video/mp4;video/x-matroska;video/quicktime;video/x-msvideo;\n"
+            "Categories=AudioVideo;Video;Player;\n"
+        ),
+        "osify-music.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Musica.ify\n"
+            "Comment=Riproduttore audio e libreria musicale MP3, WAV, FLAC, OGG\n"
+            "Exec=/Applicazioni/Musica.ify/avvia.sh %f\n"
+            "Icon=/usr/share/pixmaps/osify-audio.png\n"
+            "Terminal=false\n"
+            "MimeType=audio/mpeg;audio/x-wav;audio/ogg;audio/flac;\n"
+            "Categories=AudioVideo;Audio;Player;\n"
+        ),
+        "osify-app-store.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Negozio.ify\n"
+            "Comment=Negozio Ufficiale di Applicazioni e Moduli .ify\n"
+            "Exec=/Applicazioni/Negozio.ify/avvia.sh\n"
+            "Icon=/usr/share/pixmaps/osify-install.png\n"
+            "Terminal=false\n"
+            "Categories=System;PackageManager;\n"
+        ),
+        "osify-compatibility.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Compatibilità.ify\n"
+            "Comment=Sottosistema di Compatibilità Universale per Applicazioni e Giochi\n"
+            "Exec=/Sistema/Servizi/Compatibilità.ify\n"
+            "Icon=/usr/share/pixmaps/osify-games.png\n"
+            "Terminal=false\n"
+            "Categories=System;Utility;\n"
         ),
         "osify-keyboard.desktop": (
             "[Desktop Entry]\n"
@@ -2244,11 +2293,12 @@ WINDOW_MANAGER="openbox"
         "osify-package-installer.desktop": (
             "[Desktop Entry]\n"
             "Type=Application\n"
-            "Name=Installatore Pacchetti\n"
-            "Comment=Installa con un click pacchetti tazpkg, deb e applicazioni AppImage\n"
-            "Exec=/usr/bin/osify-package-installer\n"
+            "Name=Gestore Pacchetti (.ify)\n"
+            "Comment=Installa e gestisci applicazioni e pacchetti nativi OSify .ify\n"
+            "Exec=/Sistema/Servizi/GestorePacchetti.ify %f\n"
             "Icon=/usr/share/pixmaps/osify-install.png\n"
             "Terminal=false\n"
+            "MimeType=application/x-osify-package;\n"
             "Categories=System;PackageManager;\n"
         ),
         "osify-lid.desktop": (
@@ -2609,6 +2659,25 @@ osify::14000:0:99999:7:::
 osify ALL=(ALL) NOPASSWD: ALL
 """)
 
+    apk_sistema = os.path.join(apkovl_dir, "Sistema")
+    os.makedirs(os.path.join(apk_sistema, "Driver"), exist_ok=True)
+    os.makedirs(os.path.join(apk_sistema, "Servizi"), exist_ok=True)
+    os.makedirs(os.path.join(apk_sistema, "Icone"), exist_ok=True)
+    if os.path.exists(os.path.join(REPO_ROOT, "sistema")):
+        shutil.copytree(os.path.join(REPO_ROOT, "sistema"), apk_sistema, dirs_exist_ok=True)
+
+    apk_app = os.path.join(apkovl_dir, "Applicazioni")
+    os.makedirs(apk_app, exist_ok=True)
+    if os.path.exists(os.path.join(REPO_ROOT, "applicazioni")):
+        shutil.copytree(os.path.join(REPO_ROOT, "applicazioni"), apk_app, dirs_exist_ok=True)
+
+    apk_utenti = os.path.join(apkovl_dir, "Utenti")
+    os.makedirs(apk_utenti, exist_ok=True)
+    try:
+        os.symlink("../home/osify", os.path.join(apk_utenti, "osify"))
+    except Exception:
+        pass
+
     with open(os.path.join(apkovl_dir, "etc/hostname"), "w") as f:
         f.write("osify-station\n")
 
@@ -2626,18 +2695,18 @@ cat << 'EOF'
   ╚═════╝ ╚══════╝╚═╝╚═╝        ╚═╝   
 EOF
 printf "\\033[0m\\n"
-printf "\\033[1;32m   ⚡ OSIFY 2.0 LTS — MASTER STATION 2050 (x86_64-v3)\\033[0m\\n"
+printf "\\033[1;32m   OSIFY 2050 LTS — MASTER STATION (x86_64-v3)\\033[0m\\n"
 printf "\\033[1;34m   Ingegnerizzato da Andrea Taliento (ANDRYXify)\\033[0m\\n\\n"
 echo "• CPU Architecture : $(uname -m)"
 echo "• Kernel Attivo    : $(uname -srm)"
 echo "• RAM Disponibile  : $(awk '/MemTotal/ {print int($2/1024)" MB"}' /proc/meminfo 2>/dev/null || echo 'N/A')"
 echo ""
-echo "Comandi Rapidi di Sistema:"
-echo "  • osify-hub        : Centro di Controllo e Plancia Operativa"
-echo "  • osify-wifi       : Connessione Wi-Fi Guidata"
-echo "  • osify-install    : Installa OSify su Disco Fisso Bare-Metal"
-echo "  • osify-games      : Esecutore Giochi Windows e UEM Hub"
-echo "  • osify-ctl        : Suite Amministrativa e Diagnostica"
+echo "Applicazioni e Servizi .ify:"
+echo "  • Centro OSify.ify   : Centro di Controllo e Plancia Operativa"
+echo "  • Reti.ify           : Connessione Wi-Fi Guidata"
+echo "  • Installa OSify.ify : Installa OSify su Disco Fisso Bare-Metal"
+echo "  • Giochi.ify         : Piattaforma Giochi e Compatibilità Universale"
+echo "  • GestorePacchetti   : Installatore Nativo .ify"
 echo ""
 
 # Link rapidi
@@ -2648,6 +2717,8 @@ ln -sf /opt/osify/tools/osify-gui/osify-hub.sh /usr/bin/osify-hub 2>/dev/null ||
 ln -sf /opt/osify/tools/osify-gui/osify-games.sh /usr/bin/osify-games 2>/dev/null || true
 ln -sf /opt/osify/tools/osify-ctl /usr/bin/osify-ctl 2>/dev/null || true
 ln -sf /opt/osify/tools/osify-ctl /usr/bin/osify 2>/dev/null || true
+ln -sf /Sistema/Servizi/GestorePacchetti.ify /usr/bin/osify-package-installer 2>/dev/null || true
+ln -sf /Sistema/Servizi/Compatibilità.ify /usr/bin/osify-compatibility 2>/dev/null || true
 
 # Avvia Hub o Shell Interattiva
 if [ -x /usr/bin/osify-hub ]; then

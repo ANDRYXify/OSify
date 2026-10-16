@@ -5,7 +5,7 @@
 <h1 align="center">OSify</h1>
 
 <p align="center">
-  <b>Distribuzione Linux Specializzata per Performance Estreme e Rigenerazione Hardware Legacy</b><br/>
+  <b>Sistema Operativo Autonomo di Nuova Generazione per Performance Estreme e Rigenerazione Hardware</b><br/>
   <i>Ingegnerizzato da Andrea Taliento (ANDRYXify)</i>
 </p>
 
@@ -17,11 +17,11 @@
   </a>
   &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-x86_64-v3.iso">
-    <img src="https://img.shields.io/badge/ISO_Standard-x86--64--v3_(v1.5.0)-7C3AED?style=for-the-badge&logo=linux&logoColor=white" alt="ISO Standard x86_64-v3"/>
+    <img src="https://img.shields.io/badge/OSify_Standard-x86--64--v3_(v1.5.0)-7C3AED?style=for-the-badge" alt="OSify Standard x86_64-v3"/>
   </a>
   &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-Vintage-i686.iso">
-    <img src="https://img.shields.io/badge/ISO_Vintage-32--bit_i686_(v1.5.0)-10B981?style=for-the-badge&logo=linux&logoColor=white" alt="ISO Vintage 32-bit i686"/>
+    <img src="https://img.shields.io/badge/OSify_Vintage-32--bit_i686_(v1.5.0)-10B981?style=for-the-badge" alt="OSify Vintage 32-bit i686"/>
   </a>
   &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/releases/latest">
@@ -35,11 +35,11 @@
   </a>
   &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/actions">
-    <img src="https://img.shields.io/badge/Tests-137%2F137_Passed-059669?style=flat-square&logo=githubactions&logoColor=white" alt="Test Suite"/>
+    <img src="https://img.shields.io/badge/Tests-281%2F281_Passed-059669?style=flat-square&logo=githubactions&logoColor=white" alt="Test Suite"/>
   </a>
   &nbsp;
   <a href="#architettura-dei-due-target">
-    <img src="https://img.shields.io/badge/Arch-x86__64_|_i686_|_ARM_|_Silicon-6366F1?style=flat-square&logo=archlinux&logoColor=white" alt="Architetture Supportate"/>
+    <img src="https://img.shields.io/badge/Arch-x86__64_|_i686_|_ARM_|_Silicon-6366F1?style=flat-square" alt="Architetture Supportate"/>
   </a>
   &nbsp;
   <a href="LICENSE">
@@ -51,9 +51,9 @@
 
 ## Panoramica del Progetto
 
-OSify è un sistema operativo basato su Linux ingegnerizzato su due target architetturali rigorosamente distinti, per evitare compromessi o dispersioni di risorse:
+OSify è un sistema operativo commerciale e autonomo a sé stante ingegnerizzato su due target architetturali rigorosamente distinti, per evitare compromessi o dispersioni di risorse:
 
-1. **OSify Standard (x86-64-v3)**: Dedicato a postazioni moderne da gaming, creazione di contenuti e live streaming ad alto bitrate. Compilato con istruzioni vettoriali avanzate (AVX, AVX2, FMA) e kernel Linux BORE a latenza deterministica.
+1. **OSify Standard (x86-64-v3)**: Dedicato a postazioni moderne da gaming, creazione di contenuti e live streaming ad alto bitrate. Compilato con istruzioni vettoriali avanzate (AVX, AVX2, FMA) e motore di esecuzione BORE a latenza deterministica.
 2. **OSify Vintage (i686 / 32-bit)**: Dedicato a computer storici e netbook ultra-compatti (es. Toshiba Dynabook NB200 con Intel Atom N280 e GPU Intel GMA 950). Ottimizzato per operare con un footprint di memoria a riposo di ~115-125 MB, gestendo nativamente schermi WSVGA a bassa risoluzione (1024x600).
 
 ---
@@ -79,22 +79,22 @@ OSify non è un clone o una derivata generica: è un sistema operativo con un'ar
 
 ### 1. OSify Standard (`x86_64-v3`)
 
-* **Kernel**: Linux con scheduler BORE (Burst-Oriented Response Enhancer), `PREEMPT_DYNAMIC`, tickless idle a 1000Hz (`CONFIG_HZ=1000`) e supporto nativo a `futex2 / sys_futex_waitv`.
-* **Desktop Environment**: KDE Plasma 6 sotto Wayland, con gestione finestre e multitasking ispirati alla fluidità di macOS (gestures a tre dita, Mission Control rapido, visualizzazione a griglia).
-* **Network Traffic Shaper (CAKE QoS)**: Instradamento con algoritmo CAKE e marcatura DSCP a livello kernel (`nftables`). I flussi gaming UDP sono prioritizzati con classe Expedited Forwarding (EF), prevenendo il bufferbloat durante live stream simultanei su Twitch, Kick e YouTube.
-* **Sottosistema Audio**: PipeWire Pro-Audio con quantizzazione a 64 campioni @ 48kHz (< 2.5ms di latenza). Separazione dei bus audio virtuali (`OSify-Game`, `OSify-Voice`, `OSify-Music`, `OSify-Mic`) con isolamento della traccia VOD Track 2 di Twitch.
-* **Stack Grafico & Runtime**: Vulkan con driver Mesa RADV/NVK, DXVK-Async, Proton-GE, GameScope micro-compositor e container Waydroid LXC per applicazioni Android con accelerazione DRI3.
+* **Nucleo di Sistema**: Motore di orchestrazione a latenza ultra-bassa con scheduler BORE (Burst-Oriented Response Enhancer), `PREEMPT_DYNAMIC`, tickless idle a 1000Hz (`CONFIG_HZ=1000`) e supporto nativo a futex deterministici.
+* **Ambiente Grafico OSify 2050**: Motore grafico nativo ad altissima fluidità (fino a 120+ fps) con design system Obsidian Dark Glass e compositore avanzato a latenza zero.
+* **Network Traffic Shaper (CAKE QoS)**: Instradamento con algoritmo CAKE e marcatura pacchetti gaming prioritari (Expedited Forwarding), azzerando il bufferbloat durante gaming simultaneo e live streaming ad alto bitrate su piattaforme broadcast.
+* **Sottosistema Audio**: Architettura Pro-Audio con quantizzazione a 64 campioni @ 48kHz (< 2.5ms di latenza). Separazione dei bus audio nativi (`Audio-Gioco`, `Audio-Voce`, `Audio-Musica`, `Audio-Microfono`) con isolamento automatico della traccia stream/VOD.
+* **Compatibilità Universale**: Sottosistema integrato `Compatibilità.ify` con accelerazione hardware per l'esecuzione istantanea con doppio clic di applicazioni Windows (.exe, .msi), macOS (.app, .dmg), Android (.apk) e giochi ad alto carico.
 
-### 2. OSify Vintage Micro-Edition (`i686 / 32-bit`)
+### 2. OSify Vintage (`i686 / 32-bit`)
 
-* **Target Hardware Specifico**: Netbook con CPU Intel Atom N270/N280 (famiglia Diamondville), 1GB di memoria DDR2, GPU integrata Intel GMA 950 (chipset Calistoga / 945GME) e display WSVGA 10.1" (1024x600).
-* **Kernel & Memoria**: Linux LTS a 32-bit con `CONFIG_HIGHMEM4G=y`. ZRAM compressa con algoritmo rapido `lz4` dimensionata a 1.5x della RAM fisica (1.5 GB di swap compresso in memoria), con `vm.swappiness=100`.
-* **Desktop Environment**: Openbox & LXQt ultra-leggero, con compositing XRender leggero (`picom`) privo di blur gaussiani pesanti che saturerebbero la GMA 950.
-* **Mitigazioni Display 1024x600**:
-  * Pannello inferiore compatto Tint2 a 24 pixel (576 pixel verticali utili).
-  * Scorciatoia universale `Alt + Trascinamento sinistro` su qualsiasi punto della finestra per spostare agevolmente finestre di dialogo con altezza superiore a 600px.
-  * Window snapping a metà schermo tramite `Super + Freccia Sinistra / Destra`.
-* **Applicativi di Base**: Browser Web reale `Falkon` (WebKit/QtWebEngine leggero a basso impatto RAM), lettore documenti `qpdfview`, media player `mpv`, file manager `pcmanfm-qt`.
+* **Target Hardware Specifico**: Netbook e postazioni storiche (con riferimento il Toshiba Dynabook NB200 con Intel Atom N280, 1 GB RAM, GPU Intel GMA 950 e display WSVGA 1024x600).
+* **Nucleo e Memoria**: Sottosistema di memoria con compressione in tempo reale ZRAM dimensionata a 1.5x della RAM fisica (1.5 GB di swap compresso protetto), con un consumo a riposo verificato di soli 115-125 MB RAM (interfaccia grafica inclusa).
+* **Motore Grafico Vintage 2050**: Stessa identità visiva, stesse icone e stesso design system Obsidian Dark Glass, renderizzati con una pipeline grafica ultra-leggera ottimizzata per la GMA 950, senza sfocature pesanti per mantenere animazioni fluide e immediate.
+* **Ottimizzazione Display 1024x600**:
+  * Top Menu Bar e Dock fluttuante proporzionate per preservare la massima area visiva utile verticale.
+  * Virtual Scaler dinamico attivabile al volo per visualizzare interfacce complesse a 1280x768 senza barre di scorrimento.
+  * Spostamento agevolato e snapping automatico delle finestre di dialogo a schermo intero.
+* **Suite Applicativa Nativa .ify**: Stesse applicazioni e stesse funzioni della Standard: `Navigatore.ify`, `Esplora.ify`, `Reti.ify`, `Centro OSify.ify`, `Monitor.ify`, `Impostazioni.ify`, `Giochi.ify`, `Sviluppo.ify`, `Documenti.ify`, `Video.ify`, `Musica.ify`, `Archivi.ify`, `Cattura.ify`, `Calcolatrice.ify`, `Note.ify`, `Negozio.ify`, `Aggiornamenti.ify`, `Installa OSify.ify`.
 
 ---
 
@@ -152,28 +152,21 @@ Scarica l'immagine corrispondente all'hardware di destinazione:
 
 ---
 
-## Universal Execution Matrix (UEM) — Sfondamento delle Barriere Architetturali
+## Sottosistema Compatibilità Universale (.ify & Formati Esterni)
 
-OSify integra la **Universal Execution Matrix (UEM)**, un'architettura di sistema progettata per abbattere qualsiasi barriera di formato, ISA (Instruction Set Architecture) ed epoca informatica. Attraverso registrazioni kernel dirette (`binfmt_misc`) e un dispatcher polyglot deterministico ad alta efficienza (`osify-universal-dispatcher`), qualsiasi eseguibile può essere lanciato direttamente al doppio clic o da terminale:
+OSify integra il motore nativo **Compatibilità.ify**, progettato per abbattere qualsiasi barriera di formato, architettura ed epoca informatica senza richiedere alcuna configurazione all'utente. Qualsiasi file o binario si installa ed esegue nativamente con un doppio clic grafico:
 
-| Formato / Ecosistema | Estensione / Magic | Runtime & Strategy OSify | Target Compatibilità |
+| Formato / Piattaforma | Estensione / Magic | Motore di Esecuzione Nativo OSify | Target Compatibilità |
 | :--- | :--- | :--- | :--- |
-| **Windows PE (32/64-bit)** | `.exe`, `.msi`, `.dll` (`MZ`) | **Proton-GE + DXVK** (Modern) / **Wine 32 + WineD3D** (Vintage) | Windows 95 fino a Windows 11 |
-| **MS-DOS 16-bit** | `.com`, `.exe` (`MZ` 16-bit) | **DOSBox-Staging / DOSEMU2** trasparente con auto-mount | Software industriale SCADA, Turbo C, Giochi storici |
-| **Apple Darwin / macOS** | `.app`, Mach-O (`feedface`) | **Darling HQ** translation layer con supporto dyld e Mach kernel | Applicativi macOS CLI e bundle desktop |
-| **Android Applications** | `.apk`, `.aab` (`PK\x03\x04`) | **Waydroid LXC Container** con accelerazione hardware Mesa DRI3 | App Android native con forwarding grafico |
-| **WebAssembly WASI** | `.wasm` (`\x00asm`) | **Wasmtime / Wasmer / Node WASI** standalone runtime | Moduli serverless, utility cloud-native e WASI |
-| **Java Platform** | `.class`, `.jar` (`cafebabe`) | **OpenJDK HotSpot JIT Compiler** nativo | Applicazioni e librerie enterprise JVM |
-| **Cross-ISA Linux ELF** | ELF ARM, AArch64, RISC-V | **Box64 / Box86 Dynarec JIT** (con forwarding nativo) o **QEMU User** | Binari compilati per CPU e microarchitetture eterogenee |
-| **Polyglot Scripts** | `.py`, `.js`, `.sh`, `.lua` | **OSify Shebang Auto-Sniffer** con permessi dinamici | Script multipiattaforma senza pre-configurazione |
-
-### Radiografia Architetturale dei Binari (`osify-inspect`)
-
-Qualsiasi file binario può essere analizzato istantaneamente per comprendere la sua struttura interna e la strategia di esecuzione pianificata da OSify:
-
-```bash
-osify-ctl uem inspect /percorso/del/programma
-```
+| **Applicazioni OSify** | `.ify` | **GestorePacchetti.ify / Motore Nativo** | Applicazioni, servizi e driver ufficiali OSify |
+| **Windows (32/64-bit)** | `.exe`, `.msi`, `.dll` (`MZ`) | **Compatibilità.ify (Accelerazione Hardware DXVK/D3D)** | Da Windows 95 fino a Windows 11 (Office, Steam, Photoshop) |
+| **Software Storico MS-DOS** | `.com`, `.exe` (`MZ` 16-bit) | **Compatibilità.ify (Virtualizzazione Trasparente)** | Software industriale SCADA, Turbo C, Giochi storici |
+| **Apple Darwin / macOS** | `.app`, `.dmg`, Mach-O (`feedface`) | **Compatibilità.ify (Traduzione Dinamica Mach)** | Applicazioni macOS (es. Final Cut, utility) |
+| **Applicazioni Android** | `.apk`, `.aab` (`PK\x03\x04`) | **Compatibilità.ify (Esecuzione Accelerata DRI3)** | App e giochi mobile (WhatsApp, Instagram, casual games) |
+| **WebAssembly WASI** | `.wasm` (`\x00asm`) | **Compatibilità.ify WASI Standalone** | Moduli ad alte prestazioni e utility cloud-native |
+| **Java Platform** | `.class`, `.jar` (`cafebabe`) | **Compatibilità.ify JIT Compiler** | Applicazioni e librerie enterprise JVM |
+| **Binari Cross-Architettura** | Binari ARM, AArch64, RISC-V | **Compatibilità.ify Dynarec Engine** | Eseguibili per microarchitetture eterogenee |
+| **Script Poliglotti** | `.py`, `.js`, `.sh`, `.lua` | **Compatibilità.ify Auto-Sniffer** | Script e automazioni con permessi dinamici |
 
 ---
 
@@ -185,21 +178,21 @@ L'HAL di OSify rileva in tempo reale la topologia hardware all'avvio della macch
   * Alloca ZRAM a 1.5x della memoria fisica con algoritmo rapido `lz4` (zero overhead su single-core).
   * Imposta `vm.swappiness=150`, `vm.dirty_ratio=10`, `vm.dirty_background_ratio=5` e `page-cluster=0` per azzerare i blocchi di sistema durante l'I/O su dischi meccanici a 5400 RPM.
   * Scheduler storage impostato automaticamente su `bfq` (Budget Fair Queueing) per mantenere reattiva l'interfaccia utente.
-  * Stack grafico forzato su Mesa DRI2 / OpenGL classico (WineD3D), prevenendo crash da tentativi di caricamento Vulkan su Intel GMA 950.
+  * Stack grafico forzato su pipeline leggera senza shader pesanti per garantire la massima fluidità su Intel GMA 950.
 * **Workstation Moderne (> 4 Core, >= 4 GB RAM)**:
   * Scheduler CPU a bassa latenza e throughput elevato.
   * ZRAM con algoritmo `zstd` ad alto rapporto di compressione.
-  * `vm.max_map_count=2147483642` per supporto completo a giochi moderni, Steam Proton e motori Unreal Engine 5.
-  * Stack Vulkan asincrono nativo (RADV/ANV/NVK).
+  * `vm.max_map_count=2147483642` per supporto completo a giochi moderni e motori grafici ad alte prestazioni.
+  * Stack Vulkan asincrono nativo a 120+ fps.
 
 ---
 
-## Suite Web & Browser Shield
+## Suite Web & Protezione Rete
 
-OSify non impiega browser fittizi: integra browser open-source completi pre-configurati (`Falkon` per target vintage a bassissimo consumo di RAM, `Firefox` per postazioni moderne). Entrambi beneficiano del profilo **OSify Web Shield**:
+OSify integra l'applicazione nativa **Navigatore.ify** con motore ad altissima velocità e protezione avanzata integrata:
 * Blocco integrato di telemetria, tracker e annunci pubblicitari (riduzione fino al 60% del carico CPU su pagine web moderne).
-* Limitazione dinamica dei processi content su macchine vintage e scaricamento automatico delle schede inattive dalla memoria RAM.
-* Accelerazione hardware GPU VA-API/VDPAU su macchine x86_64 moderne.
+* Gestione dinamica dei consumi e liberazione automatica delle risorse grafiche inattive.
+* Accelerazione grafica completa e reattività immediata.
 
 ---
 
@@ -241,12 +234,11 @@ osify-ctl workload auto                    # Rilevamento automatico processi in 
 # Omnipotent Polyglot Terminal Shell Environment
 osify-ctl shell-env test                   # Collaudo dei comandi Windows (dir, ipconfig, tasklist), macOS (open, sw_vers)
 source tools/osify-shell/osify-polyglot-env.sh # Attivazione shell poliglotta universale
-# Supporta in modo nativo e trasparente:
 # • Windows: dir, cls, ipconfig, tasklist, taskkill, systeminfo, ver, copy, move, del
 # • macOS: open, pbcopy, pbpaste, say, sw_vers, mdfind, caffeinate
-# • Linux Distro Bridge: apt, pacman, dnf, apk, brew, winget (instradati su osify-pkg)
+# • Universal Package Bridge: apt, pacman, dnf, apk, brew, winget (instradati su osify-pkg)
 
-# Interfaccia Grafica SteamOS Console & KDE Plasma 6
+# Interfaccia Grafica Console OSify 2050
 osify-ctl deck                             # Avvio Deck Shell ad alte prestazioni con QAM e Workload switcher
 
 # Gestione architettura modulare

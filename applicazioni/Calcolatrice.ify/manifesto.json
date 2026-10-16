@@ -1,0 +1,16 @@
+{
+  "id": "com.osify.calcolatrice",
+  "nome": "Calcolatrice",
+  "versione": "2050.1.0",
+  "descrizione": "Calcolatrice scientifica e di programmazione in tempo reale",
+  "categoria": "Utility",
+  "icona": "icona.png",
+  "eseguibile": "avvia.sh",
+  "permessi": [
+    "grafica",
+    "input",
+    "disco",
+    "audio"
+  ],
+  "autore": "OSify Systems"
+}

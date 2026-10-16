@@ -1,0 +1,16 @@
+{
+  "id": "com.osify.cattura",
+  "nome": "Cattura",
+  "versione": "2050.1.0",
+  "descrizione": "Strumento di cattura istantanea dello schermo a risoluzione nativa",
+  "categoria": "Utility",
+  "icona": "icona.png",
+  "eseguibile": "avvia.sh",
+  "permessi": [
+    "grafica",
+    "input",
+    "disco",
+    "audio"
+  ],
+  "autore": "OSify Systems"
+}

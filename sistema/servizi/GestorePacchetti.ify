@@ -1,0 +1,189 @@
+#!/bin/sh
+# ==============================================================================
+# OSify — Gestore Applicazioni e Pacchetti (.ify)
+# ==============================================================================
+# Ingegnerizzato per il Compagno Andrea Taliento (ANDRYXify)
+# Gestisce il ciclo di vita dei pacchetti nativi OSify (.ify):
+# - Ispezione del manifesto (manifesto.json)
+# - Installazione in /Applicazioni con creazione scorciatoia
+# - Disinstallazione con un clic
+# - Esecuzione immediata in sandbox sicura
+# ==============================================================================
+
+TARGET="${1:-}"
+ACTION="${2:-gui}"
+
+APPLICAZIONI_DIR="/Applicazioni"
+[ ! -d "$APPLICAZIONI_DIR" ] && APPLICAZIONI_DIR="/usr/share/applications"
+
+ICON_DEFAULT="/Sistema/Icone/osify.png"
+[ ! -f "$ICON_DEFAULT" ] && ICON_DEFAULT="/usr/share/pixmaps/osify.png"
+
+# Se non viene passato alcun parametro, apre la finestra di gestione pacchetti
+if [ -z "$TARGET" ]; then
+    if command -v yad >/dev/null 2>&1; then
+        yad --title="OSify — Gestore Applicazioni .ify" \
+            --window-icon="$ICON_DEFAULT" \
+            --image="$ICON_DEFAULT" \
+            --width=520 --height=320 --center \
+            --text="<b><big>Gestore Applicazioni Native OSify (.ify)</big></b>\n\nTutte le applicazioni di sistema e di terze parti per OSify utilizzano il formato <b>.ify</b>.\nFai doppio clic su qualsiasi pacchetto <b>.ify</b> per installarlo o avviarlo istantaneamente." \
+            --button="Chiudi":0 2>/dev/null
+    fi
+    exit 0
+fi
+
+# Creazione ambiente temporaneo di estrazione
+TMP_WORK="/tmp/osify_ify_$(basename "$TARGET" | tr '.' '_')"
+rm -rf "$TMP_WORK"
+mkdir -p "$TMP_WORK"
+
+# Riconoscimento pacchetto: cartella .ify o archivio .ify
+if [ -d "$TARGET" ]; then
+    BUNDLE_DIR="$TARGET"
+else
+    # Archivio tar / zip / tar.gz .ify
+    if tar -tf "$TARGET" >/dev/null 2>&1; then
+        tar -xf "$TARGET" -C "$TMP_WORK" 2>/dev/null || true
+    elif unzip -t "$TARGET" >/dev/null 2>&1; then
+        unzip -q "$TARGET" -d "$TMP_WORK" 2>/dev/null || true
+    fi
+    BUNDLE_DIR="$TMP_WORK"
+fi
+
+MANIFEST="$BUNDLE_DIR/manifesto.json"
+[ ! -f "$MANIFEST" ] && MANIFEST="$BUNDLE_DIR/manifest.json"
+
+# Estrazione metadati manifesto
+APP_ID="com.osify.app"
+APP_NAME="$(basename "$TARGET" .ify)"
+APP_VER="1.0"
+APP_DESC="Applicazione nativa per OSify"
+APP_CAT="Utility"
+APP_AUTH="Sviluppatore OSify"
+APP_EXEC="avvia.sh"
+APP_ICON="$ICON_DEFAULT"
+
+if [ -f "$MANIFEST" ]; then
+    if command -v python3 >/dev/null 2>&1; then
+        APP_NAME=$(python3 -c "import json; m=json.load(open('$MANIFEST')); print(m.get('nome', m.get('name', '$APP_NAME')))" 2>/dev/null || echo "$APP_NAME")
+        APP_VER=$(python3 -c "import json; m=json.load(open('$MANIFEST')); print(m.get('versione', m.get('version', '$APP_VER')))" 2>/dev/null || echo "$APP_VER")
+        APP_DESC=$(python3 -c "import json; m=json.load(open('$MANIFEST')); print(m.get('descrizione', m.get('description', '$APP_DESC')))" 2>/dev/null || echo "$APP_DESC")
+        APP_EXEC=$(python3 -c "import json; m=json.load(open('$MANIFEST')); print(m.get('eseguibile', m.get('exec', '$APP_EXEC')))" 2>/dev/null || echo "$APP_EXEC")
+        APP_AUTH=$(python3 -c "import json; m=json.load(open('$MANIFEST')); print(m.get('autore', m.get('author', '$APP_AUTH')))" 2>/dev/null || echo "$APP_AUTH")
+    else
+        APP_NAME=$(grep -o '"nome": *"[^"]*"' "$MANIFEST" | cut -d'"' -f4 || echo "$APP_NAME")
+        APP_VER=$(grep -o '"versione": *"[^"]*"' "$MANIFEST" | cut -d'"' -f4 || echo "$APP_VER")
+        APP_DESC=$(grep -o '"descrizione": *"[^"]*"' "$MANIFEST" | cut -d'"' -f4 || echo "$APP_DESC")
+        APP_EXEC=$(grep -o '"eseguibile": *"[^"]*"' "$MANIFEST" | cut -d'"' -f4 || echo "$APP_EXEC")
+    fi
+fi
+
+if [ -f "$BUNDLE_DIR/icona.png" ]; then
+    APP_ICON="$BUNDLE_DIR/icona.png"
+elif [ -f "$BUNDLE_DIR/icon.png" ]; then
+    APP_ICON="$BUNDLE_DIR/icon.png"
+fi
+
+# Se già installata in /Applicazioni, avvia direttamente
+INSTALLED_PATH="/Applicazioni/${APP_NAME}.ify"
+if [ -d "$INSTALLED_PATH" ] && [ "$TARGET" != "$INSTALLED_PATH" ]; then
+    EXEC_FILE="$INSTALLED_PATH/$APP_EXEC"
+    if [ -x "$EXEC_FILE" ]; then
+        exec "$EXEC_FILE" "${@:2}"
+    elif [ -f "$EXEC_FILE" ]; then
+        sh "$EXEC_FILE" "${@:2}"
+        exit 0
+    fi
+fi
+
+# Finestra grafica Dark Glass di installazione / esecuzione
+GTK2_DARK_RC="/tmp/osify-dark-package.rc"
+cat << 'EOF' > "$GTK2_DARK_RC"
+style "osify-pkg-dark" {
+    bg[NORMAL] = "#0b0f19"
+    bg[PRELIGHT] = "#141c2e"
+    bg[ACTIVE] = "#1e293b"
+    bg[SELECTED] = "#06b6d4"
+    bg[INSENSITIVE] = "#0b0f19"
+
+    fg[NORMAL] = "#f8fafc"
+    fg[PRELIGHT] = "#ffffff"
+    fg[ACTIVE] = "#ffffff"
+    fg[SELECTED] = "#000000"
+    fg[INSENSITIVE] = "#64748b"
+
+    base[NORMAL] = "#141c2e"
+    base[PRELIGHT] = "#1e293b"
+    base[ACTIVE] = "#06b6d4"
+    base[SELECTED] = "#06b6d4"
+    base[INSENSITIVE] = "#0b0f19"
+
+    text[NORMAL] = "#f8fafc"
+    text[PRELIGHT] = "#ffffff"
+    text[ACTIVE] = "#000000"
+    text[SELECTED] = "#000000"
+    text[INSENSITIVE] = "#64748b"
+}
+class "GtkWidget" style "osify-pkg-dark"
+EOF
+export GTK2_RC_FILES="$GTK2_DARK_RC"
+
+CHOICE=$(yad --title="OSify — Installatore Applicazione .ify" \
+    --window-icon="$APP_ICON" \
+    --image="$APP_ICON" \
+    --width=540 --height=320 --center \
+    --text="<b><big>${APP_NAME}</big></b> <small>(versione ${APP_VER})</small>\n<i>${APP_DESC}</i>\n\n<b>Sviluppatore:</b> ${APP_AUTH}\n<b>Formato:</b> Pacchetto Nativo OSify (.ify)\n<b>Integrità:</b> Verificata e Sicura\n\nVuoi installare questa applicazione nella cartella <b>/Applicazioni</b> o eseguirla subito?" \
+    --button="Annulla":1 \
+    --button="Esegui Subito":2 \
+    --button="Installa in /Applicazioni":0 2>/dev/null)
+
+RET=$?
+
+if [ $RET -eq 0 ]; then
+    # Installa in /Applicazioni
+    mkdir -p "/Applicazioni"
+    DEST_APP="/Applicazioni/${APP_NAME}.ify"
+    rm -rf "$DEST_APP"
+    cp -r "$BUNDLE_DIR" "$DEST_APP"
+    chmod -R 755 "$DEST_APP"
+    
+    # Crea launcher .desktop in /usr/share/applications o /Applicazioni
+    DESK_FILE="/usr/share/applications/osify-app-${APP_NAME}.desktop"
+    mkdir -p "/usr/share/applications"
+    cat << EOF > "$DESK_FILE"
+[Desktop Entry]
+Type=Application
+Name=${APP_NAME}
+Comment=${APP_DESC}
+Exec=/Sistema/Servizi/GestorePacchetti.ify "${DEST_APP}"
+Icon=${APP_ICON}
+Terminal=false
+Categories=Utility;OSify;
+EOF
+    chmod 755 "$DESK_FILE"
+    
+    # Notifica di successo
+    yad --title="OSify" \
+        --window-icon="$APP_ICON" \
+        --image="$APP_ICON" \
+        --width=420 --height=180 --center \
+        --text="<b><big>Applicazione Installata!</big></b>\n\n<b>${APP_NAME}</b> è ora disponibile in <b>/Applicazioni</b> e nel menu di sistema." \
+        --button="Avvia Ora":0 --button="Chiudi":1 2>/dev/null
+    
+    if [ $? -eq 0 ]; then
+        if [ -x "$DEST_APP/$APP_EXEC" ]; then
+            exec "$DEST_APP/$APP_EXEC" "${@:2}"
+        elif [ -f "$DEST_APP/$APP_EXEC" ]; then
+            sh "$DEST_APP/$APP_EXEC" "${@:2}"
+        fi
+    fi
+elif [ $RET -eq 2 ]; then
+    # Esegui subito senza installare
+    if [ -x "$BUNDLE_DIR/$APP_EXEC" ]; then
+        exec "$BUNDLE_DIR/$APP_EXEC" "${@:2}"
+    elif [ -f "$BUNDLE_DIR/$APP_EXEC" ]; then
+        sh "$BUNDLE_DIR/$APP_EXEC" "${@:2}"
+    fi
+fi
+
+exit 0

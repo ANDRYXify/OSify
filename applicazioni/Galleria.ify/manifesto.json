@@ -1,0 +1,16 @@
+{
+  "id": "com.osify.galleria",
+  "nome": "Galleria",
+  "versione": "2050.1.0",
+  "descrizione": "Visualizzatore grafico di immagini, fotografie e illustrazioni ad alta risoluzione",
+  "categoria": "Grafica",
+  "icona": "icona.png",
+  "eseguibile": "avvia.sh",
+  "permessi": [
+    "grafica",
+    "input",
+    "disco",
+    "audio"
+  ],
+  "autore": "OSify Systems"
+}

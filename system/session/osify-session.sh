@@ -18,7 +18,14 @@ if [ -z "$DBUS_SESSION_BUS_ADDRESS" ] && command -v dbus-launch >/dev/null 2>&1;
     export DBUS_SESSION_BUS_PID
 fi
 
-# 2. Keymap tastiera italiana se configurata
+# 2. Inizializzazione File System in Italiano (/Sistema, /Applicazioni, /Utenti)
+if [ -x /usr/bin/osify-filesystem-init ]; then
+    /usr/bin/osify-filesystem-init &
+elif [ -x /opt/osify/system/session/osify-filesystem-init.sh ]; then
+    /opt/osify/system/session/osify-filesystem-init.sh &
+fi
+
+# 3. Keymap tastiera italiana se configurata
 if [ -f /etc/keymap.conf ]; then
     kmaplang=$(cat /etc/keymap.conf | awk -F'-' '{print $1}')
     [ -n "$kmaplang" ] && setxkbmap "$kmaplang" 2>/dev/null || true
