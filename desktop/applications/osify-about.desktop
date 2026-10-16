@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Informazioni su questo OSify
+GenericName=About This Mac
+Comment=Panoramica hardware, specifiche processore, memoria e rilascio
+Exec=/usr/bin/osify-about
+Icon=osify-about
+Terminal=false
+Categories=System;Utility;
+StartupNotify=false

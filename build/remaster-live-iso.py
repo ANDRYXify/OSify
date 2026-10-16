@@ -5,6 +5,7 @@ import subprocess
 import sys
 import lzma
 import hashlib
+import glob
 from PIL import Image, ImageDraw, ImageFont
 
 LANCZOS_FILTER = getattr(getattr(Image, 'Resampling', None), 'LANCZOS', getattr(Image, 'LANCZOS', getattr(Image, 'ANTIALIAS', 1)))
@@ -378,7 +379,9 @@ alias fastfetch='osify-fastfetch'
 alias neofetch='osify-fastfetch'
 """
 
-lxpanel_cfg = ""
+lxpanel_topbar_cfg = ""
+lxpanel_dock_cfg = ""
+
 
 def remaster_rootfs3(work_dir, iso_root, wallpaper_jpg):
     print("[i] Remastering rootfs3 (SLIM autologin 0s, rimozione ragno SliTaz, OSify Cyber-Bar)...")
@@ -493,111 +496,61 @@ username_msg
 password_msg
 """)
 
-    # 3. Configurazione Pannello LXPanel (OSify Cyber-Bar)
-    global lxpanel_cfg
-    lxpanel_cfg = """# OSify Cyber-Bar Configuration
+    # 3. Configurazione Dual Panel LXPanel (Top Menu Bar macOS + Floating Dock 2050)
+    global lxpanel_topbar_cfg, lxpanel_dock_cfg
+    lxpanel_topbar_cfg = """# OSify Top Menu Bar (macOS Style 2050)
 Global {
-    edge=bottom
+    edge=top
     allign=center
     margin=0
     widthtype=percent
     width=100
-    height=32
+    height=26
     transparent=1
-    tintcolor=#0a0e17
-    alpha=225
+    tintcolor=#0f111a
+    alpha=230
     autohide=0
-    heightwhenhidden=2
     setdocktype=1
     setpartialstrut=1
     usefontcolor=1
     fontsize=10
-    fontcolor=#38bdf8
+    fontcolor=#f8fafc
     usefontsize=1
     background=0
-    iconsize=24
+    iconsize=18
     loglevel=2
 }
 
 Plugin {
     type = menu
     Config {
-        image=/usr/share/pixmaps/osify-drawer.png
+        image=/usr/share/pixmaps/osify-apple-logo.png
         item {
-            name=Tutte le Applicazioni
-            image=/usr/share/pixmaps/osify-drawer.png
-            action=/usr/bin/osify-app-drawer
+            name=Informazioni su questo OSify
+            image=/usr/share/pixmaps/osify-about.png
+            action=/usr/bin/osify-about
         }
         separator {
         }
         item {
-            name=Profilo Utente
+            name=Impostazioni di Sistema...
             image=/usr/share/pixmaps/osify-settings.png
-            action=/usr/bin/osify-profile-setup --force
+            action=/usr/bin/osify-settings
         }
         item {
-            name=Gestione Utenti
-            image=/usr/share/pixmaps/osify-settings.png
-            action=/usr/bin/osify-users
-        }
-        item {
-            name=Installa OSify su Disco
-            image=/usr/share/pixmaps/osify-install.png
-            action=/usr/bin/osify-install
-        }
-        separator {
-        }
-        item {
-            name=OSify Hub
+            name=OSify App Store & Hub...
             image=/usr/share/pixmaps/osify-hub.png
             action=/usr/bin/osify-hub
         }
         item {
-            name=Navigatore Web
-            image=/usr/share/pixmaps/osify-browser.png
-            action=/usr/bin/osify-browser
-        }
-        item {
-            name=Connessione Wi-Fi
-            image=/usr/share/pixmaps/osify-wifi.png
-            action=/usr/bin/osify-wifi
-        }
-        item {
-            name=Gaming Hub
-            image=/usr/share/pixmaps/osify-games.png
-            action=/usr/bin/osify-games
-        }
-        item {
-            name=Strumenti di Sviluppo
-            image=/usr/share/pixmaps/osify-developer.png
-            action=/usr/bin/osify-developer
-        }
-        item {
-            name=Personalizzazione Schermo
+            name=Scrivania e Aspetto...
             image=/usr/share/pixmaps/osify-appearance.png
             action=/usr/bin/osify-appearance
         }
         item {
-            name=Gestione Attivita
-            image=/usr/share/pixmaps/osify-taskmanager.png
-            action=/usr/bin/osify-taskmanager
-        }
-        item {
-            name=Centro di Controllo
-            image=/usr/share/pixmaps/osify-settings.png
-            action=/usr/bin/osify-settings
-        }
-        separator {
-        }
-        item {
-            name=Terminale di Sistema
-            image=/usr/share/pixmaps/osify-terminal.png
-            action=/usr/bin/terminal
-        }
-        item {
-            name=Gestore File
-            image=/usr/share/pixmaps/osify-files.png
-            action=pcmanfm
+            name=Rete e Connessione Wi-Fi...
+            image=/usr/share/pixmaps/osify-wifi.png
+            action=/usr/bin/osify-wifi
         }
         separator {
         }
@@ -607,50 +560,14 @@ Plugin {
             action=xlock
         }
         item {
-            name=Riavvia Computer
+            name=Riavvia Computer...
             image=/usr/share/pixmaps/osify-update.png
             action=/usr/bin/osify-power reboot
         }
         item {
-            name=Spegni Computer
+            name=Spegni Computer...
             image=/usr/share/pixmaps/osify-taskmanager.png
             action=/usr/bin/osify-power off
-        }
-    }
-}
-
-Plugin {
-    type = launchbar
-    Config {
-        Button {
-            id=osify-drawer.desktop
-        }
-        Button {
-            id=osify-hub.desktop
-        }
-        Button {
-            id=osify-browser.desktop
-        }
-        Button {
-            id=osify-wifi.desktop
-        }
-        Button {
-            id=osify-games.desktop
-        }
-        Button {
-            id=osify-developer.desktop
-        }
-        Button {
-            id=osify-appearance.desktop
-        }
-        Button {
-            id=osify-files.desktop
-        }
-        Button {
-            id=osify-terminal.desktop
-        }
-        Button {
-            id=osify-install.desktop
         }
     }
 }
@@ -663,25 +580,112 @@ Plugin {
 }
 
 Plugin {
-    type = taskbar
+    type = menu
     Config {
-        tooltips=1
-        IconsOnly=0
-        ShowAllDesks=0
-        UseMouseWheel=1
-        UseUrgencyHint=1
-        FlatButton=1
-        MaxTaskWidth=180
-        spacing=2
-        GroupedTasks=0
+        name=OSify
+        image=/usr/share/pixmaps/transparent.png
+        item {
+            name=Informazioni su questo OSify
+            action=/usr/bin/osify-about
+        }
+        item {
+            name=Impostazioni di Sistema
+            action=/usr/bin/osify-settings
+        }
+        item {
+            name=Spotlight Search (Super+Spazio)
+            action=/usr/bin/osify-spotlight
+        }
+        separator {
+        }
+        item {
+            name=Terminale di Sistema
+            action=/usr/bin/terminal
+        }
     }
 }
+
+Plugin {
+    type = menu
+    Config {
+        name=File
+        image=/usr/share/pixmaps/transparent.png
+        item {
+            name=Nuova Finestra Finder
+            action=pcmanfm
+        }
+        item {
+            name=Cartella Utente
+            action=pcmanfm ~
+        }
+        item {
+            name=Cerca con Spotlight
+            action=/usr/bin/osify-spotlight
+        }
+    }
+}
+
+Plugin {
+    type = menu
+    Config {
+        name=Visualizza
+        image=/usr/share/pixmaps/transparent.png
+        item {
+            name=Tutte le Applicazioni (Launchpad)
+            action=/usr/bin/osify-app-drawer
+        }
+        item {
+            name=Personalizzazione Aspetto
+            action=/usr/bin/osify-appearance
+        }
+        item {
+            name=Monitor Risorse
+            action=/usr/bin/osify-taskmanager
+        }
+    }
+}
+
+Plugin {
+    type = menu
+    Config {
+        name=Aiuto
+        image=/usr/share/pixmaps/transparent.png
+        item {
+            name=Guida Rapida e Supporto
+            action=/usr/bin/osify-hub
+        }
+        item {
+            name=Specifiche OSify 2050
+            action=/usr/bin/osify-about
+        }
+    }
+}
+
 
 Plugin {
     type = space
     expand=1
     Config {
         Size=4
+    }
+}
+
+Plugin {
+    type = launchbar
+    Config {
+        Button {
+            id=osify-spotlight.desktop
+        }
+        Button {
+            id=osify-controlcenter.desktop
+        }
+    }
+}
+
+Plugin {
+    type = space
+    Config {
+        Size=6
     }
 }
 
@@ -730,20 +734,9 @@ Plugin {
 }
 
 Plugin {
-    type = cpu
-}
-
-Plugin {
-    type = space
-    Config {
-        Size=4
-    }
-}
-
-Plugin {
     type = dclock
     Config {
-        ClockFmt=%H:%M
+        ClockFmt=%a %d %b  %H:%M
         TooltipFmt=%A %d %B %Y
         BoldFont=1
         IconOnly=0
@@ -751,36 +744,200 @@ Plugin {
     }
 }
 """
-    for p_path in [
-        "etc/skel/.config/lxpanel/slitaz/panels/panel",
-        "etc/skel/.config/lxpanel/default/panels/panel",
-        "home/osify/.config/lxpanel/slitaz/panels/panel",
-        "home/osify/.config/lxpanel/default/panels/panel",
-        "home/tux/.config/lxpanel/slitaz/panels/panel",
-        "home/tux/.config/lxpanel/default/panels/panel",
-        "etc/lxpanel/slitaz/panels/panel",
-        "etc/lxpanel/default/panels/panel",
-        "etc/xdg/lxpanel/default/panels/panel",
-        "etc/xdg/lxpanel/slitaz/panels/panel",
-        "etc/xdg/lxpanel/original/panels/panel",
-        "root/.config/lxpanel/default/panels/panel",
-        "root/.config/lxpanel/slitaz/panels/panel"
+
+    lxpanel_dock_cfg = """# OSify Floating Dock (macOS Style 2050)
+Global {
+    edge=bottom
+    allign=center
+    margin=8
+    widthtype=request
+    height=46
+    transparent=1
+    tintcolor=#0a0e17
+    alpha=215
+    autohide=0
+    setdocktype=1
+    setpartialstrut=1
+    usefontcolor=1
+    fontsize=10
+    fontcolor=#38bdf8
+    usefontsize=1
+    background=0
+    iconsize=36
+    loglevel=2
+}
+
+Plugin {
+    type = launchbar
+    Config {
+        Button {
+            id=osify-files.desktop
+        }
+        Button {
+            id=osify-drawer.desktop
+        }
+        Button {
+            id=osify-browser.desktop
+        }
+        Button {
+            id=osify-spotlight.desktop
+        }
+        Button {
+            id=osify-hub.desktop
+        }
+        Button {
+            id=osify-terminal.desktop
+        }
+        Button {
+            id=osify-developer.desktop
+        }
+        Button {
+            id=osify-games.desktop
+        }
+        Button {
+            id=osify-settings.desktop
+        }
+    }
+}
+
+Plugin {
+    type = space
+    Config {
+        Size=8
+    }
+}
+
+Plugin {
+    type = taskbar
+    Config {
+        tooltips=1
+        IconsOnly=1
+        ShowAllDesks=0
+        UseMouseWheel=1
+        UseUrgencyHint=1
+        FlatButton=1
+        MaxTaskWidth=38
+        spacing=4
+        GroupedTasks=1
+    }
+}
+
+Plugin {
+    type = space
+    Config {
+        Size=8
+    }
+}
+
+Plugin {
+    type = launchbar
+    Config {
+        Button {
+            id=osify-install.desktop
+        }
+    }
+}
+"""
+
+    # Iniezione Top Bar e Dock in tutte le cartelle profilo LXPanel
+    for base_p in [
+        "etc/skel/.config/lxpanel",
+        "home/osify/.config/lxpanel",
+        "home/tux/.config/lxpanel",
+        "etc/lxpanel",
+        "etc/xdg/lxpanel",
+        "root/.config/lxpanel"
     ]:
-        full_p = os.path.join(r3_work, p_path)
-        os.makedirs(os.path.dirname(full_p), exist_ok=True)
-        with open(full_p, "w") as f:
-            f.write(lxpanel_cfg)
+        for prof in ["default", "slitaz", "original"]:
+            panels_dir = os.path.join(r3_work, base_p, prof, "panels")
+            os.makedirs(panels_dir, exist_ok=True)
+            # Rimuovi il vecchio panel monolitico se presente
+            old_p = os.path.join(panels_dir, "panel")
+            if os.path.exists(old_p):
+                try:
+                    os.remove(old_p)
+                except Exception:
+                    pass
+            # Scrivi topbar e dock
+            with open(os.path.join(panels_dir, "topbar"), "w") as f:
+                f.write(lxpanel_topbar_cfg)
+            with open(os.path.join(panels_dir, "dock"), "w") as f:
+                f.write(lxpanel_dock_cfg)
+
+    # Iniezione Icone Brand e Tema Openbox macOS in rootfs3
+    icons_src = os.path.join(REPO_ROOT, "desktop/branding/icons")
+    if os.path.exists(icons_src):
+        r3_pixmaps = os.path.join(r3_work, "usr/share/pixmaps")
+        os.makedirs(r3_pixmaps, exist_ok=True)
+        for ic in glob.glob(os.path.join(icons_src, "*/*.png")):
+            shutil.copy2(ic, r3_pixmaps)
+        # Sostituzione icone sistema SliTaz con logo OSify Apple-style
+        for spider_ic in [
+            "usr/share/icons/SliTaz-Faenza/48x48/places/start-here.png",
+            "usr/share/icons/SliTaz-Faenza/22x22/places/start-here.png",
+            "usr/share/icons/SliTaz-Faenza-Dark/22x22/places/start-here.png",
+            "usr/share/pixmaps/slitaz-menu.png",
+            "usr/share/pixmaps/slitaz-spider.png"
+        ]:
+            sp_dst = os.path.join(r3_work, spider_ic)
+            if os.path.exists(os.path.dirname(sp_dst)):
+                shutil.copy2(os.path.join(icons_src, "24/osify-apple-logo.png"), sp_dst)
+
+    theme_src = os.path.join(REPO_ROOT, "desktop/branding/themes/OSify-macOS")
+    if os.path.exists(theme_src):
+        theme_dst = os.path.join(r3_work, "usr/share/themes/OSify-macOS")
+        shutil.copytree(theme_src, theme_dst, dirs_exist_ok=True)
+
 
     # 4. Scorciatoie Openbox in etc/xdg/openbox/rc.xml
     rc_xml = os.path.join(r3_work, "etc/xdg/openbox/rc.xml")
     if os.path.exists(rc_xml):
         with open(rc_xml, "r") as f:
             rc_content = f.read()
+
+        # Applicazione tema macOS con Traffic Lights a sinistra (CIML: Close, Iconify, Maximize, Label)
+        theme_block = """  <theme>
+    <name>OSify-macOS</name>
+    <titlelayout>CIML</titlelayout>
+    <keepBorder>yes</keepBorder>
+    <animateIconify>yes</animateIconify>
+    <font place="ActiveWindow">
+      <name>sans</name>
+      <size>9</size>
+      <weight>bold</weight>
+      <slant>normal</slant>
+    </font>
+    <font place="InactiveWindow">
+      <name>sans</name>
+      <size>9</size>
+      <weight>normal</weight>
+      <slant>normal</slant>
+    </font>
+    <font place="MenuHeader">
+      <name>sans</name>
+      <size>9</size>
+      <weight>bold</weight>
+      <slant>normal</slant>
+    </font>
+    <font place="MenuItem">
+      <name>sans</name>
+      <size>9</size>
+      <weight>normal</weight>
+      <slant>normal</slant>
+    </font>
+  </theme>"""
+        if "<theme>" in rc_content and "</theme>" in rc_content:
+            before_t = rc_content.split("<theme>")[0]
+            after_t = rc_content.split("</theme>")[1]
+            rc_content = before_t + theme_block + after_t
+
         custom_keys = """
-    <!-- OSify Universali Hotkeys -->
-    <keybind key="W-space"><action name="Execute"><command>/usr/bin/osify-app-drawer</command></action></keybind>
+    <!-- OSify Spotlight Search & macOS Hotkeys -->
+    <keybind key="W-space"><action name="Execute"><command>/usr/bin/osify-spotlight</command></action></keybind>
+    <keybind key="C-space"><action name="Execute"><command>/usr/bin/osify-spotlight</command></action></keybind>
+    <keybind key="Super_L"><action name="Execute"><command>/usr/bin/osify-spotlight</command></action></keybind>
+    <keybind key="W-c"><action name="Execute"><command>/usr/bin/osify-controlcenter</command></action></keybind>
     <keybind key="W-a"><action name="Execute"><command>/usr/bin/osify-app-drawer</command></action></keybind>
-    <keybind key="Super_L"><action name="Execute"><command>/usr/bin/osify-app-drawer</command></action></keybind>
     <keybind key="F1"><action name="Execute"><command>/usr/bin/osify-app-drawer</command></action></keybind>
     <keybind key="A-F1"><action name="Execute"><command>/usr/bin/osify-app-drawer</command></action></keybind>
     <keybind key="W-h"><action name="Execute"><command>/usr/bin/osify-hub</command></action></keybind>
@@ -1233,6 +1390,12 @@ LABEL memtest
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-sysinfo.sh"), os.path.join(r4_work, "usr/local/bin/osify-sysinfo"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-factory-reset.sh"), os.path.join(bin_dir, "osify-factory-reset"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-factory-reset.sh"), os.path.join(r4_work, "usr/local/bin/osify-factory-reset"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-spotlight.py"), os.path.join(bin_dir, "osify-spotlight"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-spotlight.py"), os.path.join(r4_work, "usr/local/bin/osify-spotlight"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-controlcenter.py"), os.path.join(bin_dir, "osify-controlcenter"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-controlcenter.py"), os.path.join(r4_work, "usr/local/bin/osify-controlcenter"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-about.py"), os.path.join(bin_dir, "osify-about"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-about.py"), os.path.join(r4_work, "usr/local/bin/osify-about"))
 
 
 
@@ -2085,6 +2248,36 @@ WINDOW_MANAGER="openbox"
             "Icon=/usr/share/pixmaps/osify-appearance.png\n"
             "Terminal=false\n"
             "Categories=Settings;DesktopSettings;\n"
+        ),
+        "osify-spotlight.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Spotlight Search\n"
+            "Comment=Ricerca istantanea di applicazioni, impostazioni e calcolatrice\n"
+            "Exec=/usr/bin/osify-spotlight\n"
+            "Icon=/usr/share/pixmaps/osify-spotlight.png\n"
+            "Terminal=false\n"
+            "Categories=Utility;Core;\n"
+        ),
+        "osify-controlcenter.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Centro di Controllo\n"
+            "Comment=Pannello rapido Wi-Fi, audio, luminosita e stato di sistema\n"
+            "Exec=/usr/bin/osify-controlcenter\n"
+            "Icon=/usr/share/pixmaps/osify-controlcenter.png\n"
+            "Terminal=false\n"
+            "Categories=Settings;System;\n"
+        ),
+        "osify-about.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Informazioni su questo OSify\n"
+            "Comment=Panoramica hardware, specifiche processore, memoria e rilascio\n"
+            "Exec=/usr/bin/osify-about\n"
+            "Icon=/usr/share/pixmaps/osify-about.png\n"
+            "Terminal=false\n"
+            "Categories=System;Utility;\n"
         )
     }
 
@@ -2097,14 +2290,10 @@ WINDOW_MANAGER="openbox"
             f.write(content)
         os.chmod(dest_f, 0o755)
 
-    # Scrittura sul Desktop: SOLO le icone essenziali per un desktop pulito, moderno e ordinato 2050
+    # Scrittura sul Desktop: Scrivania macOS Ultra-Pulita (solo disco ed installatore per zero disordine)
     desktop_essentials = [
         "osify-install.desktop",
-        "osify-hub.desktop",
-        "osify-browser.desktop",
-        "osify-wifi.desktop",
-        "osify-games.desktop",
-        "osify-drawer.desktop"
+        "osify-files.desktop"
     ]
     for dpath in ["root/Desktop", "home/osify/Desktop", "home/tux/Desktop", "home/slitaz/Desktop", "etc/skel/Desktop"]:
         full_d = os.path.join(r4_work, dpath)
@@ -2118,26 +2307,52 @@ WINDOW_MANAGER="openbox"
                     f.write(app_entries[name])
                 os.chmod(dest_f, 0o755)
 
-    # Scrittura LXPanel Cyber-Bar anche in rootfs4 per integrità garantita
-    for p_path in [
-        "etc/skel/.config/lxpanel/slitaz/panels/panel",
-        "etc/skel/.config/lxpanel/default/panels/panel",
-        "home/osify/.config/lxpanel/slitaz/panels/panel",
-        "home/osify/.config/lxpanel/default/panels/panel",
-        "home/tux/.config/lxpanel/slitaz/panels/panel",
-        "home/tux/.config/lxpanel/default/panels/panel",
-        "etc/lxpanel/slitaz/panels/panel",
-        "etc/lxpanel/default/panels/panel",
-        "etc/xdg/lxpanel/default/panels/panel",
-        "etc/xdg/lxpanel/slitaz/panels/panel",
-        "etc/xdg/lxpanel/original/panels/panel",
-        "root/.config/lxpanel/default/panels/panel",
-        "root/.config/lxpanel/slitaz/panels/panel"
+    # Scrittura LXPanel Dual Panel (Top Bar + Floating Dock) in rootfs4
+    for base_p in [
+        "etc/skel/.config/lxpanel",
+        "home/osify/.config/lxpanel",
+        "home/tux/.config/lxpanel",
+        "etc/lxpanel",
+        "etc/xdg/lxpanel",
+        "root/.config/lxpanel"
     ]:
-        full_p = os.path.join(r4_work, p_path)
-        os.makedirs(os.path.dirname(full_p), exist_ok=True)
-        with open(full_p, "w") as f:
-            f.write(lxpanel_cfg)
+        for prof in ["default", "slitaz", "original"]:
+            panels_dir = os.path.join(r4_work, base_p, prof, "panels")
+            os.makedirs(panels_dir, exist_ok=True)
+            old_p = os.path.join(panels_dir, "panel")
+            if os.path.exists(old_p):
+                try:
+                    os.remove(old_p)
+                except Exception:
+                    pass
+            with open(os.path.join(panels_dir, "topbar"), "w") as f:
+                f.write(lxpanel_topbar_cfg)
+            with open(os.path.join(panels_dir, "dock"), "w") as f:
+                f.write(lxpanel_dock_cfg)
+
+    # Iniezione Icone Brand e Tema Openbox macOS anche in rootfs4
+    icons_src = os.path.join(REPO_ROOT, "desktop/branding/icons")
+    if os.path.exists(icons_src):
+        r4_pixmaps = os.path.join(r4_work, "usr/share/pixmaps")
+        os.makedirs(r4_pixmaps, exist_ok=True)
+        for ic in glob.glob(os.path.join(icons_src, "*/*.png")):
+            shutil.copy2(ic, r4_pixmaps)
+        for spider_ic in [
+            "usr/share/icons/SliTaz-Faenza/48x48/places/start-here.png",
+            "usr/share/icons/SliTaz-Faenza/22x22/places/start-here.png",
+            "usr/share/icons/SliTaz-Faenza-Dark/22x22/places/start-here.png",
+            "usr/share/pixmaps/slitaz-menu.png",
+            "usr/share/pixmaps/slitaz-spider.png"
+        ]:
+            sp_dst = os.path.join(r4_work, spider_ic)
+            if os.path.exists(os.path.dirname(sp_dst)):
+                shutil.copy2(os.path.join(icons_src, "24/osify-apple-logo.png"), sp_dst)
+
+    theme_src = os.path.join(REPO_ROOT, "desktop/branding/themes/OSify-macOS")
+    if os.path.exists(theme_src):
+        theme_dst = os.path.join(r4_work, "usr/share/themes/OSify-macOS")
+        shutil.copytree(theme_src, theme_dst, dirs_exist_ok=True)
+
 
     # Permessi corretti su tutte le home degli utenti live
     for uh in ["home/osify", "home/tux", "home/slitaz"]:

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Spotlight Search
+GenericName=Ricerca Rapida macOS
+Comment=Ricerca istantanea di applicazioni, file, comandi e calcolatrice
+Exec=/usr/bin/osify-spotlight
+Icon=osify-spotlight
+Terminal=false
+Categories=Utility;Core;
+StartupNotify=false
