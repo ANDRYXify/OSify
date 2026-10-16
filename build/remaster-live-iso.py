@@ -317,22 +317,32 @@ def create_boot_splash(dest_jpg):
         img.resize((640, 480), LANCZOS_FILTER).save(dest_jpg, "JPEG", quality=95)
         return
 
-    img = Image.new("RGB", (640, 480), color=(11, 13, 20))
-    draw = ImageDraw.Draw(img)
-    for r in range(160, 0, -2):
-        alpha = int(45 * (1 - r / 160))
-        color = (11 + int(alpha * 1.5), 13 + int(alpha * 0.5), 20 + int(alpha * 3))
-        draw.ellipse([(320 - r, 50 - r//2), (320 + r, 50 + r//2)], fill=color)
+    width, height = 640, 480
+    img = Image.new("RGB", (width, height), color=(7, 9, 14))
+    center_x = width // 2
+    center_y = height // 2 - 25
+
+    # Glow radiale neon sfumato
+    glow = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    glow_draw = ImageDraw.Draw(glow)
+    for r in range(120, 0, -3):
+        alpha = int(35 * (1.0 - r / 120.0))
+        glow_draw.ellipse((center_x - r, center_y - r, center_x + r, center_y + r), fill=(124, 58, 237, alpha))
+    for r in range(70, 0, -2):
+        alpha = int(45 * (1.0 - r / 70.0))
+        glow_draw.ellipse((center_x - r, center_y - r, center_x + r, center_y + r), fill=(6, 182, 212, alpha))
+    img.paste(Image.composite(glow, Image.new("RGBA", (width, height), (7, 9, 14, 255)), glow).convert("RGB"), (0, 0))
+
     logo_path = os.path.join(REPO_ROOT, "OSify.png")
     if os.path.exists(logo_path):
         logo = Image.open(logo_path).convert("RGBA")
-        logo.thumbnail((64, 64))
-        img.paste(logo, (320 - logo.width//2, 12), logo)
-    draw.text((320, 85), "OSify Operating System (32-bit Vintage Edition)", fill=(255, 255, 255), anchor="mm")
-    # Footer informativo posizionato in basso sotto il riquadro del menu vesamenu
-    draw.text((320, 435), "Ingegnerizzato da Andrea Taliento (ANDRYXify)", fill=(6, 182, 212), anchor="mm")
-    draw.text((320, 455), "Intel Atom N280 - GMA 950 - WSVGA 1024x600 Live Profile", fill=(148, 163, 184), anchor="mm")
-    img.save(dest_jpg, "JPEG", quality=90)
+        logo = logo.resize((128, 128), LANCZOS_FILTER)
+        img.paste(logo, (center_x - 64, center_y - 64), logo)
+
+    draw = ImageDraw.Draw(img)
+    draw.text((center_x, center_y + 80), "OSify", fill=(255, 255, 255), anchor="mm")
+    draw.text((center_x, center_y + 98), "Sistema Operativo Autonomo", fill=(100, 116, 139), anchor="mm")
+    img.save(dest_jpg, "JPEG", quality=98)
 
 CLEAN_XINITRC = """#!/bin/sh
 # OSify Universal Desktop Session Manager
@@ -1295,49 +1305,49 @@ def build_vintage_i686():
     clean_cfg = """DEFAULT osify
 UI vesamenu.c32
 PROMPT 0
-TIMEOUT 10
+TIMEOUT 5
 MENU HIDDEN
 
 MENU TITLE
 MENU BACKGROUND splash.jpg
 MENU WIDTH 78
 MENU MARGIN 6
-MENU ROWS 5
-MENU VSHIFT 3
+MENU ROWS 0
+MENU VSHIFT 0
 MENU NOTIMEOUTROW
 MENU TABMSG
 
 MENU COLOR border       *   #00000000 #00000000 none
-MENU COLOR title        *   #ffffffff #00000000 *
-MENU COLOR sel          0   #ffffffff #7c3aedcc *
-MENU COLOR unsel        0   #b0ffffff #00000000 none
-MENU COLOR help         *   #ffffffff #00000000 *
-MENU COLOR timeout      1;37;40 #06b6d4ff #00000000 none
-MENU COLOR timeout_msg  37;40   #a0ffffff #00000000 none
+MENU COLOR title        *   #00000000 #00000000 none
+MENU COLOR sel          0   #00000000 #00000000 none
+MENU COLOR unsel        0   #00000000 #00000000 none
+MENU COLOR help         *   #00000000 #00000000 none
+MENU COLOR timeout      *   #00000000 #00000000 none
+MENU COLOR timeout_msg  *   #00000000 #00000000 none
 
 LABEL osify
-    MENU LABEL OSify Desktop (Avvio Diretto)
+    MENU LABEL OSify
     KERNEL /boot/bzImage
     INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
-    APPEND root=/dev/null video=-32 autologin lang=it_IT kmap=it rw quiet splash tmpram=0
+    APPEND root=/dev/null video=-32 autologin lang=it_IT kmap=it rw quiet splash loglevel=0 console=tty3 vt.global_cursor_default=0 logo.nologo fbcon=map:3 rd.systemd.show_status=false rd.udev.log_priority=0 udev.log_priority=0
 
 LABEL turbo
-    MENU LABEL OSify Prestazioni Turbo (1.66GHz & zRAM)
+    MENU LABEL OSify Prestazioni Turbo
     KERNEL /boot/bzImage
     INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
-    APPEND root=/dev/null video=-32 autologin lang=it_IT kmap=it rw quiet splash tmpram=0 osify.turbo=1
+    APPEND root=/dev/null video=-32 autologin lang=it_IT kmap=it rw quiet splash loglevel=0 console=tty3 vt.global_cursor_default=0 logo.nologo fbcon=map:3 rd.systemd.show_status=false rd.udev.log_priority=0 udev.log_priority=0 osify.turbo=1
 
 LABEL safe
     MENU LABEL OSify Grafica Sicura (Fallback VESA)
     KERNEL /boot/bzImage
     INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
-    APPEND root=/dev/null nomodeset autologin lang=it_IT kmap=it rw tmpram=0
+    APPEND root=/dev/null nomodeset autologin lang=it_IT kmap=it rw quiet loglevel=0 console=tty3 vt.global_cursor_default=0 logo.nologo
 
 LABEL install
     MENU LABEL Installa OSify su Disco Fisso
     KERNEL /boot/bzImage
     INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
-    APPEND root=/dev/null video=-32 autologin lang=it_IT kmap=it rw quiet splash tmpram=0 osify.install=1
+    APPEND root=/dev/null video=-32 autologin lang=it_IT kmap=it rw quiet splash loglevel=0 console=tty3 vt.global_cursor_default=0 logo.nologo fbcon=map:3 osify.install=1
 
 LABEL memtest
     MENU LABEL Diagnostica Memoria RAM
@@ -2752,19 +2762,71 @@ WINDOW_MANAGER="openbox"
             except Exception:
                 pass
 
+    # Iniezione Bootsplash nativo x86 a 32-bit (render su /dev/fb0)
+    bootsplash_src = os.path.join(REPO_ROOT, "tools/bootsplash/osify-bootsplash-32")
+    if os.path.exists(bootsplash_src):
+        for bdst in [os.path.join(r4_work, "usr/bin/osify-bootsplash"), os.path.join(r4_work, "bin/osify-bootsplash")]:
+            os.makedirs(os.path.dirname(bdst), exist_ok=True)
+            shutil.copy2(bootsplash_src, bdst)
+            os.chmod(bdst, 0o755)
+
+    # Patch rcS per silenziare i messaggi Linux sulla console e completare il bootsplash
+    rcs_path = os.path.join(r4_work, "etc/init.d/rcS")
+    if os.path.exists(rcs_path):
+        with open(rcs_path, "r", encoding="utf-8", errors="ignore") as f:
+            rcs_content = f.read()
+        if "exec 1>>/run/boot.log 2>&1" not in rcs_content:
+            rcs_content = rcs_content.replace("#!/bin/sh\n", "#!/bin/sh\n# OSify Silent Boot\nexec 1>>/run/boot.log 2>&1\n")
+        if "killall osify-bootsplash" not in rcs_content:
+            rcs_content += "\n# OSify Bootsplash Handoff\ntouch /run/osify-desktop-ready\nkillall osify-bootsplash 2>/dev/null || true\n"
+        with open(rcs_path, "w", encoding="utf-8") as f:
+            f.write(rcs_content)
+        os.chmod(rcs_path, 0o755)
+
     os.remove(r4_gz)
     archive4 = CpioArchive.from_bytes(r4_data)
     archive4.import_directory(r4_work)
 
-    # Patch deterministica di /init per garantire boot fluido su Netbook/Atom (1GB RAM)
-    if 'init' in archive4.entries:
-        init_str = archive4.entries['init']['data'].decode('utf-8', 'ignore')
-        init_str = init_str.replace("root=100", "root=0")
-        init_str = init_str.replace("[ $(busybox free|busybox awk '/Mem:/{print int(($4*100)/$3)}') -ge $r ]", "[ -n \"$r\" ]")
-        init_str = init_str.replace("export PATH=/mnt/bin:$PATH", "export PATH=/mnt/bin:/bin:/sbin:/usr/bin:/usr/sbin:$PATH")
-        if "[ -x /sbin/init ] && exec /sbin/init" not in init_str:
-            init_str = init_str.replace(". /run/init\n\tsh", ". /run/init\n\t[ -x /sbin/init ] && exec /sbin/init\n\tsh")
-        archive4.add_file('init', init_str.encode('utf-8'), mode=0o100755)
+    # Master Init Nativo OSify 2050 (PID 1 infallibile: zero spostamenti distruttivi, zero Kernel Panic)
+    master_init = """#!/bin/sh
+# OSify Live Master Init (PID 1)
+# Architettura OSify 2050 - Ingegnerizzato per avvio istantaneo, silenzioso e infallibile
+
+# 1. Montaggio filesystem virtuali kernel
+/bin/busybox mount -t proc proc /proc 2>/dev/null || mount -t proc proc /proc
+/bin/busybox mount -t sysfs sys /sys 2>/dev/null || mount -t sysfs sys /sys
+/bin/busybox mount -t devtmpfs devtmpfs /dev 2>/dev/null || mount -t devtmpfs devtmpfs /dev
+/bin/busybox mount -t tmpfs -o mode=0755,size=64M tmpfs /run 2>/dev/null || true
+mkdir -p /dev/pts /dev/shm
+/bin/busybox mount -t devpts devpts /dev/pts 2>/dev/null || true
+
+# 2. Popolamento e gestione nodi hardware
+/bin/busybox mdev -s 2>/dev/null || true
+
+# 3. Impostazione PATH universale
+export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:$PATH
+
+# 4. Bootsplash grafico silenzioso OSify sul framebuffer /dev/fb0
+# Avvia animazione reale centrata con logo luminescente e barra dinamica
+if [ -e /dev/fb0 ] && [ -x /bin/osify-bootsplash ]; then
+    /bin/osify-bootsplash &
+elif [ -e /dev/fb0 ] && [ -x /usr/bin/osify-bootsplash ]; then
+    /usr/bin/osify-bootsplash &
+fi
+
+# 5. Soppressione output console per preservare il bootsplash immacolato
+exec 1>/run/boot.log 2>&1
+
+# 6. Esecuzione definitiva dell'init di sistema (PID 1 non termina MAI)
+if [ -x /sbin/init ]; then
+    exec /sbin/init
+elif [ -x /bin/busybox ]; then
+    exec /bin/busybox init
+else
+    exec /bin/sh
+fi
+"""
+    archive4.add_file('init', master_init.encode('utf-8'), mode=0o100755)
 
     r4_packed = archive4.to_bytes()
     with open(r4_gz, "wb") as f:

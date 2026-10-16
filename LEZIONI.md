@@ -40,3 +40,14 @@
   4. Privacy Vault & Zero-Telemetry: variabile globale `DO_NOT_TRACK=1`, blocco delle telemetrie di terze parti, instradamento DNS sicuro e crittografato su resolver zero-log (Quad9 `9.9.9.9` con DoH/TLS), cancellazione periodica del buffer appunti (`clipboard`), e Kill-Switch di emergenza per disconnessione radio e azzeramento sessione in un clic.
   5. Distruzione Forense dei Dati: eliminazione sicura con sovrascrittura crittografica multi-pass DoD 5220.22-M a tre stadi (dati casuali, azzeramento, troncamento) per impedire qualsiasi recupero forense.
 
+## 2026-10-16 — Bootsplash Framebuffer Nativo, Soppressione Console Kernel e Master Init OSify
+- **Area**: Avvio di sistema, bootsplash grafico, soppressione log console e gestione PID 1
+- **Errore**: All'avvio compariva uno splash statico con barra finta e testo grezzo, seguito da una schermata di scritte di log del kernel Linux e dal crash `/init: line 134: find: not found`, `line 349: busybox: not found`, `exitcode=0x00000100`.
+- **Causa radice**:
+  1. Lo script `/init` di SliTaz spostava i file da `/` a `/mnt` con `mv /$i /mnt`, distruggendo i percorsi standard `/bin` e `/sbin`, cercava un CD-ROM inesistente chiamando `find` e `busybox` spostati, e terminava con `exit` (provocando il Kernel Panic immediato poiché PID 1 non può mai uscire).
+  2. Il bootloader utilizzava un'immagine JPEG con finta barra statica disegnata a mano e parametri kernel senza soppressione console, lasciando attivi `loglevel`, `dmesg` e `fbcon` sulla TTY1 visibile all'utente.
+- **Regola**:
+  1. Lo script `/init` in rootfs4 deve essere sempre il Master Init proprietario di OSify: monta i filesystem virtuali (`proc`, `sysfs`, `devtmpfs`, `devpts`, `run`), popola i device nodes con `mdev -s`, non sposta mai file distruttivamente, sopprime i log della console con `exec 1>/run/boot.log 2>&1` ed esegue definitivamente `/sbin/init` via `exec` (garantendo che PID 1 non esca mai).
+  2. Il bootloader ISOLINUX/SYSLINUX deve utilizzare uno sfondo OLED nero minimale (`#07090e`) con il logo OSify squircle luminescente centrale in alta definizione, dicitura pulita del brand, zero barre finte statiche e parametri kernel `quiet splash loglevel=0 console=tty3 vt.global_cursor_default=0 logo.nologo fbcon=map:3 rd.systemd.show_status=false rd.udev.log_priority=0 udev.log_priority=0`.
+  3. L'animazione di caricamento reale deve essere gestita da un binario statico nativo C a 32-bit (`osify-bootsplash`) renderizzato direttamente su `/dev/fb0` con alpha blending, barra dinamica in tempo reale a 30 FPS e shimmer neon, con handoff automatico al display manager prima dell'apertura del desktop.
+
