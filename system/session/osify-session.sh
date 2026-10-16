@@ -34,56 +34,53 @@ if [ -x /usr/bin/osify-storage-governor ]; then
     /usr/bin/osify-storage-governor --tune &
 fi
 
-# 5. Sfondo Root Window Cyber-Dark
+# 5. Bootsplash OLED OSify con Logo Luminescente e Barra di Caricamento
+if [ -x /usr/bin/osify-bootsplash ]; then
+    /usr/bin/osify-bootsplash
+fi
+
+# 6. Sfondo Root Window Cyber-Dark
 if command -v xsetroot >/dev/null 2>&1; then
     xsetroot -solid "#0b0d14" 2>/dev/null &
 fi
 
-# 6. Gestore Scrivania PCManFM (Sfondo nativo HD ed Icone Desktop)
+# 7. Gestore Scrivania PCManFM (Sfondo nativo HD ed Icone Desktop)
 if command -v pcmanfm >/dev/null 2>&1; then
-    (sleep 0.3 && pgrep -f "pcmanfm --desktop" >/dev/null || pcmanfm --desktop) 2>/dev/null &
+    (sleep 0.2 && pgrep -f "pcmanfm --desktop" >/dev/null || pcmanfm --desktop) 2>/dev/null &
 fi
 
-# 7. OSify Cyber-Bar (LXPanel Dock Moderno con Profilo slitaz/default)
+# 8. OSify Top Menu Bar & Floating Dock (Dual-Panel macOS 2050)
 (
-    sleep 0.6
+    sleep 0.4
     if ! pgrep -x lxpanel >/dev/null 2>&1; then
         if command -v lxpanel >/dev/null 2>&1; then
             lxpanel --profile slitaz 2>/dev/null || lxpanel --profile default 2>/dev/null || lxpanel 2>/dev/null || true
         fi
     fi
-    sleep 1.0
-    if ! pgrep -x lxpanel >/dev/null 2>&1; then
-        [ -x /usr/bin/osify-cyber-dock ] && /usr/bin/osify-cyber-dock &
-    fi
 ) &
 
-# 8. Intercettazione Diretta Modalità Installazione da Bootloader (Opzione 4 ISO)
-# Se l'utente ha scelto 'Installa OSify su Disco Fisso' al menu di avvio USB,
-# si apre SUBITO l'installer su finestra grafica in primo piano senza interrompere la sessione Xorg:
+# 9. Intercettazione Diretta Modalità Installazione da Bootloader
 if grep -qE "osify\.install=1|osify_mode=install|install_mode=1" /proc/cmdline 2>/dev/null; then
     (
-        sleep 1.0
-        if command -v sakura >/dev/null 2>&1; then
-            sakura -T "OSify — Installazione Guidata su Disco" -e /usr/bin/osify-install
-        elif command -v xterm >/dev/null 2>&1; then
-            xterm -geometry 95x26 -T "OSify — Installazione Guidata su Disco" -e /usr/bin/osify-install
+        sleep 0.8
+        if [ -x /usr/bin/osify-live-installer ]; then
+            /usr/bin/osify-live-installer &
+        elif [ -x /usr/bin/osify-install-gui ]; then
+            /usr/bin/osify-install-gui &
         elif [ -x /usr/bin/osify-install ]; then
             /usr/bin/osify-install &
         fi
     ) &
 else
-    # 9. OSify Profile & Multi-User Setup (OOBE al Primo Avvio Live / Installato)
+    # 10. OSify OOBE — Assistente di Configurazione Primo Avvio (macOS Setup Assistant)
     (
-        sleep 1.2
-        FLAG_CONF="${HOME:-/home/osify}/.config/osify/profile_configured"
-        if [ ! -f "$FLAG_CONF" ]; then
-            if command -v sakura >/dev/null 2>&1; then
-                sakura -T "OSify — Configurazione Profilo Iniziale" -e /usr/bin/osify-profile-setup
-            elif command -v xterm >/dev/null 2>&1; then
-                xterm -geometry 80x25 -T "OSify — Configurazione Profilo Iniziale" -e /usr/bin/osify-profile-setup
-            elif [ -x /usr/bin/osify-profile-setup ]; then
-                /usr/bin/osify-profile-setup &
+        sleep 0.8
+        SETUP_DONE="${HOME:-/home/osify}/.config/osify/setup_done"
+        if [ ! -f "$SETUP_DONE" ]; then
+            if [ -x /usr/bin/osify-oobe ]; then
+                /usr/bin/osify-oobe
+            elif [ -x /usr/bin/osify-welcome-wizard ]; then
+                /usr/bin/osify-welcome-wizard &
             fi
         fi
     ) &

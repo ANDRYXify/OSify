@@ -156,6 +156,12 @@ def build_vintage_i686():
     if not os.path.exists(src_png):
         src_png = os.path.join(REPO_ROOT, "OSify.png")
 def create_boot_splash(dest_jpg):
+    src_splash = os.path.join(REPO_ROOT, "desktop/branding/wallpapers/osify-bootsplash.jpg")
+    if os.path.exists(src_splash):
+        img = Image.open(src_splash).convert("RGB")
+        img.resize((640, 480), LANCZOS_FILTER).save(dest_jpg, "JPEG", quality=95)
+        return
+
     img = Image.new("RGB", (640, 480), color=(11, 13, 20))
     draw = ImageDraw.Draw(img)
     for r in range(160, 0, -2):
@@ -1113,11 +1119,11 @@ MENU TITLE OSify Operating System (32-bit Vintage Edition)
 MENU BACKGROUND splash.jpg
 MENU WIDTH 78
 MENU MARGIN 6
-MENU ROWS 7
-MENU VSHIFT 4
-MENU TIMEOUTROW 18
-MENU TABMSGROW 16
-MENU CMDLINEROW 16
+MENU ROWS 6
+MENU VSHIFT 3
+MENU TIMEOUTROW 23
+MENU TABMSGROW 22
+MENU CMDLINEROW 22
 
 MENU COLOR border       *   #00000000 #00000000 none
 MENU COLOR title        *   #ffffffff #00000000 *
@@ -1402,8 +1408,17 @@ LABEL memtest
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-controlcenter.py"), os.path.join(r4_work, "usr/local/bin/osify-controlcenter"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-about.py"), os.path.join(bin_dir, "osify-about"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-about.py"), os.path.join(r4_work, "usr/local/bin/osify-about"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-bootsplash.sh"), os.path.join(bin_dir, "osify-bootsplash"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-bootsplash.py"), os.path.join(bin_dir, "osify-bootsplash.py"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-oobe.sh"), os.path.join(bin_dir, "osify-oobe"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-oobe.py"), os.path.join(bin_dir, "osify-oobe.py"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-bootsplash.sh"), os.path.join(r4_work, "usr/local/bin/osify-bootsplash"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-oobe.sh"), os.path.join(r4_work, "usr/local/bin/osify-oobe"))
 
-
+    bs_src = os.path.join(REPO_ROOT, "desktop/branding/wallpapers/osify-bootsplash.jpg")
+    if os.path.exists(bs_src):
+        os.makedirs(os.path.join(r4_work, "usr/share/pixmaps"), exist_ok=True)
+        shutil.copy2(bs_src, os.path.join(r4_work, "usr/share/pixmaps/osify-bootsplash.jpg"))
 
     for f in os.listdir(bin_dir):
         p = os.path.join(bin_dir, f)
@@ -1551,9 +1566,9 @@ LABEL memtest
                 shutil.copy2(src_icon, os.path.join(hicolor_dir, icon_file))
         print(f"[✓] Copiate {len(os.listdir(icons_src_dir))} icone native in /usr/share/pixmaps/")
 
-    osify_png = os.path.join(REPO_ROOT, "OSify.png")
-    if os.path.exists(osify_png):
-        shutil.copy2(osify_png, os.path.join(pixmaps_dir, "osify.png"))
+    osify_48 = os.path.join(REPO_ROOT, "desktop/branding/icons/48/osify.png")
+    if os.path.exists(osify_48):
+        shutil.copy2(osify_48, os.path.join(pixmaps_dir, "osify.png"))
         for icon_path in [
             "usr/share/icons/SliTaz-Faenza/48x48/places/start-here.png",
             "usr/share/icons/SliTaz-Faenza/22x22/places/start-here.png",
@@ -1562,7 +1577,7 @@ LABEL memtest
         ]:
             full_ip = os.path.join(r4_work, icon_path)
             os.makedirs(os.path.dirname(full_ip), exist_ok=True)
-            shutil.copy2(osify_png, full_ip)
+            shutil.copy2(osify_48, full_ip)
 
     # Inizializzazione Hardware Autonoma e Auto-Updater in /etc/init.d/local.sh
     local_sh = os.path.join(r4_work, "etc/init.d/local.sh")
@@ -1710,6 +1725,16 @@ WINDOW_MANAGER="openbox"
 
     # Entry Applicative Ufficiali OSify (.desktop) con Icone Native Garantite (Zero Emoji per piena compatibilita X11)
     app_entries = {
+        "osify-oobe.desktop": (
+            "[Desktop Entry]\n"
+            "Type=Application\n"
+            "Name=Assistente di Configurazione\n"
+            "Comment=Configurazione Iniziale OSify (Lingua, Tastiera, Wi-Fi, Account e Aspetto)\n"
+            "Exec=/usr/bin/osify-oobe\n"
+            "Icon=/usr/share/pixmaps/osify.png\n"
+            "Terminal=false\n"
+            "Categories=Settings;System;\n"
+        ),
         "osify-dashboard.desktop": (
             "[Desktop Entry]\n"
             "Type=Application\n"
