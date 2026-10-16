@@ -1290,8 +1290,14 @@ LABEL memtest
     shutil.copy2(os.path.join(REPO_ROOT, "uem/runners/osify-java-runner.sh"), os.path.join(bin_dir, "osify-java-runner"))
     shutil.copy2(os.path.join(REPO_ROOT, "uem/runners/osify-cross-runner.sh"), os.path.join(bin_dir, "osify-cross-runner"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-hub.sh"), os.path.join(bin_dir, "osify-hub"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-hub.py"), os.path.join(bin_dir, "osify-hub.py"))
+    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-hub.py"), os.path.join(r4_work, "usr/local/bin/osify-hub.py"))
+
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-browser.sh"), os.path.join(bin_dir, "osify-browser"))
     shutil.copy2(os.path.join(REPO_ROOT, "network/osify-wifi-gui.sh"), os.path.join(bin_dir, "osify-wifi"))
+    shutil.copy2(os.path.join(REPO_ROOT, "network/osify-wifi-gui.py"), os.path.join(bin_dir, "osify-wifi-gui.py"))
+    shutil.copy2(os.path.join(REPO_ROOT, "network/osify-wifi-gui.py"), os.path.join(r4_work, "usr/local/bin/osify-wifi-gui.py"))
+
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-games.sh"), os.path.join(bin_dir, "osify-games"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-developer.sh"), os.path.join(bin_dir, "osify-developer"))
     shutil.copy2(os.path.join(REPO_ROOT, "system/storage/osify-storage-governor.sh"), os.path.join(bin_dir, "osify-storage-governor"))
@@ -1709,7 +1715,7 @@ WINDOW_MANAGER="openbox"
             "Type=Application\n"
             "Name=Dashboard di Sistema\n"
             "Comment=Centro di Controllo Interattivo a 360 Gradi (Hardware, Turbo, Wi-Fi, Schermo, RAM)\n"
-            "Exec=/usr/bin/terminal -geometry 80x24 -T 'Dashboard di Sistema' -e /usr/bin/osify\n"
+            "Exec=/usr/bin/osify-hub\n"
             "Icon=/usr/share/pixmaps/osify-hub.png\n"
             "Terminal=false\n"
             "Categories=System;Utility;\n"
@@ -1729,7 +1735,7 @@ WINDOW_MANAGER="openbox"
             "Type=Application\n"
             "Name=OSify Hub\n"
             "Comment=Centro di Controllo, Prestazioni e Launchpad di OSify\n"
-            "Exec=/usr/bin/terminal -geometry 74x20 -T 'OSify Hub' -e /usr/bin/osify-hub\n"
+            "Exec=/usr/bin/osify-hub\n"
             "Icon=/usr/share/pixmaps/osify-hub.png\n"
             "Terminal=false\n"
             "Categories=System;Utility;\n"
@@ -1759,7 +1765,7 @@ WINDOW_MANAGER="openbox"
             "Type=Application\n"
             "Name=Connessione Wi-Fi\n"
             "Comment=Scansione reti wireless, inserimento password e connessione immediata\n"
-            "Exec=/usr/bin/terminal -geometry 75x20 -T 'Connessione Wi-Fi' -e /usr/bin/osify-wifi\n"
+            "Exec=/usr/bin/osify-wifi\n"
             "Icon=/usr/share/pixmaps/osify-wifi.png\n"
             "Terminal=false\n"
             "Categories=Network;Settings;\n"
@@ -1769,7 +1775,7 @@ WINDOW_MANAGER="openbox"
             "Type=Application\n"
             "Name=Gaming Hub\n"
             "Comment=Giochi Windows (.exe), Retrogaming DOS, Emulazione e Turbo Boost\n"
-            "Exec=/usr/bin/terminal -geometry 75x20 -T 'Gaming Hub' -e /usr/bin/osify-games\n"
+            "Exec=/usr/bin/osify-games\n"
             "Icon=/usr/share/pixmaps/osify-games.png\n"
             "Terminal=false\n"
             "Categories=Game;\n"
@@ -1779,11 +1785,12 @@ WINDOW_MANAGER="openbox"
             "Type=Application\n"
             "Name=Strumenti di Sviluppo\n"
             "Comment=Suite di Programmazione: Python, C, Git, Editor e Progetti\n"
-            "Exec=/usr/bin/terminal -geometry 75x20 -T 'Strumenti di Sviluppo' -e /usr/bin/osify-developer\n"
+            "Exec=/usr/bin/osify-developer\n"
             "Icon=/usr/share/pixmaps/osify-developer.png\n"
             "Terminal=false\n"
             "Categories=Development;\n"
         ),
+
         "osify-appearance.desktop": (
             "[Desktop Entry]\n"
             "Type=Application\n"
@@ -1919,7 +1926,7 @@ WINDOW_MANAGER="openbox"
             "Type=Application\n"
             "Name=Gestione Bluetooth\n"
             "Comment=Scansione e connessione cuffie wireless, controller e periferiche\n"
-            "Exec=/usr/bin/terminal -geometry 75x20 -T 'Connessione Bluetooth' -e /usr/bin/osify-bluetooth\n"
+            "Exec=/usr/bin/osify-bluetooth\n"
             "Icon=/usr/share/pixmaps/osify-bluetooth.png\n"
             "Terminal=false\n"
             "Categories=Network;Settings;HardwareSettings;\n"
@@ -1929,7 +1936,7 @@ WINDOW_MANAGER="openbox"
             "Type=Application\n"
             "Name=Punti di Ripristino (Snapshot)\n"
             "Comment=Crea e ripristina istantanee atomiche di sistema e configurazioni\n"
-            "Exec=/usr/bin/terminal -geometry 75x20 -T 'Punti di Ripristino' -e /usr/bin/osify-snapshot\n"
+            "Exec=/usr/bin/osify-snapshot\n"
             "Icon=/usr/share/pixmaps/osify-snapshot.png\n"
             "Terminal=false\n"
             "Categories=System;Utility;\n"
@@ -2417,11 +2424,12 @@ WINDOW_MANAGER="openbox"
         with open(full_rc, "a") as f:
             f.write(f"\n{OSIFY_SHELL_PROFILE}\n")
 
-    # Autostart automatico XDG
+    # Pulizia autostart XDG: la Scrivania si avvia pulita e sgombra come macOS
     autostart_dir = os.path.join(r4_work, "etc/xdg/autostart")
+    if os.path.exists(autostart_dir):
+        shutil.rmtree(autostart_dir, ignore_errors=True)
     os.makedirs(autostart_dir, exist_ok=True)
-    with open(os.path.join(autostart_dir, "osify-hub.desktop"), "w") as f:
-        f.write(app_entries["osify-hub.desktop"])
+
 
     # Registrazione Associazioni MIME Universali UEM per doppio click su EXE, APK, WASM
     mime_pkg_dir = os.path.join(r4_work, "usr/share/mime/packages")

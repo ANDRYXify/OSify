@@ -30,17 +30,17 @@ boost_system() {
     echo 3 > /proc/sys/vm/drop_caches 2>/dev/null || true
 }
 
-# Se PyQt6 è disponibile, apri il Control Center avanzato
+# Se Python3 è disponibile, apri la dashboard nativa scura OSify Hub
 if [ -n "$DISPLAY" ] && command -v python3 >/dev/null 2>&1; then
-    CC_PY="$(dirname "$0")/osify-control-center.py"
-    [ ! -f "$CC_PY" ] && CC_PY="/opt/osify/tools/osify-gui/osify-control-center.py"
-    if [ -f "$CC_PY" ] && python3 -c "import PyQt6" 2>/dev/null; then
-        exec python3 "$CC_PY"
-    fi
+    for cand in "$(dirname "$0")/osify-hub.py" "/usr/bin/osify-hub.py" "/usr/local/bin/osify-hub.py" "/opt/osify/tools/osify-gui/osify-hub.py"; do
+        if [ -f "$cand" ]; then
+            exec python3 "$cand"
+        fi
+    done
 fi
 
 # ------------------------------------------------------------------------------
-# 1. MODALITÀ GUI YAD (Cyber-Hub 2050)
+# 1. MODALITÀ GUI YAD (Fallback)
 # ------------------------------------------------------------------------------
 if [ -n "$DISPLAY" ] && command -v yad >/dev/null 2>&1; then
     while true; do
@@ -52,14 +52,15 @@ if [ -n "$DISPLAY" ] && command -v yad >/dev/null 2>&1; then
             --column="Icona" --column="Modulo" --column="Descrizione" \
             "⚡" "Turbo Boost Prestazioni" "Ottimizza CPU governor e svuota cache RAM" \
             "🌐" "Connessione Wi-Fi" "Scansione e connessione alle reti wireless" \
-            "🎮" "Gaming & Retrogaming Hub" "Giochi Windows, DOS, emulatori e ROM" \
-            "🎨" "Personalizzazione & Display" "Sfondi, risoluzioni, scala e temi cyber" \
+            "🎮" "Gaming e Retrogaming Hub" "Giochi Windows, DOS, emulatori e ROM" \
+            "🎨" "Personalizzazione e Display" "Sfondi, risoluzioni, scala e temi cyber" \
             "🛠️" "Strumenti per Sviluppatori" "Compilatori, UEM Inspector e debugger" \
             "📊" "Monitor Risorse e Attivita" "Uso CPU, processi e memoria in tempo reale" \
             "💿" "Installa OSify su Disco" "Installatore bare-metal autonomo su HDD/SSD" \
             "ℹ️" "Scheda Tecnica Completa" "Dettagli hardware, driver e sensori" \
             --button="Chiudi!gtk-cancel:1" \
-            --button="Apri!gtk-ok:0") || exit 0
+            --button="Apri!gtk-ok:0" 2>/dev/null) || exit 0
+
 
         ACT=$(echo "$SEL" | cut -d'|' -f2)
         case "$ACT" in

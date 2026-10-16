@@ -19,6 +19,17 @@ if [ "$(id -u 2>/dev/null || echo 0)" -ne 0 ]; then
     fi
 fi
 
+
+# Priorità interfaccia nativa scura OSify Wi-Fi Manager (Python 3)
+if [ -n "$DISPLAY" ] && command -v python3 >/dev/null 2>&1; then
+    for cand in "$(dirname "$0")/osify-wifi-gui.py" "/usr/bin/osify-wifi-gui.py" "/usr/local/bin/osify-wifi-gui.py" "/opt/osify/network/osify-wifi-gui.py"; do
+        if [ -f "$cand" ]; then
+            exec python3 "$cand"
+        fi
+    done
+fi
+
+
 find_wifi_iface() {
     if command -v iw >/dev/null 2>&1; then
         iface=$(iw dev 2>/dev/null | awk '$1=="Interface"{print $2; exit}')
