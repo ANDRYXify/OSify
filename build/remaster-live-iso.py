@@ -2944,22 +2944,217 @@ def build_modern_x86_64():
 
     # Iniezione Windows Installer e albero di sistema OSify
     inject_windows_installer(iso_root)
-    inject_osify_tree(iso_root)
-
-    # Generazione pacchetto apkovl per autologin immediato e sessione OSify 2050
-    print("[i] Generazione profilo di avvio autonomo OSify 2050 (apkovl)...")
+     # Generazione pacchetto apkovl Desktop Grafico OSify 2050 (Xorg, Openbox, Dock, TopBar)
+    print("[i] Generazione ambiente Desktop Grafico autonomo OSify 2050 (x86_64)...")
     apkovl_dir = os.path.join(work_dir, "apkovl")
     os.makedirs(os.path.join(apkovl_dir, "etc/inittab.d"), exist_ok=True)
+    os.makedirs(os.path.join(apkovl_dir, "etc/xdg/tint2"), exist_ok=True)
+    os.makedirs(os.path.join(apkovl_dir, "etc/xdg/openbox"), exist_ok=True)
+    os.makedirs(os.path.join(apkovl_dir, "usr/share/images"), exist_ok=True)
+    os.makedirs(os.path.join(apkovl_dir, "usr/share/pixmaps"), exist_ok=True)
+    os.makedirs(os.path.join(apkovl_dir, "usr/share/applications"), exist_ok=True)
     os.makedirs(os.path.join(apkovl_dir, "usr/local/bin"), exist_ok=True)
     os.makedirs(os.path.join(apkovl_dir, "home/osify"), exist_ok=True)
 
+    # Estrazione o compilazione runtime bundle desktop X11
+    desktop_bundle = "/tmp/test_desktop_x64.tar.gz"
+    if not (os.path.exists(desktop_bundle) and os.path.getsize(desktop_bundle) > 50 * 1024 * 1024):
+        print("[+] Generazione bundle X11/Desktop x86_64 in container Docker...")
+        run("docker run --rm --platform linux/amd64 -v /tmp:/out alpine:3.20 sh -c '"
+            "apk update -q && apk add -q --no-cache xinit xorg-server xf86-video-modesetting xf86-video-vesa xf86-input-libinput "
+            "openbox pcmanfm tint2 feh sakura dbus font-dejavu yad mesa-dri-gallium which && "
+            "tar -czf /out/test_desktop_x64.tar.gz /usr /etc/xdg /etc/X11 /etc/fonts /etc/gtk-3.0 /etc/pango /var/lib/dbus 2>/dev/null || true'")
+    
+    print("[i] Iniezione binari Xorg, Openbox, Tint2 e PCManFM in apkovl...")
+    run(f"tar -xzf '{desktop_bundle}' -C '{apkovl_dir}' 2>/dev/null || true")
+
+    # Configurazione permessi Xorg setuid per avvio grafico infallibile
+    for xbin in ["usr/libexec/Xorg", "usr/libexec/Xorg.wrap", "usr/bin/Xorg"]:
+        xp = os.path.join(apkovl_dir, xbin)
+        if os.path.exists(xp):
+            try:
+                os.chmod(xp, 0o4755)
+            except Exception:
+                pass
+
+    # Gruppi utente per accesso hardware diretto
+    with open(os.path.join(apkovl_dir, "etc/group"), "w") as f:
+        f.write("""root:x:0:root
+wheel:x:10:root,osify
+tty:x:5:osify
+audio:x:18:osify
+video:x:27:osify
+input:x:107:osify
+osify:x:1000:osify
+""")
+
+    # Wallpaper Dark Glass OSify
+    src_wall = os.path.join(REPO_ROOT, "desktop/branding/wallpapers/osify-clean-1920x1080.png")
+    if not os.path.exists(src_wall):
+        src_wall = os.path.join(REPO_ROOT, "OSify.png")
+    try:
+        w_img = Image.open(src_wall).convert("RGB")
+        w_img.save(os.path.join(apkovl_dir, "usr/share/images/osify-wallpaper.jpg"), "JPEG", quality=95)
+    except Exception:
+        pass
+
+    # Copia Icone native squircle
+    src_icons = os.path.join(REPO_ROOT, "sistema/icone")
+    if os.path.exists(src_icons):
+        for ic in os.listdir(src_icons):
+            if ic.endswith(".png"):
+                shutil.copy2(os.path.join(src_icons, ic), os.path.join(apkovl_dir, "usr/share/pixmaps", ic))
+
+    # Top Bar tint2 (26px stile macOS / OSify)
+    topbar_cfg = """# OSify Top Menu Bar (26px)
+panel_monitor = all
+panel_position = top center horizontal
+panel_size = 100% 26
+panel_margin = 0 0
+panel_padding = 4 2 4
+panel_background_id = 1
+wm_menu = 1
+panel_dock = 0
+panel_layer = top
+panel_items = LTSC
+
+# Stile Dark Glass
+rounded = 0
+border_width = 1
+border_sides = b
+background_color = #07090e d8
+border_color = #1e293b ff
+
+# Launcher OSify
+launcher_padding = 8 0
+launcher_background_id = 0
+launcher_icon_size = 18
+launcher_item_app = /usr/share/applications/osify-hub.desktop
+
+# Taskbar
+taskbar_mode = multi_desktop
+taskbar_padding = 2 2 2
+task_icon_size = 16
+task_font_color = #ffffff b0
+task_active_font_color = #06b6d4 ff
+
+# Orologio
+time1_format = %H:%M
+time1_font = Sans Bold 9
+clock_font_color = #ffffff ff
+clock_padding = 8 0
+
+# Systray
+systray_padding = 4 0 4
+systray_icon_size = 16
+"""
+    with open(os.path.join(apkovl_dir, "etc/xdg/tint2/osify-topbar.tint2rc"), "w") as f:
+        f.write(topbar_cfg)
+
+    # Floating Dock tint2 (46px stile macOS / OSify)
+    dock_cfg = """# OSify Floating Dock (46px)
+panel_monitor = all
+panel_position = bottom center horizontal
+panel_size = 0 46
+panel_margin = 0 10
+panel_padding = 10 4 10
+panel_background_id = 1
+panel_dock = 0
+panel_layer = top
+panel_items = L
+
+# Stile Glass Fluttuante
+rounded = 12
+border_width = 1
+border_sides = tblr
+background_color = #07090e e8
+border_color = #334155 ff
+
+launcher_padding = 8 2
+launcher_background_id = 0
+launcher_icon_size = 36
+launcher_item_app = /usr/share/applications/pcmanfm.desktop
+launcher_item_app = /usr/share/applications/sakura.desktop
+launcher_item_app = /usr/share/applications/osify-hub.desktop
+launcher_item_app = /usr/share/applications/osify-security.desktop
+launcher_item_app = /usr/share/applications/osify-wifi.desktop
+"""
+    with open(os.path.join(apkovl_dir, "etc/xdg/tint2/osify-dock.tint2rc"), "w") as f:
+        f.write(dock_cfg)
+
+    # Scrittura Desktop Entry per Dock e Menu
+    apps_meta = [
+        ("osify-hub.desktop", "Centro OSify", "osify-hub", "osify-hub", "Controllo di sistema"),
+        ("pcmanfm.desktop", "File Manager", "pcmanfm", "system-file-manager", "Gestione file"),
+        ("sakura.desktop", "Terminale", "sakura", "utilities-terminal", "Terminale di comando"),
+        ("osify-security.desktop", "Sicurezza", "osify-privacy-vault", "security-high", "Privacy e Shield"),
+        ("osify-wifi.desktop", "Reti Wi-Fi", "osify-wifi", "network-wireless", "Connessione Wi-Fi"),
+    ]
+    for d_name, d_title, d_exec, d_icon, d_comm in apps_meta:
+        with open(os.path.join(apkovl_dir, "usr/share/applications", d_name), "w") as f:
+            f.write(f"[Desktop Entry]\nType=Application\nName={d_title}\nExec={d_exec}\nIcon={d_icon}\nComment={d_comm}\nTerminal=false\nCategories=System;\n")
+
+    # Script sessione X11 (.xinitrc)
+    xinitrc_content = """#!/bin/sh
+export DISPLAY=:0
+xsetroot -solid "#07090e"
+feh --bg-fill /usr/share/images/osify-wallpaper.jpg 2>/dev/null || true
+tint2 -c /etc/xdg/tint2/osify-topbar.tint2rc 2>/dev/null &
+tint2 -c /etc/xdg/tint2/osify-dock.tint2rc 2>/dev/null &
+pcmanfm --desktop 2>/dev/null &
+exec openbox-session
+"""
+    for x_path in [
+        os.path.join(apkovl_dir, "home/osify/.xinitrc"),
+        os.path.join(apkovl_dir, "root/.xinitrc"),
+        os.path.join(apkovl_dir, "etc/X11/xinit/xinitrc")
+    ]:
+        os.makedirs(os.path.dirname(x_path), exist_ok=True)
+        with open(x_path, "w") as f:
+            f.write(xinitrc_content)
+        os.chmod(x_path, 0o755)
+
+    # Script supervisore sessione grafica
+    session_gui = """#!/bin/sh
+# Supervisore Sessione Desktop OSify 2050
+mkdir -p /home/osify/.config/openbox
+mkdir -p /home/osify/.config/tint2
+mkdir -p /home/osify/.config/pcmanfm/default
+chown -R osify:osify /home/osify 2>/dev/null || true
+
+# Inizializza D-Bus di sistema
+if [ -x /usr/bin/dbus-uuidgen ] && [ ! -s /var/lib/dbus/machine-id ]; then
+    mkdir -p /var/lib/dbus
+    /usr/bin/dbus-uuidgen > /var/lib/dbus/machine-id 2>/dev/null || true
+fi
+if [ -x /usr/bin/dbus-daemon ] && [ ! -e /run/dbus/system_bus_socket ]; then
+    mkdir -p /run/dbus /var/run/dbus
+    /usr/bin/dbus-daemon --system --fork 2>/dev/null || true
+fi
+
+# Avvia sessione X11 con utente osify
+export HOME=/home/osify
+export USER=osify
+export LOGNAME=osify
+if [ -x /usr/bin/startx ]; then
+    exec /bin/su -l osify -c "/usr/bin/startx /home/osify/.xinitrc -- /usr/bin/Xorg :0 vt1 -keeptty"
+fi
+"""
+    gui_script = os.path.join(apkovl_dir, "usr/local/bin/osify-session-gui")
+    os.makedirs(os.path.dirname(gui_script), exist_ok=True)
+    with open(gui_script, "w") as f:
+        f.write(session_gui)
+    os.chmod(gui_script, 0o755)
+
+    # Inittab per avvio grafico diretto (zero prompt CLI, zero ASCII art)
     with open(os.path.join(apkovl_dir, "etc/inittab"), "w") as f:
-        f.write("""# OSify 2.0 Inittab — Autologin Immediato
+        f.write("""# OSify 2.0 Inittab — Avvio Grafico Diretto
 ::sysinit:/sbin/openrc sysinit
+::sysinit:/sbin/openrc boot
 ::wait:/sbin/openrc default
 ::ctrlaltdel:/sbin/reboot
 ::shutdown:/sbin/openrc shutdown
-tty1::respawn:/bin/sh -l -c "/usr/local/bin/osify-session"
+tty1::respawn:/usr/local/bin/osify-session-gui
 tty2::respawn:/sbin/getty 38400 tty2
 """)
 
@@ -3000,69 +3195,39 @@ osify ALL=(ALL) NOPASSWD: ALL
     with open(os.path.join(apkovl_dir, "etc/hostname"), "w") as f:
         f.write("osify-station\n")
 
-    # Session Launcher OSify 2050 per 64-bit
-    with open(os.path.join(apkovl_dir, "usr/local/bin/osify-session"), "w") as f:
-        f.write("""#!/bin/sh
-clear
-printf "\\033[1;36m"
-cat << 'EOF'
-  ██████╗ ███████╗██╗███████╗██╗   ██╗
- ██╔═══██╗██╔════╝██║██╔════╝╚██╗ ██╔╝
- ██║   ██║███████╗██║█████╗   ╚████╔╝ 
- ██║   ██║╚════██║██║██╔══╝    ╚██╔╝  
- ╚██████╔╝███████║██║██║        ██║   
-  ╚═════╝ ╚══════╝╚═╝╚═╝        ╚═╝   
-EOF
-printf "\\033[0m\\n"
-printf "\\033[1;32m   OSIFY 2050 LTS — MASTER STATION (x86_64-v3)\\033[0m\\n"
-printf "\\033[1;34m   Ingegnerizzato da Andrea Taliento (ANDRYXify)\\033[0m\\n\\n"
-echo "• CPU Architecture : $(uname -m)"
-echo "• Kernel Attivo    : $(uname -srm)"
-echo "• RAM Disponibile  : $(awk '/MemTotal/ {print int($2/1024)" MB"}' /proc/meminfo 2>/dev/null || echo 'N/A')"
-echo ""
-echo "Applicazioni e Servizi .ify:"
-echo "  • Centro OSify.ify   : Centro di Controllo e Plancia Operativa"
-echo "  • Reti.ify           : Connessione Wi-Fi Guidata"
-echo "  • Installa OSify.ify : Installa OSify su Disco Fisso Bare-Metal"
-echo "  • Giochi.ify         : Piattaforma Giochi e Compatibilità Universale"
-echo "  • GestorePacchetti   : Installatore Nativo .ify"
-echo ""
+    # Link rapidi
+    usr_bin = os.path.join(apkovl_dir, "usr/bin")
+    os.makedirs(usr_bin, exist_ok=True)
+    for src_l, dst_l in [
+        ("/opt/osify/network/osify-wifi-gui.sh", "osify-wifi"),
+        ("/opt/osify/system/installer/osify-disk-installer.sh", "osify-install"),
+        ("/opt/osify/tools/osify-gui/osify-hub.sh", "osify-hub"),
+        ("/opt/osify/tools/osify-gui/osify-games.sh", "osify-games"),
+        ("/opt/osify/tools/osify-ctl", "osify-ctl"),
+        ("/opt/osify/tools/osify-ctl", "osify"),
+        ("/opt/osify/security/privacy/osify-privacy-vault.sh", "osify-privacy-vault"),
+        ("/opt/osify/security/adaptive/osify-adaptive-security.sh", "osify-adaptive-security"),
+    ]:
+        lp = os.path.join(usr_bin, dst_l)
+        if not os.path.exists(lp):
+            try:
+                os.symlink(src_l, lp)
+            except Exception:
+                pass
 
-# Link rapidi
-mkdir -p /usr/bin
-ln -sf /opt/osify/network/osify-wifi-gui.sh /usr/bin/osify-wifi 2>/dev/null || true
-ln -sf /opt/osify/system/installer/osify-disk-installer.sh /usr/bin/osify-install 2>/dev/null || true
-ln -sf /opt/osify/tools/osify-gui/osify-hub.sh /usr/bin/osify-hub 2>/dev/null || true
-ln -sf /opt/osify/tools/osify-gui/osify-games.sh /usr/bin/osify-games 2>/dev/null || true
-ln -sf /opt/osify/tools/osify-ctl /usr/bin/osify-ctl 2>/dev/null || true
-ln -sf /opt/osify/tools/osify-ctl /usr/bin/osify 2>/dev/null || true
-ln -sf /Sistema/Servizi/GestorePacchetti.ify /usr/bin/osify-package-installer 2>/dev/null || true
-ln -sf /Sistema/Servizi/Compatibilità.ify /usr/bin/osify-compatibility 2>/dev/null || true
-
-# Avvia Hub o Shell Interattiva
-if [ -x /usr/bin/osify-hub ]; then
-    /usr/bin/osify-hub
-else
-    exec /bin/sh -l
-fi
-""")
-    os.chmod(os.path.join(apkovl_dir, "usr/local/bin/osify-session"), 0o755)
+    # Permessi universali utente osify per X11
+    run(f"chmod -R 777 '{os.path.join(apkovl_dir, 'home/osify')}' 2>/dev/null || true")
 
     # Compressione tar.gz per Alpine apkovl
     apkovl_tar = os.path.join(iso_root, "localhost.apkovl.tar.gz")
     run(f"tar -czf '{apkovl_tar}' -C '{apkovl_dir}' .")
 
-    # Configurazione GRUB UEFI ufficiale
-    grub_cfg = """set timeout=3
+    # Configurazione GRUB UEFI ufficiale — Avvio Diretto Immediato (set timeout=0)
+    grub_cfg = """set timeout=0
 set default=0
 
-menuentry "OSify (Avvio Diretto)" {
-    linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage quiet splash loglevel=1 vt.global_cursor_default=0 logo.nologo console=tty1 rw autologin
-    initrd /boot/initramfs-lts
-}
-
-menuentry "Installa OSify su Disco Fisso" {
-    linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage osify.install=1 quiet splash loglevel=1 vt.global_cursor_default=0 logo.nologo console=tty1 rw autologin
+menuentry "OSify" {
+    linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage quiet splash loglevel=0 console=tty3 vt.global_cursor_default=0 logo.nologo rd.systemd.show_status=false rd.udev.log_priority=0 udev.log_priority=0 rw autologin
     initrd /boot/initramfs-lts
 }
 

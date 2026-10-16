@@ -59,3 +59,14 @@
   1. Ogni immagine ISO con supporto UEFI deve includere obbligatoriamente un file `startup.nsh` (e `STARTUP.NSH`) nella radice del filesystem con comandi batch per mappare `fs0:`, `fs1:`, `fs2:` e lanciare automaticamente `\EFI\BOOT\BOOTX64.EFI`.
   2. Il file di configurazione GRUB deve essere replicato in tutte le posizioni standard (`boot/grub/grub.cfg`, `efi/boot/grub.cfg`, `EFI/BOOT/grub.cfg`) per supportare indistintamente firmware BIOS legacy, UEFI a 32-bit e UEFI a 64-bit.
 
+## 2026-10-17 — Desktop Grafico Standalone 64-bit, Eliminazione Totale CLI e Autologin X11
+- **Area**: Desktop Environment x86_64, autologin grafico e soppressione interfaccia testo bootloader
+- **Errore**: La versione standard a 64-bit avviava una shell testuale con prompt `(none):~#` e banner ASCII art, mostrando inoltre il riquadro testuale di GRUB `GNU GRUB version 2.12`.
+- **Causa radice**:
+  1. L'immagine ISO 64-bit precedente era stata pacchettizzata prima dell'iniezione dei binari desktop, mancava il pacchetto fondamentale `xinit` per il comando `startx`, Xorg necessitava del bit setuid per l'avvio infallibile dell'utente non privilegiato, `/etc/inittab` eseguiva uno script di sessione testuale con fallback a `/bin/sh -l`, e GRUB aveva un timeout positivo.
+- **Regola**:
+  1. Nessuna ISO di OSify (standard o vintage) deve mai esporre un prompt CLI o una console interattiva di emergenza all'utente finale.
+  2. L'avvio deve sempre caricare direttamente l'ambiente grafico completo Dark Glass (Xorg, Openbox, Top Menu Bar a 26px, Floating Dock a 46px, PCManFM) tramite supervisore grafico dedicato `/usr/local/bin/osify-session-gui` con `startx`, D-Bus avviato, permessi setuid su Xorg, gruppi audio/video/input per l'utente `osify`.
+  3. GRUB deve essere configurato con `set timeout=0` e parametri kernel `console=tty3` per una transizione immediata e silenziosa alla Scrivania senza mostrare alcun menu testuale.
+
+
