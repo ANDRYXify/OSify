@@ -1593,9 +1593,27 @@ LABEL memtest
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-bootsplash.sh"), os.path.join(bin_dir, "osify-bootsplash"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-bootsplash.py"), os.path.join(bin_dir, "osify-bootsplash.py"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-oobe.sh"), os.path.join(bin_dir, "osify-oobe"))
-    shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-oobe.py"), os.path.join(bin_dir, "osify-oobe.py"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-bootsplash.sh"), os.path.join(r4_work, "usr/local/bin/osify-bootsplash"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-oobe.sh"), os.path.join(r4_work, "usr/local/bin/osify-oobe"))
+
+    # Suite di Sicurezza Autoadattiva, Privacy Vault e Zero-Telemetry
+    shutil.copy2(os.path.join(REPO_ROOT, "security/adaptive/osify-adaptive-security.sh"), os.path.join(bin_dir, "osify-adaptive-security"))
+    shutil.copy2(os.path.join(REPO_ROOT, "security/adaptive/osify-adaptive-security.sh"), os.path.join(r4_work, "usr/local/bin/osify-adaptive-security"))
+    shutil.copy2(os.path.join(REPO_ROOT, "security/privacy/osify-privacy-vault.sh"), os.path.join(bin_dir, "osify-privacy-vault"))
+    shutil.copy2(os.path.join(REPO_ROOT, "security/privacy/osify-privacy-vault.sh"), os.path.join(bin_dir, "osify-shred"))
+    shutil.copy2(os.path.join(REPO_ROOT, "security/privacy/osify-privacy-vault.sh"), os.path.join(r4_work, "usr/local/bin/osify-privacy-vault"))
+    shutil.copy2(os.path.join(REPO_ROOT, "security/shield/osify-shield.sh"), os.path.join(bin_dir, "osify-shield"))
+    shutil.copy2(os.path.join(REPO_ROOT, "security/shield/osify-shield.sh"), os.path.join(r4_work, "usr/local/bin/osify-shield"))
+    shutil.copy2(os.path.join(REPO_ROOT, "security/adblock/osify-adblock.sh"), os.path.join(bin_dir, "osify-adblock"))
+    shutil.copy2(os.path.join(REPO_ROOT, "security/adblock/osify-adblock.sh"), os.path.join(r4_work, "usr/local/bin/osify-adblock"))
+    shutil.copy2(os.path.join(REPO_ROOT, "security/auth/osify-auth-gateway.py"), os.path.join(bin_dir, "osify-auth-gateway"))
+    shutil.copy2(os.path.join(REPO_ROOT, "security/auth/osify-auth-gateway.py"), os.path.join(r4_work, "usr/local/bin/osify-auth-gateway"))
+
+    # Copia speculare in /Sistema/Servizi/Sicurezza.ify
+    r4_servizi = os.path.join(r4_work, "Sistema/Servizi")
+    os.makedirs(r4_servizi, exist_ok=True)
+    shutil.copy2(os.path.join(REPO_ROOT, "sistema/servizi/Sicurezza.ify"), os.path.join(r4_servizi, "Sicurezza.ify"))
+    os.chmod(os.path.join(r4_servizi, "Sicurezza.ify"), 0o755)
 
     bs_src = os.path.join(REPO_ROOT, "desktop/branding/wallpapers/osify-bootsplash.jpg")
     if os.path.exists(bs_src):

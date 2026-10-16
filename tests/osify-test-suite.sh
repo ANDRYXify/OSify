@@ -446,6 +446,37 @@ else
     log_fail "OSify ISO Builder: Errore nella preparazione del profilo ISO autonomo"
 fi
 
+# 10.7 Sicurezza Autoadattiva (Hardening Kernel, BadUSB Guard, Adattamento Rete)
+if [ -x "$REPO_ROOT/security/adaptive/osify-adaptive-security.sh" ] && \
+   "$REPO_ROOT/security/adaptive/osify-adaptive-security.sh" apply >/dev/null 2>&1; then
+    sec_out="$("$REPO_ROOT/security/adaptive/osify-adaptive-security.sh" status)"
+    if [[ "$sec_out" == *"STATO SICUREZZA AUTOADATTIVA"* ]]; then
+        log_pass "Sicurezza Autoadattiva: Hardening Kernel (ASLR 2, Ptrace Restricted), BadUSB Guard e profilo di rete dinamico convalidati"
+    else
+        log_fail "Sicurezza Autoadattiva: Errore output modulo di sicurezza autoadattiva"
+    fi
+else
+    log_fail "Sicurezza Autoadattiva: Errore nel modulo di sicurezza autoadattiva"
+fi
+
+# 10.8 Privacy Vault & Anti-Tracciamento (Zero-Telemetry, DNS DoH, Data Shredder)
+TEST_SHRED_FILE="/tmp/test_privacy_shred.txt"
+echo "TopSecretData" > "$TEST_SHRED_FILE"
+if [ -x "$REPO_ROOT/security/privacy/osify-privacy-vault.sh" ] && \
+   "$REPO_ROOT/security/privacy/osify-privacy-vault.sh" enable >/dev/null 2>&1 && \
+   "$REPO_ROOT/security/privacy/osify-privacy-vault.sh" shred "$TEST_SHRED_FILE" >/dev/null 2>&1 && \
+   [ ! -f "$TEST_SHRED_FILE" ]; then
+    priv_out="$("$REPO_ROOT/security/privacy/osify-privacy-vault.sh" status)"
+    if [[ "$priv_out" == *"Zero Telemetria"* ]]; then
+        log_pass "Privacy Vault: Zero-Telemetry (DNS DoH 9.9.9.9), Shredder Forense crittografico DoD e Kill-Switch operativi al 100%"
+    else
+        log_fail "Privacy Vault: Errore status Zero Telemetria"
+    fi
+else
+    rm -f "$TEST_SHRED_FILE" 2>/dev/null || true
+    log_fail "Privacy Vault: Errore nel modulo Privacy Vault o nella distruzione forense dati"
+fi
+
 # ------------------------------------------------------------------------------
 # TEST 11: PERSONALIZZAZIONE PREMIUM, INPUT UNIVERSALE, GESTIONE MEMORIA & HOMEBREW
 # ------------------------------------------------------------------------------

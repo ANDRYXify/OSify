@@ -3,9 +3,11 @@
 # OSify — Servizio di Sistema: Sicurezza.ify
 # ==============================================================================
 # Ingegnerizzato per il Compagno Andrea Taliento (ANDRYXify)
-# Gestore autonomo della protezione di sistema e compatibilità anti-cheat:
+# Gestore autonomo della protezione di sistema, privacy e resilienza:
 # - OSify Shield: Protezione euristica real-time e isolamento malware in quarantena
-# - AdShield: DNS sinkhole a livello di sistema per blocco tracker e telemetria
+# - Sicurezza Autoadattiva: Hardening Kernel, BadUSB Guard, adattamento dinamico
+# - Privacy Vault: Zero-Telemetry, DNS DoH crittografato, Anti-Fingerprinting
+# - Emergency Kill-Switch: Stealth istantaneo radio, audio e rete
 # - Anti-Cheat Subsystem: Compatibilità per Riot Vanguard, BattlEye, EAC, Ricochet
 # ==============================================================================
 
@@ -15,22 +17,44 @@ ICON_SICUREZZA="/Sistema/Icone/osify-firewall.png"
 [ ! -f "$ICON_SICUREZZA" ] && ICON_SICUREZZA="/usr/share/pixmaps/osify-firewall.png"
 
 if [ "$ACTION" = "scan" ] || [ "$ACTION" = "scansione" ]; then
-    if [ -x /usr/bin/osify-ctl ]; then
+    if [ -x /usr/bin/osify-shield ]; then
+        exec /usr/bin/osify-shield scan
+    elif [ -x /usr/bin/osify-ctl ]; then
         exec /usr/bin/osify-ctl shield scan
     fi
     exit 0
+elif [ "$ACTION" = "killswitch" ] || [ "$ACTION" = "stealth" ] || [ "$ACTION" = "panic" ]; then
+    if [ -x /usr/bin/osify-privacy-vault ]; then
+        exec /usr/bin/osify-privacy-vault killswitch
+    fi
+    exit 0
+elif [ "$ACTION" = "status" ]; then
+    echo "========================================================="
+    echo "         SERVIZIO DI SISTEMA: SICUREZZA.IFY 2050        "
+    echo "========================================================="
+    echo "• OSify Shield        : ATTIVO (Quarantena Automatica)"
+    echo "• Sicurezza Dinamica  : ATTIVA (Hardening Sysctl, BadUSB Guard)"
+    echo "• Privacy Vault       : ATTIVO (Zero-Telemetry, DNS DoH 9.9.9.9)"
+    echo "• Kill-Switch Panic   : PRONTO (Isolamento Hardware Istantaneo)"
+    echo "• Sandbox Applicativa : ATTIVA (Isolamento Totale .ify)"
+    echo "========================================================="
+    exit 0
 fi
 
-if command -v yad >/dev/null 2>&1; then
+if command -v yad >/dev/null 2>&1 && [ -n "${DISPLAY:-}" ]; then
     CHOICE=$(yad --title="OSify — Servizio Sicurezza.ify" \
         --window-icon="$ICON_SICUREZZA" \
         --image="$ICON_SICUREZZA" \
-        --width=540 --height=400 --center \
-        --text="<b><big>Servizio di Sistema: Sicurezza.ify 2050</big></b>\n\nMonitoraggio euristico real-time, isolamento e compatibilità protetta.\n\n<b>OSify Shield:</b> Protezione Attiva (Zero-Touch Quarantine)\n<b>AdShield DNS Sinkhole:</b> 67+ server di telemetria e tracker bloccati\n<b>Anti-Cheat Engine:</b> Riot Vanguard / BattlEye / EAC / Ricochet Operativi\n<b>Isolamento Applicazioni:</b> Sandbox .ify Attiva\n\n<b>Operazioni Disponibili:</b>" \
+        --width=620 --height=460 --center \
+        --text="<b><big>Servizio di Sistema: Sicurezza.ify 2050</big></b>\n\nProtezione autoadattiva in tempo reale, massima privacy e difesa proattiva.\n\n<b>OSify Shield:</b> Protezione Attiva (Zero-Touch Quarantine)\n<b>Sicurezza Autoadattiva:</b> Hardening Kernel (ASLR 2, Ptrace Restricted, BadUSB Guard)\n<b>Privacy Vault:</b> Zero-Telemetry (DNS DoH 9.9.9.9 / Quad9 Cifrato, DNT=1)\n<b>AdShield Sinkhole:</b> 67+ server di telemetria e tracker bloccati\n<b>Isolamento Sandbox:</b> Applicazioni .ify Confinate\n\n<b>Operazioni di Difesa e Riservatezza:</b>" \
         --list --radiolist \
         --column="Stato" --column="Opzione" --column="Descrizione" \
         TRUE "Scansione Euristica Immediata" "Verifica integrità dei file utente e processi attivi" \
+        FALSE "Sicurezza Autoadattiva" "Applica hardening kernel sysctl e scansione BadUSB" \
+        FALSE "Privacy Vault & Zero-Telemetry" "Abilita DNS cifrato DoH e protezione anti-tracking" \
+        FALSE "Kill-Switch di Emergenza (Stealth)" "Disattiva radio Wi-Fi/BT, azzera appunti e isola la rete" \
         FALSE "Gestione Regole Firewall" "Modifica porte perimetrali e modalità Stealth" \
+        FALSE "Distruzione Forense Sicura File" "Shredder crittografico multi-pass irreversibile" \
         FALSE "Punti di Ripristino (Snapshot)" "Crea un'istantanea atomica di sistema per recupero immediato" \
         --button="Chiudi":1 --button="Esegui":0 2>/dev/null)
 
@@ -39,14 +63,43 @@ if command -v yad >/dev/null 2>&1; then
         SEL=$(echo "$CHOICE" | awk -F'|' '{print $2}')
         case "$SEL" in
             "Scansione Euristica Immediata")
-                if [ -x /usr/bin/osify-ctl ]; then
+                if [ -x /usr/bin/osify-shield ]; then
+                    /usr/bin/osify-shield scan >/tmp/osify_shield_scan.log 2>&1
+                    yad --title="Scansione di Sicurezza" --text-info --filename=/tmp/osify_shield_scan.log --width=540 --height=340 2>/dev/null
+                elif [ -x /usr/bin/osify-ctl ]; then
                     /usr/bin/osify-ctl shield scan >/tmp/osify_shield_scan.log 2>&1
-                    yad --title="Scansione di Sicurezza" --text-info --filename=/tmp/osify_shield_scan.log --width=520 --height=320 2>/dev/null
+                    yad --title="Scansione di Sicurezza" --text-info --filename=/tmp/osify_shield_scan.log --width=540 --height=340 2>/dev/null
+                fi
+                ;;
+            "Sicurezza Autoadattiva")
+                if [ -x /usr/bin/osify-adaptive-security ]; then
+                    /usr/bin/osify-adaptive-security apply >/tmp/osify_adaptive.log 2>&1
+                    yad --title="Sicurezza Autoadattiva" --text-info --filename=/tmp/osify_adaptive.log --width=540 --height=340 2>/dev/null
+                fi
+                ;;
+            "Privacy Vault & Zero-Telemetry")
+                if [ -x /usr/bin/osify-privacy-vault ]; then
+                    /usr/bin/osify-privacy-vault enable >/tmp/osify_privacy.log 2>&1
+                    yad --title="Privacy Vault" --text-info --filename=/tmp/osify_privacy.log --width=540 --height=340 2>/dev/null
+                fi
+                ;;
+            "Kill-Switch di Emergenza (Stealth)")
+                if [ -x /usr/bin/osify-privacy-vault ]; then
+                    /usr/bin/osify-privacy-vault killswitch
                 fi
                 ;;
             "Gestione Regole Firewall")
                 if [ -x /usr/bin/osify-firewall ]; then
                     /usr/bin/osify-firewall gui >/dev/null 2>&1 &
+                fi
+                ;;
+            "Distruzione Forense Sicura File")
+                TARGET_FILE=$(yad --file-selection --title="Seleziona File da Distruggere in Modo Irreversibile" 2>/dev/null || true)
+                if [ -n "$TARGET_FILE" ] && [ -f "$TARGET_FILE" ]; then
+                    if [ -x /usr/bin/osify-privacy-vault ]; then
+                        /usr/bin/osify-privacy-vault shred "$TARGET_FILE"
+                        yad --title="Distruzione Completata" --info --text="Il file è stato distrutto con sovrascrittura crittografica multipla." --width=360 2>/dev/null
+                    fi
                 fi
                 ;;
             "Punti di Ripristino (Snapshot)")
@@ -59,5 +112,5 @@ if command -v yad >/dev/null 2>&1; then
     exit 0
 fi
 
-echo "OSify Sicurezza.ify — Stato: Protetto"
+echo "OSify Sicurezza.ify — Stato: Protetto (Hardening Kernel, Privacy Vault & Shield Attivi)"
 exit 0

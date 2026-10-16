@@ -416,8 +416,16 @@ case "${1:-status}" in
         shift
         "$OSIFY_DIR/system/input/osify-input-manager.sh" "$@"
         ;;
+    adaptive|security|hardening)
+        shift
+        "$OSIFY_DIR/security/adaptive/osify-adaptive-security.sh" "$@"
+        ;;
+    privacy|vault|killswitch|stealth-kill)
+        shift
+        "$OSIFY_DIR/security/privacy/osify-privacy-vault.sh" "$@"
+        ;;
     *)
-        echo "Uso: osify-ctl {status|welcome|install-disk|mode|memory|input|update|shield|adblock|auth|autotune|workload|shell-env|pkg|filemgr|wifi|audio-ctl|display|power|deck|uem|hal|web|qos|audio|emu|windows|android|darwin|anticheat|hw-detect}"
+        echo "Uso: osify-ctl {status|welcome|install-disk|mode|memory|input|update|shield|adblock|auth|adaptive|privacy|autotune|workload|shell-env|pkg|filemgr|wifi|audio-ctl|display|power|deck|uem|hal|web|qos|audio|emu|windows|android|darwin|anticheat|hw-detect}"
         exit 1
         ;;
 esac

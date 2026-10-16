@@ -29,3 +29,14 @@
   2. La manipolazione di archivi CPIO initramfs deve avvenire sempre tramite motore nativo in memoria (`CpioArchive`) che preserva intatti tutti i device nodes con i rispettivi major/minor, permessi e ownership root:root.
   3. Il kernel deve essere sempre avviato con parametro `tmpram=0` e `/init` deve essere sempre patchato per garantire l'avvio diretto in memoria senza controlli restrittivi o fallback a lettori CD-ROM.
 
+## 2026-10-16 — Sicurezza Autoadattiva, Privacy Vault e Zero-Trust OSify
+- **Area**: Hardening del kernel, mitigazione minacce hardware/rete, telemetria zero e distruzione forense dati
+- **Errore**: I sistemi operativi convenzionali lasciano attivi parametri kernel permissivi (ptrace non ristretto, ASLR debole, dmesg visibile a utenti non privilegiati, assenza di filtri anti-spoofing IP), trasmettono telemetria e query DNS in chiaro ai provider ISP, e sono vulnerabili a vettori hardware come BadUSB / Rubber Ducky su porte USB pubbliche.
+- **Causa radice**: Mancanza di un demone di sicurezza contestuale autoadattivo e di un framework di privacy integrato a livello di sistema operativo.
+- **Regola**:
+  1. Il sistema deve applicare hardening restrittivo immediato al kernel (`randomize_va_space=2`, `kptr_restrict=2`, `dmesg_restrict=1`, `yama.ptrace_scope=2`, `protected_symlinks=1`, `protected_hardlinks=1`, `rp_filter=1`, `tcp_syncookies=1`).
+  2. Sicurezza Autoadattiva in tempo reale: monitoraggio costante dell'ambiente di rete; se il sistema si connette a hotspot Wi-Fi pubblici (guest, airport, hotel, bar o reti aperte), il demone attiva automaticamente il profilo `ULTRA-STEALTH` (blocco porte, chiusura broadcast, MAC address randomization).
+  3. Difesa BadUSB attiva: rilevamento immediato di dispositivi HID malevoli o tool di iniezione (Rubber Ducky, BadUSB, Flipper Zero, Teensy) con disabilitazione immediata dell'autorizzazione USB a livello sysfs (`authorized=0`).
+  4. Privacy Vault & Zero-Telemetry: variabile globale `DO_NOT_TRACK=1`, blocco delle telemetrie di terze parti, instradamento DNS sicuro e crittografato su resolver zero-log (Quad9 `9.9.9.9` con DoH/TLS), cancellazione periodica del buffer appunti (`clipboard`), e Kill-Switch di emergenza per disconnessione radio e azzeramento sessione in un clic.
+  5. Distruzione Forense dei Dati: eliminazione sicura con sovrascrittura crittografica multi-pass DoD 5220.22-M a tre stadi (dati casuali, azzeramento, troncamento) per impedire qualsiasi recupero forense.
+

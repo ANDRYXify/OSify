@@ -508,6 +508,22 @@ case "${1:-}" in
         shift
         [ -x /usr/bin/osify-net-check ] && exec /usr/bin/osify-net-check "$@" || echo "Modulo diagnostica rete non disponibile"
         ;;
+    sicurezza|security|shield)
+        shift
+        [ -x /usr/bin/osify-adaptive-security ] && exec /usr/bin/osify-adaptive-security "$@" || [ -x /usr/bin/osify-shield ] && exec /usr/bin/osify-shield "$@" || echo "Modulo sicurezza non disponibile"
+        ;;
+    privacy|vault)
+        shift
+        [ -x /usr/bin/osify-privacy-vault ] && exec /usr/bin/osify-privacy-vault "$@" || echo "Modulo privacy non disponibile"
+        ;;
+    stealth|killswitch|panic)
+        shift
+        [ -x /usr/bin/osify-privacy-vault ] && exec /usr/bin/osify-privacy-vault killswitch "$@" || echo "Kill-Switch non disponibile"
+        ;;
+    shred)
+        shift
+        [ -x /usr/bin/osify-privacy-vault ] && exec /usr/bin/osify-privacy-vault shred "$@" || echo "Shredder non disponibile"
+        ;;
     automount)
         shift
         [ -x /usr/bin/osify-automount ] && exec /usr/bin/osify-automount "$@" || echo "Modulo automount non disponibile"
