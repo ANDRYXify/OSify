@@ -39,6 +39,31 @@ def run(cmd, cwd=None):
         sys.exit(1)
     return res.stdout
 
+def patch_kernel_binary(kernel_path):
+    if not os.path.exists(kernel_path):
+        return
+    with open(kernel_path, "rb") as f:
+        data = f.read()
+    orig_len = len(data)
+    targets = [
+        b"early console in decompress_kernel\n",
+        b"Decompressing Linux... ",
+        b"Parsing ELF... ",
+        b"No relocation needed... ",
+        b"Booting the kernel.\n"
+    ]
+    patched = data
+    count = 0
+    for t in targets:
+        pos = patched.find(t)
+        if pos != -1:
+            patched = patched[:pos] + (b"\x00" * len(t)) + patched[pos+len(t):]
+            count += 1
+    if count > 0 and len(patched) == orig_len:
+        with open(kernel_path, "wb") as f:
+            f.write(patched)
+        print(f"[✓] Patch binaria kernel completata ({os.path.basename(kernel_path)}): soppresse {count} stringhe VGA early console")
+
 class CpioArchive:
     def __init__(self):
         self.entries = {}
@@ -1284,6 +1309,9 @@ def build_vintage_i686():
     print("[i] Estrazione base 32-bit...")
     run(f"7z x -y '{src_iso}' -o'{iso_root}' > /dev/null")
 
+    # Patch binaria bzImage per azzerare stringhe VGA early console ("Decompressing Linux")
+    patch_kernel_binary(os.path.join(iso_root, "boot/bzImage"))
+
     # Wallpaper e splash ad alta risoluzione
     src_png = os.path.join(REPO_ROOT, "desktop/branding/wallpapers/osify-netbook-1024x600.png")
     if not os.path.exists(src_png):
@@ -1329,25 +1357,25 @@ LABEL osify
     MENU LABEL OSify
     KERNEL /boot/bzImage
     INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
-    APPEND root=/dev/null video=-32 autologin lang=it_IT kmap=it rw quiet splash loglevel=0 console=tty3 vt.global_cursor_default=0 logo.nologo fbcon=map:3 rd.systemd.show_status=false rd.udev.log_priority=0 udev.log_priority=0
+    APPEND root=/dev/null autologin lang=it_IT kmap=it rw quiet splash loglevel=1 console=tty1 vt.global_cursor_default=0 logo.nologo
 
 LABEL turbo
     MENU LABEL OSify Prestazioni Turbo
     KERNEL /boot/bzImage
     INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
-    APPEND root=/dev/null video=-32 autologin lang=it_IT kmap=it rw quiet splash loglevel=0 console=tty3 vt.global_cursor_default=0 logo.nologo fbcon=map:3 rd.systemd.show_status=false rd.udev.log_priority=0 udev.log_priority=0 osify.turbo=1
+    APPEND root=/dev/null autologin lang=it_IT kmap=it rw quiet splash loglevel=1 console=tty1 vt.global_cursor_default=0 logo.nologo osify.turbo=1
 
 LABEL safe
-    MENU LABEL OSify Grafica Sicura (Fallback VESA)
+    MENU LABEL OSify Modalita Compatibile (Emulatore / Safe Graphics)
     KERNEL /boot/bzImage
     INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
-    APPEND root=/dev/null nomodeset autologin lang=it_IT kmap=it rw quiet loglevel=0 console=tty3 vt.global_cursor_default=0 logo.nologo
+    APPEND root=/dev/null nomodeset vga=788 autologin lang=it_IT kmap=it rw quiet loglevel=1 console=tty1 vt.global_cursor_default=0 logo.nologo
 
 LABEL install
     MENU LABEL Installa OSify su Disco Fisso
     KERNEL /boot/bzImage
     INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
-    APPEND root=/dev/null video=-32 autologin lang=it_IT kmap=it rw quiet splash loglevel=0 console=tty3 vt.global_cursor_default=0 logo.nologo fbcon=map:3 osify.install=1
+    APPEND root=/dev/null autologin lang=it_IT kmap=it rw quiet splash loglevel=1 console=tty1 vt.global_cursor_default=0 logo.nologo osify.install=1
 
 LABEL memtest
     MENU LABEL Diagnostica Memoria RAM
@@ -2817,14 +2845,20 @@ fi
 # 5. Soppressione output console per preservare il bootsplash immacolato
 exec 1>/run/boot.log 2>&1
 
-# 6. Esecuzione definitiva dell'init di sistema (PID 1 non termina MAI)
+# 6. Esecuzione definitiva dell'init di sistema con clausola di salvaguardia anti-panic eterna
 if [ -x /sbin/init ]; then
-    exec /sbin/init
+    /sbin/init
 elif [ -x /bin/busybox ]; then
-    exec /bin/busybox init
-else
-    exec /bin/sh
+    /bin/busybox init
 fi
+
+# CLAUSOLA DI GUARDIA ASSOLUTA ANTI-KERNEL PANIC:
+# Se per qualsiasi motivo l'init principale dovesse terminare, PID 1 non esce MAI (niente panic exitcode=0x00000100)
+while true; do
+    [ -x /bin/sh ] && /bin/sh
+    [ -x /bin/busybox ] && /bin/busybox sh
+    sleep 2
+done
 """
     archive4.add_file('init', master_init.encode('utf-8'), mode=0o100755)
 
@@ -3019,26 +3053,26 @@ fi
     run(f"tar -czf '{apkovl_tar}' -C '{apkovl_dir}' .")
 
     # Configurazione GRUB UEFI ufficiale
-    grub_cfg = """set timeout=5
+    grub_cfg = """set timeout=3
 set default=0
 
-menuentry "OSify Live System (x86-64-v3 Master Station 2050)" {
-    linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage quiet splash rw autologin
+menuentry "OSify (Avvio Diretto)" {
+    linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage quiet splash loglevel=1 vt.global_cursor_default=0 logo.nologo console=tty1 rw autologin
     initrd /boot/initramfs-lts
 }
 
 menuentry "Installa OSify su Disco Fisso" {
-    linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage osify.install=1 quiet splash rw autologin
+    linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage osify.install=1 quiet splash loglevel=1 vt.global_cursor_default=0 logo.nologo console=tty1 rw autologin
     initrd /boot/initramfs-lts
 }
 
-menuentry "OSify Safe Mode (Nomodeset)" {
-    linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage nomodeset rw autologin
+menuentry "OSify Modalita Compatibile (Emulatore / Safe Graphics)" {
+    linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage nomodeset vga=788 quiet loglevel=1 vt.global_cursor_default=0 logo.nologo console=tty1 rw autologin
     initrd /boot/initramfs-lts
 }
 
 menuentry "OSify RAM Rescue Mode" {
-    linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage copytoram rw autologin
+    linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage copytoram quiet loglevel=1 console=tty1 rw autologin
     initrd /boot/initramfs-lts
 }
 """
@@ -3048,32 +3082,32 @@ menuentry "OSify RAM Rescue Mode" {
         f.write(grub_cfg)
 
     # Configurazione Syslinux Legacy BIOS ufficiale
-    syslinux_cfg = """TIMEOUT 50
+    syslinux_cfg = """TIMEOUT 30
 DEFAULT osify
 
 LABEL osify
-    MENU LABEL OSify Live System (x86-64-v3 Master Station 2050)
+    MENU LABEL OSify
     LINUX /boot/vmlinuz-lts
     INITRD /boot/initramfs-lts
-    APPEND modules=loop,squashfs,sd-mod,usb-storage quiet splash rw autologin
+    APPEND modules=loop,squashfs,sd-mod,usb-storage quiet splash loglevel=1 vt.global_cursor_default=0 logo.nologo console=tty1 rw autologin
 
 LABEL install
     MENU LABEL Installa OSify su Disco Fisso
     LINUX /boot/vmlinuz-lts
     INITRD /boot/initramfs-lts
-    APPEND modules=loop,squashfs,sd-mod,usb-storage osify.install=1 quiet splash rw autologin
+    APPEND modules=loop,squashfs,sd-mod,usb-storage osify.install=1 quiet splash loglevel=1 vt.global_cursor_default=0 logo.nologo console=tty1 rw autologin
 
 LABEL safe
-    MENU LABEL OSify Safe Mode (Nomodeset)
+    MENU LABEL OSify Modalita Compatibile (Emulatore / Safe Graphics)
     LINUX /boot/vmlinuz-lts
     INITRD /boot/initramfs-lts
-    APPEND modules=loop,squashfs,sd-mod,usb-storage nomodeset rw autologin
+    APPEND modules=loop,squashfs,sd-mod,usb-storage nomodeset vga=788 quiet loglevel=1 vt.global_cursor_default=0 logo.nologo console=tty1 rw autologin
 
 LABEL rescue
     MENU LABEL OSify RAM Rescue Mode
     LINUX /boot/vmlinuz-lts
     INITRD /boot/initramfs-lts
-    APPEND modules=loop,squashfs,sd-mod,usb-storage copytoram rw autologin
+    APPEND modules=loop,squashfs,sd-mod,usb-storage copytoram quiet loglevel=1 console=tty1 rw autologin
 """
     syslinux_path = os.path.join(iso_root, "boot/syslinux/syslinux.cfg")
     os.makedirs(os.path.dirname(syslinux_path), exist_ok=True)
