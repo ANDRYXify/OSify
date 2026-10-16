@@ -51,3 +51,11 @@
   2. Il bootloader ISOLINUX/SYSLINUX deve utilizzare uno sfondo OLED nero minimale (`#07090e`) con il logo OSify squircle luminescente centrale in alta definizione, dicitura pulita del brand, zero barre finte statiche e parametri kernel `quiet splash loglevel=0 console=tty3 vt.global_cursor_default=0 logo.nologo fbcon=map:3 rd.systemd.show_status=false rd.udev.log_priority=0 udev.log_priority=0`.
   3. L'animazione di caricamento reale deve essere gestita da un binario statico nativo C a 32-bit (`osify-bootsplash`) renderizzato direttamente su `/dev/fb0` con alpha blending, barra dinamica in tempo reale a 30 FPS e shimmer neon, con handoff automatico al display manager prima dell'apertura del desktop.
 
+## 2026-10-17 — Compatibilità UEFI Universale, Fallback EDK II e Script startup.nsh
+- **Area**: Firmware UEFI, macchine virtuali macOS (UTM/QEMU) e immagini ISO 64-bit
+- **Errore**: All'avvio della ISO standard a 64-bit su emulatore UEFI o firmware EDK II, il sistema non avviava il bootloader e cadeva nella "UEFI Interactive Shell v2.2".
+- **Causa radice**: In assenza di una voce di boot registrata in NVRAM o su drive CD-ROM secondari (`CDROM(0x1)`), il firmware EDK II cerca per 1 secondo uno script `startup.nsh` nella radice del filesystem e, se non lo trova, interrompe la sequenza automatica aprendo la shell interattiva invece di scorrere le partizioni El Torito.
+- **Regola**:
+  1. Ogni immagine ISO con supporto UEFI deve includere obbligatoriamente un file `startup.nsh` (e `STARTUP.NSH`) nella radice del filesystem con comandi batch per mappare `fs0:`, `fs1:`, `fs2:` e lanciare automaticamente `\EFI\BOOT\BOOTX64.EFI`.
+  2. Il file di configurazione GRUB deve essere replicato in tutte le posizioni standard (`boot/grub/grub.cfg`, `efi/boot/grub.cfg`, `EFI/BOOT/grub.cfg`) per supportare indistintamente firmware BIOS legacy, UEFI a 32-bit e UEFI a 64-bit.
+

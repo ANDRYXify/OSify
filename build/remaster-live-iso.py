@@ -3081,6 +3081,54 @@ menuentry "OSify RAM Rescue Mode" {
     with open(grub_path, "w") as f:
         f.write(grub_cfg)
 
+    # Copia speculare grub.cfg anche in efi/boot e EFI/BOOT per garanzia assoluta
+    for g_dst in [os.path.join(iso_root, "efi/boot/grub.cfg"), os.path.join(iso_root, "EFI/BOOT/grub.cfg")]:
+        os.makedirs(os.path.dirname(g_dst), exist_ok=True)
+        with open(g_dst, "w") as f:
+            f.write(grub_cfg)
+
+    # Iniezione startup.nsh per avvio automatico universale su emulatori UEFI (EDK II / UTM / QEMU)
+    startup_nsh = """@echo -off
+cls
+echo Avvio OSify in corso...
+fs0:
+if exist \\EFI\\BOOT\\BOOTX64.EFI then
+    \\EFI\\BOOT\\BOOTX64.EFI
+endif
+if exist \\efi\\boot\\bootx64.efi then
+    \\efi\\boot\\bootx64.efi
+endif
+fs1:
+if exist \\EFI\\BOOT\\BOOTX64.EFI then
+    \\EFI\\BOOT\\BOOTX64.EFI
+endif
+if exist \\efi\\boot\\bootx64.efi then
+    \\efi\\boot\\bootx64.efi
+endif
+fs2:
+if exist \\EFI\\BOOT\\BOOTX64.EFI then
+    \\EFI\\BOOT\\BOOTX64.EFI
+endif
+if exist \\efi\\boot\\bootx64.efi then
+    \\efi\\boot\\bootx64.efi
+endif
+"""
+    for nsh_name in ["startup.nsh", "STARTUP.NSH"]:
+        with open(os.path.join(iso_root, nsh_name), "w") as f:
+            f.write(startup_nsh)
+
+    # Assicura presenza di BOOTX64.EFI sia in efi/boot che in EFI/BOOT
+    efi_src = os.path.join(iso_root, "efi/boot/bootx64.efi")
+    if not os.path.exists(efi_src):
+        efi_src_upper = os.path.join(iso_root, "EFI/BOOT/BOOTX64.EFI")
+        if os.path.exists(efi_src_upper):
+            efi_src = efi_src_upper
+    if os.path.exists(efi_src):
+        for efi_dst in [os.path.join(iso_root, "efi/boot/bootx64.efi"), os.path.join(iso_root, "EFI/BOOT/BOOTX64.EFI")]:
+            os.makedirs(os.path.dirname(efi_dst), exist_ok=True)
+            if not os.path.exists(efi_dst):
+                shutil.copy2(efi_src, efi_dst)
+
     # Configurazione Syslinux Legacy BIOS ufficiale
     syslinux_cfg = """TIMEOUT 30
 DEFAULT osify
