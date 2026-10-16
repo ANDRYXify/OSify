@@ -2,7 +2,7 @@
 Type=Application
 Name=Sviluppo & Codice
 Comment=Suite di Programmazione: Python 3, C, Git, Editor e Progetti
-Exec=/usr/bin/terminal -geometry 75x20 -T 'OSify Developer' -e /usr/bin/osify-developer
+Exec=/usr/bin/osify-developer
 Icon=/usr/share/pixmaps/osify-developer.png
 Terminal=false
 Categories=Development;

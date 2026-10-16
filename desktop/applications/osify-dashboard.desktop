@@ -2,7 +2,7 @@
 Type=Application
 Name=OSify Master Dashboard
 Comment=Centro di Controllo Interattivo a 360° (Hardware, Turbo, Wi-Fi, Schermo, RAM)
-Exec=/usr/bin/terminal -geometry 80x24 -T 'OSify Master Dashboard' -e /usr/bin/osify
+Exec=/usr/bin/osify-hub
 Icon=/usr/share/pixmaps/osify-hub.png
 Terminal=false
 Categories=System;Utility;

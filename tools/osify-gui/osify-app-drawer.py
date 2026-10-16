@@ -22,7 +22,7 @@ APPLICATIONS = [
         "name": "OSify Hub",
         "category": "Sistema",
         "desc": "Centro di controllo, prestazioni e launchpad a 360°",
-        "cmd": ["/usr/bin/terminal", "-geometry", "74x20", "-T", "OSify Hub", "-e", "/usr/bin/osify-hub"],
+        "cmd": ["/usr/bin/osify-hub"],
         "icon": "/usr/share/pixmaps/osify-hub.png",
         "badge": "🚀 HUB",
         "color": "#8b5cf6"
@@ -72,7 +72,7 @@ APPLICATIONS = [
         "name": "Connessione Wi-Fi",
         "category": "Internet",
         "desc": "Scansione frequenze wireless, password e connessione rapida",
-        "cmd": ["/usr/bin/terminal", "-geometry", "75x20", "-T", "OSify Wi-Fi", "-e", "/usr/bin/osify-wifi"],
+        "cmd": ["/usr/bin/osify-wifi"],
         "icon": "/usr/share/pixmaps/osify-wifi.png",
         "badge": "📡 WI-FI",
         "color": "#10b981"
@@ -82,7 +82,7 @@ APPLICATIONS = [
         "name": "Gaming Hub",
         "category": "Gaming",
         "desc": "Giochi Windows (.exe con Wine/DirectX), DOSBox e UEM",
-        "cmd": ["/usr/bin/terminal", "-geometry", "75x20", "-T", "OSify Gaming", "-e", "/usr/bin/osify-games"],
+        "cmd": ["/usr/bin/osify-games"],
         "icon": "/usr/share/pixmaps/osify-games.png",
         "badge": "🎮 GIOCHI",
         "color": "#a855f7"
@@ -92,7 +92,7 @@ APPLICATIONS = [
         "name": "Sviluppo & Codice",
         "category": "Sviluppo",
         "desc": "Python 3 REPL, TinyCC/GCC, Git manager, Nano e template progetti",
-        "cmd": ["/usr/bin/terminal", "-geometry", "75x20", "-T", "OSify Developer", "-e", "/usr/bin/osify-developer"],
+        "cmd": ["/usr/bin/osify-developer"],
         "icon": "/usr/share/pixmaps/osify-developer.png",
         "badge": "💻 CODING",
         "color": "#f59e0b"

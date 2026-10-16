@@ -160,15 +160,16 @@ def create_boot_splash(dest_jpg):
     for r in range(160, 0, -2):
         alpha = int(45 * (1 - r / 160))
         color = (11 + int(alpha * 1.5), 13 + int(alpha * 0.5), 20 + int(alpha * 3))
-        draw.ellipse([(320 - r, 70 - r//2), (320 + r, 70 + r//2)], fill=color)
+        draw.ellipse([(320 - r, 50 - r//2), (320 + r, 50 + r//2)], fill=color)
     logo_path = os.path.join(REPO_ROOT, "OSify.png")
     if os.path.exists(logo_path):
         logo = Image.open(logo_path).convert("RGBA")
-        logo.thumbnail((75, 75))
-        img.paste(logo, (320 - logo.width//2, 25), logo)
-    draw.text((320, 110), "OSify Operating System", fill=(255, 255, 255), anchor="mm")
-    draw.text((320, 128), "Ingegnerizzato da Andrea Taliento (ANDRYXify)", fill=(6, 182, 212), anchor="mm")
-    draw.text((320, 144), "Intel Atom N280 - GMA 950 - WSVGA 1024x600 Live Profile", fill=(148, 163, 184), anchor="mm")
+        logo.thumbnail((64, 64))
+        img.paste(logo, (320 - logo.width//2, 12), logo)
+    draw.text((320, 85), "OSify Operating System (32-bit Vintage Edition)", fill=(255, 255, 255), anchor="mm")
+    # Footer informativo posizionato in basso sotto il riquadro del menu vesamenu
+    draw.text((320, 435), "Ingegnerizzato da Andrea Taliento (ANDRYXify)", fill=(6, 182, 212), anchor="mm")
+    draw.text((320, 455), "Intel Atom N280 - GMA 950 - WSVGA 1024x600 Live Profile", fill=(148, 163, 184), anchor="mm")
     img.save(dest_jpg, "JPEG", quality=90)
 
 CLEAN_XINITRC = """#!/bin/sh
@@ -255,172 +256,99 @@ fi
 OSIFY_OPENBOX_MENU = """<?xml version="1.0" encoding="UTF-8"?>
 <openbox_menu xmlns="http://openbox.org/3.4/menu">
   <menu id="root-menu" label="OSify Menu">
-    <separator label="OSify Operating System"/>
-    <item label="Dashboard di Sistema" icon="/usr/share/pixmaps/osify-hub.png">
-      <action name="Execute"><command>/usr/bin/terminal -geometry 80x24 -T 'Dashboard di Sistema' -e /usr/bin/osify</command></action>
+    <separator label="OSify 2.0 Operating System"/>
+    <item label="⚡ OSify Hub &amp; Dashboard" icon="/usr/share/pixmaps/osify-hub.png">
+      <action name="Execute"><command>/usr/bin/osify-hub</command></action>
     </item>
-    <item label="Tutte le Applicazioni" icon="/usr/share/pixmaps/osify-drawer.png">
+    <item label="🚀 Tutte le Applicazioni" icon="/usr/share/pixmaps/osify-drawer.png">
       <action name="Execute"><command>/usr/bin/osify-app-drawer</command></action>
     </item>
     <separator/>
-    <separator label="Applicazioni"/>
-    <item label="Terminale di Sistema" icon="/usr/share/pixmaps/osify-terminal.png">
-      <action name="Execute"><command>/usr/bin/terminal</command></action>
-    </item>
-    <item label="Navigatore Web" icon="/usr/share/pixmaps/osify-browser.png">
+    <separator label="Principali"/>
+    <item label="🌐 Navigatore Web" icon="/usr/share/pixmaps/osify-browser.png">
       <action name="Execute"><command>/usr/bin/osify-browser</command></action>
     </item>
-    <item label="Gestione File" icon="/usr/share/pixmaps/osify-files.png">
+    <item label="📶 Connessione Wi-Fi" icon="/usr/share/pixmaps/osify-wifi.png">
+      <action name="Execute"><command>/usr/bin/osify-wifi</command></action>
+    </item>
+    <item label="📁 Gestione File" icon="/usr/share/pixmaps/osify-files.png">
       <action name="Execute"><command>pcmanfm</command></action>
     </item>
-    <item label="Cattura Schermo" icon="/usr/share/pixmaps/osify-appearance.png">
-      <action name="Execute"><command>/usr/bin/osify-screenshot --gui</command></action>
+    <item label="🎮 Gaming &amp; Retrogaming Hub" icon="/usr/share/pixmaps/osify-games.png">
+      <action name="Execute"><command>/usr/bin/osify-games</command></action>
     </item>
-    <item label="Cerca File" icon="/usr/share/pixmaps/osify-search.png">
-      <action name="Execute"><command>/usr/bin/osify-search</command></action>
+    <item label="🛠️ Sviluppo &amp; Codice" icon="/usr/share/pixmaps/osify-developer.png">
+      <action name="Execute"><command>/usr/bin/osify-developer</command></action>
     </item>
-    <item label="Blocco Note ed Editor" icon="/usr/share/pixmaps/osify-notepad.png">
-      <action name="Execute"><command>/usr/bin/osify-notepad</command></action>
-    </item>
-    <item label="Calcolatrice" icon="/usr/share/pixmaps/osify-calculator.png">
-      <action name="Execute"><command>/usr/bin/osify-calculator</command></action>
-    </item>
-    <item label="Gestore Archivi" icon="/usr/share/pixmaps/osify-archive.png">
-      <action name="Execute"><command>/usr/bin/osify-archive-manager</command></action>
-    </item>
-    <item label="Lettore Multimediale" icon="/usr/share/pixmaps/osify-audio.png">
-      <action name="Execute"><command>/usr/bin/osify-media-player</command></action>
-    </item>
-    <item label="Registratore Vocale" icon="/usr/share/pixmaps/osify-voice.png">
-      <action name="Execute"><command>/usr/bin/osify-voice gui</command></action>
-    </item>
-    <item label="Fotocamera e Webcam" icon="/usr/share/pixmaps/osify-camera.png">
-      <action name="Execute"><command>/usr/bin/osify-camera gui</command></action>
-    </item>
-    <item label="Gaming Hub" icon="/usr/share/pixmaps/osify-games.png">
-      <action name="Execute"><command>/usr/bin/terminal -geometry 75x20 -T 'Gaming Hub' -e /usr/bin/osify-games</command></action>
-    </item>
-    <item label="Acquisizione Video HDMI" icon="/usr/share/pixmaps/osify-capture.png">
-      <action name="Execute"><command>/usr/bin/osify-capture</command></action>
-    </item>
-    <item label="Mirroring Smartphone" icon="/usr/share/pixmaps/osify-phone.png">
-      <action name="Execute"><command>/usr/bin/osify-phone</command></action>
-    </item>
-    <item label="Tastiera a Schermo" icon="/usr/share/pixmaps/osify-keyboard.png">
-      <action name="Execute"><command>/usr/bin/osify-onboard</command></action>
-    </item>
-    <item label="Accessibilita e Comfort Visivo" icon="/usr/share/pixmaps/osify-accessibility.png">
-      <action name="Execute"><command>/usr/bin/osify-accessibility gui</command></action>
+    <item label="💻 Terminale di Sistema" icon="/usr/share/pixmaps/osify-terminal.png">
+      <action name="Execute"><command>/usr/bin/terminal</command></action>
     </item>
     <separator/>
-    <separator label="Hardware e Connettivita"/>
-    <item label="Audio e Volume" icon="/usr/share/pixmaps/osify-audio.png">
-      <action name="Execute"><command>/usr/bin/osify-audio gui</command></action>
-    </item>
-    <item label="Connessione Wi-Fi" icon="/usr/share/pixmaps/osify-wifi.png">
-      <action name="Execute"><command>/usr/bin/terminal -geometry 75x20 -T 'Connessione Wi-Fi' -e /usr/bin/osify-wifi</command></action>
-    </item>
-    <item label="Hotspot Wi-Fi" icon="/usr/share/pixmaps/osify-hotspot.png">
-      <action name="Execute"><command>/usr/bin/osify-hotspot gui</command></action>
-    </item>
-    <item label="Connessione Bluetooth" icon="/usr/share/pixmaps/osify-bluetooth.png">
-      <action name="Execute"><command>/usr/bin/terminal -geometry 75x20 -T 'Connessione Bluetooth' -e /usr/bin/osify-bluetooth</command></action>
-    </item>
-    <item label="Diagnostica Rete" icon="/usr/share/pixmaps/osify-wifi.png">
-      <action name="Execute"><command>/usr/bin/terminal -geometry 75x20 -T 'Diagnostica Rete' -e /usr/bin/osify-net-check</command></action>
-    </item>
-    <item label="Schermo e Risoluzioni" icon="/usr/share/pixmaps/osify-appearance.png">
-      <action name="Execute"><command>/usr/bin/osify-display</command></action>
-    </item>
-    <item label="Luce Notturna (Filtro Blu)" icon="/usr/share/pixmaps/osify-nightlight.png">
-      <action name="Execute"><command>/usr/bin/osify-nightlight gui</command></action>
-    </item>
-    <item label="Luminosita Display" icon="/usr/share/pixmaps/osify-appearance.png">
-      <action name="Execute"><command>/usr/bin/osify-brightness gui</command></action>
-    </item>
-    <item label="Modalita Turbo" icon="/usr/share/pixmaps/osify-hub.png">
-      <action name="Execute"><command>/usr/bin/osify turbo</command></action>
-    </item>
-    <item label="Pulizia Memoria RAM" icon="/usr/share/pixmaps/osify-hub.png">
-      <action name="Execute"><command>/usr/bin/osify pulisci</command></action>
-    </item>
-    <item label="Gestione Attivita" icon="/usr/share/pixmaps/osify-taskmanager.png">
-      <action name="Execute"><command>/usr/bin/osify-taskmanager</command></action>
-    </item>
-    <item label="Condivisione Rete e Smartphone" icon="/usr/share/pixmaps/osify-share.png">
-      <action name="Execute"><command>/usr/bin/osify-share gui</command></action>
-    </item>
-    <item label="Gestione Stampanti e PDF" icon="/usr/share/pixmaps/osify-printer.png">
-      <action name="Execute"><command>/usr/bin/osify-printer gui</command></action>
-    </item>
-    <item label="Monitor Termico e Ventole" icon="/usr/share/pixmaps/osify-thermal.png">
-      <action name="Execute"><command>/usr/bin/osify-thermal-monitor gui</command></action>
-    </item>
-    <item label="Benchmark Prestazioni" icon="/usr/share/pixmaps/osify-benchmark.png">
-      <action name="Execute"><command>/usr/bin/osify-benchmark gui</command></action>
-    </item>
-    <item label="Mappatura Tastiera" icon="/usr/share/pixmaps/osify-keyboard.png">
-      <action name="Execute"><command>/usr/bin/osify-keyboard gui</command></action>
-    </item>
-    <item label="Touchpad e Mouse" icon="/usr/share/pixmaps/osify-touchpad.png">
-      <action name="Execute"><command>/usr/bin/osify-touchpad gui</command></action>
-    </item>
-    <item label="Data, Ora e Fuso Orario" icon="/usr/share/pixmaps/osify-time.png">
-      <action name="Execute"><command>/usr/bin/osify-time-sync gui</command></action>
-    </item>
-    <item label="Salute e Diagnostica Dischi" icon="/usr/share/pixmaps/osify-files.png">
-      <action name="Execute"><command>/usr/bin/osify-disk-health</command></action>
-    </item>
-    <item label="Scheda Tecnica Hardware" icon="/usr/share/pixmaps/osify-settings.png">
-      <action name="Execute"><command>/usr/bin/osify-sysinfo gui</command></action>
-    </item>
-    <item label="Coperchio e Sospensione" icon="/usr/share/pixmaps/osify-power.png">
-      <action name="Execute"><command>/usr/bin/osify-lid gui</command></action>
-    </item>
-    <item label="Installatore Pacchetti (.deb/.tazpkg)" icon="/usr/share/pixmaps/osify-install.png">
-      <action name="Execute"><command>/usr/bin/osify-package-installer</command></action>
-    </item>
-    <item label="Ripristino Aspetto di Fabbrica" icon="/usr/share/pixmaps/osify-appearance.png">
-      <action name="Execute"><command>/usr/bin/osify-factory-reset gui</command></action>
-    </item>
-    <item label="Centro di Controllo" icon="/usr/share/pixmaps/osify-settings.png">
-      <action name="Execute"><command>/usr/bin/osify-settings</command></action>
-    </item>
+    <menu id="multimedia-menu" label="Multimedia &amp; Strumenti">
+      <item label="Lettore Multimediale" icon="/usr/share/pixmaps/osify-audio.png">
+        <action name="Execute"><command>/usr/bin/osify-media-player</command></action>
+      </item>
+      <item label="Cattura Schermo" icon="/usr/share/pixmaps/osify-appearance.png">
+        <action name="Execute"><command>/usr/bin/osify-screenshot --gui</command></action>
+      </item>
+      <item label="Fotocamera e Webcam" icon="/usr/share/pixmaps/osify-camera.png">
+        <action name="Execute"><command>/usr/bin/osify-camera gui</command></action>
+      </item>
+      <item label="Registratore Vocale" icon="/usr/share/pixmaps/osify-voice.png">
+        <action name="Execute"><command>/usr/bin/osify-voice gui</command></action>
+      </item>
+      <item label="Blocco Note ed Editor" icon="/usr/share/pixmaps/osify-notepad.png">
+        <action name="Execute"><command>/usr/bin/osify-notepad</command></action>
+      </item>
+      <item label="Calcolatrice" icon="/usr/share/pixmaps/osify-calculator.png">
+        <action name="Execute"><command>/usr/bin/osify-calculator</command></action>
+      </item>
+      <item label="Gestore Archivi" icon="/usr/share/pixmaps/osify-archive.png">
+        <action name="Execute"><command>/usr/bin/osify-archive-manager</command></action>
+      </item>
+      <item label="Tastiera a Schermo" icon="/usr/share/pixmaps/osify-keyboard.png">
+        <action name="Execute"><command>/usr/bin/osify-onboard</command></action>
+      </item>
+    </menu>
+    <menu id="settings-menu" label="Impostazioni &amp; Hardware">
+      <item label="Centro di Controllo" icon="/usr/share/pixmaps/osify-settings.png">
+        <action name="Execute"><command>/usr/bin/osify-settings</command></action>
+      </item>
+      <item label="Personalizzazione &amp; Schermo" icon="/usr/share/pixmaps/osify-appearance.png">
+        <action name="Execute"><command>/usr/bin/osify-appearance</command></action>
+      </item>
+      <item label="Audio e Volume" icon="/usr/share/pixmaps/osify-audio.png">
+        <action name="Execute"><command>/usr/bin/osify-audio gui</command></action>
+      </item>
+      <item label="Hotspot Wi-Fi" icon="/usr/share/pixmaps/osify-hotspot.png">
+        <action name="Execute"><command>/usr/bin/osify-hotspot gui</command></action>
+      </item>
+      <item label="Bluetooth" icon="/usr/share/pixmaps/osify-bluetooth.png">
+        <action name="Execute"><command>/usr/bin/osify-bluetooth gui</command></action>
+      </item>
+      <item label="Touchpad e Mouse" icon="/usr/share/pixmaps/osify-touchpad.png">
+        <action name="Execute"><command>/usr/bin/osify-touchpad gui</command></action>
+      </item>
+      <item label="Scheda Tecnica Hardware" icon="/usr/share/pixmaps/osify-settings.png">
+        <action name="Execute"><command>/usr/bin/osify-sysinfo gui</command></action>
+      </item>
+      <item label="Gestione Attivita" icon="/usr/share/pixmaps/osify-taskmanager.png">
+        <action name="Execute"><command>/usr/bin/osify-taskmanager</command></action>
+      </item>
+    </menu>
     <separator/>
-    <separator label="Sistema e Sicurezza"/>
-    <item label="Backup e Ripristino Dati" icon="/usr/share/pixmaps/osify-backup.png">
-      <action name="Execute"><command>/usr/bin/osify-backup gui</command></action>
-    </item>
-    <item label="Scrittore USB Avviabile" icon="/usr/share/pixmaps/osify-usb.png">
-      <action name="Execute"><command>/usr/bin/osify-usb-writer gui</command></action>
-    </item>
-    <item label="Firewall e Sicurezza Rete" icon="/usr/share/pixmaps/osify-firewall.png">
-      <action name="Execute"><command>/usr/bin/osify-firewall gui</command></action>
-    </item>
-    <item label="Punti di Ripristino (Snapshot)" icon="/usr/share/pixmaps/osify-snapshot.png">
-      <action name="Execute"><command>/usr/bin/terminal -geometry 75x20 -T 'Punti di Ripristino' -e /usr/bin/osify-snapshot</command></action>
-    </item>
-    <item label="Installa OSify su Disco" icon="/usr/share/pixmaps/osify-install.png">
+    <item label="💿 Installa OSify su Disco" icon="/usr/share/pixmaps/osify-install.png">
       <action name="Execute"><command>/usr/bin/osify-install</command></action>
     </item>
-    <item label="Profilo Utente" icon="/usr/share/pixmaps/osify-profile.png">
+    <item label="👤 Profilo Utente" icon="/usr/share/pixmaps/osify-profile.png">
       <action name="Execute"><command>/usr/bin/osify-profile-setup --force</command></action>
     </item>
-    <item label="Aggiornamento Sistema" icon="/usr/share/pixmaps/osify-update.png">
-      <action name="Execute"><command>/usr/bin/terminal -T 'Aggiornamento Sistema' -e /usr/bin/osify-update</command></action>
-    </item>
     <separator/>
-    <item label="Alimentazione e Spegnimento" icon="/usr/share/pixmaps/osify-power.png">
-      <action name="Execute"><command>/usr/bin/osify-power gui</command></action>
+    <item label="⚡ Spegni Computer" icon="/usr/share/pixmaps/osify-power.png">
+      <action name="Execute"><command>/usr/bin/osify-power off</command></action>
     </item>
-    <item label="Spegni Computer" icon="/usr/share/pixmaps/osify-power.png">
-      <action name="Execute"><command>/usr/bin/osify-power poweroff</command></action>
-    </item>
-    <item label="Riavvia Computer" icon="/usr/share/pixmaps/osify-power.png">
+    <item label="🔄 Riavvia Computer" icon="/usr/share/pixmaps/osify-power.png">
       <action name="Execute"><command>/usr/bin/osify-power reboot</command></action>
-    </item>
-    <item label="Chiudi Sessione Desktop" icon="/usr/share/pixmaps/osify-power.png">
-      <action name="Execute"><command>/usr/bin/osify-power logout</command></action>
     </item>
   </menu>
 </openbox_menu>
@@ -622,7 +550,7 @@ Plugin {
         item {
             name=OSify Hub
             image=/usr/share/pixmaps/osify-hub.png
-            action=/usr/bin/terminal -geometry 74x20 -T 'OSify Hub' -e /usr/bin/osify-hub
+            action=/usr/bin/osify-hub
         }
         item {
             name=Navigatore Web
@@ -632,17 +560,17 @@ Plugin {
         item {
             name=Connessione Wi-Fi
             image=/usr/share/pixmaps/osify-wifi.png
-            action=/usr/bin/terminal -geometry 75x20 -T 'Connessione Wi-Fi' -e /usr/bin/osify-wifi
+            action=/usr/bin/osify-wifi
         }
         item {
             name=Gaming Hub
             image=/usr/share/pixmaps/osify-games.png
-            action=/usr/bin/terminal -geometry 75x20 -T 'Gaming Hub' -e /usr/bin/osify-games
+            action=/usr/bin/osify-games
         }
         item {
             name=Strumenti di Sviluppo
             image=/usr/share/pixmaps/osify-developer.png
-            action=/usr/bin/terminal -geometry 75x20 -T 'Strumenti di Sviluppo' -e /usr/bin/osify-developer
+            action=/usr/bin/osify-developer
         }
         item {
             name=Personalizzazione Schermo
@@ -943,6 +871,33 @@ Plugin {
         with open(full_as, "w") as f:
             f.write(OPENBOX_AUTOSTART)
         os.chmod(full_as, 0o755)
+
+    # 7. Disattivazione categorica di check_tazpkgupg.sh e servizi bloccanti di rete
+    stub_script = "#!/bin/sh\nexit 0\n"
+    for blk_serv in [
+        "etc/init.d/check_tazpkgupg.sh",
+        "etc/init.d/tazpanel",
+        "etc/init.d/httpd",
+        "usr/bin/check_tazpkgupg.sh"
+    ]:
+        bpath = os.path.join(r3_work, blk_serv)
+        os.makedirs(os.path.dirname(bpath), exist_ok=True)
+        with open(bpath, "w") as f:
+            f.write(stub_script)
+        os.chmod(bpath, 0o755)
+
+    # 8. Copia kernel bzImage direttamente nella rootfs per installazione su disco
+    iso_k = os.path.join(iso_root, "boot/bzImage")
+    if os.path.exists(iso_k):
+        r3_kdir = os.path.join(r3_work, "boot")
+        os.makedirs(r3_kdir, exist_ok=True)
+        shutil.copy2(iso_k, os.path.join(r3_kdir, "bzImage"))
+        vmlink = os.path.join(r3_kdir, "vmlinuz")
+        if not os.path.exists(vmlink):
+            try:
+                os.symlink("bzImage", vmlink)
+            except Exception:
+                pass
 
     os.remove(r3_gz)
     run(f"(cd '{r3_work}' && find . -print0 | cpio --null -ov -H newc) | python3 -c \"import lzma, sys; sys.stdout.buffer.write(lzma.compress(sys.stdin.buffer.read(), format=lzma.FORMAT_ALONE))\" > '{r3_gz}'")
@@ -2142,16 +2097,26 @@ WINDOW_MANAGER="openbox"
             f.write(content)
         os.chmod(dest_f, 0o755)
 
+    # Scrittura sul Desktop: SOLO le icone essenziali per un desktop pulito, moderno e ordinato 2050
+    desktop_essentials = [
+        "osify-install.desktop",
+        "osify-hub.desktop",
+        "osify-browser.desktop",
+        "osify-wifi.desktop",
+        "osify-games.desktop",
+        "osify-drawer.desktop"
+    ]
     for dpath in ["root/Desktop", "home/osify/Desktop", "home/tux/Desktop", "home/slitaz/Desktop", "etc/skel/Desktop"]:
         full_d = os.path.join(r4_work, dpath)
         if os.path.exists(full_d):
             shutil.rmtree(full_d, ignore_errors=True)
         os.makedirs(full_d, exist_ok=True)
-        for name, content in app_entries.items():
-            dest_f = os.path.join(full_d, name)
-            with open(dest_f, "w") as f:
-                f.write(content)
-            os.chmod(dest_f, 0o755)
+        for name in desktop_essentials:
+            if name in app_entries:
+                dest_f = os.path.join(full_d, name)
+                with open(dest_f, "w") as f:
+                    f.write(app_entries[name])
+                os.chmod(dest_f, 0o755)
 
     # Scrittura LXPanel Cyber-Bar anche in rootfs4 per integrità garantita
     for p_path in [
@@ -2256,6 +2221,32 @@ WINDOW_MANAGER="openbox"
     shutil.copy2(os.path.join(REPO_ROOT, "desktop/applications/osify-uem-runner.desktop"), os.path.join(r4_work, "usr/share/applications/osify-uem-runner.desktop"))
     shutil.copy2(os.path.join(REPO_ROOT, "desktop/applications/osify-bluetooth.desktop"), os.path.join(r4_work, "usr/share/applications/osify-bluetooth.desktop"))
 
+    # Disattivazione categorica di check_tazpkgupg.sh e servizi sincroni bloccanti in rootfs4
+    for blk_serv in [
+        "etc/init.d/check_tazpkgupg.sh",
+        "etc/init.d/tazpanel",
+        "etc/init.d/httpd",
+        "usr/bin/check_tazpkgupg.sh"
+    ]:
+        bpath = os.path.join(r4_work, blk_serv)
+        os.makedirs(os.path.dirname(bpath), exist_ok=True)
+        with open(bpath, "w") as f:
+            f.write("#!/bin/sh\nexit 0\n")
+        os.chmod(bpath, 0o755)
+
+    # Copia kernel bzImage in rootfs4 per garanzia assoluta durante installazione disco
+    iso_k = os.path.join(iso_root, "boot/bzImage")
+    if os.path.exists(iso_k):
+        r4_kdir = os.path.join(r4_work, "boot")
+        os.makedirs(r4_kdir, exist_ok=True)
+        shutil.copy2(iso_k, os.path.join(r4_kdir, "bzImage"))
+        vmlink = os.path.join(r4_kdir, "vmlinuz")
+        if not os.path.exists(vmlink):
+            try:
+                os.symlink("bzImage", vmlink)
+            except Exception:
+                pass
+
     os.remove(r4_gz)
     run(f"(cd '{r4_work}' && find . -print0 | cpio --null -ov -H newc) | python3 -c \"import lzma, sys; sys.stdout.buffer.write(lzma.compress(sys.stdin.buffer.read(), format=lzma.FORMAT_ALONE))\" > '{r4_gz}'")
 
@@ -2338,27 +2329,112 @@ def build_modern_x86_64():
     inject_windows_installer(iso_root)
     inject_osify_tree(iso_root)
 
+    # Generazione pacchetto apkovl per autologin immediato e sessione OSify 2050
+    print("[i] Generazione profilo di avvio autonomo OSify 2050 (apkovl)...")
+    apkovl_dir = os.path.join(work_dir, "apkovl")
+    os.makedirs(os.path.join(apkovl_dir, "etc/inittab.d"), exist_ok=True)
+    os.makedirs(os.path.join(apkovl_dir, "usr/local/bin"), exist_ok=True)
+    os.makedirs(os.path.join(apkovl_dir, "home/osify"), exist_ok=True)
+
+    with open(os.path.join(apkovl_dir, "etc/inittab"), "w") as f:
+        f.write("""# OSify 2.0 Inittab — Autologin Immediato
+::sysinit:/sbin/openrc sysinit
+::wait:/sbin/openrc default
+::ctrlaltdel:/sbin/reboot
+::shutdown:/sbin/openrc shutdown
+tty1::respawn:/bin/sh -l -c "/usr/local/bin/osify-session"
+tty2::respawn:/sbin/getty 38400 tty2
+""")
+
+    with open(os.path.join(apkovl_dir, "etc/passwd"), "w") as f:
+        f.write("""root:x:0:0:root:/root:/bin/sh
+osify:x:1000:1000:OSify Live User:/home/osify:/bin/sh
+""")
+
+    with open(os.path.join(apkovl_dir, "etc/shadow"), "w") as f:
+        f.write("""root::14000:0:99999:7:::
+osify::14000:0:99999:7:::
+""")
+
+    with open(os.path.join(apkovl_dir, "etc/sudoers"), "w") as f:
+        f.write("""root ALL=(ALL) ALL
+osify ALL=(ALL) NOPASSWD: ALL
+""")
+
+    with open(os.path.join(apkovl_dir, "etc/hostname"), "w") as f:
+        f.write("osify-station\n")
+
+    # Session Launcher OSify 2050 per 64-bit
+    with open(os.path.join(apkovl_dir, "usr/local/bin/osify-session"), "w") as f:
+        f.write("""#!/bin/sh
+clear
+printf "\\033[1;36m"
+cat << 'EOF'
+  ██████╗ ███████╗██╗███████╗██╗   ██╗
+ ██╔═══██╗██╔════╝██║██╔════╝╚██╗ ██╔╝
+ ██║   ██║███████╗██║█████╗   ╚████╔╝ 
+ ██║   ██║╚════██║██║██╔══╝    ╚██╔╝  
+ ╚██████╔╝███████║██║██║        ██║   
+  ╚═════╝ ╚══════╝╚═╝╚═╝        ╚═╝   
+EOF
+printf "\\033[0m\\n"
+printf "\\033[1;32m   ⚡ OSIFY 2.0 LTS — MASTER STATION 2050 (x86_64-v3)\\033[0m\\n"
+printf "\\033[1;34m   Ingegnerizzato da Andrea Taliento (ANDRYXify)\\033[0m\\n\\n"
+echo "• CPU Architecture : $(uname -m)"
+echo "• Kernel Attivo    : $(uname -srm)"
+echo "• RAM Disponibile  : $(awk '/MemTotal/ {print int($2/1024)" MB"}' /proc/meminfo 2>/dev/null || echo 'N/A')"
+echo ""
+echo "Comandi Rapidi di Sistema:"
+echo "  • osify-hub        : Centro di Controllo e Plancia Operativa"
+echo "  • osify-wifi       : Connessione Wi-Fi Guidata"
+echo "  • osify-install    : Installa OSify su Disco Fisso Bare-Metal"
+echo "  • osify-games      : Esecutore Giochi Windows e UEM Hub"
+echo "  • osify-ctl        : Suite Amministrativa e Diagnostica"
+echo ""
+
+# Link rapidi
+mkdir -p /usr/bin
+ln -sf /opt/osify/network/osify-wifi-gui.sh /usr/bin/osify-wifi 2>/dev/null || true
+ln -sf /opt/osify/system/installer/osify-disk-installer.sh /usr/bin/osify-install 2>/dev/null || true
+ln -sf /opt/osify/tools/osify-gui/osify-hub.sh /usr/bin/osify-hub 2>/dev/null || true
+ln -sf /opt/osify/tools/osify-gui/osify-games.sh /usr/bin/osify-games 2>/dev/null || true
+ln -sf /opt/osify/tools/osify-ctl /usr/bin/osify-ctl 2>/dev/null || true
+ln -sf /opt/osify/tools/osify-ctl /usr/bin/osify 2>/dev/null || true
+
+# Avvia Hub o Shell Interattiva
+if [ -x /usr/bin/osify-hub ]; then
+    /usr/bin/osify-hub
+else
+    exec /bin/sh -l
+fi
+""")
+    os.chmod(os.path.join(apkovl_dir, "usr/local/bin/osify-session"), 0o755)
+
+    # Compressione tar.gz per Alpine apkovl
+    apkovl_tar = os.path.join(iso_root, "localhost.apkovl.tar.gz")
+    run(f"tar -czf '{apkovl_tar}' -C '{apkovl_dir}' .")
+
     # Configurazione GRUB UEFI ufficiale
     grub_cfg = """set timeout=5
 set default=0
 
-menuentry "OSify Live System (x86-64-v3 Gaming & Streaming)" {
-    linux /boot/vmlinuz-lts quiet splash rw
+menuentry "OSify Live System (x86-64-v3 Master Station 2050)" {
+    linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage quiet splash rw autologin
     initrd /boot/initramfs-lts
 }
 
 menuentry "Installa OSify su Disco Fisso" {
-    linux /boot/vmlinuz-lts osify.install=1 quiet splash rw
+    linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage osify.install=1 quiet splash rw autologin
     initrd /boot/initramfs-lts
 }
 
 menuentry "OSify Safe Mode (Nomodeset)" {
-    linux /boot/vmlinuz-lts nomodeset rw
+    linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage nomodeset rw autologin
     initrd /boot/initramfs-lts
 }
 
 menuentry "OSify RAM Rescue Mode" {
-    linux /boot/vmlinuz-lts copytoram rw
+    linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage copytoram rw autologin
     initrd /boot/initramfs-lts
 }
 """
@@ -2372,28 +2448,28 @@ menuentry "OSify RAM Rescue Mode" {
 DEFAULT osify
 
 LABEL osify
-    MENU LABEL OSify Live System (x86-64-v3 Gaming & Streaming)
+    MENU LABEL OSify Live System (x86-64-v3 Master Station 2050)
     LINUX /boot/vmlinuz-lts
     INITRD /boot/initramfs-lts
-    APPEND quiet splash rw
+    APPEND modules=loop,squashfs,sd-mod,usb-storage quiet splash rw autologin
 
 LABEL install
     MENU LABEL Installa OSify su Disco Fisso
     LINUX /boot/vmlinuz-lts
     INITRD /boot/initramfs-lts
-    APPEND osify.install=1 quiet splash rw
+    APPEND modules=loop,squashfs,sd-mod,usb-storage osify.install=1 quiet splash rw autologin
 
 LABEL safe
     MENU LABEL OSify Safe Mode (Nomodeset)
     LINUX /boot/vmlinuz-lts
     INITRD /boot/initramfs-lts
-    APPEND nomodeset rw
+    APPEND modules=loop,squashfs,sd-mod,usb-storage nomodeset rw autologin
 
 LABEL rescue
     MENU LABEL OSify RAM Rescue Mode
     LINUX /boot/vmlinuz-lts
     INITRD /boot/initramfs-lts
-    APPEND copytoram rw
+    APPEND modules=loop,squashfs,sd-mod,usb-storage copytoram rw autologin
 """
     syslinux_path = os.path.join(iso_root, "boot/syslinux/syslinux.cfg")
     os.makedirs(os.path.dirname(syslinux_path), exist_ok=True)

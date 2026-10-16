@@ -1,52 +1,88 @@
 #!/bin/sh
 # ==============================================================================
-# OSify App Drawer — Tutte le Applicazioni e Launchpad di Sistema
+# OSify App Drawer 2050 — Launchpad e Centro Applicazioni Universale
 # ==============================================================================
-# Ingegnerizzato per OSify Operating System
+# Ingegnerizzato da Andrea Taliento (ANDRYXify)
+# 100% GUI: interfaccia grafica nativa senza terminale né finestre xterm.
 # ==============================================================================
 
-if [ -n "$DISPLAY" ] && [ ! -t 0 ]; then
-    if command -v xterm >/dev/null 2>&1; then
-        exec xterm -title "Tutte le Applicazioni — OSify" -geometry 80x25 -bg "#0b0d14" -fg "#38bdf8" -cr "#10b981" +sb -e "$0" --run-tui
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" 2>/dev/null && pwd)"
+
+# 1. Priorità: Drawer Grafico Python Nativo (Search live, griglia e categorie)
+if [ -n "$DISPLAY" ] && command -v python3 >/dev/null 2>&1; then
+    PY_DRAWER="$SCRIPT_DIR/osify-app-drawer.py"
+    [ ! -f "$PY_DRAWER" ] && PY_DRAWER="/opt/osify/tools/osify-gui/osify-app-drawer.py"
+    [ ! -f "$PY_DRAWER" ] && PY_DRAWER="/usr/bin/osify-app-drawer.py"
+    if [ -f "$PY_DRAWER" ]; then
+        exec python3 "$PY_DRAWER" "$@"
     fi
 fi
 
-if command -v dialog >/dev/null 2>&1; then
-    while true; do
-        APP=$(dialog --backtitle "OSify Operating System" \
-            --title " Tutte le Applicazioni " \
-            --menu "\nSeleziona l'applicazione da avviare:\n" 19 65 11 \
-            "1" "Navigatore Web (Dillo / Falkon)" \
-            "2" "Gestione File (PCManFM)" \
-            "3" "Terminale di Sistema" \
-            "4" "Connessione Wi-Fi" \
-            "5" "Gestione Attivita e Processi (Task Manager)" \
-            "6" "Centro di Controllo e Risoluzioni" \
-            "7" "Installa OSify su Disco Fisso" \
-            "8" "Profilo Utente e Multiutenza" \
-            "9" "Gaming Hub ed Emulazione" \
-            "10" "Acquisizione Video HDMI e Console" \
-            "11" "Mirroring Smartphone USB" \
-            3>&1 1>&2 2>&3)
-        [ $? -ne 0 ] && break
+# 2. Alternativa Grafica YAD (Cyber-Grid 2050)
+if [ -n "$DISPLAY" ] && command -v yad >/dev/null 2>&1; then
+    APP_CHOSEN=$(yad --title="OSify Launchpad 2050" \
+        --window-icon="/usr/share/pixmaps/osify-drawer.png" \
+        --width=680 --height=460 --center \
+        --list \
+        --text="<b><big>OSify Universal Launchpad</big></b>\nSeleziona l'applicazione da avviare sul tuo computer:" \
+        --column="Icona:IMG" --column="Applicazione" --column="Categoria" --column="Descrizione" \
+        "/usr/share/pixmaps/osify-hub.png" "OSify Hub & Dashboard" "Sistema" "Centro di controllo e prestazioni a 360°" \
+        "/usr/share/pixmaps/osify-browser.png" "Navigatore Web" "Internet" "Navigazione web ultra-leggera e veloce" \
+        "/usr/share/pixmaps/osify-wifi.png" "Connessione Wi-Fi" "Rete" "Scansione e gestione reti wireless" \
+        "/usr/share/pixmaps/osify-games.png" "Gaming & Retrogaming Hub" "Giochi" "Esecutore giochi Windows, DOS e ROM" \
+        "/usr/share/pixmaps/osify-files.png" "Gestione File" "Sistema" "Esplora dischi, partizioni e cartelle utente" \
+        "/usr/share/pixmaps/osify-terminal.png" "Terminale di Sistema" "Sviluppo" "Shell di comando interattiva" \
+        "/usr/share/pixmaps/osify-developer.png" "Sviluppo & Codice" "Sviluppo" "Ambiente Python, C, Git e UEM" \
+        "/usr/share/pixmaps/osify-appearance.png" "Cattura Schermo" "Grafica" "Screenshot immediato o con ritardo" \
+        "/usr/share/pixmaps/osify-audio.png" "Lettore Multimediale" "Media" "Musica e video a bassa latenza" \
+        "/usr/share/pixmaps/osify-notepad.png" "Blocco Note & Editor" "Ufficio" "Editor di testo essenziale" \
+        "/usr/share/pixmaps/osify-calculator.png" "Calcolatrice" "Utilita" "Calcoli aritmetici e scientifici" \
+        "/usr/share/pixmaps/osify-settings.png" "Personalizzazione & Aspetto" "Impostazioni" "Sfondo, risoluzioni display e tema" \
+        "/usr/share/pixmaps/osify-install.png" "Installa OSify su Disco" "Sistema" "Installatore autonomo su memoria fissa" \
+        "/usr/share/pixmaps/osify-settings.png" "Profilo Utente" "Sistema" "Configurazione identita e password" \
+        --button="Chiudi!gtk-cancel:1" \
+        --button="Avvia!gtk-ok:0") || exit 0
 
-        case "$APP" in
-            1) /usr/bin/osify-browser & break ;;
-            2) pcmanfm & break ;;
-            3) /usr/bin/terminal & break ;;
-            4) /usr/bin/terminal -geometry 75x20 -T "Connessione Wi-Fi" -e /usr/bin/osify-wifi & break ;;
-            5) /usr/bin/osify-taskmanager & break ;;
-            6) /usr/bin/osify-settings & break ;;
-            7) /usr/bin/osify-install & break ;;
-            8) /usr/bin/osify-profile-setup --force & break ;;
-            9) /usr/bin/terminal -geometry 75x20 -T "Gaming Hub" -e /usr/bin/osify-games & break ;;
-            10) /usr/bin/osify-capture & break ;;
-            11) /usr/bin/osify-phone-companion & break ;;
-        esac
-    done
+    APP_NAME=$(echo "$APP_CHOSEN" | cut -d'|' -f2)
+    case "$APP_NAME" in
+        *"Hub"*) /usr/bin/osify-hub & ;;
+        *"Web"*) /usr/bin/osify-browser & ;;
+        *"Wi-Fi"*) /usr/bin/osify-wifi & ;;
+        *"Gaming"*) /usr/bin/osify-games & ;;
+        *"File"*) pcmanfm & ;;
+        *"Terminale"*) /usr/bin/terminal & ;;
+        *"Sviluppo"*) /usr/bin/osify-developer & ;;
+        *"Cattura"*) /usr/bin/osify-screenshot --gui & ;;
+        *"Multimediale"*) /usr/bin/osify-media-player & ;;
+        *"Blocco Note"*) /usr/bin/osify-notepad & ;;
+        *"Calcolatrice"*) /usr/bin/osify-calculator & ;;
+        *"Personalizzazione"*) /usr/bin/osify-appearance & ;;
+        *"Installa"*) /usr/bin/osify-install & ;;
+        *"Profilo"*) /usr/bin/osify-profile-setup --force & ;;
+    esac
     exit 0
 fi
 
-if [ -x /usr/bin/osify ]; then
-    exec /usr/bin/osify app
+# 3. Alternativa Grafica Zenity
+if [ -n "$DISPLAY" ] && command -v zenity >/dev/null 2>&1; then
+    APP_NAME=$(zenity --list --title="Tutte le Applicazioni" \
+        --column="Applicazione" \
+        "OSify Hub" "Navigatore Web" "Connessione Wi-Fi" "Gaming Hub" \
+        "Gestione File" "Terminale" "Sviluppo" "Installa su Disco" \
+        --width=400 --height=350) || exit 0
+    case "$APP_NAME" in
+        *"Hub"*) /usr/bin/osify-hub & ;;
+        *"Web"*) /usr/bin/osify-browser & ;;
+        *"Wi-Fi"*) /usr/bin/osify-wifi & ;;
+        *"Gaming"*) /usr/bin/osify-games & ;;
+        *"File"*) pcmanfm & ;;
+        *"Terminale"*) /usr/bin/terminal & ;;
+        *"Sviluppo"*) /usr/bin/osify-developer & ;;
+        *"Installa"*) /usr/bin/osify-install & ;;
+    esac
+    exit 0
 fi
+
+exit 0

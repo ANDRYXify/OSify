@@ -314,10 +314,55 @@ copy_live_system_tree() {
     done
 
     # 2. Kernel e boot files
+    mkdir -p "$MOUNT_POINT/boot"
     if [ -d "/boot" ]; then
         log "  -> Copia /boot in corso..."
-        mkdir -p "$MOUNT_POINT/boot"
         cp -a "/boot/." "$MOUNT_POINT/boot/" 2>/dev/null || true
+    fi
+
+    # Controllo che il kernel esista sul disco di destinazione
+    if [ ! -f "$MOUNT_POINT/boot/bzImage" ] && [ ! -f "$MOUNT_POINT/boot/vmlinuz" ] && [ ! -f "$MOUNT_POINT/boot/vmlinuz-lts" ]; then
+        log "  -> Ricerca kernel live nei supporti di boot..."
+        found_kernel=""
+        for k_cand in /media/*/boot/bzImage /mnt/*/boot/bzImage /run/archiso/*/boot/* /cdrom/boot/* /media/cdrom/boot/*; do
+            if [ -f "$k_cand" ]; then
+                case "$k_cand" in
+                    *bzImage*|*vmlinuz*) found_kernel="$k_cand"; break ;;
+                esac
+            fi
+        done
+        
+        # Tentativo di montare drive ottici o live USB se non ancora montati
+        if [ -z "$found_kernel" ]; then
+            for dev in /dev/sr* /dev/cdrom /dev/live; do
+                [ -b "$dev" ] || continue
+                tmp_cd="/tmp/osify_cd_mnt"
+                mkdir -p "$tmp_cd"
+                if mount -o ro "$dev" "$tmp_cd" 2>/dev/null; then
+                    for f in "$tmp_cd/boot/bzImage" "$tmp_cd/boot/vmlinuz"* "$tmp_cd/boot/vmlinuz-lts"; do
+                        if [ -f "$f" ]; then
+                            found_kernel="$f"
+                            break
+                        fi
+                    done
+                fi
+                [ -n "$found_kernel" ] && break
+            done
+        fi
+
+        if [ -n "$found_kernel" ]; then
+            log "  -> Trovato kernel: $found_kernel. Copia in $MOUNT_POINT/boot/..."
+            cp -a "$found_kernel" "$MOUNT_POINT/boot/bzImage" 2>/dev/null || true
+            cp -a "$found_kernel" "$MOUNT_POINT/boot/vmlinuz" 2>/dev/null || true
+            umount /tmp/osify_cd_mnt 2>/dev/null || true
+        fi
+    fi
+
+    # Garantisci la presenza sia di bzImage sia di vmlinuz (symlink incrociato)
+    if [ -f "$MOUNT_POINT/boot/bzImage" ] && [ ! -f "$MOUNT_POINT/boot/vmlinuz" ]; then
+        ln -sf "bzImage" "$MOUNT_POINT/boot/vmlinuz" 2>/dev/null || true
+    elif [ -f "$MOUNT_POINT/boot/vmlinuz" ] && [ ! -f "$MOUNT_POINT/boot/bzImage" ]; then
+        ln -sf "vmlinuz" "$MOUNT_POINT/boot/bzImage" 2>/dev/null || true
     fi
 
     # 3. Creazione filesystem virtuali di runtime
@@ -524,10 +569,12 @@ configure_bootloader() {
 set default=0
 set timeout=3
 
-menuentry "OSify Desktop System" {
+menuentry "OSify Desktop System 2050" {
     search --no-floppy --label --set=root OSIFY_ROOT
     linux /boot/vmlinuz root=LABEL=OSIFY_ROOT rw quiet splash
-    initrd /boot/initramfs
+    if [ -f /boot/initramfs ]; then
+        initrd /boot/initramfs
+    fi
 }
 EOF
         if command -v grub-install >/dev/null 2>&1; then
@@ -542,16 +589,50 @@ PROMPT 0
 TIMEOUT 20
 
 LABEL osify
-    MENU LABEL OSify Vintage Edition
+    MENU LABEL OSify Desktop System 2050
     LINUX /boot/bzImage
-    INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
     APPEND root=LABEL=OSIFY_ROOT rw quiet lang=it_IT kmap=it
 EOF
+        # Copia moduli syslinux se presenti nel sistema
+        for mod_dir in /usr/lib/syslinux/bios /usr/lib/syslinux/modules/bios /usr/share/syslinux /usr/lib/syslinux; do
+            if [ -d "$mod_dir" ]; then
+                cp -a "$mod_dir/"*.c32 "$MOUNT_POINT/boot/syslinux/" 2>/dev/null || true
+            fi
+        done
+
+        # Installazione Extlinux nel filesystem di destinazione
         if command -v extlinux >/dev/null 2>&1; then
+            log "Installazione extlinux su $MOUNT_POINT/boot/syslinux..."
             extlinux --install "$MOUNT_POINT/boot/syslinux" 2>/dev/null || true
         fi
-        if command -v dd >/dev/null 2>&1 && [ -f /usr/lib/syslinux/mbr.bin ]; then
-            dd bs=440 count=1 conv=notrunc if=/usr/lib/syslinux/mbr.bin of="$d" 2>/dev/null || true
+
+        # Ricerca deterministica e scrittura MBR per boot da BIOS
+        mbr_bin=""
+        for cand in /usr/lib/syslinux/mbr.bin \
+                    /usr/lib/syslinux/bios/mbr.bin \
+                    /usr/share/syslinux/mbr.bin \
+                    /usr/lib/EXTLINUX/mbr.bin \
+                    /boot/syslinux/mbr.bin; do
+            if [ -f "$cand" ]; then
+                mbr_bin="$cand"
+                break
+            fi
+        done
+
+        if [ -n "$mbr_bin" ] && command -v dd >/dev/null 2>&1; then
+            log "Scrittura Master Boot Record (MBR) da $mbr_bin su $d..."
+            dd bs=440 count=1 conv=notrunc if="$mbr_bin" of="$d" 2>/dev/null || true
+        fi
+
+        # Assicura flag bootable sulla partizione MBR
+        if command -v parted >/dev/null 2>&1; then
+            parted -s "$d" set 1 boot on 2>/dev/null || true
+        fi
+
+        # Fallback universale con GRUB se disponibile
+        if command -v grub-install >/dev/null 2>&1; then
+            log "Installazione GRUB BIOS MBR (fallback aggiuntivo)..."
+            grub-install --target=i386-pc --boot-directory="$MOUNT_POINT/boot" "$d" 2>/dev/null || true
         fi
     fi
 }

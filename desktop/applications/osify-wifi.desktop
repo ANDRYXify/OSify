@@ -2,7 +2,7 @@
 Type=Application
 Name=Connessione Wi-Fi
 Comment=Scansione reti wireless, inserimento password e connessione immediata
-Exec=/usr/bin/terminal -geometry 75x20 -T 'OSify Wi-Fi' -e /usr/bin/osify-wifi
+Exec=/usr/bin/osify-wifi
 Icon=/usr/share/pixmaps/osify-wifi.png
 Terminal=false
 Categories=Network;Settings;
