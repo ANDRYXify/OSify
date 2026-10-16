@@ -1,0 +1,30 @@
+#!/bin/sh
+# ==============================================================================
+# OSify — Driver di Sistema: Periferiche.ify
+# ==============================================================================
+# Ingegnerizzato per il Compagno Andrea Taliento (ANDRYXify)
+# Gestore universale di periferiche esterne:
+# - Stampanti locali e di rete (CUPS / PDF)
+# - Scanner e fotocamere USB / Webcam integrate
+# - Bluetooth e adattatori radio 2.4/5GHz
+# - Unità di memorizzazione USB, SSD esterni e schede SD/MMC
+# ==============================================================================
+
+ACTION="${1:-probe}"
+
+probe_peripherals() {
+    USB_DEV="$(lsusb 2>/dev/null | awk '{$1=$2=$3=$4=$5=$6=""; print substr($0,7)}' | tr '\n' '; ')"
+    [ -z "$USB_DEV" ] && USB_DEV="Controller Host USB e Hub di Sistema"
+    echo "$USB_DEV"
+}
+
+case "$ACTION" in
+    "probe"|"info")
+        probe_peripherals
+        ;;
+    *)
+        probe_peripherals
+        ;;
+esac
+
+exit 0

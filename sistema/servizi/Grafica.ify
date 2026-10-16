@@ -1,0 +1,72 @@
+#!/bin/sh
+# ==============================================================================
+# OSify — Servizio di Sistema: Grafica.ify
+# ==============================================================================
+# Ingegnerizzato per il Compagno Andrea Taliento (ANDRYXify)
+# Gestore autonomo del comparto grafico, risoluzioni, frequenza e Virtual Scaler:
+# - Standard: Rendering a 120 fps, compositing a latenza zero, trasparenze Dark Glass
+# - Vintage: Pipeline ottimizzata GMA 950, risoluzione 1024x600 e virtual scaler 1280x768
+# ==============================================================================
+
+ACTION="${1:-}"
+
+# Tasti rapidi e comandi CLI
+if [ "$ACTION" = "scala" ] || [ "$ACTION" = "toggle-scale" ]; then
+    if [ -x /usr/bin/osify-hud ]; then
+        exec /usr/bin/osify-hud --toggle-scale
+    fi
+    exit 0
+fi
+
+ICON_GRAFICA="/Sistema/Icone/osify-appearance.png"
+[ ! -f "$ICON_GRAFICA" ] && ICON_GRAFICA="/usr/share/pixmaps/osify-appearance.png"
+
+# Rilevamento Risoluzione Attuale
+CURR_RES="$(xrandr 2>/dev/null | awk '/\*/ {print $1}' | head -n1)"
+[ -z "$CURR_RES" ] && CURR_RES="1024x600"
+
+if command -v yad >/dev/null 2>&1; then
+    CHOICE=$(yad --title="OSify — Servizio Grafica.ify" \
+        --window-icon="$ICON_GRAFICA" \
+        --image="$ICON_GRAFICA" \
+        --width=520 --height=380 --center \
+        --text="<b><big>Servizio di Sistema: Grafica.ify 2050</big></b>\n\nControllo del motore di rendering, risoluzione e frequenza di aggiornamento.\n\n<b>Risoluzione Attuale:</b> ${CURR_RES}\n<b>Motore Compositore:</b> OSify Zero-Latency Engine\n<b>Target Attivo:</b> Fluidità Massima e Trasparenze Dinamiche\n\n<b>Operazioni Disponibili:</b>" \
+        --list --radiolist \
+        --column="Stato" --column="Opzione" --column="Descrizione" \
+        TRUE "Risoluzione Nativa" "Ripristina la risoluzione originale dello schermo" \
+        FALSE "Virtual Scaler 1280x768" "Espande l'area desktop virtuale per netbook 1024x600" \
+        FALSE "Luce Notturna (On/Off)" "Regola la temperatura colore per riposare la vista" \
+        FALSE "Regolazione Luminosità" "Imposta il livello di luminosità del display" \
+        --button="Chiudi":1 --button="Applica":0 2>/dev/null)
+
+    RET=$?
+    if [ $RET -eq 0 ] && [ -n "$CHOICE" ]; then
+        SEL=$(echo "$CHOICE" | awk -F'|' '{print $2}')
+        case "$SEL" in
+            "Virtual Scaler 1280x768")
+                if [ -x /usr/bin/osify-hud ]; then
+                    /usr/bin/osify-hud --toggle-scale >/dev/null 2>&1
+                fi
+                ;;
+            "Luce Notturna (On/Off)")
+                if [ -x /usr/bin/osify-nightlight ]; then
+                    /usr/bin/osify-nightlight toggle >/dev/null 2>&1
+                fi
+                ;;
+            "Regolazione Luminosità")
+                if [ -x /usr/bin/osify-brightness ]; then
+                    /usr/bin/osify-brightness gui >/dev/null 2>&1 &
+                fi
+                ;;
+            *)
+                if [ -x /usr/bin/osify-hud ]; then
+                    /usr/bin/osify-hud --scale-off >/dev/null 2>&1
+                fi
+                ;;
+        esac
+    fi
+    exit 0
+fi
+
+echo "OSify Grafica.ify — Risoluzione attiva: $CURR_RES"
+exit 0

@@ -1,0 +1,29 @@
+#!/bin/sh
+# ==============================================================================
+# OSify — Driver di Sistema: Rete.ify
+# ==============================================================================
+# Ingegnerizzato per il Compagno Andrea Taliento (ANDRYXify)
+# Rilevamento e supporto driver wireless ed ethernet:
+# - Atheros AR9285 (Toshiba Dynabook NB200 nativo)
+# - Realtek RTL8188 / RTL8192 / RTL8111
+# - Intel Wi-Fi 6 / 6E / AX200 / AX210 / AC7260
+# ==============================================================================
+
+ACTION="${1:-probe}"
+
+probe_net() {
+    NET_DEV="$(ip link show 2>/dev/null | awk -F': ' '/wlan|eth|enp|wlp/ {print $2}' | tr '\n' ' ')"
+    [ -z "$NET_DEV" ] && NET_DEV="Interfaccia di Rete Standard"
+    echo "$NET_DEV"
+}
+
+case "$ACTION" in
+    "probe"|"info")
+        probe_net
+        ;;
+    *)
+        probe_net
+        ;;
+esac
+
+exit 0

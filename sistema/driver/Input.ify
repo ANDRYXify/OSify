@@ -1,0 +1,29 @@
+#!/bin/sh
+# ==============================================================================
+# OSify — Driver di Sistema: Input.ify
+# ==============================================================================
+# Ingegnerizzato per il Compagno Andrea Taliento (ANDRYXify)
+# Calibrazione e supporto per periferiche di puntamento e controllo:
+# - Synaptics / Elantech / ALPS Touchpad con tapping naturale e scorrimento
+# - Controller USB e Bluetooth: Xbox Series/One, DualSense/DualShock, Switch Pro
+# - Tastiere retroilluminate e tasti Fn multimediali
+# ==============================================================================
+
+ACTION="${1:-probe}"
+
+probe_input() {
+    INPUT_DEV="$(cat /proc/bus/input/devices 2>/dev/null | awk -F'"' '/Name=/ {print $2}' | tr '\n' '; ')"
+    [ -z "$INPUT_DEV" ] && INPUT_DEV="Tastiera e Touchpad PS/2 / USB Standard"
+    echo "$INPUT_DEV"
+}
+
+case "$ACTION" in
+    "probe"|"info")
+        probe_input
+        ;;
+    *)
+        probe_input
+        ;;
+esac
+
+exit 0

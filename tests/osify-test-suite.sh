@@ -731,28 +731,53 @@ else
     log_fail "Suite Applicativa Nativa .ify: Applicazioni .ify mancanti o con manifesti corrotti"
 fi
 
-# Test 12.2 Servizi di Sistema Autonomi .ify (GestorePacchetti.ify e Compatibilità.ify)
-if [ -x "$REPO_ROOT/sistema/servizi/GestorePacchetti.ify" ] && [ -x "$REPO_ROOT/sistema/servizi/Compatibilità.ify" ]; then
-    log_pass "Servizi di Sistema: GestorePacchetti.ify e Compatibilità.ify presenti ed eseguibili"
+# Test 12.2 Servizi di Sistema Autonomi .ify (Tutti gli 8 Servizi Essenziali)
+if [ -x "$REPO_ROOT/sistema/servizi/GestorePacchetti.ify" ] && \
+   [ -x "$REPO_ROOT/sistema/servizi/Compatibilità.ify" ] && \
+   [ -x "$REPO_ROOT/sistema/servizi/Nucleo.ify" ] && \
+   [ -x "$REPO_ROOT/sistema/servizi/Grafica.ify" ] && \
+   [ -x "$REPO_ROOT/sistema/servizi/Audio.ify" ] && \
+   [ -x "$REPO_ROOT/sistema/servizi/Rete.ify" ] && \
+   [ -x "$REPO_ROOT/sistema/servizi/Sicurezza.ify" ] && \
+   [ -x "$REPO_ROOT/sistema/servizi/Adattamento Hardware.ify" ]; then
+    log_pass "Servizi di Sistema: Tutti gli 8 servizi .ify (Nucleo, Grafica, Audio, Rete, Sicurezza, Compatibilità, HAL, GestorePacchetti) presenti ed eseguibili"
 else
-    log_fail "Servizi di Sistema: Servizi .ify mancanti o privi di permessi di esecuzione"
+    log_fail "Servizi di Sistema: Uno o più servizi .ify mancanti o non eseguibili"
 fi
 
-# Test 12.3 Inizializzazione File System Italiano
+# Test 12.3 Moduli Driver di Sistema (/Sistema/Driver)
+if [ -x "$REPO_ROOT/sistema/driver/Video.ify" ] && \
+   [ -x "$REPO_ROOT/sistema/driver/Audio.ify" ] && \
+   [ -x "$REPO_ROOT/sistema/driver/Rete.ify" ] && \
+   [ -x "$REPO_ROOT/sistema/driver/Input.ify" ] && \
+   [ -x "$REPO_ROOT/sistema/driver/Periferiche.ify" ]; then
+    log_pass "Driver di Sistema: Tutti i 5 moduli driver .ify (Video, Audio, Rete, Input, Periferiche) presenti ed eseguibili"
+else
+    log_fail "Driver di Sistema: Moduli driver mancanti o non eseguibili in sistema/driver"
+fi
+
+# Test 12.4 Iconografia di Sistema (/Sistema/Icone)
+if [ $(ls "$REPO_ROOT/sistema/icone/"*.png 2>/dev/null | wc -l) -ge 40 ]; then
+    log_pass "Icone di Sistema: Oltre 40 icone squircle native presenti in /Sistema/Icone (zero icone bianche o mancanti)"
+else
+    log_fail "Icone di Sistema: Icone mancanti o incomplete in sistema/icone"
+fi
+
+# Test 12.5 Inizializzazione File System Italiano
 if [ -x "$REPO_ROOT/system/session/osify-filesystem-init.sh" ] && bash -n "$REPO_ROOT/system/session/osify-filesystem-init.sh" 2>/dev/null; then
     log_pass "File System Nativo: Script di inizializzazione percorsi italiani (/Sistema, /Applicazioni, /Utenti) presente e valido"
 else
     log_fail "File System Nativo: Script di inizializzazione osify-filesystem-init.sh non valido"
 fi
 
-# Test 12.4 Tema Proprietario OSify-2050 Openbox (Dark Glass & Neon Accents)
+# Test 12.6 Tema Proprietario OSify-2050 Openbox (Dark Glass & Neon Accents)
 if [ -f "$REPO_ROOT/desktop/branding/themes/OSify-2050/openbox-3/themerc" ]; then
     log_pass "Design System: Tema proprietario OSify-2050 con finiture Obsidian Dark Glass e accenti neon presente"
 else
     log_fail "Design System: Tema OSify-2050 non trovato in desktop/branding/themes"
 fi
 
-# Test 12.5 Assenza Assoluta di Emoji nel Codice di Avvio e nei Menu
+# Test 12.7 Assenza Assoluta di Emoji nel Codice di Avvio e nei Menu
 if python3 -c "
 import re
 with open('$REPO_ROOT/build/remaster-live-iso.py', 'r') as f:

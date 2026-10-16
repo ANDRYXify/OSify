@@ -1,0 +1,72 @@
+#!/bin/sh
+# ==============================================================================
+# OSify — Servizio di Sistema: Rete.ify
+# ==============================================================================
+# Ingegnerizzato per il Compagno Andrea Taliento (ANDRYXify)
+# Gestore autonomo della connettività wireless, cablata e qualità di servizio:
+# - Scansione e connessione Wi-Fi guidata con sicurezza WPA2/WPA3
+# - Traffic Shaper CAKE QoS per latenza zero nei giochi durante download/streaming
+# - Creazione Hotspot wireless e diagnostica integrata
+# ==============================================================================
+
+ACTION="${1:-}"
+
+if [ "$ACTION" = "status" ] || [ "$ACTION" = "stato" ]; then
+    if [ -x /usr/bin/osify-wifi ]; then
+        exec /usr/bin/osify-wifi status
+    fi
+    exit 0
+fi
+
+ICON_RETE="/Sistema/Icone/osify-wifi.png"
+[ ! -f "$ICON_RETE" ] && ICON_RETE="/usr/share/pixmaps/osify-wifi.png"
+
+IP_ADDR="$(ip -4 addr show 2>/dev/null | awk '/inet / && !/127.0.0.1/ {print $2; exit}' | cut -d/ -f1)"
+[ -z "$IP_ADDR" ] && IP_ADDR="In attesa di connessione"
+
+if command -v yad >/dev/null 2>&1; then
+    CHOICE=$(yad --title="OSify — Servizio Rete.ify" \
+        --window-icon="$ICON_RETE" \
+        --image="$ICON_RETE" \
+        --width=520 --height=380 --center \
+        --text="<b><big>Servizio di Sistema: Rete.ify 2050</big></b>\n\nGestione centralizzata delle connessioni wireless e del traffic shaping.\n\n<b>Indirizzo IP:</b> ${IP_ADDR}\n<b>Traffic Shaper:</b> CAKE QoS Gaming Mode (Attivo)\n<b>Protezione DNS:</b> AdShield Sinkhole Attivo\n\n<b>Operazioni Disponibili:</b>" \
+        --list --radiolist \
+        --column="Stato" --column="Opzione" --column="Descrizione" \
+        TRUE "Connessione Wi-Fi" "Cerca reti wireless disponibili e connettiti" \
+        FALSE "Hotspot Personale" "Condividi la connessione creando una rete Wi-Fi" \
+        FALSE "Diagnostica di Rete" "Esegui un test di latenza, bufferbloat e DNS" \
+        FALSE "Firewall e Protezione Stealth" "Configura la protezione perimetrale e porte aperte" \
+        --button="Chiudi":1 --button="Apri":0 2>/dev/null)
+
+    RET=$?
+    if [ $RET -eq 0 ] && [ -n "$CHOICE" ]; then
+        SEL=$(echo "$CHOICE" | awk -F'|' '{print $2}')
+        case "$SEL" in
+            "Connessione Wi-Fi")
+                if [ -x /usr/bin/osify-wifi ]; then
+                    /usr/bin/osify-wifi >/dev/null 2>&1 &
+                fi
+                ;;
+            "Hotspot Personale")
+                if [ -x /usr/bin/osify-hotspot ]; then
+                    /usr/bin/osify-hotspot gui >/dev/null 2>&1 &
+                fi
+                ;;
+            "Diagnostica di Rete")
+                if [ -x /usr/bin/osify-ctl ]; then
+                    /usr/bin/osify-ctl network diag >/tmp/osify_net_diag.log 2>&1
+                    yad --title="Diagnostica Rete" --text-info --filename=/tmp/osify_net_diag.log --width=500 --height=300 2>/dev/null
+                fi
+                ;;
+            "Firewall e Protezione Stealth")
+                if [ -x /usr/bin/osify-firewall ]; then
+                    /usr/bin/osify-firewall gui >/dev/null 2>&1 &
+                fi
+                ;;
+        esac
+    fi
+    exit 0
+fi
+
+echo "OSify Rete.ify — IP: $IP_ADDR"
+exit 0

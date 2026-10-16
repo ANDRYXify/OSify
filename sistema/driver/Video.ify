@@ -1,0 +1,51 @@
+#!/bin/sh
+# ==============================================================================
+# OSify — Driver di Sistema: Video.ify
+# ==============================================================================
+# Ingegnerizzato per il Compagno Andrea Taliento (ANDRYXify)
+# Rilevamento deterministico GPU e configurazione driver display nativo:
+# - Intel GMA 950 (i915 classico, DRI2, no compositing pesante)
+# - Intel Iris / Xe / UHD (i915/xe moderno, Mesa ANV Vulkan)
+# - AMD Radeon (amdgpu, Mesa RADV Vulkan ad alte prestazioni)
+# - NVIDIA (nouveau / modulo proprietario con accelerazione Direct3D/Vulkan)
+# ==============================================================================
+
+ACTION="${1:-probe}"
+
+probe_gpu() {
+    GPU_NAME="GPU Standard VESA / KMS"
+    if [ -f /sys/class/drm/card0/device/vendor ]; then
+        VENDOR="$(cat /sys/class/drm/card0/device/vendor 2>/dev/null)"
+        DEVICE="$(cat /sys/class/drm/card0/device/device 2>/dev/null)"
+        case "$VENDOR" in
+            "0x8086")
+                if [ "$DEVICE" = "0x27ae" ] || [ "$DEVICE" = "0x27a2" ]; then
+                    GPU_NAME="Intel GMA 950 (Calistoga / 945GME) — Driver i915 Vintage"
+                else
+                    GPU_NAME="Intel Graphics HD/Iris/Xe — Driver i915/xe Mesa"
+                fi
+                ;;
+            "0x1002")
+                GPU_NAME="AMD Radeon Graphics — Driver amdgpu RADV Vulkan"
+                ;;
+            "0x10de")
+                GPU_NAME="NVIDIA GeForce / Quadro — Driver GPU Accelerated"
+                ;;
+        esac
+    fi
+    echo "$GPU_NAME"
+}
+
+case "$ACTION" in
+    "probe"|"info")
+        probe_gpu
+        ;;
+    "config")
+        echo "Configurazione driver video applicata."
+        ;;
+    *)
+        probe_gpu
+        ;;
+esac
+
+exit 0

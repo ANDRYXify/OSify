@@ -19,23 +19,16 @@ fi
 
 # 2. Servizi di Sistema (.ify)
 mkdir -p /Sistema/Servizi
-for s in Nucleo Grafica Audio Rete Sicurezza Compatibilità "Adattamento Hardware" GestorePacchetti; do
-    s_path="/Sistema/Servizi/${s}.ify"
-    if [ ! -e "$s_path" ]; then
-        cat << EOF > "$s_path"
-#!/bin/sh
-# Servizio di Sistema OSify: ${s}
-EOF
-        chmod 755 "$s_path"
-    fi
-done
-
-# Collega Compatibilità.ify al runner universale
-if [ -f /opt/osify/sistema/servizi/Compatibilità.ify ]; then
-    ln -sf /opt/osify/sistema/servizi/Compatibilità.ify /Sistema/Servizi/Compatibilità.ify 2>/dev/null || true
+if [ -d /opt/osify/sistema/servizi ]; then
+    cp -r /opt/osify/sistema/servizi/* /Sistema/Servizi/ 2>/dev/null || true
+    chmod -R 755 /Sistema/Servizi/ 2>/dev/null || true
 fi
-if [ -f /opt/osify/sistema/servizi/GestorePacchetti.ify ]; then
-    ln -sf /opt/osify/sistema/servizi/GestorePacchetti.ify /Sistema/Servizi/GestorePacchetti.ify 2>/dev/null || true
+
+# 2.1 Driver di Sistema (.ify)
+mkdir -p /Sistema/Driver
+if [ -d /opt/osify/sistema/driver ]; then
+    cp -r /opt/osify/sistema/driver/* /Sistema/Driver/ 2>/dev/null || true
+    chmod -R 755 /Sistema/Driver/ 2>/dev/null || true
 fi
 
 # 3. Albero /Applicazioni

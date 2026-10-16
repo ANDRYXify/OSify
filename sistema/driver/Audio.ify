@@ -1,0 +1,28 @@
+#!/bin/sh
+# ==============================================================================
+# OSify — Driver di Sistema: Audio.ify
+# ==============================================================================
+# Ingegnerizzato per il Compagno Andrea Taliento (ANDRYXify)
+# Rilevamento e configurazione interfacce audio:
+# - Intel HDA / Realtek ALC269 (Toshiba NB200 e laptop)
+# - Schede audio USB, Sound Blaster e interfaccia HDMI/DisplayPort
+# ==============================================================================
+
+ACTION="${1:-probe}"
+
+probe_audio() {
+    SND_CARD="$(cat /proc/asound/cards 2>/dev/null | head -n1)"
+    [ -z "$SND_CARD" ] && SND_CARD="Scheda Audio Hardware HD / ALSA"
+    echo "$SND_CARD"
+}
+
+case "$ACTION" in
+    "probe"|"info")
+        probe_audio
+        ;;
+    *)
+        probe_audio
+        ;;
+esac
+
+exit 0

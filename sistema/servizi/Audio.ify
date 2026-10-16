@@ -1,0 +1,70 @@
+#!/bin/sh
+# ==============================================================================
+# OSify — Servizio di Sistema: Audio.ify
+# ==============================================================================
+# Ingegnerizzato per il Compagno Andrea Taliento (ANDRYXify)
+# Gestore autonomo del comparto audio a bassissima latenza (<2.5ms):
+# - 4 Bus Virtuali separati per streaming e gaming (Gioco, Voce, Musica, Mic)
+# - Regolazione master del volume, mixer canali e soppressione rumore
+# ==============================================================================
+
+ACTION="${1:-}"
+
+if [ "$ACTION" = "mute" ] || [ "$ACTION" = "unmute" ] || [ "$ACTION" = "up" ] || [ "$ACTION" = "down" ]; then
+    if [ -x /usr/bin/osify-audio ]; then
+        exec /usr/bin/osify-audio "$@"
+    fi
+    exit 0
+fi
+
+ICON_AUDIO="/Sistema/Icone/osify-audio.png"
+[ ! -f "$ICON_AUDIO" ] && ICON_AUDIO="/usr/share/pixmaps/osify-audio.png"
+
+CURR_VOL="100%"
+if command -v amixer >/dev/null 2>&1; then
+    CURR_VOL="$(amixer get Master 2>/dev/null | awk -F'[][]' '/%/ {print $2}' | head -n1)"
+fi
+[ -z "$CURR_VOL" ] && CURR_VOL="85%"
+
+if command -v yad >/dev/null 2>&1; then
+    CHOICE=$(yad --title="OSify — Servizio Audio.ify" \
+        --window-icon="$ICON_AUDIO" \
+        --image="$ICON_AUDIO" \
+        --width=520 --height=380 --center \
+        --text="<b><big>Servizio di Sistema: Audio.ify 2050</big></b>\n\nControllo dell'architettura audio deterministica a bassa latenza.\n\n<b>Volume Master Attuale:</b> ${CURR_VOL}\n<b>Quantizzazione:</b> 64 campioni @ 48kHz (&lt;2.5ms)\n<b>Bus Streaming:</b> Audio-Gioco, Audio-Voce, Audio-Musica, Audio-Mic\n\n<b>Operazioni Disponibili:</b>" \
+        --list --radiolist \
+        --column="Stato" --column="Opzione" --column="Descrizione" \
+        TRUE "Regola Volume e Mixer" "Apre il mixer grafico per calibrare volume e ingressi" \
+        FALSE "Attiva Bus Virtuali Streaming" "Separa le tracce audio per streaming e registrazione" \
+        FALSE "Disattiva/Ripristina Audio (Mute)" "Disattiva o riattiva l'audio di sistema" \
+        --button="Chiudi":1 --button="Esegui":0 2>/dev/null)
+
+    RET=$?
+    if [ $RET -eq 0 ] && [ -n "$CHOICE" ]; then
+        SEL=$(echo "$CHOICE" | awk -F'|' '{print $2}')
+        case "$SEL" in
+            "Regola Volume e Mixer")
+                if [ -x /usr/bin/osify-audio ]; then
+                    /usr/bin/osify-audio gui >/dev/null 2>&1 &
+                fi
+                ;;
+            "Attiva Bus Virtuali Streaming")
+                if [ -x /opt/osify/audio/setup-pipewire-pro.sh ]; then
+                    /opt/osify/audio/setup-pipewire-pro.sh >/dev/null 2>&1
+                fi
+                if command -v notify-send >/dev/null 2>&1; then
+                    notify-send -i "$ICON_AUDIO" "Audio.ify" "Bus audio virtuali per streaming attivati." 2>/dev/null || true
+                fi
+                ;;
+            "Disattiva/Ripristina Audio (Mute)")
+                if [ -x /usr/bin/osify-audio ]; then
+                    /usr/bin/osify-audio mute >/dev/null 2>&1
+                fi
+                ;;
+        esac
+    fi
+    exit 0
+fi
+
+echo "OSify Audio.ify — Volume: $CURR_VOL"
+exit 0
