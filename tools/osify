@@ -254,8 +254,44 @@ cmd_aiuto() {
     echo ""
 }
 
-# Funzione: Dashboard Interattiva TUI a 360 Gradi (Lanciata da 'osify' senza argomenti)
+# Funzione: Dashboard Interattiva a Navigazione Fluida (Lanciata da 'osify' senza argomenti)
 cmd_dashboard() {
+    # Se è presente un server grafico X11, apri direttamente il Centro di Controllo GUI nativo
+    if [ -n "${DISPLAY:-}" ]; then
+        if [ -x /usr/bin/osify-hub ]; then
+            exec /usr/bin/osify-hub
+        elif [ -x /usr/bin/osify-app-drawer ]; then
+            exec /usr/bin/osify-app-drawer
+        fi
+    fi
+
+    local options=(
+        "Tutte le Applicazioni Native (.ify)"
+        "Modalita Prestazioni Turbo (1.66GHz & zRAM)"
+        "Modalita Eco Risparmio Batteria"
+        "Pulizia e Compattazione Memoria RAM"
+        "Gestione Connessioni Wi-Fi"
+        "Schermo e Risoluzioni Display"
+        "Hub Giochi ed Emulazione"
+        "Acquisizione Video Schermo/HDMI"
+        "Integrazione Smartphone USB"
+        "Gestione Audio e Volumi"
+        "Dischi e Rimozione Sicura"
+        "Installa OSify su Disco Fisso"
+        "Profilo Utente e Multiutenza"
+        "Controllo Aggiornamenti Sistema"
+        "Menu Alimentazione e Sessione"
+        "Esci al Prompt Shell"
+    )
+
+    local cur=0
+    local count=${#options[@]}
+    local key
+
+    # Nascondi cursore del terminale
+    printf "\033[?25l" 2>/dev/null || true
+    trap 'printf "\033[?25h" 2>/dev/null || true' EXIT INT TERM
+
     while true; do
         clear
         detect_metrics
@@ -266,129 +302,128 @@ cmd_dashboard() {
         echo " ${C_CYAN}CPU:${C_RESET} $CPU_MODEL ($CPU_CORES Core)   ${C_CYAN}RAM:${C_RESET} ${RAM_USED_MB}MB / ${RAM_TOTAL_MB}MB [${RAM_BAR}] ${RAM_PERCENT}%"
         echo " ${C_CYAN}Profilo:${C_RESET} $PERF_MODE   ${C_CYAN}zRAM:${C_RESET} $ZRAM_INFO   ${C_CYAN}Risoluzione:${C_RESET} $RES_INFO"
         echo " ${C_CYAN}Wi-Fi:${C_RESET} $WIFI_SSID   ${C_CYAN}Batteria:${C_RESET} $BAT_STATUS"
-        echo "  ${C_YELLOW}[1]${C_RESET} ${C_WHITE}Tutte le Applicazioni${C_RESET}         - Avvia le applicazioni di sistema"
-        echo "  ${C_YELLOW}[2]${C_RESET} ${C_WHITE}Modalita Turbo (1.66GHz & zRAM)${C_RESET} - Massima reattivita hardware"
-        echo "  ${C_YELLOW}[3]${C_RESET} ${C_WHITE}Modalita Eco Batteria${C_RESET}          - Autonomia e risparmio energetico"
-        echo "  ${C_YELLOW}[4]${C_RESET} ${C_WHITE}Pulizia Memoria RAM${C_RESET}            - Libera cache e compatta zRAM"
-        echo "  ${C_YELLOW}[5]${C_RESET} ${C_WHITE}Connessione Wi-Fi${C_RESET}              - Scansiona e connettiti alle reti"
-        echo "  ${C_YELLOW}[6]${C_RESET} ${C_WHITE}Schermo e Risoluzioni${C_RESET}          - 1024x600, 1280x768 o HDMI"
-        echo "  ${C_YELLOW}[7]${C_RESET} ${C_WHITE}Gaming Hub${C_RESET}                     - Retrocomputing ed emulazione"
-        echo "  ${C_YELLOW}[8]${C_RESET} ${C_WHITE}Acquisizione Video HDMI${C_RESET}        - Visualizza feed HDMI a schermo intero"
-        echo "  ${C_YELLOW}[9]${C_RESET} ${C_WHITE}Mirroring Smartphone${C_RESET}           - Connessione smartphone via USB"
-        echo "  ${C_YELLOW}[A]${C_RESET} ${C_WHITE}Audio e Uscite${C_RESET}                 - Regola volume, mute e canali"
-        echo "  ${C_YELLOW}[D]${C_RESET} ${C_WHITE}Dischi e Rimozione Sicura${C_RESET}     - Gestione bus USB/SD e safe unmount"
-        echo "  ${C_YELLOW}[I]${C_RESET} ${C_WHITE}Installa OSify su Disco${C_RESET}        - Procedura guidata permanente"
-        echo "  ${C_YELLOW}[P]${C_RESET} ${C_WHITE}Profilo e Multiutenza${C_RESET}          - Gestione account e permessi"
-        echo "  ${C_YELLOW}[U]${C_RESET} ${C_WHITE}Aggiornamento Sistema${C_RESET}          - Sincronizzazione aggiornamenti"
-        echo "  ${C_YELLOW}[S]${C_RESET} ${C_WHITE}Spegni o Riavvia${C_RESET}               - Menu alimentazione e sessione"
-        echo "  ${C_YELLOW}[Q]${C_RESET} ${C_WHITE}Esci al Prompt Shell${C_RESET}"
+        echo "${C_BOLD}-------------------------------------------------------------------------------${C_RESET}"
+        echo "${C_WHITE} Usa i tasti freccia [▲ / ▼] per navigare, [Invio] per eseguire, [Q] per uscire${C_RESET}"
+        echo ""
+
+        for i in "${!options[@]}"; do
+            if [ "$i" -eq "$cur" ]; then
+                printf "  ${C_BG_BLUE}${C_WHITE}${C_BOLD} ➔ %-72s ${C_RESET}\n" "${options[$i]}"
+            else
+                printf "     ${C_WHITE}%-72s${C_RESET}\n" "${options[$i]}"
+            fi
+        done
         echo "${C_BOLD}===============================================================================${C_RESET}"
-        printf "${C_CYAN}Scegli un'opzione [1-9, A, D, I, P, U, S, Q]: ${C_RESET}"
-        read -r choice || break
-        
-        case "$choice" in
-            1)
-                [ -x /usr/bin/osify-app-drawer ] && /usr/bin/osify-app-drawer &
-                break
-                ;;
-            2)
-                cmd_turbo
-                printf "\nPremi INVIO per continuare..."
-                read -r _dummy
-                ;;
-            3)
-                cmd_eco
-                printf "\nPremi INVIO per continuare..."
-                read -r _dummy
-                ;;
-            4)
-                cmd_pulisci
-                printf "\nPremi INVIO per continuare..."
-                read -r _dummy
-                ;;
-            5)
-                [ -x /usr/bin/osify-wifi ] && /usr/bin/osify-wifi || true
-                printf "\nPremi INVIO per continuare..."
-                read -r _dummy
-                ;;
-            6)
-                echo ""
-                echo "1) Risoluzione Nativa 1024x600"
-                echo "2) Virtual Scaler HD 1280x768 (per finestre grandi)"
-                echo "3) Uscita Esterna Solo HDMI/TV"
-                echo "4) Clona su HDMI"
-                printf "Seleziona modalità schermo [1-4]: "
-                read -r smode
-                case "$smode" in
-                    1) cmd_schermo 1024x600 ;;
-                    2) cmd_schermo 1280x768 ;;
-                    3) cmd_schermo hdmi ;;
-                    4) cmd_schermo clona ;;
-                esac
-                printf "\nPremi INVIO per continuare..."
-                read -r _dummy
-                ;;
-            7)
-                [ -x /usr/bin/osify-games ] && /usr/bin/osify-games &
-                break
-                ;;
-            8)
-                [ -x /usr/bin/osify-capture ] && /usr/bin/osify-capture &
-                break
-                ;;
-            9)
-                [ -x /usr/bin/osify-phone ] && /usr/bin/osify-phone &
-                break
-                ;;
-            A|a)
-                echo ""
-                echo "1) Alza Volume (+5%)"
-                echo "2) Abbassa Volume (-5%)"
-                echo "3) Muto / Attiva"
-                echo "4) Esegui Test Canali Audio"
-                printf "Scelta [1-4]: "
-                read -r amode
-                case "$amode" in
-                    1) /usr/bin/osify-sound-manager up 2>/dev/null || true ;;
-                    2) /usr/bin/osify-sound-manager down 2>/dev/null || true ;;
-                    3) /usr/bin/osify-sound-manager mute 2>/dev/null || true ;;
-                    4) /usr/bin/osify-sound-manager test 2>/dev/null || true ;;
-                esac
-                printf "\nPremi INVIO per continuare..."
-                read -r _dummy
-                ;;
-            D|d)
-                [ -x /usr/bin/osify-storage-governor ] && /usr/bin/osify-storage-governor --status || true
-                printf "\nPremi INVIO per continuare..."
-                read -r _dummy
-                ;;
-            I|i)
-                [ -x /usr/bin/osify-install ] && /usr/bin/osify-install &
-                break
-                ;;
-            P|p)
-                [ -x /usr/bin/osify-profile-setup ] && /usr/bin/osify-profile-setup --force &
-                break
-                ;;
-            U|u)
-                [ -x /usr/bin/osify-update ] && /usr/bin/osify-update || true
-                printf "\nPremi INVIO per continuare..."
-                read -r _dummy
-                ;;
-            S|s)
-                [ -x /usr/bin/osify-power ] && /usr/bin/osify-power || true
-                break
-                ;;
-            Q|q|exit)
-                clear
-                break
-                ;;
-            *)
-                echo "${C_RED}Opzione non valida.${C_RESET}"
-                sleep 0.8
-                ;;
-        esac
+
+        IFS= read -rsn1 key 2>/dev/null || break
+        if [ "$key" = $'\x1b' ]; then
+            read -rsn2 -t 0.1 rest 2>/dev/null || true
+            case "$rest" in
+                '[A') # Freccia Su
+                    if [ "$cur" -gt 0 ]; then
+                        cur=$((cur - 1))
+                    else
+                        cur=$((count - 1))
+                    fi
+                    ;;
+                '[B') # Freccia Giu
+                    if [ "$cur" -lt $((count - 1)) ]; then
+                        cur=$((cur + 1))
+                    else
+                        cur=0
+                    fi
+                    ;;
+            esac
+        elif [ "$key" = "" ]; then
+            # Invio premuto: esegui l'opzione selezionata
+            printf "\033[?25h" 2>/dev/null || true
+            case "$cur" in
+                0)
+                    [ -x /usr/bin/osify-app-drawer ] && /usr/bin/osify-app-drawer &
+                    break
+                    ;;
+                1)
+                    cmd_turbo
+                    printf "\nPremi INVIO per continuare..."
+                    read -r _dummy
+                    ;;
+                2)
+                    cmd_eco
+                    printf "\nPremi INVIO per continuare..."
+                    read -r _dummy
+                    ;;
+                3)
+                    cmd_pulisci
+                    printf "\nPremi INVIO per continuare..."
+                    read -r _dummy
+                    ;;
+                4)
+                    [ -x /usr/bin/osify-wifi ] && /usr/bin/osify-wifi || true
+                    printf "\nPremi INVIO per continuare..."
+                    read -r _dummy
+                    ;;
+                5)
+                    echo ""
+                    echo "➔ Risoluzione Nativa 1024x600"
+                    echo "➔ Virtual Scaler HD 1280x768"
+                    echo "➔ Uscita Esterna Solo HDMI/TV"
+                    cmd_schermo 1024x600
+                    printf "\nPremi INVIO per continuare..."
+                    read -r _dummy
+                    ;;
+                6)
+                    [ -x /usr/bin/osify-games ] && /usr/bin/osify-games &
+                    break
+                    ;;
+                7)
+                    [ -x /usr/bin/osify-capture ] && /usr/bin/osify-capture &
+                    break
+                    ;;
+                8)
+                    [ -x /usr/bin/osify-phone ] && /usr/bin/osify-phone &
+                    break
+                    ;;
+                9)
+                    echo ""
+                    /usr/bin/osify-sound-manager test 2>/dev/null || true
+                    printf "\nPremi INVIO per continuare..."
+                    read -r _dummy
+                    ;;
+                10)
+                    [ -x /usr/bin/osify-storage-governor ] && /usr/bin/osify-storage-governor --status || true
+                    printf "\nPremi INVIO per continuare..."
+                    read -r _dummy
+                    ;;
+                11)
+                    [ -x /usr/bin/osify-install ] && /usr/bin/osify-install &
+                    break
+                    ;;
+                12)
+                    [ -x /usr/bin/osify-profile-setup ] && /usr/bin/osify-profile-setup --force &
+                    break
+                    ;;
+                13)
+                    [ -x /usr/bin/osify-update ] && /usr/bin/osify-update || true
+                    printf "\nPremi INVIO per continuare..."
+                    read -r _dummy
+                    ;;
+                14)
+                    [ -x /usr/bin/osify-power ] && /usr/bin/osify-power || true
+                    break
+                    ;;
+                15)
+                    clear
+                    break
+                    ;;
+            esac
+            printf "\033[?25l" 2>/dev/null || true
+        elif [ "$key" = "q" ] || [ "$key" = "Q" ]; then
+            printf "\033[?25h" 2>/dev/null || true
+            clear
+            break
+        fi
     done
+    printf "\033[?25h" 2>/dev/null || true
 }
 
 # Dispatcher dei comandi

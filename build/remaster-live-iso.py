@@ -39,6 +39,191 @@ def run(cmd, cwd=None):
         sys.exit(1)
     return res.stdout
 
+class CpioArchive:
+    def __init__(self):
+        self.entries = {}
+        self.order = []
+
+    @classmethod
+    def from_bytes(cls, data):
+        archive = cls()
+        pos = 0
+        total = len(data)
+        while pos + 110 <= total:
+            magic = data[pos:pos+6]
+            if magic not in (b'070701', b'070702'):
+                break
+            header = data[pos:pos+110]
+            pos += 110
+            ino = int(header[6:14], 16)
+            mode = int(header[14:22], 16)
+            uid = int(header[22:30], 16)
+            gid = int(header[30:38], 16)
+            nlink = int(header[38:46], 16)
+            mtime = int(header[46:54], 16)
+            filesize = int(header[54:62], 16)
+            maj = int(header[62:70], 16)
+            min_ = int(header[70:78], 16)
+            rmaj = int(header[78:86], 16)
+            rmin = int(header[86:94], 16)
+            namesize = int(header[94:102], 16)
+
+            name = data[pos:pos+namesize-1].decode('utf-8', 'ignore')
+            pos += namesize
+            if (110 + namesize) % 4 != 0:
+                pos += 4 - ((110 + namesize) % 4)
+
+            file_data = data[pos:pos+filesize]
+            pos += filesize
+            if filesize % 4 != 0:
+                pos += 4 - (filesize % 4)
+
+            if name == 'TRAILER!!!':
+                break
+
+            clean_name = name.lstrip('./')
+            if clean_name in ('', '.'):
+                clean_name = '.'
+
+            archive.entries[clean_name] = {
+                'ino': ino, 'mode': mode, 'uid': uid, 'gid': gid,
+                'nlink': nlink, 'mtime': mtime, 'filesize': filesize,
+                'maj': maj, 'min': min_, 'rmaj': rmaj, 'rmin': rmin,
+                'data': file_data, 'raw_name': name
+            }
+            if clean_name not in archive.order:
+                archive.order.append(clean_name)
+        return archive
+
+    def add_file(self, path, data_bytes, mode=0o100755, uid=0, gid=0, mtime=0):
+        clean_name = path.lstrip('./')
+        self.entries[clean_name] = {
+            'ino': len(self.entries) + 1, 'mode': mode, 'uid': uid, 'gid': gid,
+            'nlink': 1, 'mtime': mtime, 'filesize': len(data_bytes),
+            'maj': 3, 'min': 1, 'rmaj': 0, 'rmin': 0,
+            'data': data_bytes, 'raw_name': clean_name
+        }
+        if clean_name not in self.order:
+            self.order.append(clean_name)
+
+    def add_symlink(self, path, target, mode=0o120777, uid=0, gid=0, mtime=0):
+        target_bytes = target.encode('utf-8')
+        clean_name = path.lstrip('./')
+        self.entries[clean_name] = {
+            'ino': len(self.entries) + 1, 'mode': mode, 'uid': uid, 'gid': gid,
+            'nlink': 1, 'mtime': mtime, 'filesize': len(target_bytes),
+            'maj': 3, 'min': 1, 'rmaj': 0, 'rmin': 0,
+            'data': target_bytes, 'raw_name': clean_name
+        }
+        if clean_name not in self.order:
+            self.order.append(clean_name)
+
+    def add_dir(self, path, mode=0o040755, uid=0, gid=0, mtime=0):
+        clean_name = path.lstrip('./')
+        if not clean_name:
+            clean_name = '.'
+        self.entries[clean_name] = {
+            'ino': len(self.entries) + 1, 'mode': mode, 'uid': uid, 'gid': gid,
+            'nlink': 2, 'mtime': mtime, 'filesize': 0,
+            'maj': 3, 'min': 1, 'rmaj': 0, 'rmin': 0,
+            'data': b'', 'raw_name': clean_name
+        }
+        if clean_name not in self.order:
+            self.order.append(clean_name)
+
+    def import_directory(self, root_dir):
+        for dirpath, dirnames, filenames in os.walk(root_dir):
+            rel_dir = os.path.relpath(dirpath, root_dir).lstrip('./')
+            if rel_dir and rel_dir != '.':
+                self.add_dir(rel_dir)
+            for f in filenames:
+                full_path = os.path.join(dirpath, f)
+                rel_file = os.path.normpath(os.path.join(rel_dir, f) if rel_dir and rel_dir != '.' else f)
+                if os.path.islink(full_path):
+                    target = os.readlink(full_path)
+                    self.add_symlink(rel_file, target)
+                elif os.path.isfile(full_path):
+                    with open(full_path, 'rb') as fp:
+                        content = fp.read()
+                    st = os.stat(full_path)
+                    is_exec = (st.st_mode & 0o111) != 0
+                    mode = 0o100755 if is_exec else 0o100644
+                    self.add_file(rel_file, content, mode=mode)
+
+    def to_bytes(self):
+        chunks = []
+        ino = 1
+        for name in self.order:
+            ent = self.entries[name]
+            raw_name = ent.get('raw_name', name)
+            name_bytes = raw_name.encode('utf-8') + b'\0'
+            namesize = len(name_bytes)
+            data = ent['data']
+            filesize = len(data)
+            mode = ent['mode']
+            uid = ent.get('uid', 0)
+            gid = ent.get('gid', 0)
+            nlink = ent.get('nlink', 1)
+            mtime = ent.get('mtime', 0)
+            maj = ent.get('maj', 3)
+            min_ = ent.get('min', 1)
+            rmaj = ent.get('rmaj', 0)
+            rmin = ent.get('rmin', 0)
+
+            header = (
+                f'070701'
+                f'{ino:08x}'
+                f'{mode:08x}'
+                f'{uid:08x}'
+                f'{gid:08x}'
+                f'{nlink:08x}'
+                f'{mtime:08x}'
+                f'{filesize:08x}'
+                f'{maj:08x}'
+                f'{min_:08x}'
+                f'{rmaj:08x}'
+                f'{rmin:08x}'
+                f'{namesize:08x}'
+                f'{0:08x}'
+            ).encode('ascii')
+            pad_name = (4 - ((110 + namesize) % 4)) % 4
+            pad_data = (4 - (filesize % 4)) % 4
+            chunks.append(header)
+            chunks.append(name_bytes)
+            if pad_name:
+                chunks.append(b'\0' * pad_name)
+            if filesize > 0:
+                chunks.append(data)
+            if pad_data:
+                chunks.append(b'\0' * pad_data)
+            ino += 1
+
+        trailer_name = b'TRAILER!!!\0'
+        namesize = len(trailer_name)
+        header = (
+            f'070701'
+            f'{ino:08x}'
+            f'{0:08x}'
+            f'{0:08x}'
+            f'{0:08x}'
+            f'{1:08x}'
+            f'{0:08x}'
+            f'{0:08x}'
+            f'{0:08x}'
+            f'{0:08x}'
+            f'{0:08x}'
+            f'{0:08x}'
+            f'{namesize:08x}'
+            f'{0:08x}'
+        ).encode('ascii')
+        pad_name = (4 - ((110 + namesize) % 4)) % 4
+        chunks.append(header)
+        chunks.append(trailer_name)
+        if pad_name:
+            chunks.append(b'\0' * pad_name)
+
+        return b''.join(chunks)
+
 def extract_cpio_archive(data, dest_dir):
     pos = 0
     total = len(data)
@@ -1056,7 +1241,11 @@ Plugin {
                 pass
 
     os.remove(r3_gz)
-    run(f"(cd '{r3_work}' && find . -print0 | cpio --null -ov -H newc) | python3 -c \"import lzma, sys; sys.stdout.buffer.write(lzma.compress(sys.stdin.buffer.read(), format=lzma.FORMAT_ALONE))\" > '{r3_gz}'")
+    archive3 = CpioArchive.from_bytes(r3_data)
+    archive3.import_directory(r3_work)
+    r3_packed = archive3.to_bytes()
+    with open(r3_gz, "wb") as f:
+        f.write(lzma.compress(r3_packed, format=lzma.FORMAT_ALONE))
     print(f"[✓] rootfs3 ricompatto con successo ({os.path.getsize(r3_gz)/(1024*1024):.1f} MB)")
 
 def build_vintage_i686():
@@ -1106,52 +1295,52 @@ def build_vintage_i686():
     clean_cfg = """DEFAULT osify
 UI vesamenu.c32
 PROMPT 0
-TIMEOUT 40
+TIMEOUT 10
+MENU HIDDEN
 
-MENU TITLE OSify Operating System (32-bit Vintage Edition)
+MENU TITLE
 MENU BACKGROUND splash.jpg
 MENU WIDTH 78
 MENU MARGIN 6
-MENU ROWS 6
+MENU ROWS 5
 MENU VSHIFT 3
-MENU TIMEOUTROW 23
-MENU TABMSGROW 22
-MENU CMDLINEROW 22
+MENU NOTIMEOUTROW
+MENU TABMSG
 
 MENU COLOR border       *   #00000000 #00000000 none
 MENU COLOR title        *   #ffffffff #00000000 *
 MENU COLOR sel          0   #ffffffff #7c3aedcc *
 MENU COLOR unsel        0   #b0ffffff #00000000 none
 MENU COLOR help         *   #ffffffff #00000000 *
-MENU COLOR timeout      1;37;40 #06b6d4ff #00000000 std
-MENU COLOR timeout_msg  37;40   #a0ffffff #00000000 std
+MENU COLOR timeout      1;37;40 #06b6d4ff #00000000 none
+MENU COLOR timeout_msg  37;40   #a0ffffff #00000000 none
 
 LABEL osify
-    MENU LABEL [1] OSify Vintage Desktop (Auto-boot / Live Session)
+    MENU LABEL OSify Desktop (Avvio Diretto)
     KERNEL /boot/bzImage
     INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
-    APPEND root=/dev/null video=-32 autologin lang=it_IT kmap=it rw quiet splash
+    APPEND root=/dev/null video=-32 autologin lang=it_IT kmap=it rw quiet splash tmpram=0
 
 LABEL turbo
-    MENU LABEL [2] OSify Turbo Performance Mode (1.66GHz & zRAM Max)
+    MENU LABEL OSify Prestazioni Turbo (1.66GHz & zRAM)
     KERNEL /boot/bzImage
     INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
-    APPEND root=/dev/null video=-32 autologin lang=it_IT kmap=it rw quiet splash osify.turbo=1
+    APPEND root=/dev/null video=-32 autologin lang=it_IT kmap=it rw quiet splash tmpram=0 osify.turbo=1
 
 LABEL safe
-    MENU LABEL [3] OSify Safe Graphics Mode (Fallback VESA / Nomodeset)
+    MENU LABEL OSify Grafica Sicura (Fallback VESA)
     KERNEL /boot/bzImage
     INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
-    APPEND root=/dev/null nomodeset autologin lang=it_IT kmap=it rw
+    APPEND root=/dev/null nomodeset autologin lang=it_IT kmap=it rw tmpram=0
 
 LABEL install
-    MENU LABEL [4] Installa OSify su Disco Fisso
+    MENU LABEL Installa OSify su Disco Fisso
     KERNEL /boot/bzImage
     INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
-    APPEND root=/dev/null video=-32 autologin lang=it_IT kmap=it rw quiet splash osify.install=1
+    APPEND root=/dev/null video=-32 autologin lang=it_IT kmap=it rw quiet splash tmpram=0 osify.install=1
 
 LABEL memtest
-    MENU LABEL [5] Verifica Memoria RAM (Memtest86)
+    MENU LABEL Diagnostica Memoria RAM
     KERNEL /boot/memtest.exe
 """
     with open(os.path.join(isolinux_dir, "isolinux.cfg"), "w") as f:
@@ -2546,7 +2735,23 @@ WINDOW_MANAGER="openbox"
                 pass
 
     os.remove(r4_gz)
-    run(f"(cd '{r4_work}' && find . -print0 | cpio --null -ov -H newc) | python3 -c \"import lzma, sys; sys.stdout.buffer.write(lzma.compress(sys.stdin.buffer.read(), format=lzma.FORMAT_ALONE))\" > '{r4_gz}'")
+    archive4 = CpioArchive.from_bytes(r4_data)
+    archive4.import_directory(r4_work)
+
+    # Patch deterministica di /init per garantire boot fluido su Netbook/Atom (1GB RAM)
+    if 'init' in archive4.entries:
+        init_str = archive4.entries['init']['data'].decode('utf-8', 'ignore')
+        init_str = init_str.replace("root=100", "root=0")
+        init_str = init_str.replace("[ $(busybox free|busybox awk '/Mem:/{print int(($4*100)/$3)}') -ge $r ]", "[ -n \"$r\" ]")
+        init_str = init_str.replace("export PATH=/mnt/bin:$PATH", "export PATH=/mnt/bin:/bin:/sbin:/usr/bin:/usr/sbin:$PATH")
+        if "[ -x /sbin/init ] && exec /sbin/init" not in init_str:
+            init_str = init_str.replace(". /run/init\n\tsh", ". /run/init\n\t[ -x /sbin/init ] && exec /sbin/init\n\tsh")
+        archive4.add_file('init', init_str.encode('utf-8'), mode=0o100755)
+
+    r4_packed = archive4.to_bytes()
+    with open(r4_gz, "wb") as f:
+        f.write(lzma.compress(r4_packed, format=lzma.FORMAT_ALONE))
+    print(f"[✓] rootfs4 ricompatto con successo ({os.path.getsize(r4_gz)/(1024*1024):.1f} MB con tutti i 131 device nodes preservati)")
 
     # Iniezione Windows Installer e albero OSify
     inject_windows_installer(iso_root)

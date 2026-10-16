@@ -816,30 +816,16 @@ EOF
     echo ""
 
     # FASE 3: Scelta Filesystem
-    echo "[3/4] Scelta del profilo Filesystem e Ottimizzazione Storage:"
+    echo "[3/4] Ottimizzazione Storage e Profilo Filesystem:"
     echo "-----------------------------------------------------------------"
     if [ "$fw" = "bios" ] || [ "$(uname -m)" = "i686" ]; then
-        printf "  \033[1;32m[1]\033[0m \033[1mExt4 Ultra-Fast (Raccomandato per Netbook/Atom/HDD 5400rpm)\033[0m\n"
-        echo "      Minimo overhead di I/O, noatime, ultra-fluido e resistente."
-        echo "  [2] Btrfs con compressione trasparente zstd"
-        printf "Scelta [Predefinito: 1]: "
-        read -r fs_choice
-        if [ "$fs_choice" = "2" ]; then
-            FS_TYPE="btrfs"
-        else
-            FS_TYPE="ext4"
-        fi
+        FS_TYPE="ext4"
+        printf "  \033[1;32m➔\033[0m \033[1mProfilo Selezionato: Ext4 Ultra-Fast (Netbook / Atom / HDD)\033[0m\n"
+        echo "    Minimo overhead di I/O, noatime, ultra-fluido, nessun impatto CPU."
     else
-        printf "  \033[1;32m[1]\033[0m \033[1mBtrfs Modern con compressione zstd (Raccomandato per SSD/NVMe)\033[0m\n"
-        echo "      Istantanee subvolumi CoW, risparmio spazio e massima integrità."
-        echo "  [2] Ext4 Standard"
-        printf "Scelta [Predefinito: 1]: "
-        read -r fs_choice
-        if [ "$fs_choice" = "2" ]; then
-            FS_TYPE="ext4"
-        else
-            FS_TYPE="btrfs"
-        fi
+        FS_TYPE="btrfs"
+        printf "  \033[1;32m➔\033[0m \033[1mProfilo Selezionato: Btrfs Modern con compressione zstd (SSD / NVMe)\033[0m\n"
+        echo "    Istantanee subvolumi CoW, risparmio spazio e massima integrità."
     fi
     log "Profilo Filesystem: $FS_TYPE"
     echo ""

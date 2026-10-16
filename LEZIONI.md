@@ -16,3 +16,16 @@
 - **Errore**: Presenza di residui lessicali distro e componenti applicativi non incapsulati nel formato nativo .ify, con percorsi UNIX standard anziché l'albero nativo in lingua italiana.
 - **Causa radice**: Eredità dei file di configurazione e script di remastering legati alla convenzione classica senza una standardizzazione formale del formato pacchetto proprietario .ify e dell'albero /Sistema, /Applicazioni, /Utenti.
 - **Regola**: OSify è esclusivamente un sistema operativo autonomo a sé stante: tutte le app e servizi devono essere incapsulati nel formato .ify con manifesto.json e icona squircle, i percorsi visibili devono risiedere in /Sistema, /Applicazioni e /Utenti, nessun nome o terminologia di distribuzioni terze o emulatori deve comparire nell'interfaccia o nella documentazione, e non devono essere presenti emoji nel codice di sistema o nei menu.
+
+## 2026-10-16 — Eliminazione Menu Testuali Numerati, Preservazione Device Nodes e Risoluzione Kernel Panic
+- **Area**: Bootloader Isolinux, initramfs rootfs4 CPIO e navigazione utente CLI/GUI
+- **Errore**: Il sistema all'avvio mostrava un anacronistico menu numerato a testo anni '90 (`[1]`, `[2]`, ecc.) e su hardware reale (Toshiba NB200) andava in Kernel Panic con `find: not found`, `busybox: not found`, `exitcode=0x00000100`.
+- **Causa radice**:
+  1. Il remastering su macOS estraeva rootfs4 su disco scartando i 131 nodi di dispositivo hardware (`dev/console`, `dev/null`, `dev/zero`, `dev/loop*`, ecc.) e ricompattava con `bsdcpio`, privando il kernel Linux dei descrittori standard di I/O (fd 0, 1, 2) e causando il fallimento di tutte le redirezioni in `/init`.
+  2. Lo script `/init` conteneva un controllo arbitrario di RAM libera al 100% che su macchine Atom a 1GB di RAM con rootfs residenti saltava il montaggio tmpfs, tentava di montare un'inesistente unità CD-ROM ottica e terminava PID 1 con codice di errore.
+  3. Il bootloader utilizzava `vesamenu.c32` con etichette numerate esplicite anziché un avvio moderno silenzioso e pulito.
+- **Regola**:
+  1. L'utente non deve mai essere costretto a interagire con menu testuali numerati (`[1]`, `[2]`): l'avvio deve essere fluido e immediato in stile 2020+ (OLED Bootsplash pulito con `MENU HIDDEN`, timeout rapido, nessuna dicitura di timeout o tasti prompt, zero numeri nelle label) e nei terminali la navigazione deve avvenire esclusivamente tramite frecce direzionali e tasto Invio (o apertura automatica del Centro di Controllo GUI).
+  2. La manipolazione di archivi CPIO initramfs deve avvenire sempre tramite motore nativo in memoria (`CpioArchive`) che preserva intatti tutti i device nodes con i rispettivi major/minor, permessi e ownership root:root.
+  3. Il kernel deve essere sempre avviato con parametro `tmpram=0` e `/init` deve essere sempre patchato per garantire l'avvio diretto in memoria senza controlli restrittivi o fallback a lettori CD-ROM.
+
