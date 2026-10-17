@@ -179,8 +179,11 @@ case "${1:-status}" in
         ;;
     anticheat)
         shift
-        subcmd="${1:-help}"
+        subcmd="${1:-status}"
         case "$subcmd" in
+            status)
+                python3 "$OSIFY_DIR/runtimes/windows/anticheat/osify-anticheat-checker.py" status
+                ;;
             check)
                 shift
                 python3 "$OSIFY_DIR/runtimes/windows/anticheat/osify-anticheat-checker.py" "$@"
@@ -190,7 +193,7 @@ case "${1:-status}" in
                 sudo "$OSIFY_DIR/runtimes/windows/anticheat/osify-boot-windows.sh" "$@"
                 ;;
             *)
-                echo "Uso: osify-ctl anticheat {check <nome-gioco>|boot-windows [--reboot]}"
+                echo "Uso: osify-ctl anticheat {status|check <nome-gioco>|boot-windows [--reboot]}"
                 ;;
         esac
         ;;

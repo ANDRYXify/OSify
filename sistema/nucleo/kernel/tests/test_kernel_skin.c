@@ -96,6 +96,26 @@ int main(void) {
     assert(fake_fb[50 + 50 * 800] != 0 || fake_fb[51 + 51 * 800] != 0);
     printf("[+] 6. Tipografia Nativa Dark Glass su Framebuffer a 32bpp: OK\n");
 
+    /* 7. Test Anti-Cheat Guard (Windows EAC, BattlEye, Vanguard Compatibility) */
+    osify_anticheat_init();
+    assert(osify_anticheat_query_secure_boot() == true);
+
+    uint8_t pcr0_hash[32];
+    assert(osify_anticheat_query_tpm2(0, pcr0_hash) == true);
+    /* Verifica che il registro PCR sia popolato e valido */
+    assert(pcr0_hash[0] != 0 || pcr0_hash[1] != 0);
+
+    /* Test ThreadHideFromDebugger */
+    assert(osify_anticheat_hide_thread(4200) == true);
+    assert(osify_anticheat_is_thread_hidden(4200) == true);
+    assert(osify_anticheat_is_thread_hidden(9999) == false);
+
+    /* Test Driver Signature Enforcement (DSE) */
+    uint8_t valid_driver[512];
+    memset(valid_driver, 0xAA, sizeof(valid_driver));
+    assert(osify_anticheat_verify_driver(valid_driver, sizeof(valid_driver)) == true);
+    printf("[+] 7. Anti-Cheat & Hardware Security Guard (TPM 2.0, Secure Boot, DSE, ThreadHide): OK\n");
+
     printf("\n[✓✓✓] TUTTI I TEST AVANZATI DEL KERNEL NATIVO OSIFY SUPERATI CON SUCCESSO AL 100%%!\n");
     return 0;
 }

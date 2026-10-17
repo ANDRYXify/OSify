@@ -139,8 +139,18 @@ typedef struct {
 osify_subsystem_t osify_detect_binary_format(const void *header_bytes, size_t len);
 osify_loaded_binary_t osify_binary_load(const void *file_buffer, size_t file_len);
 
+/* --- Anti-Cheat & Hardware Security Guard (Windows EAC, BattlEye, Vanguard) --- */
+void osify_anticheat_init(void);
+bool osify_anticheat_query_secure_boot(void);
+bool osify_anticheat_query_tpm2(int pcr_index, uint8_t *out_pcr_hash);
+bool osify_anticheat_hide_thread(uint32_t thread_id);
+bool osify_anticheat_is_thread_hidden(uint32_t thread_id);
+bool osify_anticheat_verify_driver(const void *driver_blob, size_t size);
+bool osify_anticheat_check_integrity(uint64_t vaddr, size_t size, uint32_t expected_crc);
+
 /* --- Dispatcher Syscall Universale & Calling Convention Thunk --- */
 int osify_universal_exec(const char *path, osify_subsystem_t forced_subsystem);
 int osify_syscall_dispatcher(uint32_t syscall_num, uint64_t arg1, uint64_t arg2, uint64_t arg3, osify_subsystem_t subsystem);
 
 #endif /* OSIFY_KERNEL_H */
+
