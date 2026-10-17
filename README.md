@@ -12,8 +12,8 @@
 ---
 
 <p align="center">
-  <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-NoUSB-Windows-Installer.zip">
-    <img src="https://img.shields.io/badge/Installer_Windows-Senza_USB_(vA.0)-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Installer Windows Senza USB"/>
+  <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-A.0-BareMetal.iso">
+    <img src="https://img.shields.io/badge/OSify_Bare--Metal-vA.0_Naked--Skin-06B6D4?style=for-the-badge&logo=target&logoColor=white" alt="OSify Bare-Metal vA.0"/>
   </a>
   &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-x86_64-v3.iso">
@@ -22,6 +22,14 @@
   &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-Vintage-i686.iso">
     <img src="https://img.shields.io/badge/OSify_Vintage-32--bit_i686_(vA.0)-10B981?style=for-the-badge" alt="OSify Vintage 32-bit i686"/>
+  </a>
+  &nbsp;
+  <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-ARM64.iso">
+    <img src="https://img.shields.io/badge/OSify_ARM64-Apple_Silicon_%26_ARM_(vA.0)-EC4899?style=for-the-badge&logo=apple&logoColor=white" alt="OSify ARM64"/>
+  </a>
+  &nbsp;
+  <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-NoUSB-Windows-Installer.zip">
+    <img src="https://img.shields.io/badge/Installer_Windows-Senza_USB_(vA.0)-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Installer Windows Senza USB"/>
   </a>
   &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/releases/latest">
@@ -145,8 +153,10 @@ Ideale per netbook o computer sprovvisti di porte USB utilizzabili:
 
 ### Metodo 2: Immagine ISO Avviabile (USB / Ventoy / BalenaEtcher)
 Scarica l'immagine corrispondente all'hardware di destinazione:
-* **[OSify-x86_64-v3.iso](https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-x86_64-v3.iso)** per PC moderni.
-* **[OSify-Vintage-i686.iso](https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-Vintage-i686.iso)** per netbook Atom e PC a 32-bit.
+* **[OSify-A.0-BareMetal.iso](https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-A.0-BareMetal.iso)**: Edizione pura Bare-Metal Naked-Skin con Micro-Core autonomo, Framebuffer 32bpp, Network Stack Intel e1000, Audio HDA e installatore GPT nativo (2 MB).
+* **[OSify-x86_64-v3.iso](https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-x86_64-v3.iso)** per PC moderni da gaming e workstation a 64-bit.
+* **[OSify-Vintage-i686.iso](https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-Vintage-i686.iso)** per netbook Atom e PC storici a 32-bit (footprint RAM ~115 MB).
+* **[OSify-ARM64.iso](https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-ARM64.iso)** per processori ARM a 64-bit e Apple Silicon.
 
 ---
 
