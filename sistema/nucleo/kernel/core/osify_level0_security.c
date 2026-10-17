@@ -9,7 +9,7 @@
  */
 
 #include "../include/osify_kernel.h"
-#include <string.h>
+#include "../include/osify_kstring.h"
 
 void osify_sec_init(void) {
     /* Inizializzazione delle barriere di sicurezza a Livello 0 */
@@ -36,7 +36,7 @@ bool osify_sec_check_system_write(const char *path, const osify_security_token_t
     if (!path || !token) return false;
 
     /* Se il percorso tenta di toccare /Sistema e il token non ha i privilegi del kernel, blocca */
-    if (strncmp(path, "/Sistema", 8) == 0 || strncmp(path, "C:\\Sistema", 10) == 0) {
+    if (osify_strncmp(path, "/Sistema", 8) == 0 || osify_strncmp(path, "C:\\Sistema", 10) == 0) {
         if (!token->can_write_system_tree) {
             return false; /* Violazione SIP: Accesso negato a livello 0 */
         }

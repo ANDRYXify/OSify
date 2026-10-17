@@ -1,5 +1,15 @@
 # LEZIONI APPRESE — REGISTRO ERRORI E REGOLE ARCHITETTURALI OSIFY
 
+## 2026-10-17 — Bootstrap Bare-Metal, Runtime Freestanding (No-libc) e Driver Input Hardware
+- **Area**: Kernel bootstrapping, compilazione autonoma e gestione hardware bare-metal
+- **Errore**: Mantenere dipendenze implicite dagli header della libc host (`<string.h>`, `<stdio.h>`) e assenza di un entry point assembly con linker script bare-metal per l'avvio diretto dal silicio.
+- **Causa radice**: In un vero sistema operativo autonomo non esiste alcuna libc o runtime preesistente: il kernel deve essere interamente self-contained (freestanding) e provvisto di entry point assembly per ricevere il controllo dal bootloader (Multiboot / UEFI).
+- **Regola**:
+  1. Il kernel deve essere 100% no-libc: tutte le operazioni su memoria e stringhe usano la libreria interna `osify_kstring` (`osify_memcpy`, `osify_memset`, `osify_snprintf`).
+  2. Bootstrap Assembly & Linker: l'avvio bare-metal e governato da `boot.S` (header Multiboot `0x1BADB002`, stack a 16KB) e collegato tramite `kernel.ld` con caricamento a 1MB (`0x100000`).
+  3. Interrupt & Input Hardware: il kernel inizializza la propria IDT a 256 gate, rimappa il controller PIC 8259A e cattura nativamente i tasti fisici tramite il driver PS/2 su porta `0x60`/`0x64` con buffer ad anello circolare.
+
+
 ## 2026-10-17 — Architettura 'Cover Nuda' & Kernel Nativo a Sottosistemi Universali
 - **Area**: Kernel proprietario OSify, astrazione hardware pura e compatibilita binaria universale
 - **Errore**: Trattare OSify come una distribuzione derivata con kernel generico e strati middleware ridondanti (glibc/X11 ingombranti, dipendenze esterne), appesantendo il sistema e limitandone l'identita autonoma.

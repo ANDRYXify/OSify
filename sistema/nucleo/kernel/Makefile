@@ -3,16 +3,17 @@
 # ==============================================================================
 # Ingegnerizzato da Andrea Taliento (ANDRYXify) per OSify
 # Compila l'esoscheletro del Micro-Core, PMM/VMM, Sicurezza SIP/Seatbelt,
-# Motore Tipografico Dark Glass e Ponte di Compatibilita Universale.
+# Motore Tipografico Dark Glass, Input PS/2 e Ponte di Compatibilita Universale.
 # ==============================================================================
 
 CC ?= gcc
 CFLAGS ?= -Wall -Wextra -O2 -Iinclude -std=c99
 AR ?= ar
 
-SRC_CORE = core/osify_skin_core.c core/osify_memory.c core/osify_level0_security.c
+SRC_CORE = core/osify_skin_core.c core/osify_memory.c core/osify_level0_security.c \
+           core/osify_kstring.c core/osify_idt.c core/osify_main.c
 SRC_SEC  = security/osify_anticheat_guard.c
-SRC_DRV  = drivers/osify_native_graphics.c drivers/osify_font.c
+SRC_DRV  = drivers/osify_native_graphics.c drivers/osify_font.c drivers/osify_ps2_input.c
 SRC_COMP = compat/osify_universal_bridge.c compat/osify_path_unifier.c
 SRC_LOAD = loaders/osify_binary_loader.c
 

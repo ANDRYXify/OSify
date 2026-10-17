@@ -11,6 +11,7 @@
 #include <string.h>
 #include <assert.h>
 #include "../include/osify_kernel.h"
+#include "../include/osify_kstring.h"
 
 int main(void) {
     printf("[+] Inizio collaudo avanzato del Kernel Nativo OSify...\n");
@@ -115,6 +116,23 @@ int main(void) {
     memset(valid_driver, 0xAA, sizeof(valid_driver));
     assert(osify_anticheat_verify_driver(valid_driver, sizeof(valid_driver)) == true);
     printf("[+] 7. Anti-Cheat & Hardware Security Guard (TPM 2.0, Secure Boot, DSE, ThreadHide): OK\n");
+
+    /* 8. Test Libreria Freestanding No-libc & Input PS/2 */
+    char test_buf[64];
+    osify_memset(test_buf, 0, sizeof(test_buf));
+    osify_strcpy(test_buf, "OSify");
+    assert(osify_strlen(test_buf) == 5);
+    assert(osify_strcmp(test_buf, "OSify") == 0);
+
+    osify_snprintf(test_buf, sizeof(test_buf), "Kernel %s A.%d", "Nativo", 0);
+    assert(osify_strcmp(test_buf, "Kernel Nativo A.0") == 0);
+
+    /* Test Keyboard ring buffer */
+    void osify_keyboard_init(void);
+    char osify_keyboard_get_key(void);
+    osify_keyboard_init();
+    assert(osify_keyboard_get_key() == 0);
+    printf("[+] 8. Libreria Freestanding No-libc (kstring) & Driver Input PS/2: OK\n");
 
     printf("\n[✓✓✓] TUTTI I TEST AVANZATI DEL KERNEL NATIVO OSIFY SUPERATI CON SUCCESSO AL 100%%!\n");
     return 0;
