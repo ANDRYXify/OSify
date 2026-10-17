@@ -16,16 +16,16 @@ C_RESET='\033[0m'
 C_BOLD='\033[1m'
 
 printf "%b\n" "
-${C_PURPLE}${C_BOLD}      .OOOOOOOOOOOO.          ${C_MINT}${C_BOLD}OSify Linux x86-64-v3${C_RESET}
+${C_PURPLE}${C_BOLD}      .OOOOOOOOOOOO.          ${C_MINT}${C_BOLD}OSify Bare-Metal Universale${C_RESET}
 ${C_PURPLE}${C_BOLD}    .OOOOOOOOOOOOOOOO.        ${C_GRAY}---------------------------${C_RESET}
 ${C_PURPLE}${C_BOLD}   .OOOO'        'OOOO.       ${C_PURPLE}Creatore    : ${C_MAGENTA}Andrea Taliento (ANDRYXify)${C_RESET}
-${C_PURPLE}${C_BOLD}  .OOOO'          'OOOO.      ${C_PURPLE}Kernel      : ${C_RESET}$(uname -r 2>/dev/null || echo '6.12-cachyos-bore')
-${C_PURPLE}${C_BOLD} .OOOO'            'OOOO.     ${C_PURPLE}Scheduler   : ${C_MINT}SCHED_BORE (Latenza Minima)${C_RESET}
-${C_PURPLE}${C_BOLD} OOOO'   ${C_MAGENTA}by Andryx${C_PURPLE}  'OOOO     ${C_PURPLE}Display     : ${C_RESET}Wayland (KDE Plasma 6)${C_RESET}
-${C_PURPLE}${C_BOLD} 'OOOO.            .OOOO'     ${C_PURPLE}QoS Shaper  : ${C_MINT}CAKE Anti-Bufferbloat (DSCP)${C_RESET}
-${C_PURPLE}${C_BOLD}  'OOOO.          .OOOO'      ${C_PURPLE}Audio Engine: ${C_RESET}PipeWire Pro-Audio (<2.5ms)${C_RESET}
-${C_PURPLE}${C_BOLD}   'OOOO.        .OOOO'       ${C_PURPLE}Multi-Stream: ${C_MINT}Twitch + Kick + YouTube (Tee Relay)${C_RESET}
-${C_PURPLE}${C_BOLD}    'OOOOOOOOOOOOOOOO'        ${C_PURPLE}Runtimes    : ${C_RESET}Proton-GE • Waydroid • Darling${C_RESET}
-${C_PURPLE}${C_BOLD}      'OOOOOOOOOOOO'          ${C_PURPLE}Architettura: ${C_MINT}Modulare a Blocchi (osify-blocks)${C_RESET}
+${C_PURPLE}${C_BOLD}  .OOOO'          'OOOO.      ${C_PURPLE}Nucleo      : ${C_RESET}$(uname -r 2>/dev/null || echo 'OSify-Core vA.0')
+${C_PURPLE}${C_BOLD} .OOOO'            'OOOO.     ${C_PURPLE}Pianificatore: ${C_MINT}Priorità Adattiva (Latenza Minima)${C_RESET}
+${C_PURPLE}${C_BOLD} OOOO'   ${C_MAGENTA}by Andryx${C_PURPLE}  'OOOO     ${C_PURPLE}Interfaccia : ${C_RESET}Motore Grafico Obsidian Dark Glass${C_RESET}
+${C_PURPLE}${C_BOLD} 'OOOO.            .OOOO'     ${C_PURPLE}Rete Shaper : ${C_MINT}Anti-Bufferbloat DSCP${C_RESET}
+${C_PURPLE}${C_BOLD}  'OOOO.          .OOOO'      ${C_PURPLE}Audio Engine: ${C_RESET}OSify Pro-Audio (<2.5ms)${C_RESET}
+${C_PURPLE}${C_BOLD}   'OOOO.        .OOOO'       ${C_PURPLE}Flussi VOD  : ${C_MINT}Separazione Multicanale Ns-Safe${C_RESET}
+${C_PURPLE}${C_BOLD}    'OOOOOOOOOOOOOOOO'        ${C_PURPLE}Compatibilità: ${C_RESET}Nativa PE (.exe) • APK • Mach-O • WASM${C_RESET}
+${C_PURPLE}${C_BOLD}      'OOOOOOOOOOOO'          ${C_PURPLE}Architettura: ${C_MINT}Naked Skin Silicio-Diretto${C_RESET}
 "
 

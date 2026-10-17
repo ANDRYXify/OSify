@@ -122,27 +122,27 @@ OSify/
 │   ├── pipewire.conf.d/     # Configurazione quantizzazione a 64 campioni
 │   └── osify-audio-setup.sh # Creazione canali isolati per Twitch VOD Track 2
 ├── blocks/                  # Gestore modulare dei blocchi (JSON + CLI)
-├── build/                   # File di build e manifesti pacchetti
-│   ├── packages.x86_64      # Lista pacchetti ufficiali per x86_64
-│   ├── packages.i686        # Lista pacchetti ufficiali per i686 Vintage
-│   ├── generate-live-iso.sh # Generatore immagini ISO ibride avviabili
-│   └── release/             # Script di packaging per release GitHub
-├── desktop/                 # Configurazioni ambienti desktop
-│   ├── branding/            # Sfondi ufficiali con logo OSify (1080p e 1024x600)
-│   ├── kde-plasma/          # Ottimizzazioni Wayland e tearing per Plasma 6
-│   ├── macos-multitasking/  # Gesti multitouch, Mission Control e scorciatoie
-│   └── vintage/             # Configurazione Openbox e Tint2 per netbook Atom
-├── kernel/                  # Ottimizzazioni a livello kernel
-│   ├── osify-sysctl.conf    # Parametri vm.max_map_count, CAKE e BBR
-│   ├── limits.d/            # Priorità real-time e memlock
-│   └── udev/                # Regole udev per controller e scheduler I/O
-├── network/                 # Traffic Shaper CAKE QoS e regole nftables
-├── runtimes/                # Matrice di compatibilità runtime (Proton, Waydroid, Darling)
-├── tests/                   # Suite di collaudo automatizzata e simulatori QEMU
-└── tools/                   # Toolchain di amministrazione
-    ├── osify-ctl            # CLI centrale di gestione del sistema
-    ├── hardware/            # Diagnostica predittiva hardware per netbook
-    └── windows-installer/   # Installer per Windows senza supporto USB
+├── build/                   # Strumenti di generazione e pacchettizzazione ISO Universale
+│   ├── build-universal-iso.py # Generatore ISO Universale A.0 per qualsiasi architettura
+│   ├── build-ify-apps.py    # Generatore suite nativa di applicazioni .ify
+│   └── packages/            # Indici e manifesti dei componenti di sistema
+├── desktop/                 # Motore Grafico OSify 2050 (Obsidian Dark Glass)
+│   ├── branding/            # Identità visiva, icone squircle vettoriali e sfondi a ogni risoluzione
+│   ├── motore-grafico/      # Compositore visivo nativo, gestione finestre e gesti multi-tocco
+│   └── legacy/              # Pipeline leggera ottimizzata per silicio storico (Atom, Pentium, Celeron)
+├── sistema/                 # Architettura centrale del sistema operativo
+│   ├── nucleo/              # Micro-nucleo Bare-Metal autonomo e gestione processi
+│   ├── driver/              # Driver nativi hardware (CPU, memoria, grafica, audio, rete, dischi)
+│   ├── servizi/             # Servizi nativi (/Sistema/Servizi) e Compatibilità.ify
+│   └── installatore/        # Installatore grafico guidato GPT e migrazione profilo Live
+├── applicazioni/            # Suite nativa di applicazioni .ify (/Applicazioni)
+├── rete/                    # Gestione di rete ad alta priorità, protezione DNS e anti-bufferbloat
+├── sicurezza/               # Protezione autoadattiva, Privacy Vault e Anti-Cheat Guard a livello 0
+├── tests/                   # Suite di collaudo automatizzata e simulatori di silicio universale
+└── tools/                   # Strumenti operativi e interfaccia di configurazione
+    ├── osify-gui/           # Applicazioni grafiche native Obsidian Dark Glass
+    ├── osify-ctl            # Centro di controllo e commutazione profili prestazionali
+    └── windows-installer/   # Installatore grafico da Windows senza supporto USB
 ```
 
 ---

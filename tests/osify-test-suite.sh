@@ -97,7 +97,7 @@ fi
 # ------------------------------------------------------------------------------
 echo ""
 echo "--- [5/7] Collaudo Anti-Cheat Intelligence & Ring-0 Detection ---"
-ac_script="$REPO_ROOT/runtimes/windows/anticheat/osify-anticheat-checker.py"
+ac_script="$REPO_ROOT/sistema/servizi/Compatibilita/anticheat/osify-anticheat-checker.py"
 if out_vanguard=$(python3 "$ac_script" "Valorant"); then
     if echo "$out_vanguard" | grep -q "BLOCKED_RING0"; then
         log_pass "Anti-Cheat: Valorant correttamente classificato come BLOCKED_RING0"

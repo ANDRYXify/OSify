@@ -547,6 +547,18 @@ OSIFY_OPENBOX_MENU = """<?xml version="1.0" encoding="UTF-8"?>
       <item label="Impostazioni.ify" icon="/usr/share/pixmaps/osify-settings.png">
         <action name="Execute"><command>/Applicazioni/Impostazioni.ify/avvia.sh</command></action>
       </item>
+      <item label="Dispositivi.ify" icon="/usr/share/pixmaps/osify-usb.png">
+        <action name="Execute"><command>/Applicazioni/Dispositivi.ify/avvia.sh</command></action>
+      </item>
+      <item label="Accessibilità.ify" icon="/usr/share/pixmaps/osify-accessibility.png">
+        <action name="Execute"><command>/Applicazioni/Accessibilità.ify/avvia.sh</command></action>
+      </item>
+      <item label="Ripristino.ify" icon="/usr/share/pixmaps/osify-backup.png">
+        <action name="Execute"><command>/Applicazioni/Ripristino.ify/avvia.sh</command></action>
+      </item>
+      <item label="Compatibilità.ify" icon="/usr/share/pixmaps/osify-hub.png">
+        <action name="Execute"><command>/Applicazioni/Compatibilità.ify/avvia.sh</command></action>
+      </item>
       <item label="Aspetto.ify" icon="/usr/share/pixmaps/osify-appearance.png">
         <action name="Execute"><command>/Applicazioni/Aspetto.ify/avvia.sh</command></action>
       </item>
@@ -3498,10 +3510,25 @@ LABEL rescue
     INITRD /boot/initramfs-lts
     APPEND modules=loop,squashfs,sd-mod,usb-storage keep_apk_new=yes console=tty1 console=ttyS0 copytoram quiet loglevel=1 rw autologin
 """
-    syslinux_path = os.path.join(iso_root, "boot/syslinux/syslinux.cfg")
-    os.makedirs(os.path.dirname(syslinux_path), exist_ok=True)
-    with open(syslinux_path, "w") as f:
+    # Configurazione Syslinux ed Isolinux per avvio deterministico Legacy BIOS su qualsiasi firmware
+    for sl_dir in ["boot/syslinux", "boot/isolinux", "isolinux"]:
+        full_sl_dir = os.path.join(iso_root, sl_dir)
+        os.makedirs(full_sl_dir, exist_ok=True)
+        with open(os.path.join(full_sl_dir, "syslinux.cfg"), "w") as f:
+            f.write(syslinux_cfg)
+        with open(os.path.join(full_sl_dir, "isolinux.cfg"), "w") as f:
+            f.write(syslinux_cfg)
+    with open(os.path.join(iso_root, "isolinux.cfg"), "w") as f:
         f.write(syslinux_cfg)
+
+    # Assicura presenza di isolinux.bin e moduli .c32 in tutte le directory di boot
+    src_sl = os.path.join(iso_root, "boot/syslinux")
+    if os.path.exists(src_sl):
+        for dst_sl_name in ["boot/isolinux", "isolinux"]:
+            dst_sl = os.path.join(iso_root, dst_sl_name)
+            os.makedirs(dst_sl, exist_ok=True)
+            for item in glob.glob(os.path.join(src_sl, "*")):
+                shutil.copy2(item, dst_sl)
 
     # Rimozione preventiva del vecchio boot.cat (xorriso lo rigenera fresco)
     cat_path = os.path.join(iso_root, "boot/syslinux/boot.cat")

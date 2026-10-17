@@ -121,7 +121,7 @@ set_mode() {
             if [[ -d /sys/devices/system/cpu/cpu0/cpufreq ]]; then
                 echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor >/dev/null 2>&1 || true
             fi
-            "$OSIFY_DIR/desktop/kde-plasma/apply-desktop-tuning.sh"
+            "$OSIFY_DIR/desktop/motore-grafico/taratura-desktop.sh"
             echo "[✓] Priorità massimizzata e tearing abilitato per latenza minima!"
             ;;
         emulation)
@@ -167,30 +167,30 @@ case "${1:-status}" in
         ;;
     windows)
         shift
-        "$OSIFY_DIR/runtimes/windows/osify-proton.sh" "$@"
+        "$OSIFY_DIR/sistema/servizi/Compatibilita/motore-windows.sh" "$@"
         ;;
     android)
         shift
-        "$OSIFY_DIR/runtimes/android/osify-waydroid-setup.sh" "$@"
+        "$OSIFY_DIR/sistema/servizi/Compatibilita/motore-android.sh" "$@"
         ;;
     darwin)
         shift
-        "$OSIFY_DIR/runtimes/macos/osify-darwin-bridge.sh" "$@"
+        "$OSIFY_DIR/sistema/servizi/Compatibilita/motore-macos.sh" "$@"
         ;;
     anticheat)
         shift
         subcmd="${1:-status}"
         case "$subcmd" in
             status)
-                python3 "$OSIFY_DIR/runtimes/windows/anticheat/osify-anticheat-checker.py" status
+                python3 "$OSIFY_DIR/sistema/servizi/Compatibilita/anticheat/osify-anticheat-checker.py" status
                 ;;
             check)
                 shift
-                python3 "$OSIFY_DIR/runtimes/windows/anticheat/osify-anticheat-checker.py" "$@"
+                python3 "$OSIFY_DIR/sistema/servizi/Compatibilita/anticheat/osify-anticheat-checker.py" "$@"
                 ;;
             boot-windows)
                 shift
-                sudo "$OSIFY_DIR/runtimes/windows/anticheat/osify-boot-windows.sh" "$@"
+                sudo "$OSIFY_DIR/sistema/servizi/Compatibilita/anticheat/osify-boot-windows.sh" "$@"
                 ;;
             *)
                 echo "Uso: osify-ctl anticheat {status|check <nome-gioco>|boot-windows [--reboot]}"
@@ -243,7 +243,7 @@ case "${1:-status}" in
         esac
         ;;
     macos-gestures)
-        "$OSIFY_DIR/desktop/macos-multitasking/kwin-macos-gestures.sh"
+        "$OSIFY_DIR/desktop/motore-grafico/gesti-multitasking.sh"
         ;;
     test)
         shift

@@ -1,0 +1,16 @@
+{
+  "id": "com.osify.dispositivi",
+  "nome": "Dispositivi",
+  "versione": "2050.1.0",
+  "descrizione": "Gestione periferiche fisiche, porte USB, stampanti, scanner, controller e webcam",
+  "categoria": "Sistema",
+  "icona": "icona.png",
+  "eseguibile": "avvia.sh",
+  "permessi": [
+    "grafica",
+    "input",
+    "disco",
+    "audio"
+  ],
+  "autore": "OSify Systems"
+}

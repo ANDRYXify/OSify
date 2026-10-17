@@ -1,0 +1,16 @@
+{
+  "id": "com.osify.compatibilita",
+  "nome": "Compatibilità",
+  "versione": "2050.1.0",
+  "descrizione": "Esecutore universale per formati PC (.exe), Mobili (.apk), Darwin (.app) e Anti-Cheat Guard",
+  "categoria": "Sistema",
+  "icona": "icona.png",
+  "eseguibile": "avvia.sh",
+  "permessi": [
+    "grafica",
+    "input",
+    "disco",
+    "audio"
+  ],
+  "autore": "OSify Systems"
+}

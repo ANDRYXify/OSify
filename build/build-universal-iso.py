@@ -118,13 +118,14 @@ def build_universal_iso():
 
     # 4. Configurazione Bootloader Ibrido Universale (Syslinux / Isolinux / GRUB)
     # Menu universale elegante: zero fronzoli, avvio rapido, solo identita OSify
-    isolinux_cfg = """UI vesamenu.c32
+    isolinux_cfg = """DEFAULT osify
+UI vesamenu.c32
 PROMPT 0
-TIMEOUT 50
+TIMEOUT 20
 ONTIMEOUT osify
 
 MENU TITLE  
-MENU BACKGROUND /boot/isolinux/splash.jpg
+MENU BACKGROUND splash.jpg
 MENU COLOR screen       37;40   #80ffffff #00000000 std
 MENU COLOR border       30;44   #00000000 #00000000 none
 MENU COLOR title        1;36;44 #ffffffff #00000000 none

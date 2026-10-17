@@ -1,0 +1,16 @@
+{
+  "id": "com.osify.accessibilita",
+  "nome": "Accessibilità",
+  "versione": "2050.1.0",
+  "descrizione": "Ingranditore schermo ad alto contrasto, sintesi vocale e tastiera su schermo",
+  "categoria": "Sistema",
+  "icona": "icona.png",
+  "eseguibile": "avvia.sh",
+  "permessi": [
+    "grafica",
+    "input",
+    "disco",
+    "audio"
+  ],
+  "autore": "OSify Systems"
+}

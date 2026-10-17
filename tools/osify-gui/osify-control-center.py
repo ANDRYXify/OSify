@@ -141,10 +141,11 @@ class OSifyControlCenter(QMainWindow):
         # Tab Widget Principale
         tabs = QTabWidget()
         tabs.addTab(self.create_modes_tab(), "Profili di Sistema")
-        tabs.addTab(self.create_streaming_tab(), "Live Streaming (Twitch/Kick/YT)")
-        tabs.addTab(self.create_emulation_tab(), "Console Matrix (Orbit64/Emu)")
-        tabs.addTab(self.create_runtimes_tab(), "Multi-Runtime (Win/Android/Mac)")
-        tabs.addTab(self.create_anticheat_tab(), "Anti-Cheat Bridge")
+        tabs.addTab(self.create_streaming_tab(), "Audio Pro e Flussi")
+        tabs.addTab(self.create_hardware_tab(), "Adattamento Hardware")
+        tabs.addTab(self.create_compat_tab(), "Compatibilità Universale")
+        tabs.addTab(self.create_anticheat_tab(), "Protezione Anti-Cheat Livello 0")
+        tabs.addTab(self.create_privacy_tab(), "Sicurezza e Privacy")
 
         main_layout.addWidget(tabs)
 
@@ -154,42 +155,42 @@ class OSifyControlCenter(QMainWindow):
         layout = QVBoxLayout(tab)
         layout.setSpacing(14)
 
-        desc = QLabel("Seleziona una modalità per riallocare CPU, priorità audio, QoS e pipeline grafica in tempo reale:")
+        desc = QLabel("Seleziona il profilo di carico per riallocare CPU, memoria, priorità audio e pipeline grafica:")
         desc.setStyleSheet("color: #94a3b8; font-size: 13px;")
         layout.addWidget(desc)
 
         grid = QGridLayout()
         grid.setSpacing(14)
 
-        # 1. Bottone Live Streaming
-        btn_stream = QPushButton("MODALITÀ LIVE STREAMING\n(Anti-Bufferbloat CAKE + Audio VOD Safe)")
-        btn_stream.setStyleSheet("background: #831843; border-color: #f43f5e; color: white; padding: 16px;")
-        btn_stream.clicked.connect(lambda: self.run_osify_cmd(["mode", "streaming"]))
-        grid.addWidget(btn_stream, 0, 0)
-
-        # 2. Bottone Gaming eSport
-        btn_game = QPushButton("MODALITÀ GAMING COMPETITIVO\n(CPU Max Governor + Wayland Tearing + Latency 0)")
+        # 1. Bottone Gioco eSport
+        btn_game = QPushButton("MODALITÀ GIOCO & ESPORT\n(Massima frequenza CPU + Latenza zero + VRR nativo)")
         btn_game.setStyleSheet("background: #1e3a8a; border-color: #3b82f6; color: white; padding: 16px;")
         btn_game.clicked.connect(lambda: self.run_osify_cmd(["mode", "gaming"]))
-        grid.addWidget(btn_game, 0, 1)
+        grid.addWidget(btn_game, 0, 0)
 
-        # 3. Bottone Emulazione Console
-        btn_emu = QPushButton("MODALITÀ CONSOLE (GAMESCOPE)\n(10-Foot UI + mimalloc + Shader Cache 128GB)")
-        btn_emu.setStyleSheet("background: #14532d; border-color: #22c55e; color: white; padding: 16px;")
-        btn_emu.clicked.connect(lambda: self.run_osify_cmd(["mode", "emulation"]))
-        grid.addWidget(btn_emu, 1, 0)
+        # 2. Bottone Streaming + Gioco
+        btn_stream = QPushButton("MODALITÀ STREAMING + GIOCO\n(Priorità di rete anti-bufferbloat + Bus VOD separato)")
+        btn_stream.setStyleSheet("background: #831843; border-color: #f43f5e; color: white; padding: 16px;")
+        btn_stream.clicked.connect(lambda: self.run_osify_cmd(["mode", "streaming"]))
+        grid.addWidget(btn_stream, 0, 1)
 
-        # 4. Bottone Bilanciato
-        btn_bal = QPushButton("MODALITÀ DESKTOP BILANCIATA\n(Risparmio energetico e silenziosità)")
-        btn_bal.setStyleSheet("background: #1e293b; border-color: #475569; color: white; padding: 16px;")
-        btn_bal.clicked.connect(lambda: self.run_osify_cmd(["mode", "balanced"]))
-        grid.addWidget(btn_bal, 1, 1)
+        # 3. Bottone Postazione di Lavoro
+        btn_work = QPushButton("MODALITÀ POSTAZIONE DI LAVORO\n(Multitasking bilanciato + Compilazione veloce + Stabilità)")
+        btn_work.setStyleSheet("background: #14532d; border-color: #22c55e; color: white; padding: 16px;")
+        btn_work.clicked.connect(lambda: self.run_osify_cmd(["mode", "balanced"]))
+        grid.addWidget(btn_work, 1, 0)
 
-        # 5. Bottone Vintage Low-Spec (Macchine Vecchie / 2-4GB RAM)
-        btn_low = QPushButton("MODALITÀ VINTAGE LOW-SPEC (PC DATATI)\n(Resurrezione 2-4GB RAM • ZRAM zstd • Footprint ~400MB)")
-        btn_low.setStyleSheet("background: #312e81; border-color: #6366f1; color: white; padding: 14px;")
-        btn_low.clicked.connect(lambda: self.run_osify_cmd(["mode", "lowspec"]))
-        grid.addWidget(btn_low, 2, 0, 1, 2)
+        # 4. Bottone Basso Consumo
+        btn_eco = QPushButton("MODALITÀ BASSO CONSUMO\n(Risparmio energetico massimo + Silenziosità ventole)")
+        btn_eco.setStyleSheet("background: #1e293b; border-color: #475569; color: white; padding: 16px;")
+        btn_eco.clicked.connect(lambda: self.run_osify_cmd(["mode", "lowspec"]))
+        grid.addWidget(btn_eco, 1, 1)
+
+        # 5. Bottone Automatico / Calibrazione
+        btn_auto = QPushButton("MODALITÀ AUTOMATICA ADATTIVA (HAL)\n(Riconoscimento dinamico del carico di lavoro e del silicio)")
+        btn_auto.setStyleSheet("background: #312e81; border-color: #6366f1; color: white; padding: 14px;")
+        btn_auto.clicked.connect(lambda: self.run_osify_cmd(["hw-detect", "--apply"]))
+        grid.addWidget(btn_auto, 2, 0, 1, 2)
 
         layout.addLayout(grid)
         layout.addStretch()
@@ -204,21 +205,21 @@ class OSifyControlCenter(QMainWindow):
         card.setProperty("class", "card")
         c_layout = QVBoxLayout(card)
 
-        title = QLabel("Gestione Multi-Broadcast & Audio Separation")
+        title = QLabel("Architettura Audio Pro & Separazione Canali")
         title.setFont(QFont("Arial", 14, QFont.Weight.Bold))
         title.setStyleSheet("color: #38bdf8;")
         c_layout.addWidget(title)
 
-        info = QLabel("Il Relay di OSify inoltra il flusso codificato a Twitch, Kick e YouTube simultaneamente a impatto zero su CPU e GPU.")
+        info = QLabel("Il motore audio nativo separa i bus fisici: Audio-Gioco, Audio-Voce, Audio-Musica e Audio-Microfono con isolamento della traccia VOD.")
         info.setStyleSheet("color: #94a3b8;")
         c_layout.addWidget(info)
 
         btn_box = QHBoxLayout()
-        btn_relay = QPushButton("Avvia Relay Multi-RTMP (Twitch+Kick+YT)")
+        btn_relay = QPushButton("Avvia Inoltro Flusso Multi-Piattaforma")
         btn_relay.clicked.connect(self.launch_stream_relay)
         btn_box.addWidget(btn_relay)
 
-        btn_audio = QPushButton("Inizializza Nodi Audio PipeWire")
+        btn_audio = QPushButton("Inizializza Bus Audio Pro a Bassa Latenza")
         btn_audio.clicked.connect(lambda: self.run_osify_cmd(["audio", "setup"]))
         btn_box.addWidget(btn_audio)
 
@@ -227,74 +228,83 @@ class OSifyControlCenter(QMainWindow):
         layout.addStretch()
         return tab
 
-    def create_emulation_tab(self):
+    def create_hardware_tab(self):
         tab = QWidget()
         layout = QVBoxLayout(tab)
-        
-        info = QLabel("Emulatori ottimizzati con allocatore mimalloc e Vulkan GPL:")
+        layout.setSpacing(14)
+
+        card = QFrame()
+        card.setProperty("class", "card")
+        c_layout = QVBoxLayout(card)
+
+        title = QLabel("Adattamento Hardware (HAL) e Ottimizzazione Silicio")
+        title.setFont(QFont("Arial", 14, QFont.Weight.Bold))
+        title.setStyleSheet("color: #a855f7;")
+        c_layout.addWidget(title)
+
+        info = QLabel("Configurazione atomica del silicio: rilevamento istruzioni CPU (SSE/AVX/NEON), taratura memoria compressa e pipeline grafica.")
         info.setStyleSheet("color: #94a3b8;")
-        layout.addWidget(info)
+        c_layout.addWidget(info)
 
         grid = QGridLayout()
-        emulators = [
-            ("PlayStation 3 (RPCS3)", "rpcs3"),
-            ("Nintendo Switch (Ryujinx)", "ryujinx"),
-            ("PlayStation 2 (PCSX2)", "pcsx2"),
-            ("Wii / GameCube (Dolphin)", "dolphin-emu"),
-            ("Xbox 360 (Xenia)", "xenia"),
-            ("Frontend TV (ES-DE)", "es-de")
-        ]
+        btn_detect = QPushButton("Esegui Taratura Silicio Completa")
+        btn_detect.clicked.connect(lambda: self.run_osify_cmd(["hw-detect", "--apply"]))
+        grid.addWidget(btn_detect, 0, 0)
 
-        for i, (name, cmd) in enumerate(emulators):
-            btn = QPushButton(name)
-            btn.clicked.connect(lambda checked, c=cmd: self.run_osify_cmd(["emu", c]))
-            grid.addWidget(btn, i // 2, i % 2)
+        btn_mem = QPushButton("Ottimizza Memoria Compressa Nativa")
+        btn_mem.clicked.connect(lambda: self.run_osify_cmd(["mode", "lowspec"]))
+        grid.addWidget(btn_mem, 0, 1)
 
-        layout.addLayout(grid)
+        btn_gpu = QPushButton("Calibra Pipeline Grafica Obsidian")
+        btn_gpu.clicked.connect(lambda: self.run_osify_cmd(["desktop-tuning"]))
+        grid.addWidget(btn_gpu, 1, 0, 1, 2)
+
+        c_layout.addLayout(grid)
+        layout.addWidget(card)
         layout.addStretch()
         return tab
 
-    def create_runtimes_tab(self):
+    def create_compat_tab(self):
         tab = QWidget()
         layout = QVBoxLayout(tab)
 
-        # Windows Box
+        # Sezione Eseguibili PC
         win_card = QFrame()
         w_layout = QVBoxLayout(win_card)
-        w_title = QLabel("🪟 Windows Runtime (Proton-GE / Wine-TKG)")
+        w_title = QLabel("Ambiente Compatibilità Applicazioni PC (.exe / .msi)")
         w_title.setFont(QFont("Arial", 13, QFont.Weight.Bold))
         w_layout.addWidget(w_title)
         
-        btn_run_exe = QPushButton("Seleziona ed Esegui file .exe con Fsync & Vulkan Async")
+        btn_run_exe = QPushButton("Seleziona ed Esegui Pacchetto PC con Accelerazione Vulkan")
         btn_run_exe.clicked.connect(self.select_and_run_exe)
         w_layout.addWidget(btn_run_exe)
         layout.addWidget(win_card)
 
-        # Android Box
+        # Sezione Applicazioni Mobili
         and_card = QFrame()
         a_layout = QVBoxLayout(and_card)
-        a_title = QLabel("Android Runtime (Waydroid LXC)")
+        a_title = QLabel("Ambiente Compatibilità Applicazioni Mobili (.apk / .aab)")
         a_title.setFont(QFont("Arial", 13, QFont.Weight.Bold))
         a_layout.addWidget(a_title)
 
         a_btn_box = QHBoxLayout()
-        btn_way_start = QPushButton("Avvia Sessione Android")
+        btn_way_start = QPushButton("Avvia Sessione Mobile Grafica")
         btn_way_start.clicked.connect(lambda: self.run_osify_cmd(["android", "start"]))
-        btn_way_stop = QPushButton("Arresta Sessione Android")
+        btn_way_stop = QPushButton("Arresta Sessione Mobile")
         btn_way_stop.clicked.connect(lambda: self.run_osify_cmd(["android", "stop"]))
         a_btn_box.addWidget(btn_way_start)
         a_btn_box.addWidget(btn_way_stop)
         a_layout.addLayout(a_btn_box)
         layout.addWidget(and_card)
 
-        # macOS Box
+        # Sezione Applicazioni Darwin
         mac_card = QFrame()
         m_layout = QVBoxLayout(mac_card)
-        m_title = QLabel("🍎 macOS & Darwin Bridge (Darling / OSX-KVM)")
+        m_title = QLabel("Ambiente Compatibilità Applicazioni Darwin (.app / .dmg)")
         m_title.setFont(QFont("Arial", 13, QFont.Weight.Bold))
         m_layout.addWidget(m_title)
 
-        btn_mac = QPushButton("Stato Accelerazione Darwin / VFIO")
+        btn_mac = QPushButton("Verifica Stato Accelerazione Grafica Darwin")
         btn_mac.clicked.connect(lambda: self.run_osify_cmd(["darwin", "status"]))
         m_layout.addWidget(btn_mac)
         layout.addWidget(mac_card)
@@ -311,12 +321,12 @@ class OSifyControlCenter(QMainWindow):
         card.setProperty("class", "card")
         c_layout = QVBoxLayout(card)
 
-        title = QLabel("Verifica Compatibilità Anti-Cheat (Ring-0 & Proton)")
+        title = QLabel("Protezione Anti-Cheat Livello 0 (Integrità Kernel)")
         title.setFont(QFont("Arial", 14, QFont.Weight.Bold))
         title.setStyleSheet("color: #f43f5e;")
         c_layout.addWidget(title)
 
-        desc = QLabel("I giochi con anti-cheat Ring-0 (Vanguard, Ricochet) richiedono contromisure KVM Cloaked o riavvio rapido UEFI:")
+        desc = QLabel("Isolamento kernel con emulazione TPM 2.0 e integrità Secure Boot per titoli competitivi:")
         desc.setStyleSheet("color: #94a3b8;")
         c_layout.addWidget(desc)
 
@@ -325,7 +335,7 @@ class OSifyControlCenter(QMainWindow):
         self.game_input = QLineEdit()
         self.game_input.setPlaceholderText("Es. Valorant, Apex Legends, Elden Ring, Fortnite...")
         self.game_input.setStyleSheet("background: #0b0d14; border: 1px solid #334155; border-radius: 6px; padding: 10px; color: white;")
-        btn_check = QPushButton("Verifica Gioco")
+        btn_check = QPushButton("Verifica Integrità Titolo")
         btn_check.clicked.connect(self.check_anticheat_game)
         search_box.addWidget(self.game_input)
         search_box.addWidget(btn_check)
@@ -340,7 +350,7 @@ class OSifyControlCenter(QMainWindow):
 
         # Pulsanti contromisure
         btn_row = QHBoxLayout()
-        btn_boot_win = QPushButton("Fast-Boot Windows (UEFI One-Time)")
+        btn_boot_win = QPushButton("Avvio Diretto UEFI Affiancato")
         btn_boot_win.setStyleSheet("background: #431407; border-color: #ea580c; color: white;")
         btn_boot_win.clicked.connect(lambda: self.run_osify_cmd(["anticheat", "boot-windows", "--reboot"]))
         btn_row.addWidget(btn_boot_win)
@@ -350,11 +360,43 @@ class OSifyControlCenter(QMainWindow):
         layout.addStretch()
         return tab
 
+    def create_privacy_tab(self):
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        layout.setSpacing(14)
+
+        card = QFrame()
+        card.setProperty("class", "card")
+        c_layout = QVBoxLayout(card)
+
+        title = QLabel("Sicurezza, Tracciamento e Privacy Vault")
+        title.setFont(QFont("Arial", 14, QFont.Weight.Bold))
+        title.setStyleSheet("color: #10b981;")
+        c_layout.addWidget(title)
+
+        desc = QLabel("Protezione continua contro telemetria, profilazione remota e minacce informatiche a livello di rete:")
+        desc.setStyleSheet("color: #94a3b8;")
+        c_layout.addWidget(desc)
+
+        grid = QGridLayout()
+        btn_ad = QPushButton("Attiva Protezione DNS Anti-Tracciamento")
+        btn_ad.clicked.connect(lambda: self.run_osify_cmd(["adblock", "start"]))
+        grid.addWidget(btn_ad, 0, 0)
+
+        btn_shield = QPushButton("Scansione Euristica di Sicurezza")
+        btn_shield.clicked.connect(lambda: self.run_osify_cmd(["shield", "scan"]))
+        grid.addWidget(btn_shield, 0, 1)
+
+        c_layout.addLayout(grid)
+        layout.addWidget(card)
+        layout.addStretch()
+        return tab
+
     def check_anticheat_game(self):
         game_name = self.game_input.text().strip()
         if not game_name:
             return
-        checker_script = os.path.join(os.path.dirname(__file__), "../../runtimes/windows/anticheat/osify-anticheat-checker.py")
+        checker_script = os.path.join(os.path.dirname(__file__), "../../sistema/servizi/Compatibilita/anticheat/osify-anticheat-checker.py")
         try:
             out = subprocess.check_output(["python3", checker_script, game_name], text=True)
             self.ac_result.setPlainText(out)

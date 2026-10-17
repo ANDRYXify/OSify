@@ -217,6 +217,46 @@ SUITE = [
         "categoria": "Sistema",
         "icona_src": "osify-install.png",
         "comando": "/usr/bin/osify-install-gui"
+    },
+    {
+        "id": "com.osify.dispositivi",
+        "cartella": "Dispositivi.ify",
+        "nome": "Dispositivi",
+        "versione": "2050.1.0",
+        "descrizione": "Gestione periferiche fisiche, porte USB, stampanti, scanner, controller e webcam",
+        "categoria": "Sistema",
+        "icona_src": "osify-usb.png",
+        "comando": "/usr/bin/osify-settings"
+    },
+    {
+        "id": "com.osify.accessibilita",
+        "cartella": "Accessibilità.ify",
+        "nome": "Accessibilità",
+        "versione": "2050.1.0",
+        "descrizione": "Ingranditore schermo ad alto contrasto, sintesi vocale e tastiera su schermo",
+        "categoria": "Sistema",
+        "icona_src": "osify-accessibility.png",
+        "comando": "/usr/bin/osify-accessibility"
+    },
+    {
+        "id": "com.osify.ripristino",
+        "cartella": "Ripristino.ify",
+        "nome": "Ripristino",
+        "versione": "2050.1.0",
+        "descrizione": "Salvataggio atomico e ripristino istantaneo di dati, profili e snapshot di sistema",
+        "categoria": "Sistema",
+        "icona_src": "osify-backup.png",
+        "comando": "/usr/bin/osify-backup"
+    },
+    {
+        "id": "com.osify.compatibilita",
+        "cartella": "Compatibilità.ify",
+        "nome": "Compatibilità",
+        "versione": "2050.1.0",
+        "descrizione": "Esecutore universale per formati PC (.exe), Mobili (.apk), Darwin (.app) e Anti-Cheat Guard",
+        "categoria": "Sistema",
+        "icona_src": "osify-hub.png",
+        "comando": "/usr/bin/osify-controlcenter"
     }
 ]
 

@@ -1,5 +1,14 @@
 # LEZIONI APPRESE — REGISTRO ERRORI E REGOLE ARCHITETTURALI OSIFY
 
+## 2026-10-17 — Bootloader Universale Ibrido: Direttiva DEFAULT Obbligatoria per Timeout Automatico senza Input
+- **Area**: Bootloader Syslinux / Isolinux per ISO Universale ibrida
+- **Errore**: L'avvio dell'ISO Unica Universale (`OSify-A.0-Universal.iso`) in VM o macchine prive di interazione da tastiera si fermava indefinitamente sul menu vesamenu mostrando uno schermo nero anziché far partire automaticamente il desktop dopo il timeout.
+- **Causa radice**: In Syslinux / Isolinux, la direttiva `ONTIMEOUT <label>` da sola non è sufficiente se manca la direttiva primaria `DEFAULT <label>`. In assenza di `DEFAULT`, vesamenu non seleziona alcuna voce attiva predefinita e blocca il caricamento del kernel e dell'initramfs.
+- **Regola**:
+  1. Configurazione Isolinux: Inserire sempre `DEFAULT osify` come prima riga prima di `UI vesamenu.c32` in tutti i file di configurazione (`boot/isolinux/isolinux.cfg`, `boot/syslinux/syslinux.cfg`, `isolinux/isolinux.cfg`).
+  2. Percorsi Risorse Boot: Fare sempre riferimento alle immagini di sfondo con nomi file relativi alla cartella di boot (`MENU BACKGROUND splash.jpg`) per evitare fallimenti di risoluzione del percorso assoluto nel firmware del bootloader.
+  3. Timeout Reattivo: Impostare un timeout non superiore a 20 decimi di secondo (`TIMEOUT 20`) per garantire un avvio scattante e immediato sul silicio.
+
 ## 2026-10-17 — Risoluzione Schermo Nero all'Avvio e Bootsplash Solo-Logo (Windows/Apple Style)
 - **Area**: Avvio del sistema live, bootsplash framebuffer, PID 1 init e handoff sessione grafica
 - **Errore**: All'avvio reale di OSify su hardware fisico o macchine virtuali, dopo lo splashscreen iniziale il sistema si bloccava su uno schermo nero permanente senza mai caricare il desktop; inoltre lo splashscreen conteneva testi e sottotitoli ridondanti.

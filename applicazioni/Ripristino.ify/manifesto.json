@@ -1,0 +1,16 @@
+{
+  "id": "com.osify.ripristino",
+  "nome": "Ripristino",
+  "versione": "2050.1.0",
+  "descrizione": "Salvataggio atomico e ripristino istantaneo di dati, profili e snapshot di sistema",
+  "categoria": "Sistema",
+  "icona": "icona.png",
+  "eseguibile": "avvia.sh",
+  "permessi": [
+    "grafica",
+    "input",
+    "disco",
+    "audio"
+  ],
+  "autore": "OSify Systems"
+}
