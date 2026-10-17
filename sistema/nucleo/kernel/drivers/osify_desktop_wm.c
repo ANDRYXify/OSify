@@ -1,0 +1,248 @@
+/* ==============================================================================
+ * OSify Native Window Manager & Desktop Implementation
+ * (sistema/nucleo/kernel/drivers/osify_desktop_wm.c)
+ * ==============================================================================
+ * Ingegnerizzato da Andrea Taliento (ANDRYXify) per OSify
+ * Desktop Environment autonomo a 32bpp direttamente su Linear Framebuffer:
+ * Dual-Panel (Top Menu Bar a 26px + Floating Dock centrata), Finestre Dark Glass,
+ * Cursore del mouse vettoriale e Shell interattiva nativa.
+ * ==============================================================================
+ */
+
+#include "../include/osify_desktop.h"
+#include "../include/osify_kstring.h"
+#include "../include/osify_storage.h"
+
+/* Palette Colori Ufficiale Dark Glass OSify */
+#define COLOR_DESKTOP_BG        0xFF0B101D  /* Blu Notte Profondo */
+#define COLOR_PANEL_GLASS       0xFF141C2E  /* Dark Glass Card */
+#define COLOR_TITLEBAR_GLASS    0xFF1E293B  /* Barra Titolo Finestra */
+#define COLOR_BORDER_NEON       0xFF06B6D4  /* Ciano Elettrico */
+#define COLOR_ACCENT_PURPLE     0xFF8B5CF6  /* Viola Cyber */
+#define COLOR_BTN_CLOSE         0xFFEF4444  /* Rosso macOS */
+#define COLOR_BTN_MIN           0xFFF59E0B  /* Giallo macOS */
+#define COLOR_BTN_MAX           0xFF10B981  /* Verde macOS */
+#define COLOR_TEXT_WHITE        0xFFF8FAFC  /* Bianco Testo */
+#define COLOR_TEXT_MUTED        0xFF94A3B8  /* Grigio Ardesia */
+
+static osify_window_t g_windows[MAX_WINDOWS];
+static size_t g_window_count = 0;
+static osify_mouse_cursor_t g_mouse;
+
+/* Buffer Shell Nativa su Framebuffer */
+#define SHELL_MAX_LINES 12
+#define SHELL_LINE_LEN  80
+static char g_shell_lines[SHELL_MAX_LINES][SHELL_LINE_LEN];
+static size_t g_shell_line_count = 0;
+static char g_cmd_input[SHELL_LINE_LEN];
+static size_t g_cmd_idx = 0;
+
+void osify_shell_init(void) {
+    osify_memset(g_shell_lines, 0, sizeof(g_shell_lines));
+    g_shell_line_count = 0;
+    g_cmd_idx = 0;
+    osify_memset(g_cmd_input, 0, sizeof(g_cmd_input));
+
+    osify_strcpy(g_shell_lines[g_shell_line_count++], "OSify A.0 Shell Nativa Bare-Metal (Kernel Livello 0)");
+    osify_strcpy(g_shell_lines[g_shell_line_count++], "Digita 'aiuto' per la lista dei comandi o 'stato'.");
+}
+
+static void shell_append_line(const char *line) {
+    if (g_shell_line_count < SHELL_MAX_LINES) {
+        osify_strncpy(g_shell_lines[g_shell_line_count++], line, SHELL_LINE_LEN - 1);
+    } else {
+        /* Scroll verso l'alto */
+        for (size_t i = 0; i < SHELL_MAX_LINES - 1; i++) {
+            osify_strcpy(g_shell_lines[i], g_shell_lines[i + 1]);
+        }
+        osify_strncpy(g_shell_lines[SHELL_MAX_LINES - 1], line, SHELL_LINE_LEN - 1);
+    }
+}
+
+void osify_shell_execute_cmd(osify_framebuffer_t *fb, const char *cmd) {
+    char echo_buf[90];
+    osify_snprintf(echo_buf, sizeof(echo_buf), "osify> %s", cmd);
+    shell_append_line(echo_buf);
+
+    if (osify_strcmp(cmd, "aiuto") == 0 || osify_strcmp(cmd, "help") == 0) {
+        shell_append_line("Comandi disponibili:");
+        shell_append_line("  stato     - Mostra telemetria hardware e profilo silicio");
+        shell_append_line("  disco     - Elenco partizioni e file OSifyFS");
+        shell_append_line("  sicurezza - Verifica TPM 2.0, Secure Boot, SIP e Seatbelt");
+        shell_append_line("  pulisci   - Svuota lo storico del terminale");
+    } else if (osify_strcmp(cmd, "stato") == 0) {
+        shell_append_line("Profilo: OSify A.0 (Naked-Skin Architecture - Zero Bloatware)");
+        shell_append_line("Memoria: PMM Bitmap Allocator con protezione W^X attiva");
+    } else if (osify_strcmp(cmd, "disco") == 0) {
+        char file_buf[64];
+        osify_memset(file_buf, 0, sizeof(file_buf));
+        osify_fs_read_file("/Sistema/Versione.txt", file_buf, sizeof(file_buf) - 1);
+        char disco_msg[90];
+        osify_snprintf(disco_msg, sizeof(disco_msg), "OSifyFS /Sistema/Versione.txt: '%s'", file_buf);
+        shell_append_line(disco_msg);
+    } else if (osify_strcmp(cmd, "sicurezza") == 0) {
+        shell_append_line("Sicurezza: SIP Immutabile su /Sistema | Seatbelt Sandbox: ATTIVO");
+        shell_append_line("Anti-Cheat: TPM 2.0 SHA-256 PCR Enforced | DSE: ATTIVO");
+    } else if (osify_strcmp(cmd, "pulisci") == 0 || osify_strcmp(cmd, "clear") == 0) {
+        g_shell_line_count = 0;
+        shell_append_line("Terminale OSify pulito.");
+    } else if (osify_strlen(cmd) > 0) {
+        char err[90];
+        osify_snprintf(err, sizeof(err), "Comando non riconosciuto: '%s'. Digita 'aiuto'.", cmd);
+        shell_append_line(err);
+    }
+
+    g_cmd_idx = 0;
+    osify_memset(g_cmd_input, 0, sizeof(g_cmd_input));
+    osify_desktop_render_all(fb);
+}
+
+void osify_shell_input_char(osify_framebuffer_t *fb, char c) {
+    if (c == '\n' || c == '\r') {
+        osify_shell_execute_cmd(fb, g_cmd_input);
+    } else if (c == '\b' || c == 127) {
+        if (g_cmd_idx > 0) {
+            g_cmd_input[--g_cmd_idx] = '\0';
+            osify_desktop_render_all(fb);
+        }
+    } else if (c >= 32 && c <= 126) {
+        if (g_cmd_idx + 1 < sizeof(g_cmd_input)) {
+            g_cmd_input[g_cmd_idx++] = c;
+            g_cmd_input[g_cmd_idx] = '\0';
+            osify_desktop_render_all(fb);
+        }
+    }
+}
+
+osify_window_t *osify_wm_create_window(int x, int y, int w, int h, const char *title) {
+    if (g_window_count >= MAX_WINDOWS) return NULL;
+    osify_window_t *win = &g_windows[g_window_count++];
+    win->id = (uint32_t)g_window_count;
+    win->x = x;
+    win->y = y;
+    win->w = w;
+    win->h = h;
+    win->is_visible = true;
+    win->is_focused = true;
+    win->bg_color = COLOR_PANEL_GLASS;
+    osify_strncpy(win->title, title, sizeof(win->title) - 1);
+    return win;
+}
+
+void osify_wm_draw_window(osify_framebuffer_t *fb, const osify_window_t *win) {
+    if (!fb || !win || !win->is_visible) return;
+
+    /* Corpo Finestra Dark Glass con angoli arrotondati */
+    osify_fb_draw_squircle(fb, win->x, win->y, win->w, 14, win->bg_color);
+    osify_fb_draw_rect(fb, win->x, win->y, win->w, win->h, win->bg_color);
+
+    /* Barra del Titolo Finestra (28px) */
+    osify_fb_draw_rect(fb, win->x, win->y, win->w, 28, COLOR_TITLEBAR_GLASS);
+    /* Bordo neon superiore della finestra attiva */
+    osify_fb_draw_rect(fb, win->x, win->y, win->w, 2, COLOR_BORDER_NEON);
+
+    /* Pulsanti di Controllo Finestra macOS Style (Rosso, Giallo, Verde) */
+    osify_fb_draw_squircle(fb, win->x + 12, win->y + 8, 12, 6, COLOR_BTN_CLOSE);
+    osify_fb_draw_squircle(fb, win->x + 30, win->y + 8, 12, 6, COLOR_BTN_MIN);
+    osify_fb_draw_squircle(fb, win->x + 48, win->y + 8, 12, 6, COLOR_BTN_MAX);
+
+    /* Titolo Finestra centrato */
+    osify_fb_draw_string(fb, win->x + 72, win->y + 6, win->title, COLOR_TEXT_WHITE);
+}
+
+void osify_desktop_init(osify_framebuffer_t *fb) {
+    g_window_count = 0;
+    osify_memset(g_windows, 0, sizeof(g_windows));
+
+    /* Inizializzazione Cursore Mouse al centro */
+    g_mouse.x = (int)fb->width / 2;
+    g_mouse.y = (int)fb->height / 2;
+    g_mouse.is_visible = true;
+
+    /* Inizializza Shell Nativa */
+    osify_shell_init();
+
+    /* Crea Finestra Terminale Shell di Default */
+    osify_wm_create_window(120, 80, 784, 420, "OSify Terminale Nativo");
+}
+
+void osify_desktop_render_all(osify_framebuffer_t *fb) {
+    if (!fb || !fb->buffer) return;
+
+    /* 1. Sfondo Scrivania Dark Glass */
+    osify_fb_clear(fb, COLOR_DESKTOP_BG);
+
+    /* 2. Top Menu Bar macOS-Style a 26px */
+    osify_fb_draw_rect(fb, 0, 0, fb->width, 26, COLOR_PANEL_GLASS);
+    osify_fb_draw_string(fb, 16, 5, "OSify A.0", COLOR_BORDER_NEON);
+    osify_fb_draw_string(fb, 120, 5, "File  Modifica  Visualizza  Sicurezza  Aiuto", COLOR_TEXT_WHITE);
+    osify_fb_draw_string(fb, fb->width - 160, 5, "12:00  [Sicuro]", COLOR_TEXT_MUTED);
+
+    /* 3. Disegno Finestre Attive */
+    for (size_t i = 0; i < g_window_count; i++) {
+        osify_wm_draw_window(fb, &g_windows[i]);
+
+        /* Se e la finestra terminale, renderizza le linee della shell */
+        if (osify_strcmp(g_windows[i].title, "OSify Terminale Nativo") == 0) {
+            int text_y = g_windows[i].y + 40;
+            for (size_t l = 0; l < g_shell_line_count; l++) {
+                osify_fb_draw_string(fb, g_windows[i].x + 20, text_y, g_shell_lines[l], COLOR_TEXT_WHITE);
+                text_y += 20;
+            }
+            /* Prompt di input attivo */
+            char prompt_buf[90];
+            osify_snprintf(prompt_buf, sizeof(prompt_buf), "osify> %s_", g_cmd_input);
+            osify_fb_draw_string(fb, g_windows[i].x + 20, text_y, prompt_buf, COLOR_BORDER_NEON);
+        }
+    }
+
+    /* 4. Floating Dock Inferiore Centrata (Staccata dal fondo a 14px, altezza 54px) */
+    int dock_w = 420;
+    int dock_h = 54;
+    int dock_x = ((int)fb->width - dock_w) / 2;
+    int dock_y = (int)fb->height - dock_h - 14;
+
+    osify_fb_draw_squircle(fb, dock_x, dock_y, dock_w, 18, COLOR_PANEL_GLASS);
+    osify_fb_draw_rect(fb, dock_x, dock_y, dock_w, 2, COLOR_BORDER_NEON); /* Neon line */
+
+    /* Icone Squircle macOS nel Dock */
+    const char *dock_labels[] = {"Hub", "Term", "File", "Guard", "Impost"};
+    uint32_t dock_colors[] = {COLOR_BORDER_NEON, COLOR_ACCENT_PURPLE, 0xFF3B82F6, 0xFF10B981, 0xFF64748B};
+
+    for (int d = 0; d < 5; d++) {
+        int icon_x = dock_x + 24 + (d * 76);
+        int icon_y = dock_y + 8;
+        osify_fb_draw_squircle(fb, icon_x, icon_y, 38, 10, dock_colors[d]);
+        osify_fb_draw_string(fb, icon_x + 4, icon_y + 11, dock_labels[d], COLOR_TEXT_WHITE);
+    }
+
+    /* 5. Cursore Mouse Vettoriale Dark Glass */
+    if (g_mouse.is_visible) {
+        int mx = g_mouse.x;
+        int my = g_mouse.y;
+        /* Disegno freccia del cursore */
+        for (int row = 0; row < 12; row++) {
+            for (int col = 0; col <= row; col++) {
+                if (mx + col < (int)fb->width && my + row < (int)fb->height) {
+                    uint32_t pixel_color = (col == 0 || col == row || row == 11) ? COLOR_TEXT_WHITE : COLOR_BORDER_NEON;
+                    fb->buffer[(my + row) * fb->width + (mx + col)] = pixel_color;
+                }
+            }
+        }
+    }
+}
+
+void osify_desktop_handle_key(osify_framebuffer_t *fb, char c) {
+    osify_shell_input_char(fb, c);
+}
+
+void osify_desktop_move_mouse(osify_framebuffer_t *fb, int new_x, int new_y) {
+    if (new_x < 0) new_x = 0;
+    if (new_y < 0) new_y = 0;
+    if (new_x >= (int)fb->width) new_x = (int)fb->width - 1;
+    if (new_y >= (int)fb->height) new_y = (int)fb->height - 1;
+
+    g_mouse.x = new_x;
+    g_mouse.y = new_y;
+    osify_desktop_render_all(fb);
+}

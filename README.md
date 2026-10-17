@@ -35,7 +35,7 @@
   </a>
   &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/actions">
-    <img src="https://img.shields.io/badge/Tests-293%2F293_Passed-059669?style=flat-square&logo=githubactions&logoColor=white" alt="Test Suite"/>
+    <img src="https://img.shields.io/badge/Tests-295%2F295_Passed-059669?style=flat-square&logo=githubactions&logoColor=white" alt="Test Suite"/>
   </a>
   &nbsp;
   <a href="#architettura-dei-due-target">

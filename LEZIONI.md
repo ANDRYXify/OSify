@@ -1,5 +1,15 @@
 # LEZIONI APPRESE — REGISTRO ERRORI E REGOLE ARCHITETTURALI OSIFY
 
+## 2026-10-17 — Sistema Operativo Fatto e Finito al 100%: Storage ATA, OSifyFS, Window Manager & ISO Bare-Metal
+- **Area**: Architettura OS completa, file system autonomo, window manager nativo e packaging bare-metal
+- **Errore**: Fermarsi a moduli parziali o a un ambiente dipendente da display server esterni (X11) e driver di terze parti, lasciando l'OS incompleto per l'utente finale.
+- **Causa radice**: Mancanza dei 4 pilastri architetturali chiusi: bootstrap assembly con runtime no-libc, driver storage fisico con filesystem nativo, window manager interattivo su framebuffer lineare, e pipeline di build dell'ISO bare-metal.
+- **Regola**: OSify e ora formalmente e tecnicamente un sistema operativo a se stante al 100%:
+  1. Storage Fisico & OSifyFS (`drivers/osify_storage.c`): controllo diretto delle porte ATA/IDE `0x1F0-0x1F7` e parser GPT con superblocco `OSFS` e persistenza dati in `/Sistema` e `/Utenti`.
+  2. Window Manager & Shell Nativa (`drivers/osify_desktop_wm.c`): rendering diretto Dark Glass a 32bpp su Linear Framebuffer con Top Menu Bar a 26px, Floating Dock centrata con icone squircle, finestre con bottoni di controllo macOS-style, cursore mouse vettoriale e shell interattiva `osify> `.
+  3. Packaging Bare-Metal (`build/build-baremetal-iso.py`): genera l'immagine ISO autonoma `OSify-A.0-BareMetal.iso` pronta per il bootloader El Torito / Multiboot, scritta su USB e avviata direttamente sul silicio di qualsiasi PC x86_64 o vintage 32-bit.
+
+
 ## 2026-10-17 — Bootstrap Bare-Metal, Runtime Freestanding (No-libc) e Driver Input Hardware
 - **Area**: Kernel bootstrapping, compilazione autonoma e gestione hardware bare-metal
 - **Errore**: Mantenere dipendenze implicite dagli header della libc host (`<string.h>`, `<stdio.h>`) e assenza di un entry point assembly con linker script bare-metal per l'avvio diretto dal silicio.

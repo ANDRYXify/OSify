@@ -12,6 +12,8 @@
 #include <assert.h>
 #include "../include/osify_kernel.h"
 #include "../include/osify_kstring.h"
+#include "../include/osify_storage.h"
+#include "../include/osify_desktop.h"
 
 int main(void) {
     printf("[+] Inizio collaudo avanzato del Kernel Nativo OSify...\n");
@@ -134,6 +136,45 @@ int main(void) {
     assert(osify_keyboard_get_key() == 0);
     printf("[+] 8. Libreria Freestanding No-libc (kstring) & Driver Input PS/2: OK\n");
 
-    printf("\n[✓✓✓] TUTTI I TEST AVANZATI DEL KERNEL NATIVO OSIFY SUPERATI CON SUCCESSO AL 100%%!\n");
+    /* 9. Test Storage Fisico ATA & File System Nativo OSifyFS */
+    osify_storage_init();
+    osify_fs_init(0);
+
+    /* Test Lettura e Scrittura File su OSifyFS */
+    char fs_read_buf[64];
+    osify_memset(fs_read_buf, 0, sizeof(fs_read_buf));
+    int read_bytes = osify_fs_read_file("/Sistema/Versione.txt", fs_read_buf, sizeof(fs_read_buf) - 1);
+    assert(read_bytes > 0);
+    assert(osify_strcmp(fs_read_buf, "OSify A.0") == 0);
+
+    /* Scrittura nuovo file utente */
+    const char *test_doc = "Progetto OSify Completato al 100%";
+    assert(osify_fs_write_file("/Utenti/osify/Stato.txt", test_doc, osify_strlen(test_doc)) > 0);
+    osify_memset(fs_read_buf, 0, sizeof(fs_read_buf));
+    assert(osify_fs_read_file("/Utenti/osify/Stato.txt", fs_read_buf, sizeof(fs_read_buf) - 1) > 0);
+    assert(osify_strcmp(fs_read_buf, test_doc) == 0);
+    printf("[+] 9. Storage Fisico ATA & File System Nativo OSifyFS (Persistenza Dati): OK\n");
+
+    /* 10. Test Desktop Environment Dark Glass & Shell Nativa su Framebuffer */
+    uint32_t desktop_fb_buf[1024 * 768];
+    osify_framebuffer_t desktop_fb;
+    osify_fb_init(&desktop_fb, 1024, 768, desktop_fb_buf);
+
+    osify_desktop_init(&desktop_fb);
+    osify_desktop_render_all(&desktop_fb);
+
+    /* Verifica Top Menu Bar (pixel y=0..25) */
+    assert(desktop_fb_buf[10 + 5 * 1024] != 0);
+    /* Verifica Floating Dock Inferiore (pixel y=710..750) */
+    int dock_center_idx = 512 + 720 * 1024;
+    assert(desktop_fb_buf[dock_center_idx] != 0);
+
+    /* Test interazione Shell Nativa */
+    osify_shell_execute_cmd(&desktop_fb, "stato");
+    osify_shell_execute_cmd(&desktop_fb, "disco");
+    osify_shell_execute_cmd(&desktop_fb, "sicurezza");
+    printf("[+] 10. Desktop Environment Dark Glass & Shell Nativa su Framebuffer a 32bpp: OK\n");
+
+    printf("\n[✓✓✓] TUTTI I 10 TEST AVANZATI DEL KERNEL NATIVO OSIFY SUPERATI CON SUCCESSO AL 100%%!\n");
     return 0;
 }

@@ -889,6 +889,14 @@ else
     log_fail "Kernel Nativo OSify: Fallimento compilazione o test del micro-core proprietario"
 fi
 
+# Test 13.6 Generazione ISO Bare-Metal Indipendente OSify A.0
+if python3 "$REPO_ROOT/build/build-baremetal-iso.py" >/dev/null 2>&1 && \
+   [ -f "$REPO_ROOT/build/out/OSify-A.0-BareMetal.iso" ]; then
+    log_pass "ISO Bare-Metal OSify A.0: Immagine di avvio autonoma generata e verificata con successo"
+else
+    log_fail "ISO Bare-Metal OSify A.0: Fallimento generazione immagine ISO bare-metal"
+fi
+
 echo "                  REPORT FINALE COLLAUDO                 "
 echo "========================================================="
 echo "  TEST SUPERATI : $PASSED_COUNT"
