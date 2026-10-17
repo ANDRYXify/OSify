@@ -54,7 +54,7 @@ check_thermal() {
     elif [ "$cur" -ge "$WARNING_TEMP" ]; then
         echo "[*] Avviso: Temperatura elevata (${cur}°C). Monitoraggio in corso."
     else
-        echo "[✓] Temperatura nei limiti ottimali di esercizio."
+        echo "[[OK]] Temperatura nei limiti ottimali di esercizio."
     fi
 }
 

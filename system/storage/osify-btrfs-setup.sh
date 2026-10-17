@@ -44,7 +44,7 @@ configure_subvolumes() {
     btrfs subvolume create "$SETUP_MOUNT_TARGET/@waydroid"
     umount "$SETUP_MOUNT_TARGET"
 
-    echo "[✓] Subvolumi Btrfs creati con successo."
+    echo "[[OK]] Subvolumi Btrfs creati con successo."
 }
 
 apply_game_optimizations() {
@@ -52,7 +52,7 @@ apply_game_optimizations() {
     echo "[+] Applicazione attributo NO-COW su directory giochi e VM: $target_dir"
     mkdir -p "$target_dir"
     chattr +C "$target_dir" || true
-    echo "[✓] Attributo NO-COW (chattr +C) applicato: frammentazione I/O azzerata!"
+    echo "[[OK]] Attributo NO-COW (chattr +C) applicato: frammentazione I/O azzerata!"
 }
 
 case "${1:-help}" in

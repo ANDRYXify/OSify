@@ -301,7 +301,7 @@ exec {app["comando"]} "$@"
 
         print(f"[+] Generato bundle: {app['cartella']}")
 
-    print(f"[✓] {len(SUITE)} applicazioni native .ify generate con successo!")
+    print(f"[[OK]] {len(SUITE)} applicazioni native .ify generate con successo!")
 
 if __name__ == "__main__":
     main()

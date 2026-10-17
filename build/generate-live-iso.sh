@@ -130,7 +130,7 @@ EOF
         exit 1
     fi
 
-    echo "[✓] Generata: $iso_target ($(du -sh "$iso_target" | cut -f1))"
+    echo "[[OK]] Generata: $iso_target ($(du -sh "$iso_target" | cut -f1))"
 }
 
 # 1. Costruzione ISO Moderna x86_64
@@ -150,7 +150,7 @@ echo "[+] Calcolo checksum SHA256 per tutti gli asset..."
     cd "$OUT_DIR"
     shasum -a 256 *.iso *.zip > SHA256SUMS.txt
 )
-echo "[✓] SHA256SUMS.txt aggiornato."
+echo "[[OK]] SHA256SUMS.txt aggiornato."
 
 echo ""
 echo "========================================================="

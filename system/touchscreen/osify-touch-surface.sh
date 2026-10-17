@@ -53,7 +53,7 @@ configure_touch_environment() {
         systemctl enable --now iio-sensor-proxy.service 2>/dev/null || true
     fi
 
-    echo "[✓] Suite Touchscreen & Surface configurata con successo!"
+    echo "[[OK]] Suite Touchscreen & Surface configurata con successo!"
 }
 
 toggle_tablet_mode() {
@@ -63,15 +63,15 @@ toggle_tablet_mode() {
         case "$mode" in
             on|tablet)
                 kwriteconfig6 --file kwinrc --group Input --key TabletMode "on"
-                echo "[✓] Modalità Tablet FORZATA: bersagli touch ingranditi e tastiera attiva."
+                echo "[[OK]] Modalità Tablet FORZATA: bersagli touch ingranditi e tastiera attiva."
                 ;;
             off|desktop)
                 kwriteconfig6 --file kwinrc --group Input --key TabletMode "off"
-                echo "[✓] Modalità Desktop FORZATA."
+                echo "[[OK]] Modalità Desktop FORZATA."
                 ;;
             auto)
                 kwriteconfig6 --file kwinrc --group Input --key TabletMode "auto"
-                echo "[✓] Modalità Automatica (al distacco tastiera/cover)."
+                echo "[[OK]] Modalità Automatica (al distacco tastiera/cover)."
                 ;;
         esac
     fi

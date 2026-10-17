@@ -37,7 +37,7 @@ apply_touchpad_settings() {
         syndaemon -i 0.8 -t -K -d 2>/dev/null || true
     fi
 
-    echo "[✓] Configurazione Touchpad & Puntatore applicata."
+    echo "[[OK]] Configurazione Touchpad & Puntatore applicata."
 }
 
 launch_gui() {

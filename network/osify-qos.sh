@@ -82,14 +82,14 @@ start_qos() {
 
     apply_nftables_marking
 
-    echo "[✓] OSify QoS attivo: Ping protetto per Gaming ed Emulazione durante live streaming!"
+    echo "[[OK]] OSify QoS attivo: Ping protetto per Gaming ed Emulazione durante live streaming!"
 }
 
 stop_qos() {
     echo "[!] Disattivazione OSify QoS..."
     tc qdisc del dev "$INTERFACE" root 2>/dev/null || true
     nft delete table inet osify_qos 2>/dev/null || true
-    echo "[✓] Regole rimosse, ripristinato stato predefinito."
+    echo "[[OK]] Regole rimosse, ripristinato stato predefinito."
 }
 
 status_qos() {

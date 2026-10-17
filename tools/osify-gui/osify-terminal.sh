@@ -42,25 +42,25 @@ RES_INFO=$(xrandr 2>/dev/null | grep '\*' | awk '{print $1}' | head -n1 || echo 
 
 # Mostra il banner di benvenuto OSify
 cat << EOF
-${C_CYAN}    ██████╗ ███████╗██╗███████╗██╗   ██╗${C_RESET}
-${C_MAGENTA}   ██╔═══██╗██╔════╝██║██╔════╝╚██╗ ██╔╝${C_RESET}
-${C_BLUE}   ██║   ██║███████╗██║█████╗   ╚████╔╝ ${C_RESET}
-${C_CYAN}   ██║   ██║╚════██║██║██╔══╝    ╚██╔╝  ${C_RESET}
-${C_GREEN}   ╚██████╔╝███████║██║██║        ██║   ${C_RESET}
-${C_DIM}    ╚═════╝ ╚══════╝╚═╝╚═╝        ╚═╝   ${C_RESET}
+${C_CYAN}        ${C_RESET}
+${C_MAGENTA}    ${C_RESET}
+${C_BLUE}          ${C_RESET}
+${C_CYAN}            ${C_RESET}
+${C_GREEN}              ${C_RESET}
+${C_DIM}                ${C_RESET}
 ${C_WHITE}   OSify — Sistema Operativo Universale & Resurrezione Hardware${C_RESET}
 EOF
 
 echo ""
 echo " ${C_GREEN}$GREETING${C_RESET}"
-echo "${C_BOLD}┌────────────────────────────────────────────────────────────────────────┐${C_RESET}"
-printf "│ ${C_CYAN}%-14s${C_RESET} : %-55s │\n" "Host / Utente" "$(whoami) @ $(cat /etc/hostname 2>/dev/null || echo osify)"
-printf "│ ${C_CYAN}%-14s${C_RESET} : %-55s │\n" "Edizione" "OSify $(cat /etc/osify-version 2>/dev/null || echo 'A.0') Vintage Edition"
-printf "│ ${C_CYAN}%-14s${C_RESET} : %-55s │\n" "Kernel" "$(uname -srm)"
-printf "│ ${C_CYAN}%-14s${C_RESET} : %-55s │\n" "Processore" "$CPU_MODEL"
-printf "│ ${C_CYAN}%-14s${C_RESET} : %-55s │\n" "Memoria RAM" "${RAM_USED_MB} MB usati / ${RAM_TOTAL_MB} MB totali (${RAM_AVAIL_MB} MB liberi)"
-printf "│ ${C_CYAN}%-14s${C_RESET} : %-55s │\n" "Risoluzione" "$RES_INFO (Pannello Netbook WSVGA)"
-echo "${C_BOLD}└────────────────────────────────────────────────────────────────────────┘${C_RESET}"
+echo "${C_BOLD}${C_RESET}"
+printf " ${C_CYAN}%-14s${C_RESET} : %-55s \n" "Host / Utente" "$(whoami) @ $(cat /etc/hostname 2>/dev/null || echo osify)"
+printf " ${C_CYAN}%-14s${C_RESET} : %-55s \n" "Edizione" "OSify $(cat /etc/osify-version 2>/dev/null || echo 'A.0') Vintage Edition"
+printf " ${C_CYAN}%-14s${C_RESET} : %-55s \n" "Kernel" "$(uname -srm)"
+printf " ${C_CYAN}%-14s${C_RESET} : %-55s \n" "Processore" "$CPU_MODEL"
+printf " ${C_CYAN}%-14s${C_RESET} : %-55s \n" "Memoria RAM" "${RAM_USED_MB} MB usati / ${RAM_TOTAL_MB} MB totali (${RAM_AVAIL_MB} MB liberi)"
+printf " ${C_CYAN}%-14s${C_RESET} : %-55s \n" "Risoluzione" "$RES_INFO (Pannello Netbook WSVGA)"
+echo "${C_BOLD}${C_RESET}"
 echo ""
 echo " ${C_YELLOW}Comandi Principali OSify:${C_RESET}"
 echo "    ${C_WHITE}osify${C_RESET}          -> Apre la Dashboard Interattiva a 360°"

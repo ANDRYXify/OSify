@@ -40,7 +40,7 @@ main() {
     echo "[+] Impostazione UEFI BootNext su Boot$WIN_ENTRY..."
     efibootmgr --bootnext "$WIN_ENTRY" >/dev/null
 
-    echo "[✓] Configurazione completata. Riavvio istantaneo in Windows..."
+    echo "[[OK]] Configurazione completata. Riavvio istantaneo in Windows..."
     echo "[i] Al prossimo riavvio da Windows tornerai automaticamente in OSify!"
     
     # Esegue il riavvio controllato se richiesto

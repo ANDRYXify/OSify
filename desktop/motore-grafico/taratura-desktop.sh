@@ -41,7 +41,7 @@ apply_kwin_tuning() {
         kwriteconfig6 --file kwinrc --group Compositing --key LatencyPolicy 0
         kwriteconfig6 --file kwinrc --group Compositing --key AnimationSpeed 1
         
-        echo "[✓] Parametri KWin applicati! (Richiede riavvio sessione o ricaricamento KWin)"
+        echo "[[OK]] Parametri KWin applicati! (Richiede riavvio sessione o ricaricamento KWin)"
     else
         echo "[i] kwriteconfig6 non trovato; applicazione diretta manuale su kwinrc."
         cat << 'EOF' >> "$KWIN_CONFIG"
@@ -56,7 +56,7 @@ AnimationSpeed=1
 EOF
     fi
 
-    echo "[✓] Ottimizzazioni Desktop completate!"
+    echo "[[OK]] Ottimizzazioni Desktop completate!"
 }
 
 apply_kwin_tuning

@@ -346,13 +346,13 @@ if __name__ == "__main__":
     elif cmd in ("set", "apply") and len(args) > 1:
         tid = args[1]
         if engine.set_theme(tid):
-            print(f"[✓] Tema impostato a: {tid}")
+            print(f"[[OK]] Tema impostato a: {tid}")
         else:
             print(f"[!] Tema '{tid}' non valido. Usa: {', '.join(THEMES.keys())}")
     elif cmd == "style" and len(args) > 1:
         st = args[1]
         if engine.set_window_buttons_style(st):
-            print(f"[✓] Stile pulsanti impostato a: {st}")
+            print(f"[[OK]] Stile pulsanti impostato a: {st}")
         else:
             print(f"[!] Stile non valido. Usa: macos_traffic_lights, fluent_linear, breeze_circular")
     elif cmd == "status":

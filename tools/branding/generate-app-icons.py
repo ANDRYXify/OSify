@@ -560,7 +560,7 @@ def main():
             img = create_icon(name, draw_fn, color, size=size)
             target_path = os.path.join(out_dir, f"{name}.png")
             img.save(target_path, "PNG")
-    print(f"[✓] Generate con successo {len(ICONS_REGISTRY)} icone per i formati 48px, 64px e 128px!")
+    print(f"[[OK]] Generate con successo {len(ICONS_REGISTRY)} icone per i formati 48px, 64px e 128px!")
 
 if __name__ == "__main__":
     main()

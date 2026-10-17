@@ -21,7 +21,7 @@ mkdir -p "$STATE_DIR"
 touch "$AUDIT_LOG"
 
 log()   { printf "\033[1;36m[OSify-AdaptiveSec]\033[0m %s\n" "$*"; }
-ok()    { printf "\033[1;32m[✓]\033[0m %s\n" "$*"; }
+ok()    { printf "\033[1;32m[[OK]]\033[0m %s\n" "$*"; }
 warn()  { printf "\033[1;33m[!]\033[0m %s\n" "$*"; }
 alert() { printf "\033[1;31m[SICUREZZA-ATTIVA]\033[0m %s\n" "$*"; }
 

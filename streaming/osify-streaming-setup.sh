@@ -71,7 +71,7 @@ SampleRate=48000
 ChannelSetup=Stereo
 EOF
 
-    echo "[✓] Profilo OBS 'OSify_Pro_Stream' generato con successo."
+    echo "[[OK]] Profilo OBS 'OSify_Pro_Stream' generato con successo."
     echo "[+] Traccia 1: Master Live Stream (Gioco + Voce + Musica + Mic)"
     echo "[+] Traccia 2: Twitch VOD Track (Gioco + Voce + Mic, SENZA Musica protetta da copyright)"
     echo "[i] Avvia OBS Studio e seleziona il profilo 'OSify_Pro_Stream'."

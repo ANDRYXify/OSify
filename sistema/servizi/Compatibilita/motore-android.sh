@@ -43,7 +43,7 @@ init_waydroid() {
         waydroid-extras install libndk
     fi
 
-    echo "[✓] Runtime Android configurato! Le app Android compariranno nativamente nel menu di KDE Plasma."
+    echo "[[OK]] Runtime Android configurato! Le app Android compariranno nativamente nel menu di KDE Plasma."
 }
 
 launch_app() {

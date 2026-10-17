@@ -17,7 +17,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 log() { printf "\033[1;34m[OSify-Workload]\033[0m %s\n" "$*"; }
-ok()  { printf "\033[1;32m[✓]\033[0m %s\n" "$*"; }
+ok()  { printf "\033[1;32m[[OK]]\033[0m %s\n" "$*"; }
 
 PROFILE_FILE="/tmp/osify_active_workload_profile"
 

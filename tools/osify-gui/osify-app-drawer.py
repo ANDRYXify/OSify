@@ -24,7 +24,7 @@ APPLICATIONS = [
         "desc": "Centro di controllo, prestazioni e launchpad a 360°",
         "cmd": ["/usr/bin/osify-hub"],
         "icon": "/usr/share/pixmaps/osify-hub.png",
-        "badge": "🚀 HUB",
+        "badge": " HUB",
         "color": "#8b5cf6"
     },
     {
@@ -34,7 +34,7 @@ APPLICATIONS = [
         "desc": "Configura account, password crittografata, avatar e preferenze",
         "cmd": ["/usr/bin/osify-profile-setup", "--force"],
         "icon": "/usr/share/pixmaps/osify-profile.png",
-        "badge": "👤 PROFILO",
+        "badge": " PROFILO",
         "color": "#06b6d4"
     },
     {
@@ -44,7 +44,7 @@ APPLICATIONS = [
         "desc": "Gestione multiutente: crea, elimina utenti e permessi amministrativi",
         "cmd": ["/usr/bin/osify-users"],
         "icon": "/usr/share/pixmaps/osify-users.png",
-        "badge": "👥 UTENTI",
+        "badge": " UTENTI",
         "color": "#3b82f6"
     },
     {
@@ -54,7 +54,7 @@ APPLICATIONS = [
         "desc": "Procedura guidata di installazione con migrazione profilo Live",
         "cmd": ["/usr/bin/osify-install"],
         "icon": "/usr/share/pixmaps/osify-install.png",
-        "badge": "💾 DISCO",
+        "badge": " DISCO",
         "color": "#10b981"
     },
     {
@@ -64,7 +64,7 @@ APPLICATIONS = [
         "desc": "Naviga su Internet ad alta velocità con Adblock integrato",
         "cmd": ["/usr/bin/osify-browser"],
         "icon": "/usr/share/pixmaps/osify-browser.png",
-        "badge": "🌐 WEB",
+        "badge": " WEB",
         "color": "#38bdf8"
     },
     {
@@ -74,7 +74,7 @@ APPLICATIONS = [
         "desc": "Scansione frequenze wireless, password e connessione rapida",
         "cmd": ["/usr/bin/osify-wifi"],
         "icon": "/usr/share/pixmaps/osify-wifi.png",
-        "badge": "📡 WI-FI",
+        "badge": " WI-FI",
         "color": "#10b981"
     },
     {
@@ -84,7 +84,7 @@ APPLICATIONS = [
         "desc": "Giochi Windows (.exe con Wine/DirectX), DOSBox e UEM",
         "cmd": ["/usr/bin/osify-games"],
         "icon": "/usr/share/pixmaps/osify-games.png",
-        "badge": "🎮 GIOCHI",
+        "badge": " GIOCHI",
         "color": "#a855f7"
     },
     {
@@ -94,7 +94,7 @@ APPLICATIONS = [
         "desc": "Python 3 REPL, TinyCC/GCC, Git manager, Nano e template progetti",
         "cmd": ["/usr/bin/osify-developer"],
         "icon": "/usr/share/pixmaps/osify-developer.png",
-        "badge": "💻 CODING",
+        "badge": " CODING",
         "color": "#f59e0b"
     },
     {
@@ -104,7 +104,7 @@ APPLICATIONS = [
         "desc": "Esplora file a schede, documenti, download e drive USB",
         "cmd": ["pcmanfm"],
         "icon": "/usr/share/pixmaps/osify-files.png",
-        "badge": "📁 FILE",
+        "badge": " FILE",
         "color": "#3b82f6"
     },
     {
@@ -114,7 +114,7 @@ APPLICATIONS = [
         "desc": "Sfondi automatici a zero distorsione, avatar, Virtual Scaler per Netbook",
         "cmd": ["/usr/bin/osify-appearance"],
         "icon": "/usr/share/pixmaps/osify-appearance.png",
-        "badge": "🎨 ASPETTO",
+        "badge": " ASPETTO",
         "color": "#ec4899"
     },
     {
@@ -124,7 +124,7 @@ APPLICATIONS = [
         "desc": "Telemetria hardware, processi attivi e monitor memoria",
         "cmd": ["/usr/bin/osify-taskmanager"],
         "icon": "/usr/share/pixmaps/osify-taskmanager.png",
-        "badge": "📊 RISORSE",
+        "badge": " RISORSE",
         "color": "#ef4444"
     },
     {
@@ -134,7 +134,7 @@ APPLICATIONS = [
         "desc": "Terminale interattivo con diagnostica Fastfetch hardware",
         "cmd": ["/usr/bin/terminal"],
         "icon": "/usr/share/pixmaps/osify-terminal.png",
-        "badge": "💻 SHELL",
+        "badge": " SHELL",
         "color": "#22c55e"
     },
     {
@@ -144,7 +144,7 @@ APPLICATIONS = [
         "desc": "Usa OSify come schermo a latenza zero per Nintendo Switch, PS5, Xbox o reflex",
         "cmd": ["/usr/bin/osify-capture"],
         "icon": "/usr/share/pixmaps/osify-games.png",
-        "badge": "🎥 CATTURA",
+        "badge": " CATTURA",
         "color": "#ef4444"
     },
     {
@@ -154,7 +154,7 @@ APPLICATIONS = [
         "desc": "Duplica e controlla smartphone Android (mouse/tastiera) e iPhone via AirPlay",
         "cmd": ["/usr/bin/osify-phone-companion"],
         "icon": "/usr/share/pixmaps/osify-hub.png",
-        "badge": "📱 MIRROR",
+        "badge": " MIRROR",
         "color": "#06b6d4"
     },
     {
@@ -164,7 +164,7 @@ APPLICATIONS = [
         "desc": "Gestione uscite video HDMI/VGA: Clona, Estendi (Dual Monitor) o Solo TV",
         "cmd": ["/usr/bin/osify-display"],
         "icon": "/usr/share/pixmaps/osify-appearance.png",
-        "badge": "🖥️ MONITOR",
+        "badge": " MONITOR",
         "color": "#3b82f6"
     },
     {
@@ -174,7 +174,7 @@ APPLICATIONS = [
         "desc": "Verifica e applica aggiornamenti di sistema a caldo",
         "cmd": ["/usr/bin/osify-update", "--gui"],
         "icon": "/usr/share/pixmaps/osify-update.png",
-        "badge": "🔄 AGGIORNA",
+        "badge": " AGGIORNA",
         "color": "#0ea5e9"
     },
     {
@@ -184,7 +184,7 @@ APPLICATIONS = [
         "desc": "Pannello di configurazione globale, input e periferiche",
         "cmd": ["/usr/bin/osify-settings"],
         "icon": "/usr/share/pixmaps/osify-settings.png",
-        "badge": "⚙️ CONFIG",
+        "badge": " CONFIG",
         "color": "#94a3b8"
     }
 ]
@@ -231,7 +231,7 @@ def run_tkinter_drawer():
     header_frame = tk.Frame(root, bg="#131924", pady=12, padx=16)
     header_frame.pack(fill="x", side="top")
 
-    top_title_label = tk.Label(header_frame, text="🚀 OSify App Drawer — Tutte le Applicazioni", fg="#f1f5f9", bg="#131924", font=title_font)
+    top_title_label = tk.Label(header_frame, text=" OSify App Drawer — Tutte le Applicazioni", fg="#f1f5f9", bg="#131924", font=title_font)
     top_title_label.pack(side="top", anchor="w", pady=(0, 8))
 
     search_var = tk.StringVar()
@@ -362,10 +362,10 @@ def run_tkinter_drawer():
     footer_frame = tk.Frame(root, bg="#0d1117", pady=8, padx=16)
     footer_frame.pack(fill="x", side="bottom")
 
-    esc_hint = tk.Label(footer_frame, text="💡 Suggerimento: premi ESC per chiudere l'App Drawer o INVIO per aprire l'app cercata", fg="#64748b", bg="#0d1117", font=card_desc_font)
+    esc_hint = tk.Label(footer_frame, text=" Suggerimento: premi ESC per chiudere l'App Drawer o INVIO per aprire l'app cercata", fg="#64748b", bg="#0d1117", font=card_desc_font)
     esc_hint.pack(side="left")
 
-    close_btn = tk.Button(footer_frame, text="❌ Chiudi", bg="#1e293b", fg="#ffffff", relief="flat", padx=10, pady=3, command=root.destroy)
+    close_btn = tk.Button(footer_frame, text=" Chiudi", bg="#1e293b", fg="#ffffff", relief="flat", padx=10, pady=3, command=root.destroy)
     close_btn.pack(side="right")
 
     populate_grid()
@@ -379,7 +379,7 @@ def run_dialog_drawer():
         menu_items.append(f"{app['badge']} {app['name']} — {app['desc']}")
 
     cmd = ["dialog", "--stdout", "--backtitle", "OSify Universal App Drawer",
-           "--title", " 🚀 OSify App Drawer — Tutte le Applicazioni ",
+           "--title", "  OSify App Drawer — Tutte le Applicazioni ",
            "--menu", "Seleziona l'applicazione che desideri eseguire:\n(Premi ESC per uscire)",
            "22", "75", "12"] + menu_items
     try:

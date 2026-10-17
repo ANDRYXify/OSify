@@ -33,7 +33,7 @@ docker run --rm -it --privileged \
     /bin/bash -c "
         echo '[Sandbox] Aggiornamento keyring e installazione Python & Bash...';
         pacman -Sy --noconfirm python bash iproute2 sudo >/dev/null 2>&1 || true;
-        echo '[✓] Ambiente pronto!';
+        echo '[[OK]] Ambiente pronto!';
         echo '[i] Prova a digitare: ./tools/osify-ctl status';
         echo '[i] Prova a digitare: ./tools/osify-ctl block list';
         exec /bin/bash

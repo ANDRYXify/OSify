@@ -33,7 +33,7 @@ setup_wine_environment() {
         winetricks -q gdiplus riched20 corefonts lavfilters || true
     fi
 
-    echo "[✓] Ambiente Wine per EasyWorship e PowerPoint configurato!"
+    echo "[[OK]] Ambiente Wine per EasyWorship e PowerPoint configurato!"
 }
 
 install_fonts() {
@@ -45,7 +45,7 @@ install_fonts() {
     if command -v fc-cache >/dev/null 2>&1; then
         fc-cache -f "$font_dir" 2>/dev/null || true
     fi
-    echo "[✓] Font di presentazione sincronizzati: layout slide protetto da sfasamenti."
+    echo "[[OK]] Font di presentazione sincronizzati: layout slide protetto da sfasamenti."
 }
 
 toggle_presentation_mode() {
@@ -64,7 +64,7 @@ toggle_presentation_mode() {
         if command -v kwriteconfig6 >/dev/null 2>&1; then
             kwriteconfig6 --file notificationrc --group DoNotDisturb --key NotificationDoNotDisturbMode true || true
         fi
-        echo "[✓] Modalità presentazione ATTIVA."
+        echo "[[OK]] Modalità presentazione ATTIVA."
     else
         echo "[!] Disattivazione modalità presentazione..."
         if [[ -f /tmp/osify-present-inhibit.pid ]]; then
@@ -74,7 +74,7 @@ toggle_presentation_mode() {
         if command -v kwriteconfig6 >/dev/null 2>&1; then
             kwriteconfig6 --file notificationrc --group DoNotDisturb --key NotificationDoNotDisturbMode false || true
         fi
-        echo "[✓] Modalità presentazione DISATTIVATA."
+        echo "[[OK]] Modalità presentazione DISATTIVATA."
     fi
 }
 

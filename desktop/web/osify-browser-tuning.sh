@@ -74,4 +74,4 @@ if [[ -f "$FALKON_CONFIG_DIR/settings.ini" ]]; then
     sed -i 's/AdBlockDisabled=true/AdBlockDisabled=false/' "$FALKON_CONFIG_DIR/settings.ini" 2>/dev/null || true
 fi
 
-echo "[✓] Configurazione profili web completata con successo."
+echo "[[OK]] Configurazione profili web completata con successo."

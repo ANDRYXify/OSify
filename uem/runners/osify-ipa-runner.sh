@@ -48,7 +48,7 @@ if [[ -z "$APP_BUNDLE" ]]; then
     exit 1
 fi
 
-echo "[✓] Applicazione individuata: $APP_BUNDLE"
+echo "[[OK]] Applicazione individuata: $APP_BUNDLE"
 
 # 2. Estrazione Info.plist per identificazione nome e architettura
 unzip -q -j "$IPA_FILE" "${APP_BUNDLE}Info.plist" -d "$WORK_DIR" 2>/dev/null || true

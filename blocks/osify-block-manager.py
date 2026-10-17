@@ -31,7 +31,7 @@ def save_blocks(data):
     os.makedirs(os.path.dirname(USER_OVERRIDE_FILE), exist_ok=True)
     with open(USER_OVERRIDE_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4)
-    print(f"[✓] Configurazione a blocchi salvata in: {USER_OVERRIDE_FILE}")
+    print(f"[[OK]] Configurazione a blocchi salvata in: {USER_OVERRIDE_FILE}")
 
 def list_blocks():
     data = load_blocks()
@@ -42,7 +42,7 @@ def list_blocks():
     print(f"{'STATO':<10} {'ID BLOCCO':<15} {'NOME MODULO':<32}")
     print("-" * 57)
     for b_id, info in blocks.items():
-        status = "[✓] ATTIVO" if info.get("enabled") else "[ ] SPENTO"
+        status = "[[OK]] ATTIVO" if info.get("enabled") else "[ ] SPENTO"
         locked = " (Core)" if info.get("locked") else ""
         print(f"{status:<10} {b_id:<15} {info.get('name', b_id) + locked:<32}")
         print(f"    ↳ {info.get('description', '')}")
@@ -71,7 +71,7 @@ def apply_blocks():
     print("[+] Applicazione configurazione blocchi attivi nel sistema...")
     active_blocks = [b_id for b_id, info in blocks.items() if info.get("enabled")]
     print(f"[+] Blocchi operativi montati: {', '.join(active_blocks)}")
-    print("[✓] Moduli sincronizzati.")
+    print("[[OK]] Moduli sincronizzati.")
 
 def main():
     if len(sys.argv) < 2:

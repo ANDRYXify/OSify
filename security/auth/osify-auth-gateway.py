@@ -136,7 +136,7 @@ class AuthHTTPHandler(BaseHTTPRequestHandler):
         <h2>Sblocco Computer</h2>
         <p>Tocca il pulsante per autorizzare lo sblocco istantaneo con <b>Face ID</b>, <b>Impronta Digitale</b> o <b>Passkey</b>.</p>
         <button id="btnUnlock" onclick="authorizeUnlock('{cid}', '{sig}')">AUTORIZZA CON BIOMETRIA</button>
-        <div id="lblSuccess" class="success">✓ Computer Sbloccato con Successo!</div>
+        <div id="lblSuccess" class="success">[OK] Computer Sbloccato con Successo!</div>
     </div>
 
     <script>
@@ -219,14 +219,14 @@ def render_ascii_qr(data_url):
         pass
 
     # Rendering fallback con cornice chiara e link diretto
-    border = "━" * 58
+    border = "" * 58
     return f"""
-┏{border}┓
-┃   INQUADRA QUESTO INDIRIZZO CON LA FOTOCAMERA SMARTPHONE  ┃
-┃   iPhone (Face ID / Safari) oppure Android (Biometria)   ┃
-┃                                                          ┃
-┃   👉 URL: {data_url:<46} ┃
-┗{border}┛
+{border}
+   INQUADRA QUESTO INDIRIZZO CON LA FOTOCAMERA SMARTPHONE  
+   iPhone (Face ID / Safari) oppure Android (Biometria)   
+                                                          
+    URL: {data_url:<46} 
+{border}
 """
 
 def start_server_background():
@@ -265,7 +265,7 @@ def main():
         start_t = time.time()
         while time.time() - start_t < timeout:
             if ACTIVE_TOKENS.get(cid, {}).get("status") == "GRANTED":
-                print("\n\033[1;32m[✓ SBLOCCO CONFERMATO]\033[0m Ricevuta attestazione biometrica valida dallo smartphone!")
+                print("\n\033[1;32m[[OK] SBLOCCO CONFERMATO]\033[0m Ricevuta attestazione biometrica valida dallo smartphone!")
                 print(f"Computer sbloccato all'istante alle {time.strftime('%H:%M:%S')}.\n")
                 sys.exit(0)
             time.sleep(0.5)
@@ -285,7 +285,7 @@ def main():
             assert data["status"] == "OK"
         assert ACTIVE_TOKENS[cid]["status"] == "GRANTED"
         assert os.path.exists(STATE_UNLOCK_FILE)
-        print("[✓ TEST SUPERATO] Handshake biometrico mobile validato con successo!")
+        print("[[OK] TEST SUPERATO] Handshake biometrico mobile validato con successo!")
 
     else:
         print(f"Uso: {sys.argv[0]} {{status|qr|serve|test-simulated}}")

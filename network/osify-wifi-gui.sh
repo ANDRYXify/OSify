@@ -302,7 +302,7 @@ style.configure("Treeview.Heading",
                 font=("Helvetica", 10, "bold"))
 style.map("Treeview", background=[("selected", "#0284c7")])
 
-header = tk.Label(root, text="⚡ OSIFY WIRELESS MATRIX 2050", 
+header = tk.Label(root, text=" OSIFY WIRELESS MATRIX 2050", 
                   font=("Helvetica", 14, "bold"), 
                   fg="#38bdf8", bg="#0b0d14")
 header.pack(pady=12)
@@ -355,13 +355,13 @@ def do_connect():
 btn_frame = tk.Frame(root, bg="#0b0d14")
 btn_frame.pack(fill=tk.X, padx=20, pady=15)
 
-btn_scan = tk.Button(btn_frame, text="🔄 Aggiorna", font=("Helvetica", 10, "bold"), 
+btn_scan = tk.Button(btn_frame, text=" Aggiorna", font=("Helvetica", 10, "bold"), 
                      bg="#334155", fg="#f8fafc", activebackground="#475569", 
                      activeforeground="#ffffff", relief=tk.FLAT, padx=14, pady=6, 
                      command=lambda: [tree.delete(*tree.get_children()), [tree.insert("", tk.END, values=n) for n in scan()]])
 btn_scan.pack(side=tk.LEFT)
 
-btn_conn = tk.Button(btn_frame, text="🚀 Connetti Ora", font=("Helvetica", 10, "bold"), 
+btn_conn = tk.Button(btn_frame, text=" Connetti Ora", font=("Helvetica", 10, "bold"), 
                      bg="#0284c7", fg="#ffffff", activebackground="#0369a1", 
                      activeforeground="#ffffff", relief=tk.FLAT, padx=18, pady=6, 
                      command=do_connect)

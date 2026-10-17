@@ -36,17 +36,17 @@ WM_NAME="Openbox (OSify Supervisor)"
 # Output affiancato Logo ANSI + Dati di Sistema
 cat << EOF
 
-${C_CYAN}    ██████╗ ███████╗${C_RESET}     ${C_BOLD}${C_WHITE}${USER_NAME}${C_RESET}@${C_BOLD}${C_CYAN}${HOST_NAME}${C_RESET}
-${C_MAGENTA}   ██╔═══██╗██╔════╝${C_RESET}     ----------------------------------------
-${C_BLUE}   ██║   ██║███████╗${C_RESET}     ${C_CYAN}OS:${C_RESET}        $OS_NAME
-${C_CYAN}   ██║   ██║╚════██║${C_RESET}     ${C_CYAN}Kernel:${C_RESET}    $KERNEL_VER
-${C_GREEN}   ╚██████╔╝███████║${C_RESET}     ${C_CYAN}Uptime:${C_RESET}    $UPTIME_STR
-${C_WHITE}    ╚═════╝ ╚══════╝${C_RESET}     ${C_CYAN}WM:${C_RESET}        $WM_NAME
-${C_BLUE}   ███████╗██╗██╗   ${C_RESET}     ${C_CYAN}Display:${C_RESET}   $RES_STR
-${C_CYAN}   ██╔════╝██║██║   ${C_RESET}     ${C_CYAN}CPU:${C_RESET}       $CPU_NAME ($CPU_CORES Core)
-${C_GREEN}   █████╗  ██║██║   ${C_RESET}     ${C_CYAN}Memoria:${C_RESET}   ${RAM_USED_MB}MiB / ${RAM_TOTAL_MB}MiB
-${C_YELLOW}   ██╔══╝  ██║██║   ${C_RESET}     ${C_CYAN}Ingegnere:${C_RESET} Andrea Taliento (ANDRYXify)
-${C_WHITE}   ██║     ██║██████${C_RESET}     
-${C_MAGENTA}   ╚═╝     ╚═╝╚═════${C_RESET}     ${C_CYAN}███${C_RESET}${C_MAGENTA}███${C_RESET}${C_BLUE}███${C_RESET}${C_GREEN}███${C_RESET}${C_YELLOW}███${C_RESET}${C_WHITE}███${C_RESET}
+${C_CYAN}     ${C_RESET}     ${C_BOLD}${C_WHITE}${USER_NAME}${C_RESET}@${C_BOLD}${C_CYAN}${HOST_NAME}${C_RESET}
+${C_MAGENTA}   ${C_RESET}     ----------------------------------------
+${C_BLUE}      ${C_RESET}     ${C_CYAN}OS:${C_RESET}        $OS_NAME
+${C_CYAN}      ${C_RESET}     ${C_CYAN}Kernel:${C_RESET}    $KERNEL_VER
+${C_GREEN}   ${C_RESET}     ${C_CYAN}Uptime:${C_RESET}    $UPTIME_STR
+${C_WHITE}     ${C_RESET}     ${C_CYAN}WM:${C_RESET}        $WM_NAME
+${C_BLUE}      ${C_RESET}     ${C_CYAN}Display:${C_RESET}   $RES_STR
+${C_CYAN}      ${C_RESET}     ${C_CYAN}CPU:${C_RESET}       $CPU_NAME ($CPU_CORES Core)
+${C_GREEN}        ${C_RESET}     ${C_CYAN}Memoria:${C_RESET}   ${RAM_USED_MB}MiB / ${RAM_TOTAL_MB}MiB
+${C_YELLOW}        ${C_RESET}     ${C_CYAN}Ingegnere:${C_RESET} Andrea Taliento (ANDRYXify)
+${C_WHITE}        ${C_RESET}     
+${C_MAGENTA}        ${C_RESET}     ${C_CYAN}${C_RESET}${C_MAGENTA}${C_RESET}${C_BLUE}${C_RESET}${C_GREEN}${C_RESET}${C_YELLOW}${C_RESET}${C_WHITE}${C_RESET}
 
 EOF

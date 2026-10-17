@@ -90,21 +90,21 @@ set_power_profile() {
             if [[ -d /sys/devices/system/cpu/cpu0/cpufreq ]]; then
                 echo powersave | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor >/dev/null 2>&1 || true
             fi
-            echo "[✓] Profilo Risparmio Energetico attivo (Autonomia massima)."
+            echo "[[OK]] Profilo Risparmio Energetico attivo (Autonomia massima)."
             ;;
         performance)
             # Frequenza massima, TDP 15W
             if [[ -d /sys/devices/system/cpu/cpu0/cpufreq ]]; then
                 echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor >/dev/null 2>&1 || true
             fi
-            echo "[✓] Profilo Prestazioni Massime attivo (BORE 1000Hz)."
+            echo "[[OK]] Profilo Prestazioni Massime attivo (BORE 1000Hz)."
             ;;
         balanced|*)
             # Scheduler BORE / schedutil bilanciato, TDP 10W
             if [[ -d /sys/devices/system/cpu/cpu0/cpufreq ]]; then
                 echo schedutil | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor >/dev/null 2>&1 || true
             fi
-            echo "[✓] Profilo Bilanciato attivo."
+            echo "[[OK]] Profilo Bilanciato attivo."
             ;;
     esac
 }

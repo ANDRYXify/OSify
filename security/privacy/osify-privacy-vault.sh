@@ -21,7 +21,7 @@ mkdir -p "$STATE_DIR"
 touch "$LOG_FILE"
 
 log()   { printf "\033[1;35m[OSify-PrivacyVault]\033[0m %s\n" "$*"; }
-ok()    { printf "\033[1;32m[✓]\033[0m %s\n" "$*"; }
+ok()    { printf "\033[1;32m[[OK]]\033[0m %s\n" "$*"; }
 warn()  { printf "\033[1;33m[!]\033[0m %s\n" "$*"; }
 panic() { printf "\033[1;31m[PANIC-KILLSWITCH]\033[0m %s\n" "$*"; }
 

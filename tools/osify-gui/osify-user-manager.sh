@@ -48,10 +48,10 @@ if [ -n "$DISPLAY" ] && command -v yad >/dev/null 2>&1; then
             --width=620 --height=380 --center \
             --column="Username" --column="Nome Completo" --column="UID" --column="Privilegi" \
             $(echo "$USERS_LIST" | tr '!' '\n') \
-            --button="➕ Nuovo Utente:2" \
-            --button="🔑 Cambia Password:3" \
-            --button="🛡️ Toggle Privilegi Admin:4" \
-            --button="🗑️ Elimina Utente:5" \
+            --button=" Nuovo Utente:2" \
+            --button=" Cambia Password:3" \
+            --button=" Toggle Privilegi Admin:4" \
+            --button=" Elimina Utente:5" \
             --button="gtk-close:0")
 
         EXIT_CODE=$?

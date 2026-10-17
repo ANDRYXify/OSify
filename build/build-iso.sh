@@ -207,7 +207,7 @@ EOF
     # Copia pacchetti
     cp "$SCRIPT_DIR/packages.x86_64" "$PROFILE_DIR/packages.x86_64"
 
-    echo "[✓] Profilo ISO autonomo OSify assemblato con successo."
+    echo "[[OK]] Profilo ISO autonomo OSify assemblato con successo."
 }
 
 build_iso() {
@@ -217,7 +217,7 @@ build_iso() {
     if command -v mkarchiso >/dev/null 2>&1; then
         echo "[+] Avvio compilazione ISO tramite mkarchiso..."
         sudo mkarchiso -v -w "$WORK_DIR" -o "$OUT_DIR" "$PROFILE_DIR"
-        echo "[✓] ISO generata con successo in: $OUT_DIR/"
+        echo "[[OK]] ISO generata con successo in: $OUT_DIR/"
     else
         echo "[i] Struttura profilo completata con successo. Per lanciare il build su Linux: 'sudo ./build-iso.sh'"
     fi
@@ -232,7 +232,7 @@ case "${1:-build}" in
         ;;
     clean)
         rm -rf "$WORK_DIR" "$PROFILE_DIR"
-        echo "[✓] Directory temporanee rimosse."
+        echo "[[OK]] Directory temporanee rimosse."
         ;;
     *)
         echo "Uso: $0 {build|prepare|clean}"

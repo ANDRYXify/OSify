@@ -78,7 +78,7 @@ connect_network() {
 
     # Configurazione automatica QoS CAKE e DNS protetto
     apply_network_hardening "$iface"
-    echo "[✓] Connesso a '$ssid' con accelerazione CAKE QoS e protezione DNS attiva."
+    echo "[[OK]] Connesso a '$ssid' con accelerazione CAKE QoS e protezione DNS attiva."
 }
 
 apply_network_hardening() {

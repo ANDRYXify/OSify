@@ -108,7 +108,7 @@ class SpotlightWindow:
         self.search_frame = tk.Frame(self.container, bg="#161e2e", highlightthickness=1, highlightbackground="#38bdf8", padx=12, pady=8)
         self.search_frame.pack(fill=tk.X, pady=(0, 10))
         
-        self.lbl_lens = tk.Label(self.search_frame, text="🔍", font=("Helvetica", 16), bg="#161e2e", fg="#38bdf8")
+        self.lbl_lens = tk.Label(self.search_frame, text="", font=("Helvetica", 16), bg="#161e2e", fg="#38bdf8")
         self.lbl_lens.pack(side=tk.LEFT, padx=(0, 10))
         
         self.entry_var = tk.StringVar()
@@ -214,7 +214,7 @@ class SpotlightWindow:
             row.pack(fill=tk.X, pady=2)
             
             # Icona o pallino
-            icon_lbl = tk.Label(row, text="⚡" if item.get("type") != "calc" else "🔢", font=("Helvetica", 14), bg=bg_col, fg="#38bdf8" if is_sel else "#94a3b8")
+            icon_lbl = tk.Label(row, text="" if item.get("type") != "calc" else "", font=("Helvetica", 14), bg=bg_col, fg="#38bdf8" if is_sel else "#94a3b8")
             icon_lbl.pack(side=tk.LEFT, padx=(4, 12))
             
             # Testi

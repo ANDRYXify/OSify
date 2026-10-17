@@ -38,7 +38,7 @@ apply_lowspec_tuning() {
         # Latenza bilanciata senza saturare la VRAM
         kwriteconfig6 --file kwinrc --group Compositing --key LatencyPolicy 2
         
-        echo "[✓] Parametri grafici leggeri applicati con successo!"
+        echo "[[OK]] Parametri grafici leggeri applicati con successo!"
     fi
 
     # 3. Disattivazione effetti sonori di sistema per risparmiare cicli CPU
@@ -46,7 +46,7 @@ apply_lowspec_tuning() {
         kwriteconfig6 --file plasmarc --group SoundEffects --key EnableSoundEffects false || true
     fi
 
-    echo "[✓] Profilo Vintage Low-Spec configurato: reattività massima garantita su qualsiasi PC!"
+    echo "[[OK]] Profilo Vintage Low-Spec configurato: reattività massima garantita su qualsiasi PC!"
 }
 
 apply_lowspec_tuning

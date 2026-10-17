@@ -45,7 +45,7 @@ apply_macos_multitasking() {
         kwriteconfig6 --file kwinrc --group Plugins --key magiclampEnabled true
         kwriteconfig6 --file kwinrc --group Plugins --key overviewEnabled true
 
-        echo "[✓] Multitasking e gesture stile MacBook configurati con successo!"
+        echo "[[OK]] Multitasking e gesture stile MacBook configurati con successo!"
     else
         echo "[i] kwriteconfig6 non trovato; applicazione differita al primo avvio di KDE Plasma 6."
     fi

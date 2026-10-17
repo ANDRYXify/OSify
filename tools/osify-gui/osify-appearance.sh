@@ -67,14 +67,14 @@ set_dark_background() {
 if command -v dialog >/dev/null 2>&1; then
     while true; do
         A_OPT=$(dialog --stdout --backtitle "OSify Appearance — Andrea Taliento" \
-            --title " 🎨 Personalizzazione Aspetto & Display " \
+            --title "  Personalizzazione Aspetto & Display " \
             --menu "Risoluzione Attuale: $CURRENT_RES\n\nScegli cosa personalizzare:" 16 65 6 \
-            "1" "🖥️   Toggle Virtual Scaler Netbook (1024x600 ↔ 1280x768)" \
-            "2" "🌌  Sfondo: Dark Obsidian Matrix (Nero Assoluto #0b0d14)" \
-            "3" "🔷  Sfondo: Deep Cyber Navy (#0f172a)" \
-            "4" "🛡️   Sfondo: Carbon Fiber Slate (#18181b)" \
-            "5" "🎛️   Seleziona Risoluzione Grafica Tradizionale" \
-            "0" "❌  Torna al Desktop" 2>/dev/null || echo "0")
+            "1" "   Toggle Virtual Scaler Netbook (1024x600 ↔ 1280x768)" \
+            "2" "  Sfondo: Dark Obsidian Matrix (Nero Assoluto #0b0d14)" \
+            "3" "  Sfondo: Deep Cyber Navy (#0f172a)" \
+            "4" "   Sfondo: Carbon Fiber Slate (#18181b)" \
+            "5" "   Seleziona Risoluzione Grafica Tradizionale" \
+            "0" "  Torna al Desktop" 2>/dev/null || echo "0")
 
         case "$A_OPT" in
             1) set_virtual_scaler ;;
@@ -98,13 +98,13 @@ if command -v dialog >/dev/null 2>&1; then
 else
     clear
     echo "========================================================="
-    echo "   🎨 OSify Appearance & Display Manager                "
+    echo "    OSify Appearance & Display Manager                "
     echo "========================================================="
-    echo " 1) 🖥️ Toggle Virtual Scaler Netbook (1024x600 ↔ 1280x768)"
-    echo " 2) 🌌 Sfondo Obsidian Matrix (#0b0d14)"
-    echo " 3) 🔷 Sfondo Deep Cyber Navy (#0f172a)"
-    echo " 4) 🛡️ Sfondo Carbon Slate (#18181b)"
-    echo " 0) ❌ Esci"
+    echo " 1)  Toggle Virtual Scaler Netbook (1024x600 ↔ 1280x768)"
+    echo " 2)  Sfondo Obsidian Matrix (#0b0d14)"
+    echo " 3)  Sfondo Deep Cyber Navy (#0f172a)"
+    echo " 4)  Sfondo Carbon Slate (#18181b)"
+    echo " 0)  Esci"
     echo "========================================================="
     read -rp "Selezione [0-4]: " a_opt
     case "$a_opt" in

@@ -39,7 +39,7 @@ RAW_VERSION_URL="https://raw.githubusercontent.com/${GITHUB_REPO}/main/VERSION"
 ARCHIVE_URL="https://github.com/${GITHUB_REPO}/archive/refs/heads/main.tar.gz"
 
 log()   { printf "\033[1;34m[OSify-Updater]\033[0m %s\n" "$*"; }
-ok()    { printf "\033[1;32m[✓]\033[0m %s\n" "$*"; }
+ok()    { printf "\033[1;32m[[OK]]\033[0m %s\n" "$*"; }
 warn()  { printf "\033[1;33m[!]\033[0m %s\n" "$*"; }
 alert() { printf "\033[1;31m[OSify-Alert]\033[0m %s\n" "$*"; }
 
@@ -323,7 +323,7 @@ check_and_update() {
         return 0
     fi
 
-    log "🔔 Nuovo aggiornamento disponibile: v$remote_ver!"
+    log " Nuovo aggiornamento disponibile: v$remote_ver!"
     apply_standalone_update "$remote_ver" "$local_ver"
 }
 
@@ -391,13 +391,13 @@ run_gui() {
         --width=480 \
         --center \
         --fixed \
-        --text="<b><big>🔄 OSify System Updater</big></b>\n<i>Ingegnerizzato da Andrea Taliento (ANDRYXify)</i>\n" \
+        --text="<b><big> OSify System Updater</big></b>\n<i>Ingegnerizzato da Andrea Taliento (ANDRYXify)</i>\n" \
         --field="Versione Installata:":RO "v$local_ver" \
         --field="Ultima Versione Ufficiale:":RO "v$remote_ver" \
         --field="Connessione Internet:":RO "$net_status" \
         --field="Stato Aggiornamenti:":RO "$update_text" \
         --field="Canale di Distribuzione:":CB "Stabile (Ufficiale)!Gaming & eSport!Nightly" \
-        --button="🔄 Aggiorna Ora (Zero-Reboot)":10 \
+        --button=" Aggiorna Ora (Zero-Reboot)":10 \
         --button="⏪ Ripristina (Rollback)":20 \
         --button="Chiudi":1)
 
@@ -416,7 +416,7 @@ run_gui() {
             --width=400 \
             --center 2>/dev/null
 
-        yad --notification --text="✅ OSify è stato aggiornato con successo!" --timeout=4 2>/dev/null &
+        yad --notification --text=" OSify è stato aggiornato con successo!" --timeout=4 2>/dev/null &
     elif [ "$ret" -eq 20 ]; then
         if yad --question --title="Conferma Rollback" --text="Vuoi davvero ripristinare la versione precedente di OSify?" --center; then
             rollback_previous
@@ -441,11 +441,11 @@ run_daemon_mode() {
             remote_ver="$(get_remote_version)"
             
             if [ "$local_ver" != "$remote_ver" ] && [ -n "$remote_ver" ]; then
-                log "🔔 Notifica: Rilevata nuova versione $remote_ver (attuale: $local_ver)."
+                log " Notifica: Rilevata nuova versione $remote_ver (attuale: $local_ver)."
                 if command -v notify-send >/dev/null 2>&1; then
                     notify-send -u normal -i system-software-update "OSify Update" "Nuova versione v$remote_ver disponibile! Apri il Control Center per aggiornare." 2>/dev/null || true
                 elif command -v yad >/dev/null 2>&1; then
-                    yad --notification --image="system-software-update" --text="🔔 Aggiornamento OSify v$remote_ver disponibile!" --timeout=10 2>/dev/null &
+                    yad --notification --image="system-software-update" --text=" Aggiornamento OSify v$remote_ver disponibile!" --timeout=10 2>/dev/null &
                 fi
             fi
         fi

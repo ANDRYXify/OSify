@@ -71,7 +71,7 @@ stop_share() {
             kill "$pid" 2>/dev/null || true
         fi
         rm -f "$PID_FILE"
-        echo "[✓] Condivisione terminata."
+        echo "[[OK]] Condivisione terminata."
     fi
     pkill -f "http.server $PORT" 2>/dev/null || true
 }

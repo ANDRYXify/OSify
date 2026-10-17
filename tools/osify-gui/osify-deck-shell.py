@@ -355,11 +355,11 @@ class OSifyDeckApp(tk.Tk):
         nav_box = tk.Frame(shelf_header, bg=COLOR_BG_BASE)
         nav_box.pack(side="right")
 
-        btn_prev = tk.Label(nav_box, text="◀", font=self.font_small, fg=COLOR_TEXT_MUTED, bg=COLOR_BG_SURFACE, padx=8, pady=2, cursor="hand2")
+        btn_prev = tk.Label(nav_box, text="", font=self.font_small, fg=COLOR_TEXT_MUTED, bg=COLOR_BG_SURFACE, padx=8, pady=2, cursor="hand2")
         btn_prev.pack(side="left", padx=2)
         btn_prev.bind("<Button-1>", lambda e: self.navigate_cards(-1))
 
-        btn_next = tk.Label(nav_box, text="▶", font=self.font_small, fg=COLOR_TEXT_MUTED, bg=COLOR_BG_SURFACE, padx=8, pady=2, cursor="hand2")
+        btn_next = tk.Label(nav_box, text="", font=self.font_small, fg=COLOR_TEXT_MUTED, bg=COLOR_BG_SURFACE, padx=8, pady=2, cursor="hand2")
         btn_next.pack(side="left", padx=2)
         btn_next.bind("<Button-1>", lambda e: self.navigate_cards(1))
 

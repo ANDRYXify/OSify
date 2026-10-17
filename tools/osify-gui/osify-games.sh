@@ -45,12 +45,12 @@ if [ -n "$DISPLAY" ] && command -v yad >/dev/null 2>&1; then
             --window-icon="/usr/share/pixmaps/osify-games.png" \
             --width=500 --height=380 --center \
             --list --radiolist \
-            --text="<b><big>🎮 Centro Gaming & Retrogaming 2050</big></b>\nSeleziona l'azione desiderata:" \
+            --text="<b><big> Centro Gaming & Retrogaming 2050</big></b>\nSeleziona l'azione desiderata:" \
             --column="Scelta" --column="Icona" --column="Azione" \
-            TRUE "🕹️" "Esegui Gioco Windows (.exe / DirectX / Wine)" \
-            FALSE "👾" "Retrogaming DOS & Console (.com / .exe / ROM)" \
-            FALSE "⚡" "Attiva Turbo Boost Prestazioni (CPU & GPU)" \
-            FALSE "📁" "Esplora Cartella Giochi ($GAMES_DIR)" \
+            TRUE "" "Esegui Gioco Windows (.exe / DirectX / Wine)" \
+            FALSE "" "Retrogaming DOS & Console (.com / .exe / ROM)" \
+            FALSE "" "Attiva Turbo Boost Prestazioni (CPU & GPU)" \
+            FALSE "" "Esplora Cartella Giochi ($GAMES_DIR)" \
             --button="Chiudi!gtk-cancel:1" \
             --button="Avvia!gtk-ok:0") || exit 0
 
@@ -73,7 +73,7 @@ if [ -n "$DISPLAY" ] && command -v yad >/dev/null 2>&1; then
             *"Turbo Boost"*)
                 boost_gaming_profile
                 yad --title="OSify Turbo Boost" --info \
-                    --text="<b><big>⚡ Turbo Boost Gaming Attivato!</big></b>\n\n• Governor CPU: <b>Performance</b>\n• Cache RAM: <b>Ottimizzata e ripulita</b>\n• Priorita I/O: <b>Real-time per il gioco</b>" \
+                    --text="<b><big> Turbo Boost Gaming Attivato!</big></b>\n\n• Governor CPU: <b>Performance</b>\n• Cache RAM: <b>Ottimizzata e ripulita</b>\n• Priorita I/O: <b>Real-time per il gioco</b>" \
                     --center --width=380 --button="OK:0"
                 ;;
             *"Esplora"*)
@@ -144,7 +144,7 @@ root.geometry("480x360")
 root.configure(bg="#0b0d14")
 root.resizable(False, False)
 
-header = tk.Label(root, text="🎮 OSIFY GAMING MATRIX 2050", 
+header = tk.Label(root, text=" OSIFY GAMING MATRIX 2050", 
                   font=("Helvetica", 13, "bold"), fg="#38bdf8", bg="#0b0d14")
 header.pack(pady=15)
 
@@ -168,10 +168,10 @@ def open_dir():
 
 btn_style = {"font": ("Helvetica", 11, "bold"), "fg": "#ffffff", "relief": tk.FLAT, "pady": 8, "cursor": "hand2"}
 
-tk.Button(root, text="🕹️  Esegui Gioco Windows (.EXE)", bg="#0284c7", activebackground="#0369a1", command=run_exe, **btn_style).pack(fill=tk.X, padx=30, pady=5)
-tk.Button(root, text="👾  Retrogaming DOS & Console", bg="#1e293b", activebackground="#334155", command=run_dos, **btn_style).pack(fill=tk.X, padx=30, pady=5)
-tk.Button(root, text="⚡  Attiva Profilo Turbo Boost", bg="#7c3aed", activebackground="#6d28d9", command=boost, **btn_style).pack(fill=tk.X, padx=30, pady=5)
-tk.Button(root, text="📁  Apri Cartella Giochi", bg="#334155", activebackground="#475569", command=open_dir, **btn_style).pack(fill=tk.X, padx=30, pady=5)
+tk.Button(root, text="  Esegui Gioco Windows (.EXE)", bg="#0284c7", activebackground="#0369a1", command=run_exe, **btn_style).pack(fill=tk.X, padx=30, pady=5)
+tk.Button(root, text="  Retrogaming DOS & Console", bg="#1e293b", activebackground="#334155", command=run_dos, **btn_style).pack(fill=tk.X, padx=30, pady=5)
+tk.Button(root, text="  Attiva Profilo Turbo Boost", bg="#7c3aed", activebackground="#6d28d9", command=boost, **btn_style).pack(fill=tk.X, padx=30, pady=5)
+tk.Button(root, text="  Apri Cartella Giochi", bg="#334155", activebackground="#475569", command=open_dir, **btn_style).pack(fill=tk.X, padx=30, pady=5)
 
 root.mainloop()
 PYEOF

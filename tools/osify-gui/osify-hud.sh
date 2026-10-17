@@ -39,7 +39,7 @@ action_boost_ram() {
     after=$(awk '/MemAvailable/ {print int($2/1024)}' /proc/meminfo 2>/dev/null || awk '/MemFree/ {print int($2/1024)}' /proc/meminfo 2>/dev/null || echo 0)
     freed=$((after - before))
     [ "$freed" -lt 0 ] && freed=12
-    yad --notification --text="⚡ OSify RAM Boost: Liberati ${freed} MB di memoria!" --timeout=3 2>/dev/null &
+    yad --notification --text=" OSify RAM Boost: Liberati ${freed} MB di memoria!" --timeout=3 2>/dev/null &
 }
 
 # Azione: Virtual WSVGA Scaler (Toggle 1280x768 su pannello fisico 1024x600)
@@ -53,11 +53,11 @@ toggle_virtual_display() {
     if [ -n "$is_scaled" ]; then
         # Ripristina 1024x600 nativo
         xrandr --output "$disp" --scale 1.0x1.0 --panning 1024x600 2>/dev/null || xrandr --output "$disp" --auto
-        yad --notification --text="🖥️ Risoluzione ripristinata: Nativa WSVGA (1024x600)" --timeout=3 2>/dev/null &
+        yad --notification --text=" Risoluzione ripristinata: Nativa WSVGA (1024x600)" --timeout=3 2>/dev/null &
     else
         # Attiva virtual viewport 1280x768 (1.25x in larghezza, 1.28x in altezza)
         xrandr --output "$disp" --scale 1.25x1.28 --panning 1280x768 2>/dev/null
-        yad --notification --text="🖥️ Virtual WSVGA Enhancer ATTIVO (1280x768 Anti-Cutoff)" --timeout=3 2>/dev/null &
+        yad --notification --text=" Virtual WSVGA Enhancer ATTIVO (1280x768 Anti-Cutoff)" --timeout=3 2>/dev/null &
     fi
 }
 
@@ -69,7 +69,7 @@ set_governor() {
             echo "$gov" > "$cpu" 2>/dev/null || true
         fi
     done
-    yad --notification --text="⚡ CPU Governor impostato: $gov" --timeout=3 2>/dev/null &
+    yad --notification --text=" CPU Governor impostato: $gov" --timeout=3 2>/dev/null &
 }
 
 # Azione: Filtro Notte (Night Light Gamma)
@@ -79,10 +79,10 @@ toggle_night_light() {
     is_warm=$(xrandr --verbose 2>/dev/null | grep -i "gamma" | grep -v "1.0:1.0:1.0" || true)
     if [ -n "$is_warm" ]; then
         xrandr --output "$disp" --gamma 1.0:1.0:1.0 2>/dev/null
-        yad --notification --text="☀️ Luce Notturna Disattivata" --timeout=2 2>/dev/null &
+        yad --notification --text=" Luce Notturna Disattivata" --timeout=2 2>/dev/null &
     else
         xrandr --output "$disp" --gamma 1.0:0.85:0.70 2>/dev/null
-        yad --notification --text="🌙 Modalità Notte Attiva (Tonalità Calda)" --timeout=2 2>/dev/null &
+        yad --notification --text=" Modalità Notte Attiva (Tonalità Calda)" --timeout=2 2>/dev/null &
     fi
 }
 
@@ -131,14 +131,14 @@ RESP=$(yad --form \
     --fixed \
     --center \
     --columns=1 \
-    --text="<b><big>⚡ OSify Performance & Quick HUD</big></b>\n<i>Ingegnerizzato da Andrea Taliento (ANDRYXify)</i>\n" \
-    --field="💻 Frequenza CPU Live:":RO "$CPU_CLOCK (Governor: $ACTIVE_GOV)" \
-    --field="🧠 Stato Memoria & zRAM:":RO "$MEM_INFO" \
-    --field="⚡ Profilo Energetico:":CB "Turbo Performance (1.66 GHz)!Adattivo Ondemand!Risparmio Eco" \
-    --field="🖥️ Risoluzione Schermo:":CB "WSVGA Nativa 1024x600!Virtual Enhancer 1280x768 (Anti-Cutoff)" \
-    --field="🌙 Filtro Notte (Luce Blu):":CHK "FALSE" \
-    --button="🔄 Aggiorna OSify":20 \
-    --button="⚡ Boost RAM Subito":10 \
+    --text="<b><big> OSify Performance & Quick HUD</big></b>\n<i>Ingegnerizzato da Andrea Taliento (ANDRYXify)</i>\n" \
+    --field=" Frequenza CPU Live:":RO "$CPU_CLOCK (Governor: $ACTIVE_GOV)" \
+    --field=" Stato Memoria & zRAM:":RO "$MEM_INFO" \
+    --field=" Profilo Energetico:":CB "Turbo Performance (1.66 GHz)!Adattivo Ondemand!Risparmio Eco" \
+    --field=" Risoluzione Schermo:":CB "WSVGA Nativa 1024x600!Virtual Enhancer 1280x768 (Anti-Cutoff)" \
+    --field=" Filtro Notte (Luce Blu):":CHK "FALSE" \
+    --button=" Aggiorna OSify":20 \
+    --button=" Boost RAM Subito":10 \
     --button="Applica Impostazioni":0 \
     --button="Chiudi":1)
 

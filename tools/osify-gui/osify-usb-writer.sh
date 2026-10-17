@@ -47,7 +47,7 @@ write_iso() {
     echo "[+] Scrittura di $(basename "$iso") su $target_dev in corso..."
     sudo dd if="$iso" of="$target_dev" bs=4M status=progress conv=fdatasync
     sync
-    echo "[✓] Scrittura completata con successo! La chiavetta USB e' ora avviabile."
+    echo "[[OK]] Scrittura completata con successo! La chiavetta USB e' ora avviabile."
 }
 
 launch_gui() {

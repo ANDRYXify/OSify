@@ -107,7 +107,7 @@ def test_vm(edition="vintage", boot_seconds=40):
         send_qemu_cmd(f"screendump {ppm1}")
         time.sleep(1)
         if convert_ppm_to_png(ppm1, png1):
-            print(f"[✓ SCREENSHOT 1] Bootloader catturato: {png1} ({os.path.getsize(png1)} bytes)")
+            print(f"[[OK] SCREENSHOT 1] Bootloader catturato: {png1} ({os.path.getsize(png1)} bytes)")
 
         # Invia invio per avviare il boot predefinito da isolinux/syslinux
         print("[+] Invio tasto ENTER al bootloader...")
@@ -133,7 +133,7 @@ def test_vm(edition="vintage", boot_seconds=40):
         send_qemu_cmd(f"screendump {ppm_final}")
         time.sleep(1)
         if convert_ppm_to_png(ppm_final, png_final):
-            print(f"[✓ SCREENSHOT 2] Desktop finale catturato: {png_final} ({os.path.getsize(png_final)} bytes)")
+            print(f"[[OK] SCREENSHOT 2] Desktop finale catturato: {png_final} ({os.path.getsize(png_final)} bytes)")
 
         # 4. Invia tasto Super/Windows (W-space o W-a) per aprire l'App Drawer o Start menu
         print("[+] Invia shortcut Super (W-space) per testare l'apertura del menu...")
@@ -144,7 +144,7 @@ def test_vm(edition="vintage", boot_seconds=40):
         send_qemu_cmd(f"screendump {ppm_menu}")
         time.sleep(1)
         if convert_ppm_to_png(ppm_menu, png_menu):
-            print(f"[✓ SCREENSHOT 3] Menu Start/Drawer catturato: {png_menu} ({os.path.getsize(png_menu)} bytes)")
+            print(f"[[OK] SCREENSHOT 3] Menu Start/Drawer catturato: {png_menu} ({os.path.getsize(png_menu)} bytes)")
 
         return {
             "bootloader": png1,

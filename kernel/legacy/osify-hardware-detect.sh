@@ -87,7 +87,7 @@ apply_legacy_optimizations() {
         if [[ -f "$lowspec_script" ]]; then
             bash "$lowspec_script" || true
         fi
-        echo "[✓] Modalità Vintage Low-Spec attiva: consumi azzerati e massima fluidità."
+        echo "[[OK]] Modalità Vintage Low-Spec attiva: consumi azzerati e massima fluidità."
     else
         echo "[+] Risorse abbondanti (>4GB RAM): profilo ad alte prestazioni standard attivo."
     fi

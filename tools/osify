@@ -38,12 +38,12 @@ get_saluto() {
 # Stampa Banner Ufficiale OSify Cromatico
 print_logo() {
     cat << EOF
-${C_CYAN}    ██████╗ ███████╗██╗███████╗██╗   ██╗${C_RESET}
-${C_MAGENTA}   ██╔═══██╗██╔════╝██║██╔════╝╚██╗ ██╔╝${C_RESET}
-${C_BLUE}   ██║   ██║███████╗██║█████╗   ╚████╔╝ ${C_RESET}
-${C_CYAN}   ██║   ██║╚════██║██║██╔══╝    ╚██╔╝  ${C_RESET}
-${C_GREEN}   ╚██████╔╝███████║██║██║        ██║   ${C_RESET}
-${C_DIM}    ╚═════╝ ╚══════╝╚═╝╚═╝        ╚═╝   ${C_RESET}
+${C_CYAN}        ${C_RESET}
+${C_MAGENTA}    ${C_RESET}
+${C_BLUE}          ${C_RESET}
+${C_CYAN}            ${C_RESET}
+${C_GREEN}              ${C_RESET}
+${C_DIM}                ${C_RESET}
 ${C_WHITE}   OSify — Sistema Operativo Universale & Resurrezione Hardware${C_RESET}
 ${C_DIM}   Ingegnerizzato con orgoglio da Andrea Taliento (ANDRYXify)${C_RESET}
 EOF
@@ -72,11 +72,11 @@ detect_metrics() {
     RAM_BAR=""
     _i=0
     while [ "$_i" -lt "$BAR_FILLED" ]; do
-        RAM_BAR="${RAM_BAR}■"
+        RAM_BAR="${RAM_BAR}"
         _i=$((_i + 1))
     done
     while [ "$_i" -lt "$BAR_TOTAL" ]; do
-        RAM_BAR="${RAM_BAR}□"
+        RAM_BAR="${RAM_BAR}"
         _i=$((_i + 1))
     done
 
@@ -125,19 +125,19 @@ cmd_info() {
     detect_metrics
     print_logo
     echo ""
-    echo "${C_BOLD}┌─────────────────────── ⚡ SCHEDA SISTEMA OSIFY ───────────────────────┐${C_RESET}"
-    printf "│ ${C_YELLOW}%-15s${C_RESET} : %-52s │\n" "Utente" "$(whoami) @ $(cat /etc/hostname 2>/dev/null || echo osify)"
-    printf "│ ${C_YELLOW}%-15s${C_RESET} : %-52s │\n" "Edizione" "OSify $(cat /etc/osify-version 2>/dev/null || echo 'A.0') (Vintage Universal)"
-    printf "│ ${C_YELLOW}%-15s${C_RESET} : %-52s │\n" "Kernel" "$(uname -srm)"
-    printf "│ ${C_YELLOW}%-15s${C_RESET} : %-52s │\n" "Processore" "$CPU_MODEL ($CPU_CORES Core)"
-    printf "│ ${C_YELLOW}%-15s${C_RESET} : %-52s │\n" "RAM Utilizzata" "${RAM_USED_MB}MB / ${RAM_TOTAL_MB}MB [${RAM_BAR}] ${RAM_PERCENT}%"
-    printf "│ ${C_YELLOW}%-15s${C_RESET} : %-52s │\n" "Modulo zRAM" "$ZRAM_INFO"
-    printf "│ ${C_YELLOW}%-15s${C_RESET} : %-52s │\n" "Profilo CPU" "$PERF_MODE"
-    printf "│ ${C_YELLOW}%-15s${C_RESET} : %-52s │\n" "Risoluzione" "$RES_INFO (Pannello Netbook WSVGA)"
-    printf "│ ${C_YELLOW}%-15s${C_RESET} : %-52s │\n" "Rete Wi-Fi" "$WIFI_SSID"
-    printf "│ ${C_YELLOW}%-15s${C_RESET} : %-52s │\n" "Batteria" "$BAT_STATUS"
-    printf "│ ${C_YELLOW}%-15s${C_RESET} : %-52s │\n" "Tempo di Avvio" "$(uptime -p 2>/dev/null || uptime | awk -F',' '{print $1}')"
-    echo "${C_BOLD}└───────────────────────────────────────────────────────────────────────┘${C_RESET}"
+    echo "${C_BOLD}  SCHEDA SISTEMA OSIFY ${C_RESET}"
+    printf " ${C_YELLOW}%-15s${C_RESET} : %-52s \n" "Utente" "$(whoami) @ $(cat /etc/hostname 2>/dev/null || echo osify)"
+    printf " ${C_YELLOW}%-15s${C_RESET} : %-52s \n" "Edizione" "OSify $(cat /etc/osify-version 2>/dev/null || echo 'A.0') (Vintage Universal)"
+    printf " ${C_YELLOW}%-15s${C_RESET} : %-52s \n" "Kernel" "$(uname -srm)"
+    printf " ${C_YELLOW}%-15s${C_RESET} : %-52s \n" "Processore" "$CPU_MODEL ($CPU_CORES Core)"
+    printf " ${C_YELLOW}%-15s${C_RESET} : %-52s \n" "RAM Utilizzata" "${RAM_USED_MB}MB / ${RAM_TOTAL_MB}MB [${RAM_BAR}] ${RAM_PERCENT}%"
+    printf " ${C_YELLOW}%-15s${C_RESET} : %-52s \n" "Modulo zRAM" "$ZRAM_INFO"
+    printf " ${C_YELLOW}%-15s${C_RESET} : %-52s \n" "Profilo CPU" "$PERF_MODE"
+    printf " ${C_YELLOW}%-15s${C_RESET} : %-52s \n" "Risoluzione" "$RES_INFO (Pannello Netbook WSVGA)"
+    printf " ${C_YELLOW}%-15s${C_RESET} : %-52s \n" "Rete Wi-Fi" "$WIFI_SSID"
+    printf " ${C_YELLOW}%-15s${C_RESET} : %-52s \n" "Batteria" "$BAT_STATUS"
+    printf " ${C_YELLOW}%-15s${C_RESET} : %-52s \n" "Tempo di Avvio" "$(uptime -p 2>/dev/null || uptime | awk -F',' '{print $1}')"
+    echo "${C_BOLD}${C_RESET}"
     echo ""
     echo "${C_CYAN}Suggerimento:${C_RESET} Digita ${C_WHITE}osify aiuto${C_RESET} per la lista completa dei comandi o ${C_WHITE}osify${C_RESET} per la Dashboard."
 }
@@ -157,9 +157,9 @@ cmd_turbo() {
         sysctl -w vm.swappiness=70 vm.vfs_cache_pressure=50 >/dev/null 2>&1 || true
     fi
     sync && echo 3 > /proc/sys/vm/drop_caches 2>/dev/null || true
-    echo "${C_GREEN}[✓] CPU impostata a frequenza massima fissa!${C_RESET}"
-    echo "${C_GREEN}[✓] zRAM Swap compresso ultra-rapido LZ4 attivo!${C_RESET}"
-    echo "${C_GREEN}[✓] Cache RAM ottimizzata a latenza zero.${C_RESET}"
+    echo "${C_GREEN}[[OK]] CPU impostata a frequenza massima fissa!${C_RESET}"
+    echo "${C_GREEN}[[OK]] zRAM Swap compresso ultra-rapido LZ4 attivo!${C_RESET}"
+    echo "${C_GREEN}[[OK]] Cache RAM ottimizzata a latenza zero.${C_RESET}"
 }
 
 # Funzione: Risparmio Energetico Eco
@@ -168,7 +168,7 @@ cmd_eco() {
     for gov in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
         [ -f "$gov" ] && echo "powersave" > "$gov" 2>/dev/null || true
     done
-    echo "${C_GREEN}[✓] Governor impostato su powersave per massima autonomia batteria!${C_RESET}"
+    echo "${C_GREEN}[[OK]] Governor impostato su powersave per massima autonomia batteria!${C_RESET}"
 }
 
 # Funzione: Pulizia Memoria Istantanea
@@ -183,7 +183,7 @@ cmd_pulisci() {
     _after=$(awk '/MemAvailable/ {print int($2/1024)}' /proc/meminfo 2>/dev/null || echo 0)
     _liberati=$((_after - _before))
     [ "$_liberati" -lt 0 ] && _liberati=0
-    echo "${C_GREEN}[✓] Memoria ripulita con successo! Liberati ${_liberati} MB di RAM.${C_RESET}"
+    echo "${C_GREEN}[[OK]] Memoria ripulita con successo! Liberati ${_liberati} MB di RAM.${C_RESET}"
     echo "RAM Libera Attuale: ${_after} MB"
 }
 
@@ -193,23 +193,23 @@ cmd_schermo() {
     case "$_mode" in
         "1024x600"|"nativo"|"default")
             xrandr --output LVDS1 --scale 1x1 --panning 1024x600 2>/dev/null || xrandr -s 1024x600 2>/dev/null || true
-            echo "${C_GREEN}[✓] Schermo reimpostato alla risoluzione nativa 1024x600.${C_RESET}"
+            echo "${C_GREEN}[[OK]] Schermo reimpostato alla risoluzione nativa 1024x600.${C_RESET}"
             ;;
         "1280x768"|"scale"|"virtuale")
             xrandr --output LVDS1 --scale 1.25x1.28 --panning 1280x768 2>/dev/null || true
-            echo "${C_GREEN}[✓] Virtual Scaler HD 1280x768 attivato! Tutte le finestre grandi ora entrano perfettamente nello schermo.${C_RESET}"
+            echo "${C_GREEN}[[OK]] Virtual Scaler HD 1280x768 attivato! Tutte le finestre grandi ora entrano perfettamente nello schermo.${C_RESET}"
             ;;
         "hdmi"|"tv")
             xrandr --output HDMI1 --auto --primary --output LVDS1 --off 2>/dev/null || true
-            echo "${C_GREEN}[✓] Uscita video commutata su porta HDMI (Monitor Esterno / TV).${C_RESET}"
+            echo "${C_GREEN}[[OK]] Uscita video commutata su porta HDMI (Monitor Esterno / TV).${C_RESET}"
             ;;
         "clona"|"mirror")
             xrandr --output HDMI1 --auto --same-as LVDS1 2>/dev/null || true
-            echo "${C_GREEN}[✓] Uscite video duplicate (Display Netbook + HDMI Esterno).${C_RESET}"
+            echo "${C_GREEN}[[OK]] Uscite video duplicate (Display Netbook + HDMI Esterno).${C_RESET}"
             ;;
         "estendi")
             xrandr --output HDMI1 --auto --right-of LVDS1 2>/dev/null || true
-            echo "${C_GREEN}[✓] Desktop esteso su monitor secondario (a destra).${C_RESET}"
+            echo "${C_GREEN}[[OK]] Desktop esteso su monitor secondario (a destra).${C_RESET}"
             ;;
         *)
             echo "${C_YELLOW}Uso: osify schermo [1024x600 | 1280x768 | hdmi | clona | estendi]${C_RESET}"
@@ -303,12 +303,12 @@ cmd_dashboard() {
         echo " ${C_CYAN}Profilo:${C_RESET} $PERF_MODE   ${C_CYAN}zRAM:${C_RESET} $ZRAM_INFO   ${C_CYAN}Risoluzione:${C_RESET} $RES_INFO"
         echo " ${C_CYAN}Wi-Fi:${C_RESET} $WIFI_SSID   ${C_CYAN}Batteria:${C_RESET} $BAT_STATUS"
         echo "${C_BOLD}-------------------------------------------------------------------------------${C_RESET}"
-        echo "${C_WHITE} Usa i tasti freccia [▲ / ▼] per navigare, [Invio] per eseguire, [Q] per uscire${C_RESET}"
+        echo "${C_WHITE} Usa i tasti freccia [ / ] per navigare, [Invio] per eseguire, [Q] per uscire${C_RESET}"
         echo ""
 
         for i in "${!options[@]}"; do
             if [ "$i" -eq "$cur" ]; then
-                printf "  ${C_BG_BLUE}${C_WHITE}${C_BOLD} ➔ %-72s ${C_RESET}\n" "${options[$i]}"
+                printf "  ${C_BG_BLUE}${C_WHITE}${C_BOLD}  %-72s ${C_RESET}\n" "${options[$i]}"
             else
                 printf "     ${C_WHITE}%-72s${C_RESET}\n" "${options[$i]}"
             fi
@@ -364,9 +364,9 @@ cmd_dashboard() {
                     ;;
                 5)
                     echo ""
-                    echo "➔ Risoluzione Nativa 1024x600"
-                    echo "➔ Virtual Scaler HD 1280x768"
-                    echo "➔ Uscita Esterna Solo HDMI/TV"
+                    echo " Risoluzione Nativa 1024x600"
+                    echo " Virtual Scaler HD 1280x768"
+                    echo " Uscita Esterna Solo HDMI/TV"
                     cmd_schermo 1024x600
                     printf "\nPremi INVIO per continuare..."
                     read -r _dummy

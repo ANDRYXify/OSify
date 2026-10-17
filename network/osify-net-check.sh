@@ -12,8 +12,8 @@
 # ==============================================================================
 
 log() { printf "\033[1;36m[OSify-NetCheck]\033[0m %s\n" "$*"; }
-ok()  { printf "\033[1;32m[✓ OK]\033[0m %s\n" "$*"; }
-fail(){ printf "\033[1;31m[✗ ERRORE]\033[0m %s\n" "$*"; }
+ok()  { printf "\033[1;32m[[OK] OK]\033[0m %s\n" "$*"; }
+fail(){ printf "\033[1;31m[ ERRORE]\033[0m %s\n" "$*"; }
 warn(){ printf "\033[1;33m[! AVVISO]\033[0m %s\n" "$*"; }
 
 diagnose_network() {

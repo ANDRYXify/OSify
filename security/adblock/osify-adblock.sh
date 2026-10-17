@@ -22,7 +22,7 @@ mkdir -p "$CONFIG_DIR"
 touch "$CUSTOM_BLACKLIST" "$ADBLOCK_LOG"
 
 log() { printf "\033[1;34m[OSify-AdShield]\033[0m %s\n" "$*"; }
-ok()  { printf "\033[1;32m[✓]\033[0m %s\n" "$*"; }
+ok()  { printf "\033[1;32m[[OK]]\033[0m %s\n" "$*"; }
 warn(){ printf "\033[1;33m[!]\033[0m %s\n" "$*"; }
 
 # Elenco core di domini noti di tracciamento e malvertising aggressivo

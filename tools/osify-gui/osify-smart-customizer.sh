@@ -68,11 +68,11 @@ if [ -n "$DISPLAY" ] && command -v yad >/dev/null 2>&1; then
             --text="<big><b>Personalizzazione Grafica OSify</b></big>\nPersonalizza ogni elemento del sistema. Il motore interno adatta automaticamente formati e dimensioni." \
             --width=580 --height=340 --center \
             --column="ID" --column="Opzione" --column="Descrizione" \
-            "1" "🖼️  Imposta Nuovo Sfondo" "Scegli qualsiasi immagine: il motore la adatta a zero distorsione" \
-            "2" "👤  Cambia Avatar Utente" "Ritaglia e normalizza automaticamente una foto personale" \
-            "3" "📐  Virtual Scaler Schermo" "Ingrandisci la scrivania a 1280x768 per Netbook 1024x600" \
-            "4" "🎨  Palette Cromatica" "Seleziona colore accento (Cyber Ciano, Viola, Menta, Ambra)" \
-            "5" "🖱️  Touchpad & Puntatore" "Regola velocità, tap-to-click ed edge-scrolling" \
+            "1" "  Imposta Nuovo Sfondo" "Scegli qualsiasi immagine: il motore la adatta a zero distorsione" \
+            "2" "  Cambia Avatar Utente" "Ritaglia e normalizza automaticamente una foto personale" \
+            "3" "  Virtual Scaler Schermo" "Ingrandisci la scrivania a 1280x768 per Netbook 1024x600" \
+            "4" "  Palette Cromatica" "Seleziona colore accento (Cyber Ciano, Viola, Menta, Ambra)" \
+            "5" "  Touchpad & Puntatore" "Regola velocità, tap-to-click ed edge-scrolling" \
             --button="Seleziona:0" --button="gtk-close:1")
 
         EXIT_CODE=$?

@@ -45,14 +45,14 @@ setup_matrix() {
     # Imposta OSify_Game come sink predefinito per tutte le nuove app
     pactl set-default-sink "OSify_Game"
 
-    echo "[✓] Matrice audio virtuale configurata con successo!"
+    echo "[[OK]] Matrice audio virtuale configurata con successo!"
     echo "[i] In OBS: aggiungi sorgenti di cattura 'Monitor di OSify_Game', 'Monitor di OSify_Voice' e 'Monitor di OSify_Music'."
 }
 
 reset_matrix() {
     echo "[!] Ripristino configurazione audio..."
     pactl unload-module module-null-sink 2>/dev/null || true
-    echo "[✓] Sinks virtuali scaricati."
+    echo "[[OK]] Sinks virtuali scaricati."
 }
 
 case "${1:-setup}" in

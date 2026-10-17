@@ -207,7 +207,7 @@ def test_alu_dictionary():
             )
             print(f"  [{arch:7s}]: {res.replace(chr(10), ' | ')}")
 
-    print("\n[✓] Validazione del Dizionario Semantico ALU OSify completata con successo.")
+    print("\n[[OK]] Validazione del Dizionario Semantico ALU OSify completata con successo.")
 
 if __name__ == "__main__":
     test_alu_dictionary()

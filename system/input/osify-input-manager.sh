@@ -120,7 +120,7 @@ cmd_apply() {
 
     # 1. Configurazione Touchscreen
     if [[ "$has_touch" -eq 1 ]]; then
-        echo "  [✓] Rilevato Touchscreen attivo"
+        echo "  [[OK]] Rilevato Touchscreen attivo"
         # Configurazione KWin Wayland / libinput per touch
         if command -v kwriteconfig6 >/dev/null 2>&1; then
             kwriteconfig6 --file kcminputrc --group Touchscreen --key TapToClick "$TAP_TO_CLICK"
@@ -129,7 +129,7 @@ cmd_apply() {
 
     # 2. Configurazione Touchpad
     if [[ "$has_pad" -eq 1 ]]; then
-        echo "  [✓] Configurazione Touchpad..."
+        echo "  [[OK]] Configurazione Touchpad..."
 
         # KWin Wayland libinput
         if command -v kwriteconfig6 >/dev/null 2>&1; then
@@ -160,11 +160,11 @@ cmd_apply() {
         if [[ "$PALM_REJECTION" == "true" ]] && command -v syndaemon >/dev/null 2>&1; then
             pkill syndaemon 2>/dev/null || true
             syndaemon -i 0.5 -t -K -d 2>/dev/null || true
-            echo "  [✓] Syndaemon anti-palm protection attivo"
+            echo "  [[OK]] Syndaemon anti-palm protection attivo"
         fi
     fi
 
-    echo "[✓] Configurazione input completata con successo."
+    echo "[[OK]] Configurazione input completata con successo."
 }
 
 cmd_status() {
@@ -207,7 +207,7 @@ cmd_set() {
     esac
     save_input_config
     cmd_apply
-    echo "[✓] Parametro $key impostato a $val."
+    echo "[[OK]] Parametro $key impostato a $val."
 }
 
 case "${1:-status}" in

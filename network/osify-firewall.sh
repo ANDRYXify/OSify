@@ -18,7 +18,7 @@ apply_profile_stealth() {
         sudo iptables -A INPUT -i lo -j ACCEPT 2>/dev/null || true
         sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT 2>/dev/null || true
     fi
-    echo "[✓] Profilo Stealth Attivo: Porte in ingresso chiuse e PC invisibile."
+    echo "[[OK]] Profilo Stealth Attivo: Porte in ingresso chiuse e PC invisibile."
 }
 
 apply_profile_lan() {
@@ -29,7 +29,7 @@ apply_profile_lan() {
         sudo iptables -P FORWARD ACCEPT 2>/dev/null || true
         sudo iptables -P OUTPUT ACCEPT 2>/dev/null || true
     fi
-    echo "[✓] Profilo Rete Locale Attivo: Condivisione file, stampanti e media consentita."
+    echo "[[OK]] Profilo Rete Locale Attivo: Condivisione file, stampanti e media consentita."
 }
 
 get_firewall_status() {

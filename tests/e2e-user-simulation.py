@@ -42,7 +42,7 @@ def test_1_user_identity_cleanliness():
         di_content = f.read()
     assert 'NEW_USER="andrea"' not in di_content, "NEW_USER='andrea' trovato in disk installer!"
     assert 'USER_PASS="osify"' not in di_content, "Password 'osify' forzata di nascosto in disk installer!"
-    print("[✓ PASS] Nessun nome o credenziale hardcoded nei moduli di profilazione e installazione.")
+    print("[[OK] PASS] Nessun nome o credenziale hardcoded nei moduli di profilazione e installazione.")
 
 def test_2_empty_password_handling():
     print("--- [2/5] Verifica Gestione Password Vuota (Zero Password Fantasma) ---")
@@ -51,7 +51,7 @@ def test_2_empty_password_handling():
     p = run_cmd(cmd, check=False)
     out = p.stdout.strip()
     assert out == "", f"L'hash di password vuota DEVE essere vuoto, invece ha restituito: '{out}'"
-    print("[✓ PASS] La password vuota produce stringa vuota in shadow (nessun blocco al login o sudo).")
+    print("[[OK] PASS] La password vuota produce stringa vuota in shadow (nessun blocco al login o sudo).")
 
 def test_3_applications_and_icons_alignment():
     print("--- [3/5] Collaudo 360° Applicazioni Desktop & Iconografia Vettoriale ---")
@@ -86,7 +86,7 @@ def test_3_applications_and_icons_alignment():
                     missing_icons.append(f"{df} -> {icon_name} ({sz}px)")
     
     assert len(missing_icons) == 0, f"Icone native mancanti: {missing_icons}"
-    print(f"[✓ PASS] Tutti i {len(desktop_files)} applicativi hanno icone native a 48, 64 e 128px.")
+    print(f"[[OK] PASS] Tutti i {len(desktop_files)} applicativi hanno icone native a 48, 64 e 128px.")
 
 def test_4_installation_chroot_simulation():
     print("--- [4/5] Simulazione Reale di Installazione su Target Filesystem Isolato ---")
@@ -128,7 +128,7 @@ def test_4_installation_chroot_simulation():
         with open(os.path.join(tmp_target, "etc/shadow")) as f:
             assert f"{new_user}:{pass_hash}" in f.read()
             
-        print("[✓ PASS] Creazione utente su disco fisso e shadow file conformi agli standard POSIX/Linux.")
+        print("[[OK] PASS] Creazione utente su disco fisso e shadow file conformi agli standard POSIX/Linux.")
     finally:
         shutil.rmtree(tmp_target, ignore_errors=True)
 
@@ -145,7 +145,7 @@ def test_5_vm_environment_readiness():
     pro_iso = os.path.join(REPO_ROOT, "build/out/release/OSify-x86_64-v3.iso")
     assert os.path.isfile(vintage_iso) and os.path.getsize(vintage_iso) > 100 * 1024 * 1024, "ISO Vintage mancante o incompleta!"
     assert os.path.isfile(pro_iso) and os.path.getsize(pro_iso) > 100 * 1024 * 1024, "ISO Pro mancante o incompleta!"
-    print(f"[✓ PASS] Ambiente VM convalidato: entrambe le immagini ISO (Vintage {os.path.getsize(vintage_iso)//(1024*1024)}MB e Pro {os.path.getsize(pro_iso)//(1024*1024)}MB) pronte per QEMU.")
+    print(f"[[OK] PASS] Ambiente VM convalidato: entrambe le immagini ISO (Vintage {os.path.getsize(vintage_iso)//(1024*1024)}MB e Pro {os.path.getsize(pro_iso)//(1024*1024)}MB) pronte per QEMU.")
 
 def main():
     print("=============================================================================")
@@ -157,7 +157,7 @@ def main():
     test_4_installation_chroot_simulation()
     test_5_vm_environment_readiness()
     print("=============================================================================")
-    print("[✓✓✓] COLLAUDO 360° COMPLETATO CON SUCCESSO! ZERO ERRORI O INCONGRUENZE.")
+    print("[] COLLAUDO 360° COMPLETATO CON SUCCESSO! ZERO ERRORI O INCONGRUENZE.")
     print("=============================================================================")
 
 if __name__ == "__main__":

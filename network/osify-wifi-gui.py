@@ -186,7 +186,7 @@ class OSifyWifiApp:
             row = tk.Frame(self.body, bg="#1e293b" if is_active else "#131929", padx=10, pady=8, cursor="hand2", highlightthickness=1, highlightbackground="#38bdf8" if is_active else "#1e293b")
             row.pack(fill=tk.X, pady=2)
             
-            ico = "🔒" if "WPA" in sec else "🔓"
+            ico = "" if "WPA" in sec else ""
             tk.Label(row, text=ico, font=("Helvetica", 11), bg=row["bg"], fg="#38bdf8").pack(side=tk.LEFT, padx=(2, 8))
             
             name_lbl = tk.Label(row, text=ssid, font=("Helvetica", 11, "bold" if is_active else "normal"), fg="#38bdf8" if is_active else "#f8fafc", bg=row["bg"], anchor="w")

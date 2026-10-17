@@ -525,7 +525,7 @@ $btnInstall.Add_Click({
     $btnBrowseIso.IsEnabled = $false
     $btnDownloadIso.IsEnabled = $false
 
-    # FASE 1: Partizionamento o Preparazione Unità O:
+    # FASE 1: Partizionamento o Preparazione Unita O:
     $progBar.Value = 15
     $txtStepInfo.Text = "[1/4] Configurazione partizione temporanea per l'avvio..."
 
@@ -632,7 +632,7 @@ $btnInstall.Add_Click({
 
     $extracted = $false
 
-    # Controllo se i file sono già estratti (es. estrazione manuale o precedente)
+    # Controllo se i file sono gia' estratti (es. estrazione manuale o precedente)
     try {
         $nested = Get-ChildItem 'O:\' -Directory -ErrorAction SilentlyContinue | Where-Object { 
             (Test-Path "$($_.FullName)\boot") -or (Test-Path "$($_.FullName)\osify") -or (Test-Path "$($_.FullName)\isolinux") 

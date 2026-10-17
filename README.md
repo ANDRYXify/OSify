@@ -74,20 +74,20 @@ L'ecosistema viene distribuito primariamente tramite l'**ISO Unica Universale Al
 
 ---
 
-## 🌟 Esperienza a 360° Out-Of-The-Box & Live-to-Disk Persistence (vA.0)
+##  Esperienza a 360° Out-Of-The-Box & Live-to-Disk Persistence (vA.0)
 
 OSify non è un clone o una derivata generica: è un sistema operativo con un'architettura completa progettata per consentire all'utente di lavorare, programmare, giocare e personalizzare ogni aspetto fin dal primo secondo.
 
-* **🚀 OSify App Drawer & Launchpad**: Menu applicazioni universale con barra di ricerca istantanea in tempo reale, suddivisione a schede di categoria (Internet, Gaming, Sviluppo, Ufficio, Aspetto, Sistema), navigazione a tastiera/mouse e scorciatoie globali immediate (`Super`, `Super+Space`, `Super+A`, `F1` o clic sul dock).
-* **🎨 Icone Native Vettoriali Garantite (Zero Icone Bianche)**: Set completo di icone PNG proprietarie disegnate geometricamente con colori specifici ad alto contrasto per ciascuna applicazione (Hub, Web, Wi-Fi, Gaming, Coding, File, Display, Task Manager, Installatore, Update), caricate direttamente tramite percorsi assoluti `/usr/share/pixmaps/`.
+* ** OSify App Drawer & Launchpad**: Menu applicazioni universale con barra di ricerca istantanea in tempo reale, suddivisione a schede di categoria (Internet, Gaming, Sviluppo, Ufficio, Aspetto, Sistema), navigazione a tastiera/mouse e scorciatoie globali immediate (`Super`, `Super+Space`, `Super+A`, `F1` o clic sul dock).
+* ** Icone Native Vettoriali Garantite (Zero Icone Bianche)**: Set completo di icone PNG proprietarie disegnate geometricamente con colori specifici ad alto contrasto per ciascuna applicazione (Hub, Web, Wi-Fi, Gaming, Coding, File, Display, Task Manager, Installatore, Update), caricate direttamente tramite percorsi assoluti `/usr/share/pixmaps/`.
 * **Identità Nativa e Personale (Zero Residui Tux)**: L'utente configura il proprio profilo reale (Nome, Username, Password crittografata SHA-512, Hostname). L'ambiente Live opera sotto l'utente ufficiale `osify`.
 * **Live-to-Disk Profile & Data Persistence**: Durante l'installazione su disco fisso (`osify-install`), il sistema preserva e migra **integralmente** sul nuovo account tutti i file salvati, documenti, cronologia e configurazioni create durante la sessione Live. Nessun dato va perso.
-* **🌐 Web & Connettività Wi-Fi**: Browser nativo ultra-veloce (`osify-browser`) e gestore reti wireless guidato (`osify-wifi`) con scansione SSID, WPA2/WPA3, DHCP immediato e protezione DNS anti-leak.
-* **🎮 Gaming & Retrogaming Hub**: Lanciatore integrato (`osify-games`) per giochi Windows (.exe tramite Wine/DirectX), retrogaming DOS (DOSBox) ed emulazione universale (UEM runner per Android .apk e iOS .ipa).
-* **💻 Developer & Coding Suite**: Ambiente per programmatori (`osify-developer`) con Python 3 interattivo (REPL), compilatore C rapido (TinyCC / GCC), Git manager, editor con colorazione sintassi e template di progetto pronti in `~/Progetti`.
-* **📁 Lavoro & Produttività**: File manager reattivo con schede, visualizzatore documenti PDF, gestore archivi compressi (.zip, .tar.gz, .7z) e screenshot tool istantaneo.
-* **🎨 Personalizzazione & Virtual Scaler**: Centro aspetto (`osify-appearance`) con Virtual Scaler Netbook (1024x600 ↔ 1280x768 per visualizzare finestre alte senza tagli verticali) e sfondi Cyber Dark ad alta definizione.
-* **⚡ Turbo Boost Hardware Adattivo**: Riconoscimento automatico dell'hardware (Standard, Pro o Riesumare Antichi) con sblocco governor CPU `performance`, 1 GB di swap compresso zRAM LZ4 e calibrazione touchpad universale `evdev`.
+* ** Web & Connettività Wi-Fi**: Browser nativo ultra-veloce (`osify-browser`) e gestore reti wireless guidato (`osify-wifi`) con scansione SSID, WPA2/WPA3, DHCP immediato e protezione DNS anti-leak.
+* ** Gaming & Retrogaming Hub**: Lanciatore integrato (`osify-games`) per giochi Windows (.exe tramite Wine/DirectX), retrogaming DOS (DOSBox) ed emulazione universale (UEM runner per Android .apk e iOS .ipa).
+* ** Developer & Coding Suite**: Ambiente per programmatori (`osify-developer`) con Python 3 interattivo (REPL), compilatore C rapido (TinyCC / GCC), Git manager, editor con colorazione sintassi e template di progetto pronti in `~/Progetti`.
+* ** Lavoro & Produttività**: File manager reattivo con schede, visualizzatore documenti PDF, gestore archivi compressi (.zip, .tar.gz, .7z) e screenshot tool istantaneo.
+* ** Personalizzazione & Virtual Scaler**: Centro aspetto (`osify-appearance`) con Virtual Scaler Netbook (1024x600 ↔ 1280x768 per visualizzare finestre alte senza tagli verticali) e sfondi Cyber Dark ad alta definizione.
+* ** Turbo Boost Hardware Adattivo**: Riconoscimento automatico dell'hardware (Standard, Pro o Riesumare Antichi) con sblocco governor CPU `performance`, 1 GB di swap compresso zRAM LZ4 e calibrazione touchpad universale `evdev`.
 
 ---
 
@@ -118,31 +118,31 @@ OSify non è un clone o una derivata generica: è un sistema operativo con un'ar
 
 ```
 OSify/
-├── audio/                   # Routing PipeWire Pro-Audio e script bus virtuali
-│   ├── pipewire.conf.d/     # Configurazione quantizzazione a 64 campioni
-│   └── osify-audio-setup.sh # Creazione canali isolati per Twitch VOD Track 2
-├── blocks/                  # Gestore modulare dei blocchi (JSON + CLI)
-├── build/                   # Strumenti di generazione e pacchettizzazione ISO Universale
-│   ├── build-universal-iso.py # Generatore ISO Universale A.0 per qualsiasi architettura
-│   ├── build-ify-apps.py    # Generatore suite nativa di applicazioni .ify
-│   └── packages/            # Indici e manifesti dei componenti di sistema
-├── desktop/                 # Motore Grafico OSify 2050 (Obsidian Dark Glass)
-│   ├── branding/            # Identità visiva, icone squircle vettoriali e sfondi a ogni risoluzione
-│   ├── motore-grafico/      # Compositore visivo nativo, gestione finestre e gesti multi-tocco
-│   └── legacy/              # Pipeline leggera ottimizzata per silicio storico (Atom, Pentium, Celeron)
-├── sistema/                 # Architettura centrale del sistema operativo
-│   ├── nucleo/              # Micro-nucleo Bare-Metal autonomo e gestione processi
-│   ├── driver/              # Driver nativi hardware (CPU, memoria, grafica, audio, rete, dischi)
-│   ├── servizi/             # Servizi nativi (/Sistema/Servizi) e Compatibilità.ify
-│   └── installatore/        # Installatore grafico guidato GPT e migrazione profilo Live
-├── applicazioni/            # Suite nativa di applicazioni .ify (/Applicazioni)
-├── rete/                    # Gestione di rete ad alta priorità, protezione DNS e anti-bufferbloat
-├── sicurezza/               # Protezione autoadattiva, Privacy Vault e Anti-Cheat Guard a livello 0
-├── tests/                   # Suite di collaudo automatizzata e simulatori di silicio universale
-└── tools/                   # Strumenti operativi e interfaccia di configurazione
-    ├── osify-gui/           # Applicazioni grafiche native Obsidian Dark Glass
-    ├── osify-ctl            # Centro di controllo e commutazione profili prestazionali
-    └── windows-installer/   # Installatore grafico da Windows senza supporto USB
+ audio/                   # Routing PipeWire Pro-Audio e script bus virtuali
+    pipewire.conf.d/     # Configurazione quantizzazione a 64 campioni
+    osify-audio-setup.sh # Creazione canali isolati per Twitch VOD Track 2
+ blocks/                  # Gestore modulare dei blocchi (JSON + CLI)
+ build/                   # Strumenti di generazione e pacchettizzazione ISO Universale
+    build-universal-iso.py # Generatore ISO Universale A.0 per qualsiasi architettura
+    build-ify-apps.py    # Generatore suite nativa di applicazioni .ify
+    packages/            # Indici e manifesti dei componenti di sistema
+ desktop/                 # Motore Grafico OSify 2050 (Obsidian Dark Glass)
+    branding/            # Identità visiva, icone squircle vettoriali e sfondi a ogni risoluzione
+    motore-grafico/      # Compositore visivo nativo, gestione finestre e gesti multi-tocco
+    legacy/              # Pipeline leggera ottimizzata per silicio storico (Atom, Pentium, Celeron)
+ sistema/                 # Architettura centrale del sistema operativo
+    nucleo/              # Micro-nucleo Bare-Metal autonomo e gestione processi
+    driver/              # Driver nativi hardware (CPU, memoria, grafica, audio, rete, dischi)
+    servizi/             # Servizi nativi (/Sistema/Servizi) e Compatibilità.ify
+    installatore/        # Installatore grafico guidato GPT e migrazione profilo Live
+ applicazioni/            # Suite nativa di applicazioni .ify (/Applicazioni)
+ rete/                    # Gestione di rete ad alta priorità, protezione DNS e anti-bufferbloat
+ sicurezza/               # Protezione autoadattiva, Privacy Vault e Anti-Cheat Guard a livello 0
+ tests/                   # Suite di collaudo automatizzata e simulatori di silicio universale
+ tools/                   # Strumenti operativi e interfaccia di configurazione
+     osify-gui/           # Applicazioni grafiche native Obsidian Dark Glass
+     osify-ctl            # Centro di controllo e commutazione profili prestazionali
+     windows-installer/   # Installatore grafico da Windows senza supporto USB
 ```
 
 ---

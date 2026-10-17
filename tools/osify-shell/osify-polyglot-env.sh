@@ -24,7 +24,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" && -z "${_OSIFY_SHELL_TESTING:-}" ]]; then
                 echo "" >> "$SHELL_RC"
                 echo "# OSify Universal Polyglot CLI Environment" >> "$SHELL_RC"
                 echo "$TARGET_LINE" >> "$SHELL_RC"
-                echo "[✓] Ambiente Poliglotto OSify agganciato a $SHELL_RC"
+                echo "[[OK]] Ambiente Poliglotto OSify agganciato a $SHELL_RC"
             else
                 echo "[i] Già presente in $SHELL_RC"
             fi
@@ -47,7 +47,7 @@ if [[ "${BASH_SOURCE[0]}" == "${0}" && -z "${_OSIFY_SHELL_TESTING:-}" ]]; then
             tasklist | head -n 5
             echo "• Testing universal package bridge (apt / pacman / brew)..."
             apt search retroarch || true
-            echo "[✓] Tutti i moduli del Polyglot Shell sono operativi!"
+            echo "[[OK]] Tutti i moduli del Polyglot Shell sono operativi!"
             exit 0
             ;;
         help|*)
@@ -721,7 +721,7 @@ osify-bench() {
     local start_t
     start_t=$(date +%s 2>/dev/null || echo 0)
     dd if=/dev/zero bs=1M count=100 2>/dev/null | sha256sum >/dev/null 2>&1 || true
-    echo "   [✓] Test CPU I/O completato."
+    echo "   [[OK]] Test CPU I/O completato."
     echo "2. Rilevamento memoria e frequenza core..."
     local arch
     arch="$(uname -m)"
@@ -796,9 +796,9 @@ osify_prompt_command() {
     local red="\[\e[1;31m\]"
     local gray="\[\e[0;90m\]"
 
-    local exit_indicator="$green✓$reset"
+    local exit_indicator="$green[OK]$reset"
     if (( last_exit != 0 )); then
-        exit_indicator="$red✕$reset"
+        exit_indicator="$red$reset"
     fi
 
     local current_arch

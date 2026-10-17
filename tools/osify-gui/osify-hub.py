@@ -93,14 +93,14 @@ class OSifyHubApp:
         body.pack(fill=tk.BOTH, expand=True)
         
         cards = [
-            ("⚡", "Turbo Boost Prestazioni", "Ottimizza governor CPU, svuota cache e massimizza reattivita", self.do_turbo_boost),
-            ("📶", "Connessione Wi-Fi e Rete", "Scansione ad alta sensibilita e gestione reti wireless", lambda: self.launch("/usr/bin/osify-wifi")),
-            ("🎮", "Gaming e Retrogaming Hub", "Giochi Windows, emulatori retro, DOSBox e librerie UEM", lambda: self.launch("/usr/bin/osify-games")),
-            ("🖥️", "Scrivania e Aspetto", "Sfondi 4K, palette colori dark mode e rifiniture desktop", lambda: self.launch("/usr/bin/osify-appearance")),
-            ("🛠️", "Strumenti di Sviluppo", "Compilatori, interpreti, editor e Universal Execution Matrix", lambda: self.launch("/usr/bin/osify-developer")),
-            ("📊", "Monitor Attivita e Risorse", "Visualizza processi attivi, carico hardware e memoria", lambda: self.launch("/usr/bin/osify-taskmanager")),
-            ("💿", "Installa OSify su Disco", "Installatore bare-metal autonomo per memorie e dischi fissi", lambda: self.launch("/usr/bin/osify-install")),
-            ("ℹ️", "Informazioni su questo OSify", "Carta d'identita hardware, specifiche chip e release", lambda: self.launch("/usr/bin/osify-about")),
+            ("", "Turbo Boost Prestazioni", "Ottimizza governor CPU, svuota cache e massimizza reattivita", self.do_turbo_boost),
+            ("", "Connessione Wi-Fi e Rete", "Scansione ad alta sensibilita e gestione reti wireless", lambda: self.launch("/usr/bin/osify-wifi")),
+            ("", "Gaming e Retrogaming Hub", "Giochi Windows, emulatori retro, DOSBox e librerie UEM", lambda: self.launch("/usr/bin/osify-games")),
+            ("", "Scrivania e Aspetto", "Sfondi 4K, palette colori dark mode e rifiniture desktop", lambda: self.launch("/usr/bin/osify-appearance")),
+            ("", "Strumenti di Sviluppo", "Compilatori, interpreti, editor e Universal Execution Matrix", lambda: self.launch("/usr/bin/osify-developer")),
+            ("", "Monitor Attivita e Risorse", "Visualizza processi attivi, carico hardware e memoria", lambda: self.launch("/usr/bin/osify-taskmanager")),
+            ("", "Installa OSify su Disco", "Installatore bare-metal autonomo per memorie e dischi fissi", lambda: self.launch("/usr/bin/osify-install")),
+            ("ℹ", "Informazioni su questo OSify", "Carta d'identita hardware, specifiche chip e release", lambda: self.launch("/usr/bin/osify-about")),
         ]
         
         for idx, (ico, title, desc, action) in enumerate(cards):

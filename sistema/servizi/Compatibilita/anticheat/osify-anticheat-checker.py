@@ -143,13 +143,13 @@ def print_report(data):
     print("---------------------------------------------------------")
     
     if not data['proton_compatible']:
-        print("💡 SOLUZIONI INGEGNERISTICHE OSIFY DISPONIBILI:")
+        print(" SOLUZIONI INGEGNERISTICHE OSIFY DISPONIBILI:")
         print(" 1. Avvia in VM KVM Stealth con GPU Passthrough (Hypervisor Cloaked):")
         print("    -> osify-ctl anticheat run-stealth-vm")
         print(" 2. Riavvio immediato su Windows con ritorno automatico a OSify:")
         print("    -> osify-ctl anticheat boot-windows")
     else:
-        print("✓ Questo titolo gira con prestazioni native su OSify tramite Proton-GE.")
+        print("[OK] Questo titolo gira con prestazioni native su OSify tramite Proton-GE.")
     print("=========================================================")
 
 def print_kernel_status():
@@ -164,7 +164,7 @@ def print_kernel_status():
     print("[W^X Memory Protection]      : ATTIVO (Zero-Trust Anti-Injection)")
     print("[macOS Seatbelt Sandbox]     : ATTIVO (Livello 0 Hardware Ring-0)")
     print("---------------------------------------------------------")
-    print("✓ Tutte le primitive di sicurezza richieste dai giochi Windows")
+    print("[OK] Tutte le primitive di sicurezza richieste dai giochi Windows")
     print("  (EAC, BattlEye, Vanguard, Ricochet) sono certificate e attive.")
     print("=========================================================")
 

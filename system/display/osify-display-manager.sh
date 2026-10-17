@@ -47,7 +47,7 @@ set_brightness() {
     elif command -v xbacklight >/dev/null 2>&1; then
         xbacklight -set "$percent" 2>/dev/null || true
     fi
-    echo "[✓] Luminosità schermo impostata al ${percent}%"
+    echo "[[OK]] Luminosità schermo impostata al ${percent}%"
 }
 
 get_resolutions() {
@@ -66,7 +66,7 @@ set_resolution() {
     if command -v xrandr >/dev/null 2>&1; then
         xrandr -s "$res" 2>/dev/null || true
     fi
-    echo "[✓] Risoluzione video impostata su: $res"
+    echo "[[OK]] Risoluzione video impostata su: $res"
 }
 
 case "${1:-get-brightness}" in

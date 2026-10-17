@@ -11,7 +11,7 @@ set_layout() {
     local layout="$1"
     if command -v setxkbmap >/dev/null 2>&1 && [ -n "${DISPLAY:-}" ]; then
         setxkbmap "$layout"
-        echo "[✓] Mappatura tastiera impostata su: $layout"
+        echo "[[OK]] Mappatura tastiera impostata su: $layout"
         if command -v notify-send >/dev/null 2>&1; then
             notify-send "Tastiera OSify" "Layout tastiera impostato su: ${layout^^}" -i /usr/share/pixmaps/osify-settings.png || true
         fi

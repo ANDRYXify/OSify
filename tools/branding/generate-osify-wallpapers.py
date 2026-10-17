@@ -65,7 +65,7 @@ def generate_clean_wallpaper(width, height, filename):
     # 4. Salvataggio in PNG RGB alta qualità
     out_path = os.path.join(OUT_DIR, filename)
     base.convert("RGB").save(out_path, quality=95)
-    print(f"[✓] Salvato sfondo clean: {out_path}")
+    print(f"[[OK]] Salvato sfondo clean: {out_path}")
 
 def main():
     resolutions = [

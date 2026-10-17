@@ -237,12 +237,12 @@ if (-not (Test-Path 'O:\')) {
     exit 1
 }
 
-# 6. Estrazione File da ISO verso l'unità O:\
+# 6. Estrazione File da ISO verso l'unita O:\
 Write-Host "[+] Estrazione dei file del sistema operativo su unita O:\..." -ForegroundColor Cyan
 
 $extracted = $false
 
-# Controllo preliminare se i file sono già estratti
+# Controllo preliminare se i file sono gia' estratti
 try {
     $nested = Get-ChildItem 'O:\' -Directory -ErrorAction SilentlyContinue | Where-Object { 
         (Test-Path "$($_.FullName)\boot") -or (Test-Path "$($_.FullName)\osify") -or (Test-Path "$($_.FullName)\isolinux") 

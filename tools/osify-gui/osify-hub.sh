@@ -50,14 +50,14 @@ if [ -n "$DISPLAY" ] && command -v yad >/dev/null 2>&1; then
             --list \
             --text="<b><big>OSify 2.0 Operating System</big></b>\n• Profilo: <b>$OSIFY_TIER</b>\n• CPU: <b>$CPU_MODEL ($CPU_CORES core)</b>\n• RAM: <b>$RAM_AVAIL liberi su $RAM_TOTAL</b>\n\nSeleziona un'area operativa:" \
             --column="Icona" --column="Modulo" --column="Descrizione" \
-            "⚡" "Turbo Boost Prestazioni" "Ottimizza CPU governor e svuota cache RAM" \
-            "🌐" "Connessione Wi-Fi" "Scansione e connessione alle reti wireless" \
-            "🎮" "Gaming e Retrogaming Hub" "Giochi Windows, DOS, emulatori e ROM" \
-            "🎨" "Personalizzazione e Display" "Sfondi, risoluzioni, scala e temi cyber" \
-            "🛠️" "Strumenti per Sviluppatori" "Compilatori, UEM Inspector e debugger" \
-            "📊" "Monitor Risorse e Attivita" "Uso CPU, processi e memoria in tempo reale" \
-            "💿" "Installa OSify su Disco" "Installatore bare-metal autonomo su HDD/SSD" \
-            "ℹ️" "Scheda Tecnica Completa" "Dettagli hardware, driver e sensori" \
+            "" "Turbo Boost Prestazioni" "Ottimizza CPU governor e svuota cache RAM" \
+            "" "Connessione Wi-Fi" "Scansione e connessione alle reti wireless" \
+            "" "Gaming e Retrogaming Hub" "Giochi Windows, DOS, emulatori e ROM" \
+            "" "Personalizzazione e Display" "Sfondi, risoluzioni, scala e temi cyber" \
+            "" "Strumenti per Sviluppatori" "Compilatori, UEM Inspector e debugger" \
+            "" "Monitor Risorse e Attivita" "Uso CPU, processi e memoria in tempo reale" \
+            "" "Installa OSify su Disco" "Installatore bare-metal autonomo su HDD/SSD" \
+            "ℹ" "Scheda Tecnica Completa" "Dettagli hardware, driver e sensori" \
             --button="Chiudi!gtk-cancel:1" \
             --button="Apri!gtk-ok:0" 2>/dev/null) || exit 0
 
@@ -67,7 +67,7 @@ if [ -n "$DISPLAY" ] && command -v yad >/dev/null 2>&1; then
             *"Turbo Boost"*)
                 boost_system
                 yad --title="Turbo Boost" --info \
-                    --text="<b>[✓] Ottimizzazione Completata!</b>\n\nPrestazioni massime abilitate." \
+                    --text="<b>[[OK]] Ottimizzazione Completata!</b>\n\nPrestazioni massime abilitate." \
                     --center --width=320 --button="OK:0"
                 ;;
             *"Wi-Fi"*)
@@ -114,7 +114,7 @@ root.geometry("520x460")
 root.configure(bg="#0b0d14")
 root.resizable(False, False)
 
-header = tk.Label(root, text="⚡ OSIFY MASTER HUB 2050", 
+header = tk.Label(root, text=" OSIFY MASTER HUB 2050", 
                   font=("Helvetica", 14, "bold"), fg="#38bdf8", bg="#0b0d14")
 header.pack(pady=12)
 
@@ -133,13 +133,13 @@ def boost():
     messagebox.showinfo("Turbo Boost", "Prestazioni massime attivate con successo!")
 
 buttons = [
-    ("⚡ Attiva Turbo Boost Prestazioni", boost, "#7c3aed"),
-    ("🌐 Connessione Wi-Fi & Reti", lambda: spawn("/usr/bin/osify-wifi"), "#0284c7"),
-    ("🎮 Gaming & Retrogaming Hub", lambda: spawn("/usr/bin/osify-games"), "#059669"),
-    ("🎨 Personalizzazione Schermo & Temi", lambda: spawn("/usr/bin/osify-appearance"), "#1e293b"),
-    ("🛠️ Strumenti di Sviluppo UEM", lambda: spawn("/usr/bin/osify-developer"), "#1e293b"),
-    ("📊 Gestione Attivita di Sistema", lambda: spawn("/usr/bin/osify-taskmanager"), "#1e293b"),
-    ("💿 Installa OSify su Disco Fisso", lambda: spawn("/usr/bin/osify-install"), "#d97706"),
+    (" Attiva Turbo Boost Prestazioni", boost, "#7c3aed"),
+    (" Connessione Wi-Fi & Reti", lambda: spawn("/usr/bin/osify-wifi"), "#0284c7"),
+    (" Gaming & Retrogaming Hub", lambda: spawn("/usr/bin/osify-games"), "#059669"),
+    (" Personalizzazione Schermo & Temi", lambda: spawn("/usr/bin/osify-appearance"), "#1e293b"),
+    (" Strumenti di Sviluppo UEM", lambda: spawn("/usr/bin/osify-developer"), "#1e293b"),
+    (" Gestione Attivita di Sistema", lambda: spawn("/usr/bin/osify-taskmanager"), "#1e293b"),
+    (" Installa OSify su Disco Fisso", lambda: spawn("/usr/bin/osify-install"), "#d97706"),
 ]
 
 for text, cmd, col in buttons:

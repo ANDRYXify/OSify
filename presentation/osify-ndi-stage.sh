@@ -30,7 +30,7 @@ start_ndi_bridge() {
     echo "========================================================="
     echo "[+] Avvio broadcast NDI su rete locale LAN..."
     echo "[i] In OBS Studio: aggiungi sorgente 'NDI™ Source' -> 'OSify_Live_Presentation'."
-    echo "[✓] NDI Bridge attivo per la cattura a latenza zero delle slide in live stream!"
+    echo "[[OK]] NDI Bridge attivo per la cattura a latenza zero delle slide in live stream!"
 }
 
 launch_worship_suite() {

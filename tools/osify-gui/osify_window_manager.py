@@ -491,7 +491,7 @@ class OSifyDesktopWindowManager:
 
         btn_start = tk.Label(
             left_box,
-            text=" OSify ❖",
+            text=" OSify ",
             font=("Helvetica Neue", 11, "bold"),
             fg=fg_text,
             bg=accent,
@@ -513,7 +513,7 @@ class OSifyDesktopWindowManager:
 
         btn_deck = tk.Label(
             right_box,
-            text="⤹ Gaming Mode",
+            text=" Gaming Mode",
             font=("Helvetica Neue", 9, "bold"),
             fg=engine.get_color("accent_cyan"),
             bg=bg_panel,
@@ -831,7 +831,7 @@ class OSifyDesktopWindowManager:
 
             tk.Label(sb, text="POSIZIONI", font=("Helvetica Neue", 8, "bold"), fg=engine.get_color("accent_cyan"), bg=engine.get_color("bg_panel")).pack(anchor="w", padx=8, pady=(8, 4))
             for place in ("Home (~)", "Documenti", "Download", "Giochi", "Quarantena"):
-                lbl = tk.Label(sb, text=f"📁 {place}", font=("Helvetica Neue", 8), fg=engine.get_color("text_primary"), bg=engine.get_color("bg_panel"), cursor="hand2")
+                lbl = tk.Label(sb, text=f" {place}", font=("Helvetica Neue", 8), fg=engine.get_color("text_primary"), bg=engine.get_color("bg_panel"), cursor="hand2")
                 lbl.pack(anchor="w", padx=8, pady=3)
 
             main_view = tk.Frame(pad, bg=engine.get_color("bg_base"), padx=10, pady=8)
@@ -851,7 +851,7 @@ class OSifyDesktopWindowManager:
             for fname, desc in file_list:
                 row = tk.Frame(main_view, bg=engine.get_color("bg_base"), pady=2)
                 row.pack(fill="x")
-                ico_str = "📁" if fname.endswith("/") else "📄"
+                ico_str = "" if fname.endswith("/") else ""
                 tk.Label(row, text=f"{ico_str} {fname:<14}", font=("Courier New", 8, "bold"), fg=engine.get_color("accent_cyan") if fname.endswith("/") else engine.get_color("text_primary"), bg=engine.get_color("bg_base")).pack(side="left")
                 tk.Label(row, text=f"• {desc}", font=("Helvetica Neue", 8), fg=engine.get_color("text_muted"), bg=engine.get_color("bg_base")).pack(side="left", padx=6)
 
@@ -880,7 +880,7 @@ class OSifyDesktopWindowManager:
                 is_cur = (tid == engine.config["theme_id"])
                 btn = tk.Label(
                     themes_f,
-                    text=f"● {tmeta['name'].split('(')[0].strip()}",
+                    text=f" {tmeta['name'].split('(')[0].strip()}",
                     font=("Helvetica Neue", 8, "bold" if is_cur else "normal"),
                     fg="#ffffff" if is_cur else engine.get_color("text_muted"),
                     bg=engine.get_color("accent_primary") if is_cur else engine.get_color("bg_card"),
@@ -960,7 +960,7 @@ class OSifyDesktopWindowManager:
             btn_touch.bind("<Button-1>", toggle_touch)
 
             # Notifica salvataggio
-            lbl_info = tk.Label(pad, text="[✓] Modifiche salvate automaticamente in ~/.config/osify/appearance.json", font=("Courier New", 8), fg=engine.get_color("accent_mint"), bg=engine.get_color("bg_base"))
+            lbl_info = tk.Label(pad, text="[[OK]] Modifiche salvate automaticamente in ~/.config/osify/appearance.json", font=("Courier New", 8), fg=engine.get_color("accent_mint"), bg=engine.get_color("bg_base"))
             lbl_info.pack(side="bottom", pady=8)
 
         win = OSifyFloatingWindow(self, win_id, "Personalizzazione & Stile", "palette", x, y, w, h, builder)
@@ -1014,7 +1014,7 @@ class OSifyDesktopWindowManager:
 
             btn_clean = tk.Label(
                 pad,
-                text="⚡ OTTIMIZZA & LIBERA MEMORIA ADESSO",
+                text=" OTTIMIZZA & LIBERA MEMORIA ADESSO",
                 font=("Helvetica Neue", 9, "bold"),
                 bg=engine.get_color("accent_primary"),
                 fg="#ffffff",
@@ -1031,7 +1031,7 @@ class OSifyDesktopWindowManager:
                 cleaner_sh = os.path.join(REPO_ROOT, "system/storage/osify-memory-cleaner.sh")
                 try:
                     subprocess.run([cleaner_sh, "clean"], check=True)
-                    lbl_res.config(text="[✓] Pagecache liberata, temporanei orfani rimossi con successo!")
+                    lbl_res.config(text="[[OK]] Pagecache liberata, temporanei orfani rimossi con successo!")
                     update_stats()
                 except Exception as ex:
                     lbl_res.config(text=f"[!] Errore: {ex}")
@@ -1091,7 +1091,7 @@ class OSifyDesktopWindowManager:
                 in_sh = os.path.join(REPO_ROOT, "system/input/osify-input-manager.sh")
                 try:
                     subprocess.run([in_sh, "apply"], check=True)
-                    lbl_res.config(text="[✓] Calibrazione input applicata al kernel e a libinput!")
+                    lbl_res.config(text="[[OK]] Calibrazione input applicata al kernel e a libinput!")
                 except Exception as ex:
                     lbl_res.config(text=f"[!] Errore: {ex}")
             btn_apply.bind("<Button-1>", do_apply)

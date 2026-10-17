@@ -246,6 +246,6 @@ int main(void) {
     assert(desktop_fb_buf[250 + 200 * 1024] != 0);
     printf("[+] 13. Installatore Bare-Metal Guidato su Disco Fisso (GPT, OSifyFS, 100%%): OK\n");
 
-    printf("\n[✓✓✓] TUTTI I 13 TEST AVANZATI DEL KERNEL NATIVO OSIFY SUPERATI CON SUCCESSO AL 100%%!\n");
+    printf("\n[] TUTTI I 13 TEST AVANZATI DEL KERNEL NATIVO OSIFY SUPERATI CON SUCCESSO AL 100%%!\n");
     return 0;
 }

@@ -55,4 +55,4 @@ if [[ -f "$SETTINGS_FILE" ]]; then
     sed -i -E "s/echo \"[0-9.]+\"\)/echo \"${CURRENT_VER}\")/g" "$SETTINGS_FILE"
 fi
 
-echo "[✓] Allineamento globale completato con successo su versione v${CURRENT_VER}!"
+echo "[[OK]] Allineamento globale completato con successo su versione v${CURRENT_VER}!"

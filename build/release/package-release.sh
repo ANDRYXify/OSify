@@ -38,7 +38,7 @@ rm -f "$ZIP_PATH"
         "logo.png" \
         "ISTRUZIONI-INSTALLAZIONE.txt"
 )
-echo "[✓] Creato: $ZIP_PATH"
+echo "[[OK]] Creato: $ZIP_PATH"
 
 # 2. Verifica Immagine ISO e Calcolo Checksum
 ISO_CANDIDATE=$(find "$REPO_ROOT/build/out" -maxdepth 1 -name "*.iso" | head -n1 || true)
@@ -57,7 +57,7 @@ if [[ -n "$ISO_CANDIDATE" && -f "$ISO_CANDIDATE" ]]; then
         cd "$(dirname "$ISO_CANDIDATE")"
         shasum -a 256 "$(basename "$ISO_CANDIDATE")" >> "$CHECKSUM_FILE"
     )
-    echo "[✓] ISO inclusa nel file checksum."
+    echo "[[OK]] ISO inclusa nel file checksum."
 else
     echo "[i] Nessun file .iso trovato in build/out/ (la compilazione ISO puo' essere eseguita con build/docker/run-build.sh)."
 fi

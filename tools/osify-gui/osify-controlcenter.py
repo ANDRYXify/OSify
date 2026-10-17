@@ -44,14 +44,14 @@ class ControlCenterWindow:
         lbl_h = tk.Label(head, text="Centro di Controllo", font=("Helvetica", 13, "bold"), fg="#f8fafc", bg="#0d111c")
         lbl_h.pack(side=tk.LEFT)
         
-        btn_close = tk.Label(head, text="✕", font=("Helvetica", 11, "bold"), fg="#94a3b8", bg="#0d111c", cursor="hand2")
+        btn_close = tk.Label(head, text="", font=("Helvetica", 11, "bold"), fg="#94a3b8", bg="#0d111c", cursor="hand2")
         btn_close.pack(side=tk.RIGHT)
         btn_close.bind("<Button-1>", lambda e: self.root.destroy())
         
         # Card Wi-Fi
         wifi_card = tk.Frame(self.container, bg="#161e2e", padx=12, pady=10, cursor="hand2")
         wifi_card.pack(fill=tk.X, pady=(0, 8))
-        wifi_icon = tk.Label(wifi_card, text="📶", font=("Helvetica", 16), bg="#161e2e", fg="#38bdf8")
+        wifi_icon = tk.Label(wifi_card, text="", font=("Helvetica", 16), bg="#161e2e", fg="#38bdf8")
         wifi_icon.pack(side=tk.LEFT, padx=(0, 10))
         wifi_info = tk.Frame(wifi_card, bg="#161e2e")
         wifi_info.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
@@ -70,7 +70,7 @@ class ControlCenterWindow:
         # Display Box
         b_disp = tk.Frame(grid_f, bg="#161e2e", padx=10, pady=8, cursor="hand2")
         b_disp.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 4))
-        d_ico = tk.Label(b_disp, text="🖥️", font=("Helvetica", 13), bg="#161e2e", fg="#38bdf8")
+        d_ico = tk.Label(b_disp, text="", font=("Helvetica", 13), bg="#161e2e", fg="#38bdf8")
         d_ico.pack()
         d_txt = tk.Label(b_disp, text="Aspetto", font=("Helvetica", 9, "bold"), bg="#161e2e", fg="#f8fafc")
         d_txt.pack()
@@ -81,7 +81,7 @@ class ControlCenterWindow:
         # Hub Box
         b_hub = tk.Frame(grid_f, bg="#161e2e", padx=10, pady=8, cursor="hand2")
         b_hub.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(4, 0))
-        h_ico = tk.Label(b_hub, text="⚡", font=("Helvetica", 13), bg="#161e2e", fg="#38bdf8")
+        h_ico = tk.Label(b_hub, text="", font=("Helvetica", 13), bg="#161e2e", fg="#38bdf8")
         h_ico.pack()
         h_txt = tk.Label(b_hub, text="OSify Hub", font=("Helvetica", 9, "bold"), bg="#161e2e", fg="#f8fafc")
         h_txt.pack()
@@ -94,7 +94,7 @@ class ControlCenterWindow:
         vol_box.pack(fill=tk.X, pady=(0, 8))
         v_head = tk.Frame(vol_box, bg="#161e2e")
         v_head.pack(fill=tk.X)
-        tk.Label(v_head, text="🔊  Volume Suono", font=("Helvetica", 10, "bold"), fg="#f8fafc", bg="#161e2e").pack(side=tk.LEFT)
+        tk.Label(v_head, text="  Volume Suono", font=("Helvetica", 10, "bold"), fg="#f8fafc", bg="#161e2e").pack(side=tk.LEFT)
         self.vol_lbl = tk.Label(v_head, text="70%", font=("Helvetica", 9), fg="#94a3b8", bg="#161e2e")
         self.vol_lbl.pack(side=tk.RIGHT)
         
@@ -112,7 +112,7 @@ class ControlCenterWindow:
         bri_box.pack(fill=tk.X, pady=(0, 10))
         b_head = tk.Frame(bri_box, bg="#161e2e")
         b_head.pack(fill=tk.X)
-        tk.Label(b_head, text="☀️  Luminosita Schermo", font=("Helvetica", 10, "bold"), fg="#f8fafc", bg="#161e2e").pack(side=tk.LEFT)
+        tk.Label(b_head, text="  Luminosita Schermo", font=("Helvetica", 10, "bold"), fg="#f8fafc", bg="#161e2e").pack(side=tk.LEFT)
         self.bri_lbl = tk.Label(b_head, text="85%", font=("Helvetica", 9), fg="#94a3b8", bg="#161e2e")
         self.bri_lbl.pack(side=tk.RIGHT)
         

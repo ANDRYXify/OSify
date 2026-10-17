@@ -30,7 +30,7 @@ capture_fullscreen() {
     fi
 
     if [ -f "$OUT_FILE" ]; then
-        echo "[✓] Schermata salvata con successo in: $OUT_FILE"
+        echo "[[OK]] Schermata salvata con successo in: $OUT_FILE"
         if command -v notify-send >/dev/null 2>&1; then
             notify-send "OSify Screenshot" "Schermata salvata in: $(basename "$OUT_FILE")" -i /usr/share/pixmaps/osify-appearance.png || true
         fi
@@ -47,7 +47,7 @@ capture_window() {
     fi
 
     if [ -f "$OUT_FILE" ]; then
-        echo "[✓] Finestra catturata con successo in: $OUT_FILE"
+        echo "[[OK]] Finestra catturata con successo in: $OUT_FILE"
     fi
 }
 

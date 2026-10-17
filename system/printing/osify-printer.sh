@@ -62,7 +62,7 @@ open('$out_pdf', 'w').write(out)
     fi
 
     if [ -f "$out_pdf" ]; then
-        echo "[✓] Documento stampato con successo in: $out_pdf"
+        echo "[[OK]] Documento stampato con successo in: $out_pdf"
         if command -v notify-send >/dev/null 2>&1; then
             notify-send "Stampa OSify" "Documento salvato in: $(basename "$out_pdf")" -i /usr/share/pixmaps/osify-files.png || true
         fi

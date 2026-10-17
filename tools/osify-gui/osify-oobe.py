@@ -400,7 +400,7 @@ class OSifyOOBEApp(tk.Tk):
         if not networks:
             networks = ["[Cablata] Connessione Ethernet Attiva", "OSify-Mesh-FastNet", "Wi-Fi Casa (WPA2)", "Altra Rete..."]
         for net in networks:
-            self.wifi_listbox.insert(tk.END, f"  📶  {net}")
+            self.wifi_listbox.insert(tk.END, f"    {net}")
         self.wifi_listbox.selection_set(0)
 
         # Inserimento Password
@@ -534,7 +534,7 @@ class OSifyOOBEApp(tk.Tk):
         elif self.current_step == 2:
             sel = self.wifi_listbox.curselection()
             if sel:
-                self.config_data["wifi_ssid"] = self.wifi_listbox.get(sel[0]).replace("  📶  ", "")
+                self.config_data["wifi_ssid"] = self.wifi_listbox.get(sel[0]).replace("    ", "")
             self.config_data["wifi_pass"] = self.wifi_pwd_entry.get()
         elif self.current_step == 3:
             self.config_data["fullname"] = self.entry_fullname.get().strip() or "Utente OSify"

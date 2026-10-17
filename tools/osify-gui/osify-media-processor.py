@@ -61,7 +61,7 @@ def process_wallpaper(src_path, dst_path, mode="smart_blur"):
 
         os.makedirs(os.path.dirname(os.path.abspath(dst_path)), exist_ok=True)
         final_img.save(dst_path, "JPEG", quality=92, optimize=True)
-        print(f"[✓] Sfondo generato con successo: {dst_path} ({target_w}x{target_h})")
+        print(f"[[OK]] Sfondo generato con successo: {dst_path} ({target_w}x{target_h})")
         return True
     except Exception as e:
         # Fallback ImageMagick / Netpbm
@@ -95,7 +95,7 @@ def process_avatar(src_path, dst_path, size=128):
 
         os.makedirs(os.path.dirname(os.path.abspath(dst_path)), exist_ok=True)
         avatar.save(dst_path, "PNG")
-        print(f"[✓] Avatar utente normalizzato: {dst_path} ({size}x{size})")
+        print(f"[[OK]] Avatar utente normalizzato: {dst_path} ({size}x{size})")
         return True
     except Exception as e:
         print(f"[!] Fallback avatar: {e}")

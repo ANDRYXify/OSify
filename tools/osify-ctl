@@ -9,12 +9,12 @@ OSIFY_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 show_banner() {
     cat << "EOF"
-  ██████╗ ███████╗██╗███████╗██╗   ██╗
- ██╔═══██╗██╔════╝██║██╔════╝╚██╗ ██╔╝
- ██║   ██║███████╗██║█████╗   ╚████╔╝ 
- ██║   ██║╚════██║██║██╔══╝    ╚██╔╝  
- ╚██████╔╝███████║██║██║        ██║   
-  ╚═════╝ ╚══════╝╚═╝╚═╝        ╚═╝   
+      
+  
+        
+          
+            
+              
   Gaming • Live Streaming • Multi-Runtime • Emulazione
 EOF
     echo ""
@@ -113,7 +113,7 @@ set_mode() {
             echo "[+] Attivazione MODALITÀ STREAMING LIVE..."
             "$OSIFY_DIR/network/osify-qos.sh" "" start || true
             "$OSIFY_DIR/audio/osify-audio-setup.sh" setup || true
-            echo "[✓] Canali audio VOD separati e Anti-Bufferbloat attivi per Twitch/Kick/YouTube!"
+            echo "[[OK]] Canali audio VOD separati e Anti-Bufferbloat attivi per Twitch/Kick/YouTube!"
             ;;
         gaming)
             echo "[+] Attivazione MODALITÀ GAMING COMPETITIVO..."
@@ -122,7 +122,7 @@ set_mode() {
                 echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor >/dev/null 2>&1 || true
             fi
             "$OSIFY_DIR/desktop/motore-grafico/taratura-desktop.sh"
-            echo "[✓] Priorità massimizzata e tearing abilitato per latenza minima!"
+            echo "[[OK]] Priorità massimizzata e tearing abilitato per latenza minima!"
             ;;
         emulation)
             echo "[+] Attivazione MODALITÀ EMULAZIONE CONSOLE..."
@@ -136,7 +136,7 @@ set_mode() {
             echo "[+] Attivazione MODALITÀ VINTAGE LOW-SPEC..."
             "$OSIFY_DIR/desktop/profiles/osify-lowspec-kde.sh"
             "$OSIFY_DIR/kernel/legacy/osify-hardware-detect.sh" --apply || true
-            echo "[✓] Profilo PC Vintage attivo: footprint memoria ridotto a ~400MB e fluidità massimizzata!"
+            echo "[[OK]] Profilo PC Vintage attivo: footprint memoria ridotto a ~400MB e fluidità massimizzata!"
             ;;
         *)
             echo "Modalità disponibili: streaming | gaming | emulation | balanced | lowspec"

@@ -76,11 +76,11 @@ else
     echo "Compilatore non trovato nel PATH."
     exit 1
 fi
-echo "[✓] Compilazione completata! Esecuzione:"
+echo "[[OK]] Compilazione completata! Esecuzione:"
 ./main
 EOF
             chmod +x "$target_dir/build.sh"
-            echo "[✓] Progetto C creato in: $target_dir"
+            echo "[[OK]] Progetto C creato in: $target_dir"
             open_editor "$target_dir/main.c"
             ;;
         2)
@@ -101,7 +101,7 @@ import platform
 
 def main():
     print("=" * 50)
-    print(" 🚀 OSify Python Runtime System")
+    print("  OSify Python Runtime System")
     print(f" Sistema   : {platform.system()} {platform.release()} ({platform.machine()})")
     print(f" Python    : {platform.python_version()}")
     print("=" * 50)
@@ -111,7 +111,7 @@ if __name__ == "__main__":
     main()
 EOF
             chmod +x "$target_dir/main.py"
-            echo "[✓] Progetto Python creato in: $target_dir"
+            echo "[[OK]] Progetto Python creato in: $target_dir"
             open_editor "$target_dir/main.py"
             ;;
         3)
@@ -131,7 +131,7 @@ echo "Data e ora: $(date)"
 echo "Uptime: $(uptime)"
 EOF
             chmod +x "$target_dir/script.sh"
-            echo "[✓] Script Bash creato in: $target_dir"
+            echo "[[OK]] Script Bash creato in: $target_dir"
             open_editor "$target_dir/script.sh"
             ;;
         *)
@@ -181,14 +181,14 @@ git_quick_manager() {
 if command -v dialog >/dev/null 2>&1; then
     while true; do
         DEV_OPT=$(dialog --stdout --backtitle "OSify Developer Suite — Andrea Taliento" \
-            --title " 💻 OSify Developer & Coding Environment " \
+            --title "  OSify Developer & Coding Environment " \
             --menu "Cartella Progetti: $PROJECTS_DIR\n\nScegli un'attività di sviluppo:" 16 65 6 \
-            "1" "📝  Crea Nuovo Progetto da Template (C, Python, Bash)" \
-            "2" "🐍  Avvia Console Interattiva Python 3 REPL" \
-            "3" "💻  Apri Terminale di Sviluppo & Debug" \
-            "4" "📁  Apri Cartella Personale Progetti ($PROJECTS_DIR)" \
-            "5" "🐙  Gestore Version Control Git (Clona / Status)" \
-            "0" "❌  Torna al Desktop" 2>/dev/null || echo "0")
+            "1" "  Crea Nuovo Progetto da Template (C, Python, Bash)" \
+            "2" "  Avvia Console Interattiva Python 3 REPL" \
+            "3" "  Apri Terminale di Sviluppo & Debug" \
+            "4" "  Apri Cartella Personale Progetti ($PROJECTS_DIR)" \
+            "5" "  Gestore Version Control Git (Clona / Status)" \
+            "0" "  Torna al Desktop" 2>/dev/null || echo "0")
 
         case "$DEV_OPT" in
             1) create_template_project ;;
@@ -202,14 +202,14 @@ if command -v dialog >/dev/null 2>&1; then
 else
     clear
     echo "========================================================="
-    echo "   💻 OSify Developer & Coding Suite                     "
+    echo "    OSify Developer & Coding Suite                     "
     echo "========================================================="
-    echo " 1) 📝 Crea Nuovo Progetto (C, Python, Bash)"
-    echo " 2) 🐍 Avvia Python 3 REPL"
-    echo " 3) 💻 Apri Cyber Terminal"
-    echo " 4) 📁 Apri Cartella Progetti ($PROJECTS_DIR)"
-    echo " 5) 🐙 Git Quick Manager"
-    echo " 0) ❌ Esci"
+    echo " 1)  Crea Nuovo Progetto (C, Python, Bash)"
+    echo " 2)  Avvia Python 3 REPL"
+    echo " 3)  Apri Cyber Terminal"
+    echo " 4)  Apri Cartella Progetti ($PROJECTS_DIR)"
+    echo " 5)  Git Quick Manager"
+    echo " 0)  Esci"
     echo "========================================================="
     read -rp "Selezione [0-5]: " d_opt
     case "$d_opt" in

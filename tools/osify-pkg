@@ -18,7 +18,7 @@ DESKTOP_DIR="${HOME}/.local/share/applications"
 mkdir -p "$APPS_DIR" "$DESKTOP_DIR"
 
 log() { echo -e "\e[1;34m[osify-pkg]\e[0m $*"; }
-ok()  { echo -e "\e[1;32m[✓]\e[0m $*"; }
+ok()  { echo -e "\e[1;32m[[OK]]\e[0m $*"; }
 err() { echo -e "\e[1;31m[ERRORE]\e[0m $*" >&2; }
 
 get_catalog_desc() {

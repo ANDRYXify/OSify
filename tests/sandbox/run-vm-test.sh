@@ -63,7 +63,7 @@ create_virtual_disk() {
     if [[ ! -f "$DISK_IMAGE" ]]; then
         echo "[+] Creazione disco virtuale QCOW2 da 20 GB per il test..."
         qemu-img create -f qcow2 "$DISK_IMAGE" 20G >/dev/null
-        echo "[✓] Disco virtuale pronto: $DISK_IMAGE"
+        echo "[[OK]] Disco virtuale pronto: $DISK_IMAGE"
     fi
 }
 
@@ -204,7 +204,7 @@ menu() {
         1) start_vm 1 ;;
         2) start_vm 2 ;;
         3) start_vm 3 ;;
-        4) rm -f "$DISK_IMAGE" && echo "[✓] Disco virtuale resettato." ;;
+        4) rm -f "$DISK_IMAGE" && echo "[[OK]] Disco virtuale resettato." ;;
         *) echo "Scelta non valida." ;;
     esac
 }

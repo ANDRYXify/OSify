@@ -187,8 +187,8 @@ if [ -n "$DISPLAY" ] && command -v yad >/dev/null 2>&1; then
         --field="Immagine Profilo / Avatar (Scegli file...):FL" "$USER_AVATAR" \
         --field="Attiva Virtual Scaler 1280x768 per Netbook (risolve finestre tagliate):CHK" "$NETBOOK_DEFAULT" \
         --field="Attiva Touchpad Universale (Edge Scrolling & Tap):CHK" TRUE \
-        --button="💾 Installa Direttamente su Disco:2" \
-        --button="🚀 Inizia Sessione con Questo Profilo:0" \
+        --button=" Installa Direttamente su Disco:2" \
+        --button=" Inizia Sessione con Questo Profilo:0" \
         --button="gtk-cancel:1")
 
     EXIT_CODE=$?

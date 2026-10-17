@@ -21,12 +21,12 @@ PASSED_COUNT=0
 FAILED_COUNT=0
 
 log_pass() {
-    echo "  [✓ PASS] $1"
+    echo "  [[OK] PASS] $1"
     PASSED_COUNT=$((PASSED_COUNT + 1))
 }
 
 log_fail() {
-    echo "  [✗ FAIL] $1"
+    echo "  [ FAIL] $1"
     FAILED_COUNT=$((FAILED_COUNT + 1))
 }
 
@@ -601,7 +601,7 @@ for fpath in files:
     assert '::new(' not in content, f'Trovato ::new() in {fpath}'
     assert (chr(92) + chr(34)) not in content, f'Trovato backslash-quote problematico per PS2.0 in {fpath}'
     assert '-o\"' not in content, f'Trovata sintassi 7-zip con virgoletta aperta in {fpath}'
-    assert '✓' not in content, f'Trovato carattere non-ASCII Unicode in {fpath}'
+    assert all(ord(ch) < 128 for ch in content), f'Trovato carattere non-ASCII Unicode in {fpath}'
     if 'GUI.ps1' in fpath:
         m = re.search(r'@\"\s*\n(<Window.*?</Window>)\s*\n\"@', content, re.DOTALL)
         assert m, 'XAML non trovato'
@@ -811,12 +811,11 @@ fi
 # Test 12.7 Assenza Assoluta di Emoji nel Codice di Avvio e nei Menu
 if python3 -c "
 import re
-with open('$REPO_ROOT/build/remaster-live-iso.py', 'r') as f:
+with open('$REPO_ROOT/build/remaster-live-iso.py', 'r', encoding='utf-8') as f:
     c = f.read()
-# Verifica assenza emoji specifici nei menu
-forbidden = ['⚡', '🚀', '🌐', '📶', '📁', '🎮', '🛠️', '💻', '💿', '👤', '🔄']
-for e in forbidden:
-    assert e not in c, f'Emoji {e} presente in remaster-live-iso.py'
+# Verifica assenza emoji tramite range Unicode
+emoji_match = re.search(r'[\U0001F300-\U0001FAFF]', c)
+assert not emoji_match, f'Emoji trovata in remaster-live-iso.py: {emoji_match.group(0)}'
 print('Nessuna emoji trovata in remaster-live-iso.py')
 " >/dev/null 2>&1; then
     log_pass "Codifica Testuale & X11: Zero emoji nel codice di build del remaster ISO e nei menu contestuali"
@@ -962,7 +961,7 @@ echo "  TEST FALLITI  : $FAILED_COUNT"
 echo "========================================================="
 
 if [[ "$FAILED_COUNT" -eq 0 ]]; then
-    echo "[✓✓✓] TUTTI I TEST SONO PASSATI CON SUCCESSO AL 100%! OSify È PRONTO."
+    echo "[] TUTTI I TEST SONO PASSATI CON SUCCESSO AL 100%! OSify È PRONTO."
     exit 0
 else
     echo "[!!!] ALCUNI TEST SONO FALLITI. VERIFICARE I LOG SOPRA."

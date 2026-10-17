@@ -63,7 +63,7 @@ extract_archive() {
             fi ;;
     esac
 
-    echo "[✓] Estrazione completata: $dest_dir"
+    echo "[[OK]] Estrazione completata: $dest_dir"
     if command -v notify-send >/dev/null 2>&1; then
         notify-send "OSify Archivi" "Archivio estratto in: $(basename "$dest_dir")" -i /usr/share/pixmaps/osify-files.png || true
     fi
@@ -103,7 +103,7 @@ create_archive() {
             tar -czf "$out_arch" -C "$parent_src" "$base_src" ;;
     esac
 
-    echo "[✓] Archivio creato: $out_arch"
+    echo "[[OK]] Archivio creato: $out_arch"
 }
 
 launch_gui() {

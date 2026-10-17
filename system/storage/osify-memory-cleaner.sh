@@ -157,7 +157,7 @@ cmd_clean() {
         if [[ -d "$HOME/.cache/thumbnails" ]]; then
             rm -rf "$HOME/.cache/thumbnails"/* 2>/dev/null || true
             freed_items=$((freed_items + 1))
-            log "  [✓] Miniature cache rimosse (~/.cache/thumbnails)"
+            log "  [[OK]] Miniature cache rimosse (~/.cache/thumbnails)"
         fi
     fi
 
@@ -167,14 +167,14 @@ cmd_clean() {
         find /tmp -maxdepth 2 -type f -name "osify_*.tmp" -delete 2>/dev/null || true
         find /tmp -maxdepth 2 -type f -name "*.crdownload" -delete 2>/dev/null || true
         freed_items=$((freed_items + 1))
-        log "  [✓] File temporanei orfani in /tmp ripuliti"
+        log "  [[OK]] File temporanei orfani in /tmp ripuliti"
     fi
 
     # 3. Pulizia cache pacchetti (se abilitata)
     if [[ "$CLEAN_PACKAGE_CACHE" == "true" ]]; then
         if command -v pacman >/dev/null 2>&1; then
             paccache -rk1 -q 2>/dev/null || pacman -Sc --noconfirm 2>/dev/null || true
-            log "  [✓] Cache pacchetti Arch/CachyOS ottimizzata"
+            log "  [[OK]] Cache pacchetti Arch/CachyOS ottimizzata"
         fi
         if command -v apt-get >/dev/null 2>&1; then
             apt-get clean -q 2>/dev/null || true
@@ -190,7 +190,7 @@ cmd_clean() {
         rm -rf "$HOME/.cache/mesa_shader_cache" 2>/dev/null || true
         log "  [!] Shader cache grafici rimossi su richiesta esplicita utente"
     else
-        log "  [✓] Shader cache DirectX/Vulkan/Proton preservati per garantire 60+ FPS"
+        log "  [[OK]] Shader cache DirectX/Vulkan/Proton preservati per garantire 60+ FPS"
     fi
 
     # 5. Drop Caches e Compattazione RAM
@@ -198,13 +198,13 @@ cmd_clean() {
         sync
         echo 3 > /proc/sys/vm/drop_caches 2>/dev/null || true
         echo 1 > /proc/sys/vm/compact_memory 2>/dev/null || true
-        log "  [✓] Pagecache, dentries e inodes rilasciati al kernel; memoria compattata"
+        log "  [[OK]] Pagecache, dentries e inodes rilasciati al kernel; memoria compattata"
     elif command -v purge >/dev/null 2>&1; then
         purge 2>/dev/null || true
-        log "  [✓] Memoria inattiva purgata (macOS host)"
+        log "  [[OK]] Memoria inattiva purgata (macOS host)"
     fi
 
-    log "[✓] Ciclo di pulizia completato con successo."
+    log "[[OK]] Ciclo di pulizia completato con successo."
 }
 
 cmd_emergency_check() {
@@ -249,7 +249,7 @@ cmd_set_policy() {
         *) echo "Chiave non valida: $key. Usa {reboot|auto|threshold|shaders|packages}"; exit 1 ;;
     esac
     save_policy
-    echo "[✓] Policy aggiornata: $key = $val (salvata in $CONF_FILE)"
+    echo "[[OK]] Policy aggiornata: $key = $val (salvata in $CONF_FILE)"
 }
 
 case "${1:-status}" in

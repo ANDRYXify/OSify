@@ -177,11 +177,11 @@ def print_diagnostic_report(res, specs):
 
     print(f"\n{c.BOLD}--- RACCOMANDAZIONI & AVVISI ({len(res['warnings'])}) ---{c.END}")
     for w in res["warnings"]:
-        print(f"  {c.YELLOW}⚠{c.END} {w}")
+        print(f"  {c.YELLOW}{c.END} {w}")
 
     print(f"\n{c.BOLD}--- OTTIMIZZAZIONI AUTOMATICHE APPLICATE ({len(res['optimizations'])}) ---{c.END}")
     for opt in res["optimizations"]:
-        print(f"  {c.GREEN}✓{c.END} {opt}")
+        print(f"  {c.GREEN}[OK]{c.END} {opt}")
 
     print(f"\n{c.BOLD}--- BUDGET MEMORIA E DESKTOP ---{c.END}")
     rb = res["ram_budget"]

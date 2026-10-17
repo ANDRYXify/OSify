@@ -53,7 +53,7 @@ auto_check_and_fix() {
     if [ "$cur_year" -lt "$MIN_YEAR" ]; then
         echo "[!] ALLERTA: Orologio di sistema non allineato (Anno $cur_year < $MIN_YEAR, probabile batteria CMOS scarica)."
         if sync_time_ntp || sync_time_http; then
-            echo "[✓] Orologio sincronizzato con successo: $(date)"
+            echo "[[OK]] Orologio sincronizzato con successo: $(date)"
             # Salva nell'RTC hardware per i successivi riavvii
             sudo hwclock --systohc 2>/dev/null || true
             if command -v notify-send >/dev/null 2>&1 && [ -n "${DISPLAY:-}" ]; then
@@ -63,7 +63,7 @@ auto_check_and_fix() {
             echo "[!] Impossibile sincronizzare l'orologio (rete non ancora disponibile)."
         fi
     else
-        echo "[✓] Orologio di sistema valido (Anno $cur_year)."
+        echo "[[OK]] Orologio di sistema valido (Anno $cur_year)."
     fi
 }
 
@@ -71,7 +71,7 @@ set_manual_time() {
     local new_dt="$1"
     sudo date -s "$new_dt" 2>/dev/null || true
     sudo hwclock --systohc 2>/dev/null || true
-    echo "[✓] Data impostata: $(date)"
+    echo "[[OK]] Data impostata: $(date)"
 }
 
 launch_gui() {

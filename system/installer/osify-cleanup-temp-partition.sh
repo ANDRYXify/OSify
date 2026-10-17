@@ -46,7 +46,7 @@ cleanup_partition() {
     if [[ -n "$parent_disk" && -n "$part_num" ]]; then
         echo "[+] Eliminazione partizione $part_num da /dev/$parent_disk..."
         parted -s "/dev/$parent_disk" rm "$part_num" 2>/dev/null || true
-        echo "[✓] Partizione temporanea rimossa! Lo spazio è ora riutilizzabile dal filesystem principale."
+        echo "[[OK]] Partizione temporanea rimossa! Lo spazio è ora riutilizzabile dal filesystem principale."
     else
         echo "[!] Impossibile determinare automaticamente il disco genitore; rimuovere manualmente con fdisk/gparted."
     fi

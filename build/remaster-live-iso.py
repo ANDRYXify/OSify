@@ -69,7 +69,7 @@ def patch_kernel_binary(kernel_path):
     if count > 0 and len(patched) == orig_len:
         with open(kernel_path, "wb") as f:
             f.write(patched)
-        print(f"[✓] Patch binaria kernel completata ({os.path.basename(kernel_path)}): soppresse {count} stringhe VGA early console")
+        print(f"[[OK]] Patch binaria kernel completata ({os.path.basename(kernel_path)}): soppresse {count} stringhe VGA early console")
 
 def patch_binary_string(file_path, old_bytes, new_bytes):
     if not os.path.exists(file_path):
@@ -82,7 +82,7 @@ def patch_binary_string(file_path, old_bytes, new_bytes):
         data = data.replace(old_bytes, new_bytes)
         with open(file_path, "wb") as f:
             f.write(data)
-        print(f"[✓] Patch binaria EFI ({os.path.basename(file_path)}): {old_bytes.decode('latin1', 'replace')} -> {new_bytes.decode('latin1', 'replace')}")
+        print(f"[[OK]] Patch binaria EFI ({os.path.basename(file_path)}): {old_bytes.decode('latin1', 'replace')} -> {new_bytes.decode('latin1', 'replace')}")
         return True
     return False
 
@@ -1337,7 +1337,7 @@ Plugin {
     r3_packed = archive3.to_bytes()
     with open(r3_gz, "wb") as f:
         f.write(lzma.compress(r3_packed, format=lzma.FORMAT_ALONE))
-    print(f"[✓] rootfs3 ricompatto con successo ({os.path.getsize(r3_gz)/(1024*1024):.1f} MB)")
+    print(f"[[OK]] rootfs3 ricompatto con successo ({os.path.getsize(r3_gz)/(1024*1024):.1f} MB)")
 
 def build_vintage_i686():
     print("=========================================================")
@@ -1469,7 +1469,7 @@ LABEL memtest
     with open(r4_gz, "rb") as f:
         r4_data = safe_lzma_decompress(f.read())
     n_files = extract_cpio_archive(r4_data, r4_work)
-    print(f"[✓] Layer unificati con successo: {n_files} file estratti nel rootfs unico")
+    print(f"[[OK]] Layer unificati con successo: {n_files} file estratti nel rootfs unico")
 
     img_dir = os.path.join(r4_work, "usr/share/images")
     os.makedirs(img_dir, exist_ok=True)
@@ -1490,7 +1490,7 @@ LABEL memtest
             if not os.path.exists(os.path.join(r4_work, "usr/bin/bash")):
                 os.symlink("/bin/bash", os.path.join(r4_work, "usr/bin/bash"))
             bash_injected = True
-            print(f"[✓] Inietto bash-static da sistema: {candidate}")
+            print(f"[[OK]] Inietto bash-static da sistema: {candidate}")
             break
 
     if not bash_injected and shutil.which("docker"):
@@ -1505,7 +1505,7 @@ LABEL memtest
             )
             run(docker_bash_cmd)
             bash_injected = True
-            print("[✓] Inietto bash-static via container docker")
+            print("[[OK]] Inietto bash-static via container docker")
         except Exception as e:
             print(f"[!] Warning docker bash: {e}")
 
@@ -1759,7 +1759,7 @@ LABEL memtest
                         dst_sub = os.path.join(dest_rootfs, sub)
                         if os.path.exists(src_sub):
                             shutil.copytree(src_sub, dst_sub, dirs_exist_ok=True)
-                    print(f"[✓] Pacchetto {pkg_name} integrato con successo nella rootfs!")
+                    print(f"[[OK]] Pacchetto {pkg_name} integrato con successo nella rootfs!")
 
     # Iniezione Applicativi Chiave: Dillo (Web), YAD (GTK Dialogs) e Htop (Task Manager)
     inject_tazpkg("dillo-3.0.5.tazpkg", "https://mirror.slitaz.org/i486/cooking/packages/dillo-3.0.5.tazpkg", r4_work)
@@ -1904,7 +1904,7 @@ LABEL memtest
                 src_icon = os.path.join(icons_src_dir, icon_file)
                 shutil.copy2(src_icon, os.path.join(pixmaps_dir, icon_file))
                 shutil.copy2(src_icon, os.path.join(hicolor_dir, icon_file))
-        print(f"[✓] Copiate {len(os.listdir(icons_src_dir))} icone native in /usr/share/pixmaps/")
+        print(f"[[OK]] Copiate {len(os.listdir(icons_src_dir))} icone native in /usr/share/pixmaps/")
 
     osify_48 = os.path.join(REPO_ROOT, "desktop/branding/icons/48/osify.png")
     if os.path.exists(osify_48):
@@ -2952,7 +2952,7 @@ fi
     os.remove(r4_gz)
     print("[+] Ricompressione rootfs4 unificato con cpio ad alte prestazioni...")
     run(f'cd "{r4_work}" && find . -print0 | cpio --null -ov -H newc | lzma -z -1 > "{r4_gz}"')
-    print(f"[✓] rootfs4 ricompatto con successo ({os.path.getsize(r4_gz)/(1024*1024):.1f} MB con tutti i file unificati e permessi corretti)")
+    print(f"[[OK]] rootfs4 ricompatto con successo ({os.path.getsize(r4_gz)/(1024*1024):.1f} MB con tutti i file unificati e permessi corretti)")
 
     # Iniezione Windows Installer e albero OSify
     inject_windows_installer(iso_root)
@@ -3004,7 +3004,7 @@ fi
         
     shutil.copy2(out_iso_tmp, DEST_VINTAGE_ISO)
     shutil.copy2(DEST_VINTAGE_ISO, DEST_SANDBOX_VINTAGE)
-    print(f"[✓] OSify Vintage 32-bit Ibrida creata: {DEST_VINTAGE_ISO} ({os.path.getsize(DEST_VINTAGE_ISO)/(1024*1024):.1f} MB)")
+    print(f"[[OK]] OSify Vintage 32-bit Ibrida creata: {DEST_VINTAGE_ISO} ({os.path.getsize(DEST_VINTAGE_ISO)/(1024*1024):.1f} MB)")
 
 def build_modern_x86_64():
     print("=========================================================")
@@ -3559,7 +3559,7 @@ LABEL rescue
         f"-o '{DEST_MODERN_ISO}' '{iso_root}'"
     )
     run(cmd_xorriso)
-    print(f"[✓] OSify Modern 64-bit creata: {DEST_MODERN_ISO} ({os.path.getsize(DEST_MODERN_ISO)/(1024*1024):.1f} MB)")
+    print(f"[[OK]] OSify Modern 64-bit creata: {DEST_MODERN_ISO} ({os.path.getsize(DEST_MODERN_ISO)/(1024*1024):.1f} MB)")
 
 def build_arm64():
     print("=========================================================")
@@ -4002,7 +4002,7 @@ endif
         f"-o '{DEST_ARM64_ISO}' '{iso_root}'"
     )
     run(cmd_xorriso)
-    print(f"[✓] OSify ARM64 creata: {DEST_ARM64_ISO} ({os.path.getsize(DEST_ARM64_ISO)/(1024*1024):.1f} MB)")
+    print(f"[[OK]] OSify ARM64 creata: {DEST_ARM64_ISO} ({os.path.getsize(DEST_ARM64_ISO)/(1024*1024):.1f} MB)")
 
 def main():
     target = sys.argv[1] if len(sys.argv) > 1 else "--all"
@@ -4034,7 +4034,7 @@ def main():
         f.write(sha_txt)
     print(sha_txt)
     print("=========================================================")
-    print("[✓✓✓] TUTTE LE IMMAGINI ISO (32, 64, ARM) SONO PRONTE E COLLAUDATE!")
+    print("[] TUTTE LE IMMAGINI ISO (32, 64, ARM) SONO PRONTE E COLLAUDATE!")
     print("=========================================================")
 
 if __name__ == "__main__":

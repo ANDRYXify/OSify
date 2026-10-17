@@ -148,7 +148,7 @@ class OSifyWelcomeApp(tk.Tk):
 
         btn_inst = tk.Button(
             ac_inner,
-            text="🚀  AVVIA INSTALLAZIONE GUIDATA SU DISCO",
+            text="  AVVIA INSTALLAZIONE GUIDATA SU DISCO",
             font=("Helvetica", 11, "bold"),
             fg="#ffffff",
             bg=COLOR_ACCENT_BLUE,
@@ -167,10 +167,10 @@ class OSifyWelcomeApp(tk.Tk):
         tools_frame.pack(fill="x", padx=24, pady=10)
 
         tools = [
-            ("🎮 Deck & Desktop Shell", self.launch_deck_shell),
-            ("⚙️ Ottimizza Input / Touchpad", self.tune_input),
-            ("🧹 Pulizia Memoria & Cache", self.clean_memory),
-            ("🌐 Configura Wi-Fi", self.launch_wifi),
+            (" Deck & Desktop Shell", self.launch_deck_shell),
+            (" Ottimizza Input / Touchpad", self.tune_input),
+            (" Pulizia Memoria & Cache", self.clean_memory),
+            (" Configura Wi-Fi", self.launch_wifi),
         ]
 
         for idx, (title, cmd) in enumerate(tools):

@@ -22,7 +22,7 @@ ALERT_LOG="$LOG_DIR/shield_alerts.log"
 mkdir -p "$QUARANTINE_DIR" "$LOG_DIR"
 
 log()   { printf "\033[1;34m[OSify-Shield]\033[0m %s\n" "$*"; }
-ok()    { printf "\033[1;32m[✓]\033[0m %s\n" "$*"; }
+ok()    { printf "\033[1;32m[[OK]]\033[0m %s\n" "$*"; }
 warn()  { printf "\033[1;33m[!]\033[0m %s\n" "$*"; }
 alert() { printf "\033[1;31m[SHIELD-THREAT]\033[0m %s\n" "$*"; }
 

@@ -113,7 +113,7 @@ user_setup_wizard() {
         FOUND_USER=$(awk -F'"' '/"username":/ {print $4}' "$PROFILE_JSON" 2>/dev/null)
         FOUND_PASS=$(awk -F'"' '/"password":/ {print $4}' "$PROFILE_JSON" 2>/dev/null)
         if [ -n "$FOUND_USER" ]; then
-            printf "\033[1;32m[✓] Rilevato profilo già configurato nella sessione di prova:\033[0m\n"
+            printf "\033[1;32m[[OK]] Rilevato profilo già configurato nella sessione di prova:\033[0m\n"
             printf "    Nome: \033[1m%s\033[0m  |  Username: \033[1m%s\033[0m\n" "$FOUND_NAME" "$FOUND_USER"
             printf "Desideri usare direttamente questo profilo per l'installazione? [S/n]: "
             read -r ans_prof
@@ -681,12 +681,12 @@ interactive_wizard() {
     clear
     printf "\033[1;36m"
     cat << 'EOF'
-  ██████╗ ███████╗██╗███████╗██╗   ██╗
- ██╔═══██╗██╔════╝██║██╔════╝╚██╗ ██╔╝
- ██║   ██║███████╗██║█████╗   ╚████╔╝ 
- ██║   ██║╚════██║██║██╔══╝    ╚██╔╝  
- ╚██████╔╝███████║██║██║        ██║   
-  ╚═════╝ ╚══════╝╚═╝╚═╝        ╚═╝   
+      
+  
+        
+          
+            
+              
 EOF
     printf "\033[0m\n"
     printf "\033[1;37m=================================================================\033[0m\n"
@@ -820,11 +820,11 @@ EOF
     echo "-----------------------------------------------------------------"
     if [ "$fw" = "bios" ] || [ "$(uname -m)" = "i686" ]; then
         FS_TYPE="ext4"
-        printf "  \033[1;32m➔\033[0m \033[1mProfilo Selezionato: Ext4 Ultra-Fast (Netbook / Atom / HDD)\033[0m\n"
+        printf "  \033[1;32m\033[0m \033[1mProfilo Selezionato: Ext4 Ultra-Fast (Netbook / Atom / HDD)\033[0m\n"
         echo "    Minimo overhead di I/O, noatime, ultra-fluido, nessun impatto CPU."
     else
         FS_TYPE="btrfs"
-        printf "  \033[1;32m➔\033[0m \033[1mProfilo Selezionato: Btrfs Modern con compressione zstd (SSD / NVMe)\033[0m\n"
+        printf "  \033[1;32m\033[0m \033[1mProfilo Selezionato: Btrfs Modern con compressione zstd (SSD / NVMe)\033[0m\n"
         echo "    Istantanee subvolumi CoW, risparmio spazio e massima integrità."
     fi
     log "Profilo Filesystem: $FS_TYPE"

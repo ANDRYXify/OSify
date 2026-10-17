@@ -29,4 +29,4 @@ docker run --rm --privileged \
     -v "$REPO_ROOT:/workspace" \
     osify-builder
 
-echo "[✓] Compilazione completata! Controlla la directory build/out/ per l'ISO finale."
+echo "[[OK]] Compilazione completata! Controlla la directory build/out/ per l'ISO finale."
