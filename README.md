@@ -12,8 +12,12 @@
 ---
 
 <p align="center">
+  <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-A.0-Universal.iso">
+    <img src="https://img.shields.io/badge/OSify_Universal_All--In--One-vA.0_Cover_Nuda-F59E0B?style=for-the-badge&logo=disc&logoColor=white" alt="OSify Universal All-In-One vA.0"/>
+  </a>
+  &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-A.0-BareMetal.iso">
-    <img src="https://img.shields.io/badge/OSify_Bare--Metal-vA.0_Naked--Skin-06B6D4?style=for-the-badge&logo=target&logoColor=white" alt="OSify Bare-Metal vA.0"/>
+    <img src="https://img.shields.io/badge/OSify_Bare--Metal-vA.0_Micro--Core-06B6D4?style=for-the-badge&logo=target&logoColor=white" alt="OSify Bare-Metal vA.0"/>
   </a>
   &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-x86_64-v3.iso">
@@ -57,12 +61,16 @@
 
 ---
 
-## Panoramica del Progetto
+## Panoramica del Progetto — Filosofia "Cover Nuda"
 
-OSify è un sistema operativo commerciale e autonomo a sé stante ingegnerizzato su due target architetturali rigorosamente distinti, per evitare compromessi o dispersioni di risorse:
+OSify non è una distribuzione Linux derivata, non è Windows, non è macOS: **OSify è OSify**. È un sistema operativo autonomo, strutturato come una **"cover nuda"** che aderisce direttamente al silicio dell'hardware: un esoscheletro essenziale, ultra-reattivo, che elimina gli strati intermedi ridondanti ed espone un ponte di compatibilità universale a livello 0.
 
-1. **OSify Standard (x86-64-v3)**: Dedicato a postazioni moderne da gaming, creazione di contenuti e live streaming ad alto bitrate. Compilato con istruzioni vettoriali avanzate (AVX, AVX2, FMA) e motore di esecuzione BORE a latenza deterministica.
-2. **OSify Vintage (i686 / 32-bit)**: Dedicato a computer storici e netbook ultra-compatti (es. Toshiba Dynabook NB200 con Intel Atom N280 e GPU Intel GMA 950). Ottimizzato per operare con un footprint di memoria a riposo di ~115-125 MB, gestendo nativamente schermi WSVGA a bassa risoluzione (1024x600).
+L'ecosistema viene distribuito primariamente tramite l'**ISO Unica Universale All-In-One**:
+* **`OSify-A.0-Universal.iso` (Consigliata per qualsiasi macchina)**: Un'unica immagine ibrida avviabile (MBR BIOS + UEFI x86_64 + UEFI i686) che all'avvio introspeziona il processore e la memoria fisica in tempo reale, auto-configurandosi al volo:
+  1. **Macchine Moderne / Gaming / Multicore**: Abilita il motore vettoriale 64-bit ad altissime prestazioni, compositore Dark Glass a 120+ fps e accelerazione grafica Vulkan/DXVK.
+  2. **Netbook Vintage & PC Storici (< 1.5 GB RAM, Intel Atom N280 / GMA 950)**: Abilita il runtime ultra-leggero con footprint a riposo di ~115 MB e swap compresso zRAM LZ4.
+  3. **Micro-Core Bare-Metal Libero**: Avvia il kernel nativo freestanding puro (`sistema/nucleo/kernel/`) direttamente su Framebuffer lineare a 32bpp con storage ATA/IDE, audio HDA e network stack autonomo.
+  4. **Installatore Permanente su Disco**: Permette l'installazione guidata GPT con persistenza totale dei dati e partizionamento conforme UEFI.
 
 ---
 
