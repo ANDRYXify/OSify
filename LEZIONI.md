@@ -9,6 +9,17 @@
   2. Motore grafico Dark Glass nativo su Framebuffer lineare (GOP/VESA a 32bpp) con doppi buffer, rendering geometrico e squircle, eliminando la dipendenza da server grafici pesanti.
   3. Ponte di compatibilita universale a sottosistemi multipli (ABI translation): riconosce automaticamente all'avvio il formato binario (.ify nativo, ELF Linux, PE Windows .exe, Mach-O macOS) e ne instrada le syscall direttamente sul silicio, garantendo la massima liberta e robustezza hardware.
 
+## 2026-10-17 — Protezione Memoria Livello 0: Zero-Page Sentinel, W^X e macOS-Style SIP & Seatbelt
+- **Area**: Kernel memory management, sicurezza hardware e compatibilita a livello 0
+- **Errore**: L'allocatore fisico PMM restituiva la pagina 0 (`0x0`), coincidente con il puntatore `NULL`, e mancava un controllo hardware preventivo contro exploit di tipo code-injection in memoria virtuale.
+- **Causa radice**: In C e nell'architettura x86/ARM, l'indirizzo `0x0` e formalmente `NULL` ed e storicamente bersaglio di attacchi Null-Pointer Dereference. Inoltre, permettere a una pagina virtuale di essere contemporaneamente scrivibile ed eseguibile (RWX) espone il sistema all'esecuzione di payload malevoli.
+- **Regola**:
+  1. Il PMM deve sempre preservare la pagina 0 (`0x0 - 0x1000`) come Null Sentinel permanente: le allocazioni per i processi partono da pagina 1 (`0x1000`).
+  2. Il VMM applica rigidamente il principio W^X (Write XOR Execute): qualsiasi richiesta di mappatura con permessi contemporanei di Scrittura ed Esecuzione viene respinta a livello hardware.
+  3. Integrita a Livello 0 (SIP & Seatbelt): l'albero `/Sistema` e bloccato in sola lettura hardware contro modifiche non autorizzate anche da parte di root, e i token di sicurezza isolano le chiamate raw disk/network per processi in sandbox.
+  4. Unificatore Percorsi: la traduzione a livello 0 intercetta trasparentemente percorsi Windows (`C:\...`), POSIX (`/home`, `/usr`) e macOS (`/Users`, `/Applications`) normalizzandoli sull'albero nativo OSify (`/Sistema`, `/Applicazioni`, `/Utenti`).
+
+
 
 ## 2026-10-17 — Sincronizzazione Binaria Etichette EFI & Prevenzione 'no such device'
 - **Area**: Firmware UEFI, GRUB EFI embedded e masterizzazione xorriso
