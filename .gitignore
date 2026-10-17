@@ -11,6 +11,8 @@ __pycache__/
 build/out/
 build/profile/
 build/cache/
+build/syslinux_alpine/
+build/*.c32
 
 # Virtual testbed storage images
 tests/sandbox/*.iso
