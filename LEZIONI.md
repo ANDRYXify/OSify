@@ -1,5 +1,23 @@
 # LEZIONI APPRESE — REGISTRO ERRORI E REGOLE ARCHITETTURALI OSIFY
 
+## 2026-10-17 — Sincronizzazione Binaria Etichette EFI & Prevenzione 'no such device'
+- **Area**: Firmware UEFI, GRUB EFI embedded e masterizzazione xorriso
+- **Errore**: All'avvio UEFI di OSify x86_64 e ARM64, GRUB si bloccava con il messaggio `error: no such device: alpine-std 3.20.3 ...`.
+- **Causa radice**: I binari EFI precompilati (`bootx64.efi`, `bootaa64.efi` ed `efi.img`) integrano internamente il comando `search --no-floppy --set=root --label "<etichetta>"`. Quando `xorriso` creava l'ISO con un'etichetta di volume arbitraria non coincidente, GRUB non riusciva a individuare il disco di boot e falliva l'impostazione della variabile `$root`.
+- **Regola**: Sostituire con patch binaria byte-per-byte (preservando l'identica lunghezza) l'etichetta originaria nei binari EFI con l'identità pura OSify (`OSify-2050-Gaming-x86_64` per 64-bit e `OSify-2050-ARM64-Ultimate` per ARM64) e passare la medesima etichetta al parametro `-V` di `xorriso`.
+
+## 2026-10-17 — Protezione Overlay Diskless & Prevenzione Purge Librerie di Sistema
+- **Area**: Initramfs live, Alpine diskless boot e integrità pacchetti
+- **Errore**: Durante l'avvio grafico, Xorg falliva segnalando librerie mancanti (`libudev.so.1`) che erano state correttamente inserite nell'archivio `localhost.apkovl.tar.gz`.
+- **Causa radice**: Lo script `init` dell'initramfs, in assenza del parametro kernel `keep_apk_new`, esegue `apk add --clean-protected`, eliminando dall'overlay tmpfs tutti i file non corrispondenti ai pacchetti registrati nell'archivio `apks/` della ISO.
+- **Regola**: Inserire sempre il parametro kernel `keep_apk_new=yes` nei menuentry di GRUB e nelle label di Syslinux, e ripulire la cartella `lib/apk` dal bundle prima della creazione dell'apkovl per impedire qualsiasi rimozione distruttiva dei binari o librerie desktop.
+
+## 2026-10-17 — Gestione Privilegi Server Xorg & Wrapper Setuid
+- **Area**: Server grafico X11, logging ed esecuzione non privilegiata
+- **Errore**: Xorg terminava con errore fatale `Cannot open log file /var/log/Xorg.0.log` e, specificando il parametro `-logfile`, con `Invalid argument -logfile with elevated privileges`.
+- **Causa radice**: Il binario `Xorg` (provvisto di wrapper setuid) rifiuta categoricamente per motivi di sicurezza il flag `-logfile` a runtime quando invocato con privilegi elevati, mentre l'avvio da utente non-root falliva nel creare o rinominare il file di log in `/var/log` non provvisto di permessi di scrittura universali.
+- **Regola**: Creare sempre a runtime `/var/log` e `/tmp/.X11-unix` con permessi `1777`, impostare `export DISPLAY=:0 XAUTHORITY=/home/osify/.Xauthority`, non passare mai il flag `-logfile` nel comando `startx`, e configurare `/etc/X11/Xwrapper.config` con `allowed_users = anybody` e `needs_root_rights = yes`.
+
 ## 2026-10-16 — Desktop Environment & macOS Experience
 - **Area**: Desktop layout, branding ed estetica utente
 - **Errore**: Il sistema presentava un'unica barra monolitica inferiore e un desktop ingombro, mancando dell'identità visiva distintiva macOS 2050 e del brand OSify.

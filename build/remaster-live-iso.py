@@ -71,6 +71,21 @@ def patch_kernel_binary(kernel_path):
             f.write(patched)
         print(f"[✓] Patch binaria kernel completata ({os.path.basename(kernel_path)}): soppresse {count} stringhe VGA early console")
 
+def patch_binary_string(file_path, old_bytes, new_bytes):
+    if not os.path.exists(file_path):
+        return False
+    if len(old_bytes) != len(new_bytes):
+        raise ValueError(f"old_bytes len ({len(old_bytes)}) != new_bytes len ({len(new_bytes)})")
+    with open(file_path, "rb") as f:
+        data = f.read()
+    if old_bytes in data:
+        data = data.replace(old_bytes, new_bytes)
+        with open(file_path, "wb") as f:
+            f.write(data)
+        print(f"[✓] Patch binaria EFI ({os.path.basename(file_path)}): {old_bytes.decode('latin1', 'replace')} -> {new_bytes.decode('latin1', 'replace')}")
+        return True
+    return False
+
 class CpioArchive:
     def __init__(self):
         self.entries = {}
@@ -1882,7 +1897,7 @@ nice -n 19 /usr/bin/osify-update daemon >/var/log/osify-autoupdate.log 2>&1 &
         f.write(f"""NAME="OSify"
 PRETTY_NAME="OSify {OSIFY_VERSION} (Vintage Universal Edition)"
 ID=osify
-ID_LIKE="slitaz debian linux"
+ID_LIKE=osify
 VERSION="{OSIFY_VERSION}"
 VERSION_ID="{OSIFY_VERSION}"
 HOME_URL="https://github.com/ANDRYXify/OSify"
@@ -2978,15 +2993,35 @@ def build_modern_x86_64():
 
     # Estrazione o compilazione runtime bundle desktop X11
     desktop_bundle = "/tmp/test_desktop_x64.tar.gz"
-    if not (os.path.exists(desktop_bundle) and os.path.getsize(desktop_bundle) > 50 * 1024 * 1024):
-        print("[+] Generazione bundle X11/Desktop x86_64 in container Docker...")
+    # Verifica presenza libudev.so.1 nel bundle o rigenerazione forzata
+    need_rebuild = True
+    if os.path.exists(desktop_bundle) and os.path.getsize(desktop_bundle) > 50 * 1024 * 1024:
+        # Verifica veloce se contiene libudev
+        ret = subprocess.run(f"tar -tzf '{desktop_bundle}' lib/libudev.so.1 2>/dev/null", shell=True)
+        if ret.returncode == 0:
+            need_rebuild = False
+
+    if need_rebuild:
+        print("[+] Generazione bundle X11/Desktop x86_64 con /lib e libudev in container Docker...")
         run("docker run --rm --platform linux/amd64 -v /tmp:/out alpine:3.20 sh -c '"
             "apk update -q && apk add -q --no-cache xinit xorg-server xf86-video-modesetting xf86-video-vesa xf86-input-libinput "
-            "openbox pcmanfm tint2 feh sakura dbus font-dejavu yad mesa-dri-gallium which && "
-            "tar -czf /out/test_desktop_x64.tar.gz /usr /etc/xdg /etc/X11 /etc/fonts /etc/gtk-3.0 /etc/pango /var/lib/dbus 2>/dev/null || true'")
+            "openbox pcmanfm tint2 feh sakura dbus font-dejavu yad mesa-dri-gallium which eudev eudev-libs && "
+            "tar -czf /out/test_desktop_x64.tar.gz /lib /usr /etc/xdg /etc/X11 /etc/fonts /etc/gtk-3.0 /etc/pango /var/lib/dbus 2>/dev/null || true'")
     
-    print("[i] Iniezione binari Xorg, Openbox, Tint2 e PCManFM in apkovl...")
+    print("[i] Iniezione binari Xorg, Openbox, Tint2, PCManFM e librerie di sistema in apkovl...")
     run(f"tar -xzf '{desktop_bundle}' -C '{apkovl_dir}' 2>/dev/null || true")
+    shutil.rmtree(os.path.join(apkovl_dir, "lib/apk"), ignore_errors=True)
+
+    # Garanzia symlink libudev.so.1 sia in /lib che in /usr/lib
+    for udev_dir in [os.path.join(apkovl_dir, "lib"), os.path.join(apkovl_dir, "usr/lib")]:
+        os.makedirs(udev_dir, exist_ok=True)
+    if os.path.exists(os.path.join(apkovl_dir, "lib/libudev.so.1")):
+        usr_udev = os.path.join(apkovl_dir, "usr/lib/libudev.so.1")
+        if not os.path.exists(usr_udev):
+            try:
+                os.symlink("/lib/libudev.so.1", usr_udev)
+            except Exception:
+                pass
 
     # Configurazione permessi Xorg setuid per avvio grafico infallibile
     for xbin in ["usr/libexec/Xorg", "usr/libexec/Xorg.wrap", "usr/bin/Xorg"]:
@@ -3114,6 +3149,30 @@ launcher_item_app = /usr/share/applications/osify-wifi.desktop
         with open(os.path.join(apkovl_dir, "usr/share/applications", d_name), "w") as f:
             f.write(f"[Desktop Entry]\nType=Application\nName={d_title}\nExec={d_exec}\nIcon={d_icon}\nComment={d_comm}\nTerminal=false\nCategories=System;\n")
 
+    # Iniezione Assistente Primo Avvio OOBE OSify
+    oobe_src = os.path.join(REPO_ROOT, "tools/osify-gui/osify-oobe.sh")
+    if os.path.exists(oobe_src):
+        for odst in [os.path.join(apkovl_dir, "usr/bin/osify-oobe"), os.path.join(apkovl_dir, "usr/local/bin/osify-oobe")]:
+            os.makedirs(os.path.dirname(odst), exist_ok=True)
+            shutil.copy2(oobe_src, odst)
+            os.chmod(odst, 0o755)
+
+    # Identità di Sistema Autonoma OSify (zero residui distro terze)
+    with open(os.path.join(apkovl_dir, "etc/os-release"), "w") as f:
+        f.write(f"""NAME="OSify"
+PRETTY_NAME="OSify {OSIFY_VERSION} (Ultra-Performance Edition)"
+ID=osify
+ID_LIKE=osify
+VERSION="{OSIFY_VERSION}"
+VERSION_ID="{OSIFY_VERSION}"
+HOME_URL="https://github.com/ANDRYXify/OSify"
+BUG_REPORT_URL="https://github.com/ANDRYXify/OSify/issues"
+SUPPORT_URL="https://github.com/ANDRYXify/OSify"
+ANSI_COLOR="0;36"
+""")
+    with open(os.path.join(apkovl_dir, "etc/issue"), "w") as f:
+        f.write("OSify 2050 (x86_64) \\n \\l\n\n")
+
     # Script sessione X11 (.xinitrc)
     xinitrc_content = """#!/bin/sh
 export DISPLAY=:0
@@ -3122,6 +3181,10 @@ feh --bg-fill /usr/share/images/osify-wallpaper.jpg 2>/dev/null || true
 tint2 -c /etc/xdg/tint2/osify-topbar.tint2rc 2>/dev/null &
 tint2 -c /etc/xdg/tint2/osify-dock.tint2rc 2>/dev/null &
 pcmanfm --desktop 2>/dev/null &
+# Assistente Primo Avvio OOBE OSify (Setup Wizard)
+if [ ! -f /home/osify/.config/osify/setup_done ]; then
+    (sleep 1 && /usr/bin/osify-oobe) &
+fi
 exec openbox-session
 """
     for x_path in [
@@ -3134,12 +3197,30 @@ exec openbox-session
             f.write(xinitrc_content)
         os.chmod(x_path, 0o755)
 
+    # Permessi Xorg Wrapper universali
+    xwrap_dir = os.path.join(apkovl_dir, "etc/X11")
+    os.makedirs(xwrap_dir, exist_ok=True)
+    with open(os.path.join(xwrap_dir, "Xwrapper.config"), "w") as f:
+        f.write("allowed_users = anybody\nneeds_root_rights = yes\n")
+
     # Script supervisore sessione grafica
     session_gui = """#!/bin/sh
 # Supervisore Sessione Desktop OSify 2050
 mkdir -p /home/osify/.config/openbox
 mkdir -p /home/osify/.config/tint2
 mkdir -p /home/osify/.config/pcmanfm/default
+mkdir -p /home/osify/.config/osify
+chown -R osify:osify /home/osify 2>/dev/null || true
+
+# Configura hostname ufficiale per prevenire errori xauth
+hostname osify 2>/dev/null || true
+echo "osify" > /etc/hostname 2>/dev/null || true
+grep -q "osify" /etc/hosts 2>/dev/null || echo "127.0.0.1 osify localhost" >> /etc/hosts 2>/dev/null || true
+
+# Permessi dispositivi video, console e log per server X11
+chmod 666 /dev/tty* /dev/fb* /dev/dri/* 2>/dev/null || true
+mkdir -p /home/osify/.local/share/xorg /tmp/.X11-unix /var/log
+chmod 1777 /tmp /tmp/.X11-unix /var/log 2>/dev/null || true
 chown -R osify:osify /home/osify 2>/dev/null || true
 
 # Inizializza D-Bus di sistema
@@ -3152,13 +3233,20 @@ if [ -x /usr/bin/dbus-daemon ] && [ ! -e /run/dbus/system_bus_socket ]; then
     /usr/bin/dbus-daemon --system --fork 2>/dev/null || true
 fi
 
-# Avvia sessione X11 con utente osify
+# Avvia sessione X11
 export HOME=/home/osify
 export USER=osify
 export LOGNAME=osify
+export DISPLAY=:0
+export XAUTHORITY=/home/osify/.Xauthority
+touch /home/osify/.Xauthority 2>/dev/null || true
+chown -R osify:osify /home/osify 2>/dev/null || true
+
+echo "[OSify-Session] Inizializzazione Display Server Xorg..." > /dev/console 2>/dev/null || true
 if [ -x /usr/bin/startx ]; then
-    exec /bin/su -l osify -c "/usr/bin/startx /home/osify/.xinitrc -- /usr/bin/Xorg :0 vt1 -keeptty"
+    /usr/bin/startx /home/osify/.xinitrc -- /usr/bin/Xorg :0 vt1 -keeptty 2>&1 | tee -a /var/log/osify-session.log > /dev/console
 fi
+sleep 2
 """
     gui_script = os.path.join(apkovl_dir, "usr/local/bin/osify-session-gui")
     os.makedirs(os.path.dirname(gui_script), exist_ok=True)
@@ -3171,7 +3259,7 @@ fi
         f.write("""# OSify 2.0 Inittab — Avvio Grafico Diretto
 ::sysinit:/sbin/openrc sysinit
 ::sysinit:/sbin/openrc boot
-::wait:/sbin/openrc default
+::once:/sbin/openrc default
 ::ctrlaltdel:/sbin/reboot
 ::shutdown:/sbin/openrc shutdown
 tty1::respawn:/usr/local/bin/osify-session-gui
@@ -3242,22 +3330,34 @@ osify ALL=(ALL) NOPASSWD: ALL
     apkovl_tar = os.path.join(iso_root, "localhost.apkovl.tar.gz")
     run(f"tar -czf '{apkovl_tar}' -C '{apkovl_dir}' .")
 
+    # Generazione Bootsplash Framebuffer nativo OSify
+    try:
+        splash_src = os.path.join(REPO_ROOT, "desktop/branding/wallpapers/osify-clean-1920x1080.png")
+        if not os.path.exists(splash_src):
+            splash_src = os.path.join(REPO_ROOT, "OSify.png")
+        s_img = Image.open(splash_src).resize((1024, 768), Image.Resampling.LANCZOS)
+        s_img.save(os.path.join(iso_root, "fbsplash.ppm"), "PPM")
+        with open(os.path.join(iso_root, "fbsplash.cfg"), "w") as f:
+            f.write("BOX 362 550 662 560 #1e293b\nBAR 364 552 660 558 #06b6d4\nIMG_ALIGN=CM\n")
+    except Exception:
+        pass
+
     # Configurazione GRUB UEFI ufficiale — Avvio Diretto Immediato (set timeout=0)
     grub_cfg = """set timeout=0
 set default=0
 
 menuentry "OSify" {
-    linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage quiet splash loglevel=0 console=tty3 vt.global_cursor_default=0 logo.nologo rd.systemd.show_status=false rd.udev.log_priority=0 udev.log_priority=0 rw autologin
+    linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage keep_apk_new=yes quiet splash loglevel=0 console=tty1 console=ttyS0 vt.global_cursor_default=0 logo.nologo rd.systemd.show_status=false rd.udev.log_priority=0 udev.log_priority=0 rw autologin
     initrd /boot/initramfs-lts
 }
 
 menuentry "OSify Modalita Compatibile (Emulatore / Safe Graphics)" {
-    linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage nomodeset vga=788 quiet loglevel=1 vt.global_cursor_default=0 logo.nologo console=tty1 rw autologin
+    linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage keep_apk_new=yes nomodeset vga=788 quiet loglevel=1 vt.global_cursor_default=0 logo.nologo console=tty1 rw autologin
     initrd /boot/initramfs-lts
 }
 
 menuentry "OSify RAM Rescue Mode" {
-    linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage copytoram quiet loglevel=1 console=tty1 rw autologin
+    linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage keep_apk_new=yes copytoram quiet loglevel=1 console=tty1 rw autologin
     initrd /boot/initramfs-lts
 }
 """
@@ -3314,48 +3414,69 @@ endif
             if not os.path.exists(efi_dst):
                 shutil.copy2(efi_src, efi_dst)
 
+    # Patch binaria etichette EFI: sostituzione dell'etichetta incorporata con identità pura OSify
+    old_label_x64 = b"alpine-std 3.20.3 x86_64"
+    new_label_x64 = b"OSify-2050-Gaming-x86_64"
+    for efi_target in [
+        os.path.join(iso_root, "boot/grub/efi.img"),
+        os.path.join(iso_root, "efi/boot/bootx64.efi"),
+        os.path.join(iso_root, "EFI/BOOT/BOOTX64.EFI")
+    ]:
+        patch_binary_string(efi_target, old_label_x64, new_label_x64)
+
     # Configurazione Syslinux Legacy BIOS ufficiale
-    syslinux_cfg = """TIMEOUT 30
+    syslinux_cfg = """TIMEOUT 5
 DEFAULT osify
 
 LABEL osify
     MENU LABEL OSify
     LINUX /boot/vmlinuz-lts
     INITRD /boot/initramfs-lts
-    APPEND modules=loop,squashfs,sd-mod,usb-storage quiet splash loglevel=1 vt.global_cursor_default=0 logo.nologo console=tty1 rw autologin
+    APPEND modules=loop,squashfs,sd-mod,usb-storage keep_apk_new=yes console=tty1 console=ttyS0 quiet splash loglevel=1 vt.global_cursor_default=0 logo.nologo rw autologin
 
 LABEL install
     MENU LABEL Installa OSify su Disco Fisso
     LINUX /boot/vmlinuz-lts
     INITRD /boot/initramfs-lts
-    APPEND modules=loop,squashfs,sd-mod,usb-storage osify.install=1 quiet splash loglevel=1 vt.global_cursor_default=0 logo.nologo console=tty1 rw autologin
+    APPEND modules=loop,squashfs,sd-mod,usb-storage keep_apk_new=yes console=tty1 console=ttyS0 osify.install=1 quiet splash loglevel=1 vt.global_cursor_default=0 logo.nologo rw autologin
 
 LABEL safe
     MENU LABEL OSify Modalita Compatibile (Emulatore / Safe Graphics)
     LINUX /boot/vmlinuz-lts
     INITRD /boot/initramfs-lts
-    APPEND modules=loop,squashfs,sd-mod,usb-storage nomodeset vga=788 quiet loglevel=1 vt.global_cursor_default=0 logo.nologo console=tty1 rw autologin
+    APPEND modules=loop,squashfs,sd-mod,usb-storage keep_apk_new=yes console=tty1 console=ttyS0 nomodeset vga=788 quiet loglevel=1 vt.global_cursor_default=0 logo.nologo rw autologin
 
 LABEL rescue
     MENU LABEL OSify RAM Rescue Mode
     LINUX /boot/vmlinuz-lts
     INITRD /boot/initramfs-lts
-    APPEND modules=loop,squashfs,sd-mod,usb-storage copytoram quiet loglevel=1 console=tty1 rw autologin
+    APPEND modules=loop,squashfs,sd-mod,usb-storage keep_apk_new=yes console=tty1 console=ttyS0 copytoram quiet loglevel=1 rw autologin
 """
     syslinux_path = os.path.join(iso_root, "boot/syslinux/syslinux.cfg")
     os.makedirs(os.path.dirname(syslinux_path), exist_ok=True)
     with open(syslinux_path, "w") as f:
         f.write(syslinux_cfg)
 
+    # Rimozione preventiva del vecchio boot.cat (xorriso lo rigenera fresco)
+    cat_path = os.path.join(iso_root, "boot/syslinux/boot.cat")
+    if os.path.exists(cat_path):
+        os.remove(cat_path)
+
+    mbr_path = os.path.join(iso_root, "boot/syslinux/isohdpfx.bin")
+    if os.path.exists(mbr_path):
+        mbr_arg = f"-isohybrid-mbr '{mbr_path}'"
+    else:
+        mbr_arg = f"-isohybrid-mbr --interval:local_fs:0s-15s:zero_mbrpt,zero_gpt:'{src_iso}'"
+
     with open(os.path.join(iso_root, "OSify-Version.txt"), "w") as f:
-        f.write("OSify Live System (x86-64-v3 Gaming & Streaming Edition)\nKernel: Linux 64-bit BORE/LTS\n")
+        f.write("OSify Live System (x86-64-v3 Gaming & Streaming Edition)\nKernel: OSify 64-bit HAL\n")
 
     print("[i] Masterizzazione immagine ibrida 64-bit avviabile (UEFI + BIOS)...")
     os.makedirs(OUT_RELEASE_DIR, exist_ok=True)
     cmd_xorriso = (
         f"xorriso -as mkisofs -r -J "
-        f"-V 'OSIFY_X64' "
-        f"-isohybrid-mbr --interval:local_fs:0s-15s:zero_mbrpt,zero_gpt:'{src_iso}' "
+        f"-V 'OSify-2050-Gaming-x86_64' "
+        f"{mbr_arg} "
         f"-partition_cyl_align on -partition_offset 0 "
         f"-partition_hd_cyl 64 -partition_sec_hd 32 --mbr-force-bootable "
         f"-iso_mbr_part_type 0x00 "
@@ -3411,15 +3532,33 @@ def build_arm64():
     os.makedirs(os.path.join(apkovl_dir, "home/osify"), exist_ok=True)
 
     desktop_bundle = "/tmp/test_desktop_arm64.tar.gz"
-    if not (os.path.exists(desktop_bundle) and os.path.getsize(desktop_bundle) > 50 * 1024 * 1024):
-        print("[+] Generazione bundle X11/Desktop ARM64 in container Docker...")
+    need_rebuild_arm = True
+    if os.path.exists(desktop_bundle) and os.path.getsize(desktop_bundle) > 50 * 1024 * 1024:
+        ret = subprocess.run(f"tar -tzf '{desktop_bundle}' lib/libudev.so.1 2>/dev/null", shell=True)
+        if ret.returncode == 0:
+            need_rebuild_arm = False
+
+    if need_rebuild_arm:
+        print("[+] Generazione bundle X11/Desktop ARM64 con /lib e libudev in container Docker...")
         run("docker run --rm --platform linux/arm64 -v /tmp:/out alpine:3.20 sh -c '"
             "apk update -q && apk add -q --no-cache xinit xorg-server xf86-video-modesetting xf86-input-libinput "
-            "openbox pcmanfm tint2 feh sakura dbus font-dejavu yad mesa-dri-gallium which && "
-            "tar -czf /out/test_desktop_arm64.tar.gz /usr /etc/xdg /etc/X11 /etc/fonts /etc/gtk-3.0 /etc/pango /var/lib/dbus 2>/dev/null || true'")
+            "openbox pcmanfm tint2 feh sakura dbus font-dejavu yad mesa-dri-gallium which eudev eudev-libs && "
+            "tar -czf /out/test_desktop_arm64.tar.gz /lib /usr /etc/xdg /etc/X11 /etc/fonts /etc/gtk-3.0 /etc/pango /var/lib/dbus 2>/dev/null || true'")
     
-    print("[i] Iniezione binari Xorg, Openbox, Tint2 e PCManFM in apkovl ARM64...")
+    print("[i] Iniezione binari Xorg, Openbox, Tint2, PCManFM e librerie di sistema in apkovl ARM64...")
     run(f"tar -xzf '{desktop_bundle}' -C '{apkovl_dir}' 2>/dev/null || true")
+    shutil.rmtree(os.path.join(apkovl_dir, "lib/apk"), ignore_errors=True)
+
+    # Garanzia symlink libudev.so.1 sia in /lib che in /usr/lib
+    for udev_dir in [os.path.join(apkovl_dir, "lib"), os.path.join(apkovl_dir, "usr/lib")]:
+        os.makedirs(udev_dir, exist_ok=True)
+    if os.path.exists(os.path.join(apkovl_dir, "lib/libudev.so.1")):
+        usr_udev = os.path.join(apkovl_dir, "usr/lib/libudev.so.1")
+        if not os.path.exists(usr_udev):
+            try:
+                os.symlink("/lib/libudev.so.1", usr_udev)
+            except Exception:
+                pass
 
     for xbin in ["usr/libexec/Xorg", "usr/libexec/Xorg.wrap", "usr/bin/Xorg"]:
         xp = os.path.join(apkovl_dir, xbin)
@@ -3540,6 +3679,30 @@ launcher_item_app = /usr/share/applications/osify-wifi.desktop
         with open(os.path.join(apkovl_dir, "usr/share/applications", d_name), "w") as f:
             f.write(f"[Desktop Entry]\nType=Application\nName={d_title}\nExec={d_exec}\nIcon={d_icon}\nComment={d_comm}\nTerminal=false\nCategories=System;\n")
 
+    # Iniezione Assistente Primo Avvio OOBE OSify
+    oobe_src = os.path.join(REPO_ROOT, "tools/osify-gui/osify-oobe.sh")
+    if os.path.exists(oobe_src):
+        for odst in [os.path.join(apkovl_dir, "usr/bin/osify-oobe"), os.path.join(apkovl_dir, "usr/local/bin/osify-oobe")]:
+            os.makedirs(os.path.dirname(odst), exist_ok=True)
+            shutil.copy2(oobe_src, odst)
+            os.chmod(odst, 0o755)
+
+    # Identità di Sistema Autonoma OSify (zero residui distro terze)
+    with open(os.path.join(apkovl_dir, "etc/os-release"), "w") as f:
+        f.write(f"""NAME="OSify"
+PRETTY_NAME="OSify {OSIFY_VERSION} (ARM64 Universal Edition)"
+ID=osify
+ID_LIKE=osify
+VERSION="{OSIFY_VERSION}"
+VERSION_ID="{OSIFY_VERSION}"
+HOME_URL="https://github.com/ANDRYXify/OSify"
+BUG_REPORT_URL="https://github.com/ANDRYXify/OSify/issues"
+SUPPORT_URL="https://github.com/ANDRYXify/OSify"
+ANSI_COLOR="0;36"
+""")
+    with open(os.path.join(apkovl_dir, "etc/issue"), "w") as f:
+        f.write("OSify 2050 (ARM64) \\n \\l\n\n")
+
     xinitrc_content = """#!/bin/sh
 export DISPLAY=:0
 xsetroot -solid "#07090e"
@@ -3547,6 +3710,10 @@ feh --bg-fill /usr/share/images/osify-wallpaper.jpg 2>/dev/null || true
 tint2 -c /etc/xdg/tint2/osify-topbar.tint2rc 2>/dev/null &
 tint2 -c /etc/xdg/tint2/osify-dock.tint2rc 2>/dev/null &
 pcmanfm --desktop 2>/dev/null &
+# Assistente Primo Avvio OOBE OSify (Setup Wizard)
+if [ ! -f /home/osify/.config/osify/setup_done ]; then
+    (sleep 1 && /usr/bin/osify-oobe) &
+fi
 exec openbox-session
 """
     for x_path in [
@@ -3559,11 +3726,29 @@ exec openbox-session
             f.write(xinitrc_content)
         os.chmod(x_path, 0o755)
 
+    # Permessi Xorg Wrapper universali ARM64
+    xwrap_dir = os.path.join(apkovl_dir, "etc/X11")
+    os.makedirs(xwrap_dir, exist_ok=True)
+    with open(os.path.join(xwrap_dir, "Xwrapper.config"), "w") as f:
+        f.write("allowed_users = anybody\nneeds_root_rights = yes\n")
+
     session_gui = """#!/bin/sh
 # Supervisore Sessione Desktop OSify 2050 (ARM64)
 mkdir -p /home/osify/.config/openbox
 mkdir -p /home/osify/.config/tint2
 mkdir -p /home/osify/.config/pcmanfm/default
+mkdir -p /home/osify/.config/osify
+chown -R osify:osify /home/osify 2>/dev/null || true
+
+# Configura hostname ufficiale per prevenire errori xauth
+hostname osify 2>/dev/null || true
+echo "osify" > /etc/hostname 2>/dev/null || true
+grep -q "osify" /etc/hosts 2>/dev/null || echo "127.0.0.1 osify localhost" >> /etc/hosts 2>/dev/null || true
+
+# Permessi dispositivi video, console e log per server X11
+chmod 666 /dev/tty* /dev/fb* /dev/dri/* 2>/dev/null || true
+mkdir -p /home/osify/.local/share/xorg /tmp/.X11-unix /var/log
+chmod 1777 /tmp /tmp/.X11-unix /var/log 2>/dev/null || true
 chown -R osify:osify /home/osify 2>/dev/null || true
 
 # Inizializza D-Bus di sistema
@@ -3576,13 +3761,20 @@ if [ -x /usr/bin/dbus-daemon ] && [ ! -e /run/dbus/system_bus_socket ]; then
     /usr/bin/dbus-daemon --system --fork 2>/dev/null || true
 fi
 
-# Avvia sessione X11 con utente osify
+# Avvia sessione X11
 export HOME=/home/osify
 export USER=osify
 export LOGNAME=osify
+export DISPLAY=:0
+export XAUTHORITY=/home/osify/.Xauthority
+touch /home/osify/.Xauthority 2>/dev/null || true
+chown -R osify:osify /home/osify 2>/dev/null || true
+
+echo "[OSify-Session] Inizializzazione Display Server Xorg ARM64..." > /dev/console 2>/dev/null || true
 if [ -x /usr/bin/startx ]; then
-    exec /bin/su -l osify -c "/usr/bin/startx /home/osify/.xinitrc -- /usr/bin/Xorg :0 vt1 -keeptty"
+    /usr/bin/startx /home/osify/.xinitrc -- /usr/bin/Xorg :0 vt1 -keeptty 2>&1 | tee -a /var/log/osify-session.log > /dev/console
 fi
+sleep 2
 """
     gui_script = os.path.join(apkovl_dir, "usr/local/bin/osify-session-gui")
     os.makedirs(os.path.dirname(gui_script), exist_ok=True)
@@ -3594,7 +3786,7 @@ fi
         f.write("""# OSify 2.0 Inittab — Avvio Grafico Diretto
 ::sysinit:/sbin/openrc sysinit
 ::sysinit:/sbin/openrc boot
-::wait:/sbin/openrc default
+::once:/sbin/openrc default
 ::ctrlaltdel:/sbin/reboot
 ::shutdown:/sbin/openrc shutdown
 tty1::respawn:/usr/local/bin/osify-session-gui
@@ -3663,16 +3855,28 @@ osify ALL=(ALL) NOPASSWD: ALL
     apkovl_tar = os.path.join(iso_root, "localhost.apkovl.tar.gz")
     run(f"tar -czf '{apkovl_tar}' -C '{apkovl_dir}' .")
 
+    # Generazione Bootsplash Framebuffer nativo OSify ARM64
+    try:
+        splash_src = os.path.join(REPO_ROOT, "desktop/branding/wallpapers/osify-clean-1920x1080.png")
+        if not os.path.exists(splash_src):
+            splash_src = os.path.join(REPO_ROOT, "OSify.png")
+        s_img = Image.open(splash_src).resize((1024, 768), Image.Resampling.LANCZOS)
+        s_img.save(os.path.join(iso_root, "fbsplash.ppm"), "PPM")
+        with open(os.path.join(iso_root, "fbsplash.cfg"), "w") as f:
+            f.write("BOX 362 550 662 560 #1e293b\nBAR 364 552 660 558 #06b6d4\nIMG_ALIGN=CM\n")
+    except Exception:
+        pass
+
     grub_cfg = """set timeout=0
 set default=0
 
 menuentry "OSify ARM64" {
-    linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage quiet splash loglevel=0 console=tty3 vt.global_cursor_default=0 logo.nologo rd.systemd.show_status=false rd.udev.log_priority=0 udev.log_priority=0 rw autologin
+    linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage keep_apk_new=yes quiet splash loglevel=0 console=tty1 console=ttyS0 vt.global_cursor_default=0 logo.nologo rd.systemd.show_status=false rd.udev.log_priority=0 udev.log_priority=0 rw autologin
     initrd /boot/initramfs-lts
 }
 
 menuentry "OSify ARM64 Safe Graphics" {
-    linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage nomodeset quiet loglevel=1 vt.global_cursor_default=0 logo.nologo console=tty1 rw autologin
+    linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage keep_apk_new=yes nomodeset quiet loglevel=1 vt.global_cursor_default=0 logo.nologo console=tty1 rw autologin
     initrd /boot/initramfs-lts
 }
 """
@@ -3680,6 +3884,16 @@ menuentry "OSify ARM64 Safe Graphics" {
         os.makedirs(os.path.dirname(g_dst), exist_ok=True)
         with open(g_dst, "w") as f:
             f.write(grub_cfg)
+
+    # Patch binaria etichette EFI ARM64
+    old_label_arm = b"alpine-std 3.20.3 aarch64"
+    new_label_arm = b"OSify-2050-ARM64-Ultimate"
+    for efi_target in [
+        os.path.join(iso_root, "boot/grub/efi.img"),
+        os.path.join(iso_root, "efi/boot/bootaa64.efi"),
+        os.path.join(iso_root, "EFI/BOOT/BOOTAA64.EFI")
+    ]:
+        patch_binary_string(efi_target, old_label_arm, new_label_arm)
 
     startup_nsh = """@echo -off
 cls
@@ -3710,7 +3924,7 @@ endif
     os.makedirs(OUT_RELEASE_DIR, exist_ok=True)
     cmd_xorriso = (
         f"xorriso -as mkisofs -r -J "
-        f"-V 'OSIFY_ARM64' "
+        f"-V 'OSify-2050-ARM64-Ultimate' "
         f"-eltorito-alt-boot -e '/boot/grub/efi.img' -no-emul-boot -isohybrid-gpt-basdat "
         f"-o '{DEST_ARM64_ISO}' '{iso_root}'"
     )
