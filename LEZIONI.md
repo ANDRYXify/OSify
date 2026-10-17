@@ -1,5 +1,18 @@
 # LEZIONI APPRESE — REGISTRO ERRORI E REGOLE ARCHITETTURALI OSIFY
 
+## 2026-10-17 — Risoluzione Schermo Nero all'Avvio e Bootsplash Solo-Logo (Windows/Apple Style)
+- **Area**: Avvio del sistema live, bootsplash framebuffer, PID 1 init e handoff sessione grafica
+- **Errore**: All'avvio reale di OSify su hardware fisico o macchine virtuali, dopo lo splashscreen iniziale il sistema si bloccava su uno schermo nero permanente senza mai caricare il desktop; inoltre lo splashscreen conteneva testi e sottotitoli ridondanti.
+- **Causa radice**:
+  1. Nel rootfs SliTaz originale, `/init` tentava uno spostamento distruttivo di `/` in RAM con `mv /$i /mnt`, cancellando `/bin` e `/lib` sotto i piedi del kernel ed esaurendo i binari (`busybox: not found`, Kernel panic).
+  2. La suddivisione in 4 archivi frammentati (`rootfs1..4.gz`) introduceva fallimenti nel loop device e nel display server; SLiM falliva l'autologin saltando `~/.xinitrc` e lasciando Xorg aperto ma privo di client window manager.
+  3. Il bootsplash originale generava stringhe di testo ("Sistema Operativo Autonomo", "OSify") non conformi allo standard pulito ed essenziale dei sistemi operativi premium moderni (Windows, macOS).
+- **Regola**:
+  1. Bootsplash Solo-Logo: Lo splashscreen deve contenere unicamente il logo OSify squircle centrato (con glow radiale) su sfondo nero OLED (`#07090e`), eliminando categoricamente qualsiasi testo o sottotitolo.
+  2. Rootfs Unificato: Tutti i layer del sistema operativo vengono fusi in un singolo rootfs monolitico decompresso direttamente in memoria RAM all'avvio dal kernel.
+  3. Master Init Diretto: `/init` esegue una sequenza pulita e non distruttiva (montaggio di `/proc`, `/sys`, `/dev`, `/run`, `/dev/pts`, avvio del bootsplash) ed esegue direttamente `/sbin/init "$@"` senza spostamenti distruttivi di directory.
+  4. Handoff Grafico Garantito: SLiM delega l'avvio della sessione grafica a `~/.xinitrc` per tutti gli utenti live (`osify`, `tux`, `root`), il quale invoca `osify-session` con Openbox, Dual Panel macOS 2050 (Top Bar + Floating Dock), PCManFM e Wizard OOBE di benvenuto in italiano.
+
 ## 2026-10-17 — Network Stack Bare-Metal, Audio Driver Intel HDA & Installatore Guidato su Disco Fisso GPT
 - **Area**: Rete bare-metal, driver audio PCI, formattazione stringhe freestanding e partizionamento disco persistente
 - **Errore**: Mancanza di connettivita automatica DHCP a basso livello, assenza di audio feedback hardware con mixer DMA, formattazione MAC address fallita in `osify_snprintf` per assenza di supporto padding width/zero-pad, e impossibilita per l'utente finale di installare permanentemente il kernel sul disco interno GPT.

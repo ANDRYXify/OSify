@@ -86,6 +86,19 @@ def patch_binary_string(file_path, old_bytes, new_bytes):
         return True
     return False
 
+def safe_lzma_decompress(data):
+    try:
+        return lzma.decompress(data)
+    except Exception:
+        pass
+    try:
+        d = lzma.LZMADecompressor(format=lzma.FORMAT_ALONE)
+        return d.decompress(data)
+    except Exception:
+        pass
+    d = lzma.LZMADecompressor(format=lzma.FORMAT_AUTO)
+    return d.decompress(data)
+
 class CpioArchive:
     def __init__(self):
         self.entries = {}
@@ -386,9 +399,7 @@ def create_boot_splash(dest_jpg):
         logo = logo.resize((128, 128), LANCZOS_FILTER)
         img.paste(logo, (center_x - 64, center_y - 64), logo)
 
-    draw = ImageDraw.Draw(img)
-    draw.text((center_x, center_y + 80), "OSify", fill=(255, 255, 255), anchor="mm")
-    draw.text((center_x, center_y + 98), "Sistema Operativo Autonomo", fill=(100, 116, 139), anchor="mm")
+    # Solo il logo iconico centrato con glow radiale: zero testo, zero sottotitoli
     img.save(dest_jpg, "JPEG", quality=98)
 
 CLEAN_XINITRC = """#!/bin/sh
@@ -599,7 +610,7 @@ def remaster_rootfs3(work_dir, iso_root, wallpaper_jpg):
     r3_gz = os.path.join(iso_root, "boot/rootfs3.gz")
     
     with open(r3_gz, "rb") as f:
-        r3_data = lzma.decompress(f.read())
+        r3_data = safe_lzma_decompress(f.read())
     extract_cpio_archive(r3_data, r3_work)
 
     # 1. Configurazione SLIM per autologin forzato e tema osify con fallback indistruttibile
@@ -612,7 +623,7 @@ console_cmd         /usr/bin/xterm -C -fg white -bg black +sb -T "Console login"
 xauth_path          /usr/bin/xauth 
 authfile            /var/run/slim.auth
 hidecursor          true
-login_cmd           exec /bin/sh -l /usr/bin/osify-session
+login_cmd           exec /bin/sh -l ~/.xinitrc %session
 auto_login          yes
 default_user        osify
 current_theme       osify
@@ -1090,7 +1101,18 @@ Plugin {
         "root/.config/lxpanel"
     ]:
         for prof in ["default", "slitaz", "original"]:
-            panels_dir = os.path.join(r3_work, base_p, prof, "panels")
+            prof_path = os.path.join(r3_work, base_p, prof)
+            if os.path.exists(prof_path) and not os.path.isdir(prof_path):
+                try:
+                    os.remove(prof_path)
+                except Exception:
+                    pass
+            panels_dir = os.path.join(prof_path, "panels")
+            if os.path.exists(panels_dir) and not os.path.isdir(panels_dir):
+                try:
+                    os.remove(panels_dir)
+                except Exception:
+                    pass
             os.makedirs(panels_dir, exist_ok=True)
             # Rimuovi il vecchio panel monolitico se presente
             old_p = os.path.join(panels_dir, "panel")
@@ -1381,25 +1403,25 @@ MENU COLOR timeout_msg  *   #00000000 #00000000 none
 LABEL osify
     MENU LABEL OSify
     KERNEL /boot/bzImage
-    INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
+    INITRD /boot/rootfs4.gz
     APPEND root=/dev/null tmpram=0 autologin lang=it_IT kmap=it rw quiet splash loglevel=0 console=tty3 vt.global_cursor_default=0 logo.nologo
 
 LABEL turbo
     MENU LABEL OSify Prestazioni Turbo
     KERNEL /boot/bzImage
-    INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
+    INITRD /boot/rootfs4.gz
     APPEND root=/dev/null tmpram=0 autologin lang=it_IT kmap=it rw quiet splash loglevel=0 console=tty3 vt.global_cursor_default=0 logo.nologo osify.turbo=1
 
 LABEL safe
     MENU LABEL OSify Modalita Compatibile (Emulatore / Safe Graphics)
     KERNEL /boot/bzImage
-    INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
+    INITRD /boot/rootfs4.gz
     APPEND root=/dev/null tmpram=0 nomodeset vga=788 autologin lang=it_IT kmap=it rw quiet loglevel=1 console=tty1 vt.global_cursor_default=0 logo.nologo
 
 LABEL install
     MENU LABEL Installa OSify su Disco Fisso
     KERNEL /boot/bzImage
-    INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
+    INITRD /boot/rootfs4.gz
     APPEND root=/dev/null tmpram=0 autologin lang=it_IT kmap=it rw quiet splash loglevel=0 console=tty3 vt.global_cursor_default=0 logo.nologo osify.install=1
 
 LABEL memtest
@@ -1419,16 +1441,23 @@ LABEL memtest
     # Remastering di rootfs3 (SLIM, LXPanel, Openbox)
     remaster_rootfs3(work_dir, iso_root, wallpaper_jpg)
 
-    # Remastering rootfs4
-    print("[i] Remastering rootfs4 desktop e toolchain...")
+    # Remastering rootfs4 con unificazione completa di tutti i layer
+    print("[i] Unificazione di tutti i layer rootfs (1, 2, 3, 4) in rootfs4...")
     r4_work = os.path.join(work_dir, "rootfs4")
     os.makedirs(r4_work, exist_ok=True)
+
+    for r_sub in ["boot/rootfs1.gz", "boot/rootfs2.gz", "boot/rootfs3.gz"]:
+        r_path = os.path.join(iso_root, r_sub)
+        if os.path.exists(r_path):
+            with open(r_path, "rb") as f:
+                sub_data = safe_lzma_decompress(f.read())
+            extract_cpio_archive(sub_data, r4_work)
+
     r4_gz = os.path.join(iso_root, "boot/rootfs4.gz")
-    
     with open(r4_gz, "rb") as f:
-        r4_data = lzma.decompress(f.read())
+        r4_data = safe_lzma_decompress(f.read())
     n_files = extract_cpio_archive(r4_data, r4_work)
-    print(f"[✓] Decompressi {n_files} file da rootfs4.gz senza errori")
+    print(f"[✓] Layer unificati con successo: {n_files} file estratti nel rootfs unico")
 
     img_dir = os.path.join(r4_work, "usr/share/images")
     os.makedirs(img_dir, exist_ok=True)
@@ -1707,7 +1736,7 @@ LABEL memtest
             lzma_cpio = os.path.join(tmp_d, "fs.cpio.lzma")
             if os.path.exists(lzma_cpio):
                 with open(lzma_cpio, "rb") as f:
-                    raw_cpio = lzma.decompress(f.read())
+                    raw_cpio = safe_lzma_decompress(f.read())
                 with open(os.path.join(tmp_d, "fs.cpio"), "wb") as f:
                     f.write(raw_cpio)
                 run(f"cd '{tmp_d}' && cpio -idmv < fs.cpio >/dev/null 2>&1")
@@ -2669,7 +2698,18 @@ WINDOW_MANAGER="openbox"
         "root/.config/lxpanel"
     ]:
         for prof in ["default", "slitaz", "original"]:
-            panels_dir = os.path.join(r4_work, base_p, prof, "panels")
+            prof_path = os.path.join(r4_work, base_p, prof)
+            if os.path.exists(prof_path) and not os.path.isdir(prof_path):
+                try:
+                    os.remove(prof_path)
+                except Exception:
+                    pass
+            panels_dir = os.path.join(prof_path, "panels")
+            if os.path.exists(panels_dir) and not os.path.isdir(panels_dir):
+                try:
+                    os.remove(panels_dir)
+                except Exception:
+                    pass
             os.makedirs(panels_dir, exist_ok=True)
             old_p = os.path.join(panels_dir, "panel")
             if os.path.exists(old_p):
@@ -2846,9 +2886,13 @@ WINDOW_MANAGER="openbox"
             f.write(itab_content)
         os.chmod(inittab_path, 0o644)
 
-    os.remove(r4_gz)
-    archive4 = CpioArchive.from_bytes(r4_data)
-    archive4.import_directory(r4_work)
+    # Scrittura ~/.xinitrc per tutti gli utenti live
+    for u in ["home/osify", "home/tux", "etc/skel", "root"]:
+        x_path = os.path.join(r4_work, u, ".xinitrc")
+        os.makedirs(os.path.dirname(x_path), exist_ok=True)
+        with open(x_path, "w") as f:
+            f.write("#!/bin/sh\nexec /usr/bin/osify-session\n")
+        os.chmod(x_path, 0o755)
 
     # Master Init Nativo OSify 2050 (PID 1 infallibile: zero spostamenti distruttivi, zero Kernel Panic)
     master_init = """#!/bin/sh
@@ -2870,7 +2914,6 @@ mkdir -p /dev/pts /dev/shm
 export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:$PATH
 
 # 4. Bootsplash grafico silenzioso OSify sul framebuffer /dev/fb0
-# Avvia animazione reale centrata con logo luminescente e barra dinamica
 if [ -e /dev/fb0 ] && [ -x /bin/osify-bootsplash ]; then
     /bin/osify-bootsplash &
 elif [ -e /dev/fb0 ] && [ -x /usr/bin/osify-bootsplash ]; then
@@ -2882,19 +2925,22 @@ exec 1>/run/boot.log 2>&1
 
 # 6. Esecuzione definitiva dell'init di sistema (PID 1 non termina MAI)
 if [ -x /sbin/init ]; then
-    exec /sbin/init
+    exec /sbin/init "$@"
 elif [ -x /bin/busybox ]; then
-    exec /bin/busybox init
+    exec /bin/busybox init "$@"
 else
     exec /bin/sh
 fi
 """
-    archive4.add_file('init', master_init.encode('utf-8'), mode=0o100755)
+    master_init_path = os.path.join(r4_work, "init")
+    with open(master_init_path, "w") as f:
+        f.write(master_init)
+    os.chmod(master_init_path, 0o755)
 
-    r4_packed = archive4.to_bytes()
-    with open(r4_gz, "wb") as f:
-        f.write(lzma.compress(r4_packed, format=lzma.FORMAT_ALONE))
-    print(f"[✓] rootfs4 ricompatto con successo ({os.path.getsize(r4_gz)/(1024*1024):.1f} MB con tutti i 131 device nodes preservati)")
+    os.remove(r4_gz)
+    print("[+] Ricompressione rootfs4 unificato con cpio ad alte prestazioni...")
+    run(f'cd "{r4_work}" && find . -print0 | cpio --null -ov -H newc | lzma -z -1 > "{r4_gz}"')
+    print(f"[✓] rootfs4 ricompatto con successo ({os.path.getsize(r4_gz)/(1024*1024):.1f} MB con tutti i file unificati e permessi corretti)")
 
     # Iniezione Windows Installer e albero OSify
     inject_windows_installer(iso_root)
