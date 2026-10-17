@@ -1,5 +1,19 @@
 # LEZIONI APPRESE — REGISTRO ERRORI E REGOLE ARCHITETTURALI OSIFY
 
+## 2026-10-17 — Bootloader Ibrido Universale: El Torito EFI, Partizione GPT isohybrid-gpt-basdat e Auto-Detect ifcpu64
+- **Area**: Bootloader ISO Universale Ibrida (UEFI x86_64, BIOS Legacy x86_64, Vintage 32-bit i686)
+- **Errore**: L'immagine ISO Universale `OSify-A.0-Universal.iso` non veniva avviata su macchine o VM UEFI cadendo nella `UEFI Interactive Shell v2.2` (EDK II), mentre su hardware BIOS legacy con GPU moderne si arrestava su uno schermo nero.
+- **Causa radice**:
+  1. La compilazione con `genisoimage` impostava unicamente il settore di boot BIOS (`-b boot/isolinux/isolinux.bin`) omettendo l'entry alternativa El Torito per UEFI (`-eltorito-alt-boot -e /boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat`) e mancando di scrivere la partizione GPT `EFI System Partition`, per cui il firmware UEFI rilevava solo un disco dati grezzo senza filesystem (`BLK1:`) e senza script `startup.nsh`.
+  2. L'etichetta ISO (`-V`) era impostata su `OSIFY_UNIVERSAL`, rompendo la ricerca hardcoded `search --label OSify-2050-Gaming-x86_64` integrata nel binario GRUB EFI.
+  3. Su BIOS legacy, Syslinux avviava deterministicamente il kernel 32-bit `bzImage` privo di parametro `video=-32` invece di auto-rilevare le CPU a 64-bit tramite `ifcpu64.c32` congruente.
+- **Regola**:
+  1. Masterizzazione xorriso Obbligatoria: La ISO universale deve sempre essere masterizzata con `xorriso` includendo sia il catalogo BIOS (`-b /boot/syslinux/isolinux.bin`) sia il catalogo alternativo El Torito EFI (`-eltorito-alt-boot -e /boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat`).
+  2. Allineamento Etichetta EFI: L'etichetta volume `-V` passata a `xorriso` deve coincidere categoricamente con quella presente nel binario `bootx64.efi` (`OSify-2050-Gaming-x86_64`).
+  3. Script Fallback EDK II: Inserire sempre `startup.nsh` e `STARTUP.NSH` nella radice del filesystem ISO per eseguire automaticamente `\EFI\BOOT\BOOTX64.EFI` qualora il firmware UEFI non rilevi le voci NVRAM.
+  4. Auto-Rilevamento Silicio: Utilizzare `DEFAULT autodetect` con `COM32 ifcpu64.c32` e toolchain syslinux coerente per indirizzare a caldo su `osify64` (`vmlinuz-lts` a 64-bit con KMS) o su `osify32` (`bzImage` con `video=-32`).
+  5. Bootsplash Solo-Logo Puro: Utilizzare `MENU HIDDEN`, `MENU ROWS 0` e colori `#00000000` (trasparenza totale) per non sovrapporre testi, box o timer al logo squircle luminescente.
+
 ## 2026-10-17 — Bootloader Universale Ibrido: Direttiva DEFAULT Obbligatoria per Timeout Automatico senza Input
 - **Area**: Bootloader Syslinux / Isolinux per ISO Universale ibrida
 - **Errore**: L'avvio dell'ISO Unica Universale (`OSify-A.0-Universal.iso`) in VM o macchine prive di interazione da tastiera si fermava indefinitamente sul menu vesamenu mostrando uno schermo nero anziché far partire automaticamente il desktop dopo il timeout.
