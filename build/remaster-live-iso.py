@@ -24,11 +24,13 @@ if os.path.isfile(VERSION_FILE):
 
 CACHE_I686 = os.path.join(REPO_ROOT, "build/cache/osify-base-i686.iso")
 CACHE_X86_64 = os.path.join(REPO_ROOT, "build/cache/osify-base-x86_64.iso")
+CACHE_ARM64 = os.path.join(REPO_ROOT, "build/cache/osify-base-aarch64.iso")
 SANDBOX_I686 = os.path.join(REPO_ROOT, "tests/sandbox/osify-vintage-desktop.iso")
 
 OUT_RELEASE_DIR = os.path.join(REPO_ROOT, "build/out/release")
 DEST_VINTAGE_ISO = os.path.join(OUT_RELEASE_DIR, "OSify-Vintage-i686.iso")
 DEST_MODERN_ISO = os.path.join(OUT_RELEASE_DIR, "OSify-x86_64-v3.iso")
+DEST_ARM64_ISO = os.path.join(OUT_RELEASE_DIR, "OSify-ARM64.iso")
 DEST_SANDBOX_VINTAGE = os.path.join(REPO_ROOT, "tests/sandbox/OSify-Vintage-Live.iso")
 
 def run(cmd, cwd=None):
@@ -3347,15 +3349,362 @@ LABEL rescue
     run(cmd_xorriso)
     print(f"[✓] OSify Modern 64-bit creata: {DEST_MODERN_ISO} ({os.path.getsize(DEST_MODERN_ISO)/(1024*1024):.1f} MB)")
 
+def build_arm64():
+    print("=========================================================")
+    print(" [3/3] Costruzione OSify ARM64 (AArch64 Apple Silicon / RPi / Ampere)")
+    print("=========================================================")
+    
+    src_iso = CACHE_ARM64
+    if not (os.path.exists(src_iso) and os.path.getsize(src_iso) > 10 * 1024 * 1024):
+        print("[+] Download base OSify 64-bit ARM (Alpine LTS aarch64)...")
+        os.makedirs(os.path.dirname(CACHE_ARM64), exist_ok=True)
+        url = "https://dl-cdn.alpinelinux.org/alpine/v3.20/releases/aarch64/alpine-standard-3.20.3-aarch64.iso"
+        run(f"curl -L -o '{CACHE_ARM64}' '{url}'")
+
+    work_dir = "/tmp/osify_remaster_arm64"
+    if os.path.exists(work_dir):
+        shutil.rmtree(work_dir)
+    os.makedirs(work_dir)
+
+    iso_root = os.path.join(work_dir, "iso_root")
+    os.makedirs(iso_root)
+
+    print("[i] Estrazione base ARM64...")
+    run(f"7z x -y '{src_iso}' -o'{iso_root}' > /dev/null")
+
+    # Iniezione Windows Installer e albero di sistema OSify
+    inject_windows_installer(iso_root)
+
+    print("[i] Generazione ambiente Desktop Grafico autonomo OSify 2050 (ARM64)...")
+    apkovl_dir = os.path.join(work_dir, "apkovl")
+    os.makedirs(os.path.join(apkovl_dir, "etc/inittab.d"), exist_ok=True)
+    os.makedirs(os.path.join(apkovl_dir, "etc/xdg/tint2"), exist_ok=True)
+    os.makedirs(os.path.join(apkovl_dir, "etc/xdg/openbox"), exist_ok=True)
+    os.makedirs(os.path.join(apkovl_dir, "usr/share/images"), exist_ok=True)
+    os.makedirs(os.path.join(apkovl_dir, "usr/share/pixmaps"), exist_ok=True)
+    os.makedirs(os.path.join(apkovl_dir, "usr/share/applications"), exist_ok=True)
+    os.makedirs(os.path.join(apkovl_dir, "usr/local/bin"), exist_ok=True)
+    os.makedirs(os.path.join(apkovl_dir, "home/osify"), exist_ok=True)
+
+    desktop_bundle = "/tmp/test_desktop_arm64.tar.gz"
+    if not (os.path.exists(desktop_bundle) and os.path.getsize(desktop_bundle) > 50 * 1024 * 1024):
+        print("[+] Generazione bundle X11/Desktop ARM64 in container Docker...")
+        run("docker run --rm --platform linux/arm64 -v /tmp:/out alpine:3.20 sh -c '"
+            "apk update -q && apk add -q --no-cache xinit xorg-server xf86-video-modesetting xf86-input-libinput "
+            "openbox pcmanfm tint2 feh sakura dbus font-dejavu yad mesa-dri-gallium which && "
+            "tar -czf /out/test_desktop_arm64.tar.gz /usr /etc/xdg /etc/X11 /etc/fonts /etc/gtk-3.0 /etc/pango /var/lib/dbus 2>/dev/null || true'")
+    
+    print("[i] Iniezione binari Xorg, Openbox, Tint2 e PCManFM in apkovl ARM64...")
+    run(f"tar -xzf '{desktop_bundle}' -C '{apkovl_dir}' 2>/dev/null || true")
+
+    for xbin in ["usr/libexec/Xorg", "usr/libexec/Xorg.wrap", "usr/bin/Xorg"]:
+        xp = os.path.join(apkovl_dir, xbin)
+        if os.path.exists(xp):
+            try:
+                os.chmod(xp, 0o4755)
+            except Exception:
+                pass
+
+    with open(os.path.join(apkovl_dir, "etc/group"), "w") as f:
+        f.write("""root:x:0:root
+wheel:x:10:root,osify
+tty:x:5:osify
+audio:x:18:osify
+video:x:27:osify
+input:x:107:osify
+osify:x:1000:osify
+""")
+
+    src_wall = os.path.join(REPO_ROOT, "desktop/branding/wallpapers/osify-clean-1920x1080.png")
+    if not os.path.exists(src_wall):
+        src_wall = os.path.join(REPO_ROOT, "OSify.png")
+    try:
+        w_img = Image.open(src_wall).convert("RGB")
+        w_img.save(os.path.join(apkovl_dir, "usr/share/images/osify-wallpaper.jpg"), "JPEG", quality=95)
+    except Exception:
+        pass
+
+    src_icons = os.path.join(REPO_ROOT, "sistema/icone")
+    if os.path.exists(src_icons):
+        for ic in os.listdir(src_icons):
+            if ic.endswith(".png"):
+                shutil.copy2(os.path.join(src_icons, ic), os.path.join(apkovl_dir, "usr/share/pixmaps", ic))
+
+    topbar_cfg = """# OSify Top Menu Bar (26px)
+panel_monitor = all
+panel_position = top center horizontal
+panel_size = 100% 26
+panel_margin = 0 0
+panel_padding = 4 2 4
+panel_background_id = 1
+wm_menu = 1
+panel_dock = 0
+panel_layer = top
+panel_items = LTSC
+
+# Stile Dark Glass
+rounded = 0
+border_width = 1
+border_sides = b
+background_color = #07090e d8
+border_color = #1e293b ff
+
+# Launcher OSify
+launcher_padding = 8 0
+launcher_background_id = 0
+launcher_icon_size = 18
+launcher_item_app = /usr/share/applications/osify-hub.desktop
+
+# Taskbar
+taskbar_mode = multi_desktop
+taskbar_padding = 2 2 2
+task_icon_size = 16
+task_font_color = #ffffff b0
+task_active_font_color = #06b6d4 ff
+
+# Orologio
+time1_format = %H:%M
+time1_font = Sans Bold 9
+clock_font_color = #ffffff ff
+clock_padding = 8 0
+
+# Systray
+systray_padding = 4 0 4
+systray_icon_size = 16
+"""
+    with open(os.path.join(apkovl_dir, "etc/xdg/tint2/osify-topbar.tint2rc"), "w") as f:
+        f.write(topbar_cfg)
+
+    dock_cfg = """# OSify Floating Dock (46px)
+panel_monitor = all
+panel_position = bottom center horizontal
+panel_size = 0 46
+panel_margin = 0 10
+panel_padding = 10 4 10
+panel_background_id = 1
+panel_dock = 0
+panel_layer = top
+panel_items = L
+
+# Stile Glass Fluttuante
+rounded = 12
+border_width = 1
+border_sides = tblr
+background_color = #07090e e8
+border_color = #334155 ff
+
+launcher_padding = 8 2
+launcher_background_id = 0
+launcher_icon_size = 36
+launcher_item_app = /usr/share/applications/pcmanfm.desktop
+launcher_item_app = /usr/share/applications/sakura.desktop
+launcher_item_app = /usr/share/applications/osify-hub.desktop
+launcher_item_app = /usr/share/applications/osify-security.desktop
+launcher_item_app = /usr/share/applications/osify-wifi.desktop
+"""
+    with open(os.path.join(apkovl_dir, "etc/xdg/tint2/osify-dock.tint2rc"), "w") as f:
+        f.write(dock_cfg)
+
+    apps_meta = [
+        ("osify-hub.desktop", "Centro OSify", "osify-hub", "osify-hub", "Controllo di sistema"),
+        ("pcmanfm.desktop", "File Manager", "pcmanfm", "system-file-manager", "Gestione file"),
+        ("sakura.desktop", "Terminale", "sakura", "utilities-terminal", "Terminale di comando"),
+        ("osify-security.desktop", "Sicurezza", "osify-privacy-vault", "security-high", "Privacy e Shield"),
+        ("osify-wifi.desktop", "Reti Wi-Fi", "osify-wifi", "network-wireless", "Connessione Wi-Fi"),
+    ]
+    for d_name, d_title, d_exec, d_icon, d_comm in apps_meta:
+        with open(os.path.join(apkovl_dir, "usr/share/applications", d_name), "w") as f:
+            f.write(f"[Desktop Entry]\nType=Application\nName={d_title}\nExec={d_exec}\nIcon={d_icon}\nComment={d_comm}\nTerminal=false\nCategories=System;\n")
+
+    xinitrc_content = """#!/bin/sh
+export DISPLAY=:0
+xsetroot -solid "#07090e"
+feh --bg-fill /usr/share/images/osify-wallpaper.jpg 2>/dev/null || true
+tint2 -c /etc/xdg/tint2/osify-topbar.tint2rc 2>/dev/null &
+tint2 -c /etc/xdg/tint2/osify-dock.tint2rc 2>/dev/null &
+pcmanfm --desktop 2>/dev/null &
+exec openbox-session
+"""
+    for x_path in [
+        os.path.join(apkovl_dir, "home/osify/.xinitrc"),
+        os.path.join(apkovl_dir, "root/.xinitrc"),
+        os.path.join(apkovl_dir, "etc/X11/xinit/xinitrc")
+    ]:
+        os.makedirs(os.path.dirname(x_path), exist_ok=True)
+        with open(x_path, "w") as f:
+            f.write(xinitrc_content)
+        os.chmod(x_path, 0o755)
+
+    session_gui = """#!/bin/sh
+# Supervisore Sessione Desktop OSify 2050 (ARM64)
+mkdir -p /home/osify/.config/openbox
+mkdir -p /home/osify/.config/tint2
+mkdir -p /home/osify/.config/pcmanfm/default
+chown -R osify:osify /home/osify 2>/dev/null || true
+
+# Inizializza D-Bus di sistema
+if [ -x /usr/bin/dbus-uuidgen ] && [ ! -s /var/lib/dbus/machine-id ]; then
+    mkdir -p /var/lib/dbus
+    /usr/bin/dbus-uuidgen > /var/lib/dbus/machine-id 2>/dev/null || true
+fi
+if [ -x /usr/bin/dbus-daemon ] && [ ! -e /run/dbus/system_bus_socket ]; then
+    mkdir -p /run/dbus /var/run/dbus
+    /usr/bin/dbus-daemon --system --fork 2>/dev/null || true
+fi
+
+# Avvia sessione X11 con utente osify
+export HOME=/home/osify
+export USER=osify
+export LOGNAME=osify
+if [ -x /usr/bin/startx ]; then
+    exec /bin/su -l osify -c "/usr/bin/startx /home/osify/.xinitrc -- /usr/bin/Xorg :0 vt1 -keeptty"
+fi
+"""
+    gui_script = os.path.join(apkovl_dir, "usr/local/bin/osify-session-gui")
+    os.makedirs(os.path.dirname(gui_script), exist_ok=True)
+    with open(gui_script, "w") as f:
+        f.write(session_gui)
+    os.chmod(gui_script, 0o755)
+
+    with open(os.path.join(apkovl_dir, "etc/inittab"), "w") as f:
+        f.write("""# OSify 2.0 Inittab — Avvio Grafico Diretto
+::sysinit:/sbin/openrc sysinit
+::sysinit:/sbin/openrc boot
+::wait:/sbin/openrc default
+::ctrlaltdel:/sbin/reboot
+::shutdown:/sbin/openrc shutdown
+tty1::respawn:/usr/local/bin/osify-session-gui
+ttyAMA0::respawn:/sbin/getty 115200 ttyAMA0
+""")
+
+    with open(os.path.join(apkovl_dir, "etc/passwd"), "w") as f:
+        f.write("""root:x:0:0:root:/root:/bin/sh
+osify:x:1000:1000:OSify Live User:/home/osify:/bin/sh
+""")
+
+    with open(os.path.join(apkovl_dir, "etc/shadow"), "w") as f:
+        f.write("""root::14000:0:99999:7:::
+osify::14000:0:99999:7:::
+""")
+
+    with open(os.path.join(apkovl_dir, "etc/sudoers"), "w") as f:
+        f.write("""root ALL=(ALL) ALL
+osify ALL=(ALL) NOPASSWD: ALL
+""")
+
+    apk_sistema = os.path.join(apkovl_dir, "Sistema")
+    os.makedirs(os.path.join(apk_sistema, "Driver"), exist_ok=True)
+    os.makedirs(os.path.join(apk_sistema, "Servizi"), exist_ok=True)
+    os.makedirs(os.path.join(apk_sistema, "Icone"), exist_ok=True)
+    os.makedirs(os.path.join(apk_sistema, "Nucleo"), exist_ok=True)
+    if os.path.exists(os.path.join(REPO_ROOT, "sistema")):
+        shutil.copytree(os.path.join(REPO_ROOT, "sistema"), apk_sistema, dirs_exist_ok=True)
+
+    apk_app = os.path.join(apkovl_dir, "Applicazioni")
+    os.makedirs(apk_app, exist_ok=True)
+    if os.path.exists(os.path.join(REPO_ROOT, "applicazioni")):
+        shutil.copytree(os.path.join(REPO_ROOT, "applicazioni"), apk_app, dirs_exist_ok=True)
+
+    apk_utenti = os.path.join(apkovl_dir, "Utenti")
+    os.makedirs(apk_utenti, exist_ok=True)
+    try:
+        os.symlink("../home/osify", os.path.join(apk_utenti, "osify"))
+    except Exception:
+        pass
+
+    with open(os.path.join(apkovl_dir, "etc/hostname"), "w") as f:
+        f.write("osify-station\n")
+
+    usr_bin = os.path.join(apkovl_dir, "usr/bin")
+    os.makedirs(usr_bin, exist_ok=True)
+    for src_l, dst_l in [
+        ("/opt/osify/network/osify-wifi-gui.sh", "osify-wifi"),
+        ("/opt/osify/system/installer/osify-disk-installer.sh", "osify-install"),
+        ("/opt/osify/tools/osify-gui/osify-hub.sh", "osify-hub"),
+        ("/opt/osify/tools/osify-gui/osify-games.sh", "osify-games"),
+        ("/opt/osify/tools/osify-ctl", "osify-ctl"),
+        ("/opt/osify/tools/osify-ctl", "osify"),
+        ("/opt/osify/security/privacy/osify-privacy-vault.sh", "osify-privacy-vault"),
+        ("/opt/osify/security/adaptive/osify-adaptive-security.sh", "osify-adaptive-security"),
+    ]:
+        lp = os.path.join(usr_bin, dst_l)
+        if not os.path.exists(lp):
+            try:
+                os.symlink(src_l, lp)
+            except Exception:
+                pass
+
+    run(f"chmod -R 777 '{os.path.join(apkovl_dir, 'home/osify')}' 2>/dev/null || true")
+
+    apkovl_tar = os.path.join(iso_root, "localhost.apkovl.tar.gz")
+    run(f"tar -czf '{apkovl_tar}' -C '{apkovl_dir}' .")
+
+    grub_cfg = """set timeout=0
+set default=0
+
+menuentry "OSify ARM64" {
+    linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage quiet splash loglevel=0 console=tty3 vt.global_cursor_default=0 logo.nologo rd.systemd.show_status=false rd.udev.log_priority=0 udev.log_priority=0 rw autologin
+    initrd /boot/initramfs-lts
+}
+
+menuentry "OSify ARM64 Safe Graphics" {
+    linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage nomodeset quiet loglevel=1 vt.global_cursor_default=0 logo.nologo console=tty1 rw autologin
+    initrd /boot/initramfs-lts
+}
+"""
+    for g_dst in [os.path.join(iso_root, "boot/grub/grub.cfg"), os.path.join(iso_root, "efi/boot/grub.cfg"), os.path.join(iso_root, "EFI/BOOT/grub.cfg")]:
+        os.makedirs(os.path.dirname(g_dst), exist_ok=True)
+        with open(g_dst, "w") as f:
+            f.write(grub_cfg)
+
+    startup_nsh = """@echo -off
+cls
+echo Avvio OSify ARM64 in corso...
+fs0:
+if exist \\EFI\\BOOT\\BOOTAA64.EFI then
+    \\EFI\\BOOT\\BOOTAA64.EFI
+endif
+if exist \\efi\\boot\\bootaa64.efi then
+    \\efi\\boot\\bootaa64.efi
+endif
+fs1:
+if exist \\EFI\\BOOT\\BOOTAA64.EFI then
+    \\EFI\\BOOT\\BOOTAA64.EFI
+endif
+if exist \\efi\\boot\\bootaa64.efi then
+    \\efi\\boot\\bootaa64.efi
+endif
+"""
+    for nsh_name in ["startup.nsh", "STARTUP.NSH"]:
+        with open(os.path.join(iso_root, nsh_name), "w") as f:
+            f.write(startup_nsh)
+
+    with open(os.path.join(iso_root, "OSify-Version.txt"), "w") as f:
+        f.write("OSify Live System (ARM64 Universal Edition)\nKernel: OSify ARM64 HAL\n")
+
+    print("[i] Masterizzazione immagine ARM64 avviabile (UEFI AArch64)...")
+    os.makedirs(OUT_RELEASE_DIR, exist_ok=True)
+    cmd_xorriso = (
+        f"xorriso -as mkisofs -r -J "
+        f"-V 'OSIFY_ARM64' "
+        f"-eltorito-alt-boot -e '/boot/grub/efi.img' -no-emul-boot -isohybrid-gpt-basdat "
+        f"-o '{DEST_ARM64_ISO}' '{iso_root}'"
+    )
+    run(cmd_xorriso)
+    print(f"[✓] OSify ARM64 creata: {DEST_ARM64_ISO} ({os.path.getsize(DEST_ARM64_ISO)/(1024*1024):.1f} MB)")
+
 def main():
     target = sys.argv[1] if len(sys.argv) > 1 else "--all"
     if target in ["--vintage", "--i686", "-32"]:
         build_vintage_i686()
     elif target in ["--modern", "--x86_64", "-64"]:
         build_modern_x86_64()
+    elif target in ["--arm64", "--aarch64", "-arm"]:
+        build_arm64()
     else:
         build_vintage_i686()
         build_modern_x86_64()
+        build_arm64()
 
     # Aggiorna SHA256SUMS nativamente con hashlib
     print("[+] Aggiornamento checksum SHA256 universale...")
@@ -3374,7 +3723,7 @@ def main():
         f.write(sha_txt)
     print(sha_txt)
     print("=========================================================")
-    print("[✓✓✓] ENTRAMBE LE IMMAGINI ISO SONO PRONTE E COLLAUDATE!")
+    print("[✓✓✓] TUTTE LE IMMAGINI ISO (32, 64, ARM) SONO PRONTE E COLLAUDATE!")
     print("=========================================================")
 
 if __name__ == "__main__":

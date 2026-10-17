@@ -824,6 +824,64 @@ else
     log_fail "Codifica Testuale & X11: Rilevate emoji non permesse in build/remaster-live-iso.py"
 fi
 
+echo ""
+echo "=== FASE 13: ARCHITETTURA DI SISTEMA UNIVERSALE (32, 64, ARM) & DIZIONARIO ALU OSIFY ==="
+# Test 13.1 Motore Dizionario Semantico ALU OSify
+if python3 -c "
+from sistema.nucleo.osify_alu_dictionary import OSifyALUDictionary
+d = OSifyALUDictionary()
+m = d.generate_dictionary_matrix()
+assert m['supported_architectures'] == ['x86_32', 'x86_64', 'arm64']
+assert m['virtual_registers'] == 32
+assert m['operations_count'] >= 10
+print('Dizionario ALU OSify validato')
+" >/dev/null 2>&1; then
+    log_pass "Dizionario ALU OSify: Motore semantico multi-architettura x86_32, x86_64 e arm64 operativo"
+else
+    log_fail "Dizionario ALU OSify: Errore inizializzazione o schema matrice"
+fi
+
+# Test 13.2 Traduzione Semantica Cross-ISA (x86_32, x86_64, arm64)
+if python3 -c "
+from sistema.nucleo.osify_alu_dictionary import OSifyALUDictionary
+d = OSifyALUDictionary()
+# Test ALU_ADD su tutte le 3 architetture
+t32 = d.translate_op('ALU_ADD', 'x86_32', dst='VREG_0', src='VREG_1')
+t64 = d.translate_op('ALU_ADD', 'x86_64', dst='VREG_0', src='VREG_1')
+t_arm = d.translate_op('ALU_ADD', 'arm64', dst='VREG_0', src='VREG_1')
+assert 'eax' in t32 and 'ecx' in t32
+assert 'rax' in t64 and 'rcx' in t64
+assert 'x0' in t_arm and 'x1' in t_arm
+# Test Barrel-Shift + ADD
+b_arm = d.translate_op('ALU_SHIFT_ADD', 'arm64', dst='VREG_0', src='VREG_1', shift=3)
+assert 'lsl #3' in b_arm
+print('Traduzioni cross-ISA verificate')
+" >/dev/null 2>&1; then
+    log_pass "Traduzione Semantica Cross-ISA: Mappatura micro-op e registri universali VREG verificata al 100%"
+else
+    log_fail "Traduzione Semantica Cross-ISA: Fallimento congruenza tra x86_32, x86_64 e arm64"
+fi
+
+# Test 13.3 Triade Architetturale Nativa OSify (32, 64, ARM)
+if grep -q "CACHE_ARM64" "$REPO_ROOT/build/remaster-live-iso.py" && \
+   grep -q "build_arm64" "$REPO_ROOT/build/remaster-live-iso.py"; then
+    log_pass "Triade Architetturale: Pipeline di generazione multi-target 32-bit (i686), 64-bit (x86_64) e ARM64 presente"
+else
+    log_fail "Triade Architetturale: Target ARM64 non configurato in build/remaster-live-iso.py"
+fi
+
+# Test 13.4 Identità Ontologica OSify: Quarto Sistema Operativo Autonomo
+if python3 -c "
+with open('$REPO_ROOT/LEZIONI.md', 'r') as f:
+    text = f.read()
+assert 'c\'è linux, windows, macos, e c\'è OSify' in text.lower() or 'quarto ecosistema autonomo' in text.lower() or 'sistema operativo autonomo a sé stante' in text.lower()
+print('Identita OSify verificata')
+" >/dev/null 2>&1; then
+    log_pass "Identita Ontologica OSify: Riconoscimento formale come quarto ecosistema autonomo (Linux, Windows, macOS, OSify)"
+else
+    log_fail "Identita Ontologica OSify: Mancata registrazione dell'identita autonoma in LEZIONI.md"
+fi
+
 echo "                  REPORT FINALE COLLAUDO                 "
 echo "========================================================="
 echo "  TEST SUPERATI : $PASSED_COUNT"

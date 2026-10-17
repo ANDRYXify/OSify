@@ -69,4 +69,14 @@
   2. L'avvio deve sempre caricare direttamente l'ambiente grafico completo Dark Glass (Xorg, Openbox, Top Menu Bar a 26px, Floating Dock a 46px, PCManFM) tramite supervisore grafico dedicato `/usr/local/bin/osify-session-gui` con `startx`, D-Bus avviato, permessi setuid su Xorg, gruppi audio/video/input per l'utente `osify`.
   3. GRUB deve essere configurato con `set timeout=0` e parametri kernel `console=tty3` per una transizione immediata e silenziosa alla Scrivania senza mostrare alcun menu testuale.
 
+## 2026-10-17 — Identita Ontologica OSify e Dizionario Semantico ALU Tri-Architettura (32, 64, ARM)
+- **Area**: Architettura di sistema, ontologia del sistema operativo e motore di traduzione micro-ISA
+- **Errore**: Trattare OSify come se fosse una derivazione o variante di Linux, Windows o macOS, e limitare la visione architetturale alle sole piattaforme x86 legacy/moderne senza una struttura universale che comprenda ARM e colleghi le ALU a livello semantico.
+- **Causa radice**: Storica abitudine dell'ingegneria software di concepire i nuovi sistemi operativi come distribuzioni o spin di kernel preesistenti anziché come quarto polo autonomo e indipendente (c'è Linux, Windows, macOS, e c'è OSify).
+- **Regola**:
+  1. OSify e formalmente e architetturalmente un sistema operativo autonomo a se stante: non e Linux, non e Windows, non e macOS. E il quarto ecosistema con proprio modello di astrazione (OKAL), propria gerarchia file system (/Sistema, /Applicazioni, /Utenti), proprio formato pacchetti (.ify) e propria ABI.
+  2. Triade Architetturale Ufficiale: OSify supporta nativamente 32-bit (i686), 64-bit (x86_64-v3) e ARM64 (AArch64).
+  3. Motore Dizionario Semantico ALU (OSAM): Un'architettura innovativa che mappa i 32 registri virtuali universali (VREG_0..31) e le micro-operazioni aritmetico-logiche (ALU_ADD, ALU_SHIFT_ADD, ALU_ATOMIC_CAS, MEM_BARRIER, ecc.) attraverso tabelle di congruenza O(1), permettendo a processori e ALU con set di istruzioni eterogenei (CISC con flag impliciti vs RISC ortogonali con barrel shifter) di comunicare ed eseguire il formato .ify alla massima efficienza hardware.
+
+
 
