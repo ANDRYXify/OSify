@@ -8,8 +8,13 @@
 # ==============================================================================
 
 export DISPLAY="${DISPLAY:-:0.0}"
+export HOME="${HOME:-/home/osify}"
+export USER="${USER:-osify}"
+export LOGNAME="${LOGNAME:-osify}"
 export XDG_CURRENT_DESKTOP="OSify"
 export DESKTOP_SESSION="osify"
+[ -f /var/run/slim.auth ] && [ -z "$XAUTHORITY" ] && export XAUTHORITY=/var/run/slim.auth
+[ -d "$HOME" ] && cd "$HOME" 2>/dev/null || cd /
 
 # 1. Inizializzazione D-Bus e autorizzazioni
 if [ -z "$DBUS_SESSION_BUS_ADDRESS" ] && command -v dbus-launch >/dev/null 2>&1; then
@@ -41,10 +46,9 @@ if [ -x /usr/bin/osify-storage-governor ]; then
     /usr/bin/osify-storage-governor --tune &
 fi
 
-# 5. Bootsplash OLED OSify con Logo Luminescente e Barra di Caricamento
-if [ -x /usr/bin/osify-bootsplash ]; then
-    /usr/bin/osify-bootsplash
-fi
+# 5. Notifica Desktop Pronto ed eliminazione Bootsplash
+touch /run/osify-desktop-ready 2>/dev/null || true
+killall osify-bootsplash 2>/dev/null || true
 
 # 6. Sfondo Root Window Cyber-Dark
 if command -v xsetroot >/dev/null 2>&1; then
@@ -97,7 +101,9 @@ fi
 # Se Openbox dovesse avere un'eccezione o crashare, viene riavviato istantaneamente
 # SENZA MAI cadere su TTY o chiudere Xorg:
 while true; do
-    if command -v openbox >/dev/null 2>&1; then
+    if command -v openbox-session >/dev/null 2>&1; then
+        openbox-session
+    elif command -v openbox >/dev/null 2>&1; then
         openbox
     else
         xterm

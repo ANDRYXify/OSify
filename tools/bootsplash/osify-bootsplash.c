@@ -166,8 +166,10 @@ int main(int argc, char **argv) {
         }
 
         shimmer_pos = (shimmer_pos + 6) % (bar_w + 20);
-        if (progress < 95) {
-            progress += 1;
+        if (progress < 100) {
+            progress += 2;
+        } else {
+            break;
         }
 
         usleep(33000); // ~30 FPS

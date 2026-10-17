@@ -52,13 +52,18 @@ def patch_kernel_binary(kernel_path):
         b"Decompressing Linux... ",
         b"Parsing ELF... ",
         b"No relocation needed... ",
-        b"Booting the kernel.\n"
+        b"Performing relocations... ",
+        b"done.\nBooting the kernel.\n",
+        b"Booting the kernel.\n",
+        b"done.\n",
     ]
     patched = data
     count = 0
     for t in targets:
-        pos = patched.find(t)
-        if pos != -1:
+        while True:
+            pos = patched.find(t)
+            if pos == -1:
+                break
             patched = patched[:pos] + (b"\x00" * len(t)) + patched[pos+len(t):]
             count += 1
     if count > 0 and len(patched) == orig_len:
@@ -1311,8 +1316,11 @@ def build_vintage_i686():
     print("[i] Estrazione base 32-bit...")
     run(f"7z x -y '{src_iso}' -o'{iso_root}' > /dev/null")
 
-    # Patch binaria bzImage per azzerare stringhe VGA early console ("Decompressing Linux")
-    patch_kernel_binary(os.path.join(iso_root, "boot/bzImage"))
+    # Patch binaria kernel per azzerare stringhe VGA early console ("Decompressing Linux", "done.")
+    for r, _, files in os.walk(iso_root):
+        for f in files:
+            if "bzImage" in f or "vmlinuz" in f:
+                patch_kernel_binary(os.path.join(r, f))
 
     # Wallpaper e splash ad alta risoluzione
     src_png = os.path.join(REPO_ROOT, "desktop/branding/wallpapers/osify-netbook-1024x600.png")
@@ -1359,25 +1367,25 @@ LABEL osify
     MENU LABEL OSify
     KERNEL /boot/bzImage
     INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
-    APPEND root=/dev/null autologin lang=it_IT kmap=it rw quiet splash loglevel=1 console=tty1 vt.global_cursor_default=0 logo.nologo
+    APPEND root=/dev/null tmpram=0 autologin lang=it_IT kmap=it rw quiet splash loglevel=0 console=tty3 vt.global_cursor_default=0 logo.nologo
 
 LABEL turbo
     MENU LABEL OSify Prestazioni Turbo
     KERNEL /boot/bzImage
     INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
-    APPEND root=/dev/null autologin lang=it_IT kmap=it rw quiet splash loglevel=1 console=tty1 vt.global_cursor_default=0 logo.nologo osify.turbo=1
+    APPEND root=/dev/null tmpram=0 autologin lang=it_IT kmap=it rw quiet splash loglevel=0 console=tty3 vt.global_cursor_default=0 logo.nologo osify.turbo=1
 
 LABEL safe
     MENU LABEL OSify Modalita Compatibile (Emulatore / Safe Graphics)
     KERNEL /boot/bzImage
     INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
-    APPEND root=/dev/null nomodeset vga=788 autologin lang=it_IT kmap=it rw quiet loglevel=1 console=tty1 vt.global_cursor_default=0 logo.nologo
+    APPEND root=/dev/null tmpram=0 nomodeset vga=788 autologin lang=it_IT kmap=it rw quiet loglevel=1 console=tty1 vt.global_cursor_default=0 logo.nologo
 
 LABEL install
     MENU LABEL Installa OSify su Disco Fisso
     KERNEL /boot/bzImage
     INITRD /boot/rootfs4.gz,/boot/rootfs3.gz,/boot/rootfs2.gz,/boot/rootfs1.gz
-    APPEND root=/dev/null autologin lang=it_IT kmap=it rw quiet splash loglevel=1 console=tty1 vt.global_cursor_default=0 logo.nologo osify.install=1
+    APPEND root=/dev/null tmpram=0 autologin lang=it_IT kmap=it rw quiet splash loglevel=0 console=tty3 vt.global_cursor_default=0 logo.nologo osify.install=1
 
 LABEL memtest
     MENU LABEL Diagnostica Memoria RAM
@@ -2800,7 +2808,7 @@ WINDOW_MANAGER="openbox"
             shutil.copy2(bootsplash_src, bdst)
             os.chmod(bdst, 0o755)
 
-    # Patch rcS per silenziare i messaggi Linux sulla console e completare il bootsplash
+    # Patch rcS per silenziare i messaggi Linux sulla console, completare il bootsplash e avviare la grafica
     rcs_path = os.path.join(r4_work, "etc/init.d/rcS")
     if os.path.exists(rcs_path):
         with open(rcs_path, "r", encoding="utf-8", errors="ignore") as f:
@@ -2808,10 +2816,20 @@ WINDOW_MANAGER="openbox"
         if "exec 1>>/run/boot.log 2>&1" not in rcs_content:
             rcs_content = rcs_content.replace("#!/bin/sh\n", "#!/bin/sh\n# OSify Silent Boot\nexec 1>>/run/boot.log 2>&1\n")
         if "killall osify-bootsplash" not in rcs_content:
-            rcs_content += "\n# OSify Bootsplash Handoff\ntouch /run/osify-desktop-ready\nkillall osify-bootsplash 2>/dev/null || true\n"
+            rcs_content += "\n# OSify Bootsplash Handoff & Session Launch\ntouch /run/osify-desktop-ready\nkillall osify-bootsplash 2>/dev/null || true\n[ -x /etc/init.d/slim ] && /etc/init.d/slim start &\n"
         with open(rcs_path, "w", encoding="utf-8") as f:
             f.write(rcs_content)
         os.chmod(rcs_path, 0o755)
+
+    # Patch inittab per autologin grafico SLiM su tty1 anziché login testuale getty
+    inittab_path = os.path.join(r4_work, "etc/inittab")
+    if os.path.exists(inittab_path):
+        with open(inittab_path, "r", encoding="utf-8", errors="ignore") as f:
+            itab_content = f.read()
+        itab_content = itab_content.replace("tty1::respawn:/sbin/getty 38400 tty1", "tty1::respawn:/usr/bin/slim -nodaemon")
+        with open(inittab_path, "w", encoding="utf-8") as f:
+            f.write(itab_content)
+        os.chmod(inittab_path, 0o644)
 
     os.remove(r4_gz)
     archive4 = CpioArchive.from_bytes(r4_data)
@@ -2847,20 +2865,14 @@ fi
 # 5. Soppressione output console per preservare il bootsplash immacolato
 exec 1>/run/boot.log 2>&1
 
-# 6. Esecuzione definitiva dell'init di sistema con clausola di salvaguardia anti-panic eterna
+# 6. Esecuzione definitiva dell'init di sistema (PID 1 non termina MAI)
 if [ -x /sbin/init ]; then
-    /sbin/init
+    exec /sbin/init
 elif [ -x /bin/busybox ]; then
-    /bin/busybox init
+    exec /bin/busybox init
+else
+    exec /bin/sh
 fi
-
-# CLAUSOLA DI GUARDIA ASSOLUTA ANTI-KERNEL PANIC:
-# Se per qualsiasi motivo l'init principale dovesse terminare, PID 1 non esce MAI (niente panic exitcode=0x00000100)
-while true; do
-    [ -x /bin/sh ] && /bin/sh
-    [ -x /bin/busybox ] && /bin/busybox sh
-    sleep 2
-done
 """
     archive4.add_file('init', master_init.encode('utf-8'), mode=0o100755)
 
@@ -2943,6 +2955,12 @@ def build_modern_x86_64():
 
     print("[i] Estrazione base 64-bit...")
     run(f"7z x -y '{src_iso}' -o'{iso_root}' > /dev/null")
+
+    # Patch binaria kernel per azzerare stringhe VGA early console ("Decompressing Linux", "done.")
+    for r, _, files in os.walk(iso_root):
+        for f in files:
+            if "bzImage" in f or "vmlinuz" in f:
+                patch_kernel_binary(os.path.join(r, f))
 
     # Iniezione Windows Installer e albero di sistema OSify
     inject_windows_installer(iso_root)
@@ -3371,6 +3389,12 @@ def build_arm64():
 
     print("[i] Estrazione base ARM64...")
     run(f"7z x -y '{src_iso}' -o'{iso_root}' > /dev/null")
+
+    # Patch binaria kernel per azzerare stringhe VGA early console ("Decompressing Linux", "done.")
+    for r, _, files in os.walk(iso_root):
+        for f in files:
+            if "bzImage" in f or "vmlinuz" in f:
+                patch_kernel_binary(os.path.join(r, f))
 
     # Iniezione Windows Installer e albero di sistema OSify
     inject_windows_installer(iso_root)

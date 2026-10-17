@@ -78,5 +78,18 @@
   2. Triade Architetturale Ufficiale: OSify supporta nativamente 32-bit (i686), 64-bit (x86_64-v3) e ARM64 (AArch64).
   3. Motore Dizionario Semantico ALU (OSAM): Un'architettura innovativa che mappa i 32 registri virtuali universali (VREG_0..31) e le micro-operazioni aritmetico-logiche (ALU_ADD, ALU_SHIFT_ADD, ALU_ATOMIC_CAS, MEM_BARRIER, ecc.) attraverso tabelle di congruenza O(1), permettendo a processori e ALU con set di istruzioni eterogenei (CISC con flag impliciti vs RISC ortogonali con barrel shifter) di comunicare ed eseguire il formato .ify alla massima efficienza hardware.
 
+## 2026-10-17 — Decompressore Kernel "done.", Master Init PID 1 e Autostart Grafico SLiM
+- **Area**: Decompressore bzImage x86, gestione PID 1 in /init e catena di avvio grafica
+- **Errore**: L'avvio dell'immagine 32-bit rimaneva congelato a tempo indeterminato con schermo nero 720x400 VGA e la sola dicitura `done.` in alto a sinistra.
+- **Causa radice**:
+  1. Il decompressore x86 in `bzImage` stampava la stringa `Performing relocations... \x00done.\n\x00`; la patch precedente azzerava solo `Booting the kernel.\n`, lasciando intatta e visibile la sequenza `done.\n`.
+  2. Lo script `/init` in rootfs4 invocava `/sbin/init` senza `exec`, impedendo a SysVinit di diventare PID 1 (`getpid() != 1`); SysVinit terminava immediatamente e il processo ricadeva nel loop infinito di salvaguardia `while true; do sleep 2; done` con output silenziato su `/run/boot.log`.
+  3. `osify-session.sh` invocava `osify-bootsplash` in modo sincrono prima di Openbox, e il bootsplash attendeva un file di completamento non ancora generato, creando un potenziale stallo nella sessione.
+- **Regola**:
+  1. La funzione `patch_kernel_binary()` deve sempre scansionare e azzerare `Performing relocations... `, `done.\nBooting the kernel.\n`, `Booting the kernel.\n` e `done.\n` su tutte le immagini del kernel (32-bit, 64-bit e ARM64).
+  2. `/init` deve cedere definitivamente il controllo a `/sbin/init` (o a Busybox init) tramite `exec /sbin/init` per garantire che PID 1 governi i runlevel e i servizi di sistema.
+  3. `osify-bootsplash` deve avere un contatore di fotogrammi a uscita automatica (massimo ~1.6 secondi a 100%) e la sessione desktop utente non deve mai bloccarne l'esecuzione in modo sincrono.
+  4. L'avvio della sessione grafica deve essere orchestrato deterministicamente sia da `rcS` che da `/etc/inittab` (`tty1::respawn:/usr/bin/slim -nodaemon`) con credenziali e XAUTHORITY configurati per l'utente nativo `osify`.
+
 
 
