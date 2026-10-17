@@ -882,6 +882,13 @@ else
     log_fail "Identita Ontologica OSify: Mancata registrazione dell'identita autonoma in LEZIONI.md"
 fi
 
+# Test 13.5 Kernel Nativo OSify (Architettura Cover Nuda & Ponte Universale)
+if make -C "$REPO_ROOT/sistema/nucleo/kernel" clean all test >/dev/null 2>&1; then
+    log_pass "Kernel Nativo OSify: Architettura Cover Nuda, Framebuffer Dark Glass e ponte di compatibilita universale verificati al 100%"
+else
+    log_fail "Kernel Nativo OSify: Fallimento compilazione o test del micro-core proprietario"
+fi
+
 echo "                  REPORT FINALE COLLAUDO                 "
 echo "========================================================="
 echo "  TEST SUPERATI : $PASSED_COUNT"

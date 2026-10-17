@@ -1,5 +1,15 @@
 # LEZIONI APPRESE — REGISTRO ERRORI E REGOLE ARCHITETTURALI OSIFY
 
+## 2026-10-17 — Architettura 'Cover Nuda' & Kernel Nativo a Sottosistemi Universali
+- **Area**: Kernel proprietario OSify, astrazione hardware pura e compatibilita binaria universale
+- **Errore**: Trattare OSify come una distribuzione derivata con kernel generico e strati middleware ridondanti (glibc/X11 ingombranti, dipendenze esterne), appesantendo il sistema e limitandone l'identita autonoma.
+- **Causa radice**: Errata assunzione che per supportare l'hardware servisse trascinare l'intero albero di una distribuzione Linux, anziche concepire il kernel come una "cover nuda": un esoscheletro essenziale, aderente al silicio, che estrae il 100% delle risorse hardware e fa da ponte di compatibilita universale a caldo.
+- **Regola**: Il Kernel Nativo OSify (`sistema/nucleo/kernel/`) opera secondo la filosofia "Cover Nuda":
+  1. Introspezione immediata del silicio (x86_32, x86_64, ARM64 Apple Silicon) con profilazione adattiva all'avvio (Vintage <1GB con footprint ridotto, Estremo per multicore/AVX/NEON).
+  2. Motore grafico Dark Glass nativo su Framebuffer lineare (GOP/VESA a 32bpp) con doppi buffer, rendering geometrico e squircle, eliminando la dipendenza da server grafici pesanti.
+  3. Ponte di compatibilita universale a sottosistemi multipli (ABI translation): riconosce automaticamente all'avvio il formato binario (.ify nativo, ELF Linux, PE Windows .exe, Mach-O macOS) e ne instrada le syscall direttamente sul silicio, garantendo la massima liberta e robustezza hardware.
+
+
 ## 2026-10-17 — Sincronizzazione Binaria Etichette EFI & Prevenzione 'no such device'
 - **Area**: Firmware UEFI, GRUB EFI embedded e masterizzazione xorriso
 - **Errore**: All'avvio UEFI di OSify x86_64 e ARM64, GRUB si bloccava con il messaggio `error: no such device: alpine-std 3.20.3 ...`.

@@ -58,7 +58,7 @@ LANG_CHOICE=$(yad --title="OSify — Benvenuto nel tuo nuovo Sistema Operativo" 
     --window-icon="$ICON_LOGO" \
     --image="$ICON_LOGO" \
     --width=560 --height=340 --center \
-    --text="<b><big>Benvenuto in OSify 2050</big></b>\n\nOSify è il tuo nuovo sistema operativo ultra-veloce, sicuro e autonomo.\nIngegnerizzato da <b>Andrea Taliento (ANDRYXify)</b>.\n\nScegli la lingua del sistema per continuare:" \
+    --text="<b><big>Benvenuto in OSify</big></b>\n\nOSify è il tuo nuovo sistema operativo ultra-veloce, sicuro e autonomo.\nIngegnerizzato da <b>Andrea Taliento (ANDRYXify)</b>.\n\nScegli la lingua del sistema per continuare:" \
     --form \
     --field="Lingua Principale:CB" "Italiano (Italia)!English (US)!Español (España)!Français (France)!Deutsch (Deutschland)" \
     --button="Esci":1 --button="Continua":0 2>/dev/null)
@@ -122,7 +122,7 @@ USER_CHOICE=$(yad --title="OSify — Account Personale" \
     --field="Nome e Cognome:" "Utente OSify" \
     --field="Nome Account (login):" "osify" \
     --field="Password:H" "" \
-    --field="Stile Desktop:CB" "Dark Obsidian Glass (macOS Style)!Cyber Neon 2050" \
+    --field="Stile Desktop:CB" "Dark Obsidian Glass (macOS Style)!Cyber Neon" \
     --button="Indietro":1 --button="Entra in OSify":0 2>/dev/null)
 
 # Registra completamento configurazione
@@ -134,7 +134,7 @@ yad --title="OSify" \
     --window-icon="$ICON_LOGO" \
     --image="$ICON_LOGO" \
     --width=460 --height=220 --center \
-    --text="<b><big>Tutto pronto!</big></b>\n\nIl tuo sistema operativo <b>OSify 2050</b> è configurato.\nEsplora le applicazioni dal Dock inferiore o premi <b>Super+Spazio</b> per Spotlight." \
+    --text="<b><big>Tutto pronto!</big></b>\n\nIl tuo sistema operativo <b>OSify</b> è configurato.\nEsplora le applicazioni dal Dock inferiore o premi <b>Super+Spazio</b> per Spotlight." \
     --button="Inizia subito":0 2>/dev/null
 
 exit 0

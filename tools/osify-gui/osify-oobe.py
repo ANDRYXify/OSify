@@ -94,9 +94,11 @@ class OSifyOOBEApp(tk.Tk):
     def load_assets(self):
         # Carica logo principale
         logo_candidates = [
+            "/usr/share/pixmaps/osify.png",
+            "/usr/share/pixmaps/osify-hub.png",
+            "/Sistema/Icone/osify.png",
             os.path.join(REPO_ROOT, "desktop/branding/icons/64/osify.png"),
             os.path.join(REPO_ROOT, "OSify.png"),
-            "/usr/share/pixmaps/osify.png",
         ]
         for c in logo_candidates:
             if os.path.exists(c):
@@ -111,10 +113,14 @@ class OSifyOOBEApp(tk.Tk):
         # Carica avatar dalle icone squircle
         icon_names = ["osify", "osify-games", "osify-terminal", "osify-audio", "osify-settings"]
         for name in icon_names:
-            p = os.path.join(REPO_ROOT, f"desktop/branding/icons/48/{name}.png")
-            if not os.path.exists(p):
-                p = f"/usr/share/icons/hicolor/48x48/apps/{name}.png"
-            if os.path.exists(p):
+            p_cands = [
+                f"/usr/share/pixmaps/{name}.png",
+                f"/Sistema/Icone/{name}.png",
+                os.path.join(REPO_ROOT, f"desktop/branding/icons/48/{name}.png"),
+                f"/usr/share/icons/hicolor/48x48/apps/{name}.png"
+            ]
+            p = next((x for x in p_cands if os.path.exists(x)), None)
+            if p:
                 try:
                     im = Image.open(p).convert("RGBA")
                     im.thumbnail((44, 44), Image.Resampling.LANCZOS)
@@ -137,8 +143,8 @@ class OSifyOOBEApp(tk.Tk):
         
         lbl_brand = tk.Label(
             sb_hdr,
-            text="OSify 2050",
-            font=("Helvetica", 14, "bold"),
+            text="OSify",
+            font=("Helvetica", 15, "bold"),
             fg=COLOR_TEXT_WHITE,
             bg=COLOR_SIDEBAR
         )
@@ -483,7 +489,7 @@ class OSifyOOBEApp(tk.Tk):
         c1.pack(side="left", fill="both", expand=True, padx=(0, 8), pady=4)
 
         tk.Label(c1, text="DARK OBSIDIAN", font=("Helvetica", 11, "bold"), fg=COLOR_TEXT_WHITE, bg=COLOR_CARD).pack(anchor="w", padx=14, pady=(12, 4))
-        tk.Label(c1, text="Vetro scuro, contrasto profondo e Traffic Lights in stile Apple macOS 2050.", font=("Helvetica", 9), fg=COLOR_TEXT_MUTED, bg=COLOR_CARD, wraplength=220, justify="left").pack(anchor="w", padx=14, pady=(0, 12))
+        tk.Label(c1, text="Vetro scuro, contrasto profondo e Traffic Lights in stile Apple macOS.", font=("Helvetica", 9), fg=COLOR_TEXT_MUTED, bg=COLOR_CARD, wraplength=220, justify="left").pack(anchor="w", padx=14, pady=(0, 12))
 
         # Card 2: Cyber Neon
         c2 = tk.Frame(theme_frame, bg=COLOR_CARD, bd=1, relief="solid", highlightbackground=COLOR_CARD_BORDER)
@@ -509,7 +515,7 @@ class OSifyOOBEApp(tk.Tk):
             f"• Lingua di Sistema: {self.config_data.get('lang', 'it_IT')}",
             f"• Disposizione Tastiera: {self.config_data.get('keyboard', 'it')}",
             f"• Utente Predefinito: {self.config_data.get('fullname', 'Utente OSify')} ({self.config_data.get('username', 'osify')})",
-            f"• Ambiente Desktop: OSify macOS 2050 Dual-Panel",
+            f"• Ambiente Desktop: OSify Dual-Panel",
             f"• Gestore Icone: Squircle HD Native Engine",
         ]
         for s in summary:

@@ -21,3 +21,8 @@ vm/*.qcow2
 # Scratch files
 scratch/
 
+# C compiled binaries and objects
+*.o
+*.a
+sistema/nucleo/kernel/test_osify_kernel
+
