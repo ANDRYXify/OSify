@@ -15,9 +15,10 @@
 
 #define OSIFY_OS_NAME       "OSify"
 #define OSIFY_OS_CODENAME   "Resurrezione"
-#define OSIFY_VERSION_MAJOR 1
-#define OSIFY_VERSION_MINOR 5
+#define OSIFY_VERSION_GEN   'A'
+#define OSIFY_VERSION_MAJOR 0
 #define OSIFY_VERSION_PATCH 0
+#define OSIFY_VERSION_STR   "A.0"
 
 #define OSIFY_PAGE_SIZE     4096ULL
 #define OSIFY_MAX_HANDLES   1024

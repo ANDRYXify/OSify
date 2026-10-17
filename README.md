@@ -13,19 +13,19 @@
 
 <p align="center">
   <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-NoUSB-Windows-Installer.zip">
-    <img src="https://img.shields.io/badge/Installer_Windows-Senza_USB_(v1.5.0)-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Installer Windows Senza USB"/>
+    <img src="https://img.shields.io/badge/Installer_Windows-Senza_USB_(vA.0)-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Installer Windows Senza USB"/>
   </a>
   &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-x86_64-v3.iso">
-    <img src="https://img.shields.io/badge/OSify_Standard-x86--64--v3_(v1.5.0)-7C3AED?style=for-the-badge" alt="OSify Standard x86_64-v3"/>
+    <img src="https://img.shields.io/badge/OSify_Standard-x86--64--v3_(vA.0)-7C3AED?style=for-the-badge" alt="OSify Standard x86_64-v3"/>
   </a>
   &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-Vintage-i686.iso">
-    <img src="https://img.shields.io/badge/OSify_Vintage-32--bit_i686_(v1.5.0)-10B981?style=for-the-badge" alt="OSify Vintage 32-bit i686"/>
+    <img src="https://img.shields.io/badge/OSify_Vintage-32--bit_i686_(vA.0)-10B981?style=for-the-badge" alt="OSify Vintage 32-bit i686"/>
   </a>
   &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/releases/latest">
-    <img src="https://img.shields.io/badge/Release-v1.5.0_Latest-22C55E?style=for-the-badge&logo=github&logoColor=white" alt="Official Release"/>
+    <img src="https://img.shields.io/badge/Release-vA.0_Latest-22C55E?style=for-the-badge&logo=github&logoColor=white" alt="Official Release"/>
   </a>
 </p>
 
@@ -35,7 +35,7 @@
   </a>
   &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/actions">
-    <img src="https://img.shields.io/badge/Tests-283%2F283_Passed-059669?style=flat-square&logo=githubactions&logoColor=white" alt="Test Suite"/>
+    <img src="https://img.shields.io/badge/Tests-293%2F293_Passed-059669?style=flat-square&logo=githubactions&logoColor=white" alt="Test Suite"/>
   </a>
   &nbsp;
   <a href="#architettura-dei-due-target">
@@ -58,7 +58,7 @@ OSify è un sistema operativo commerciale e autonomo a sé stante ingegnerizzato
 
 ---
 
-## 🌟 Esperienza a 360° Out-Of-The-Box & Live-to-Disk Persistence (v1.5.0)
+## 🌟 Esperienza a 360° Out-Of-The-Box & Live-to-Disk Persistence (vA.0)
 
 OSify non è un clone o una derivata generica: è un sistema operativo con un'architettura completa progettata per consentire all'utente di lavorare, programmare, giocare e personalizzare ogni aspetto fin dal primo secondo.
 

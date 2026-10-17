@@ -19,7 +19,15 @@
   3. Integrita a Livello 0 (SIP & Seatbelt): l'albero `/Sistema` e bloccato in sola lettura hardware contro modifiche non autorizzate anche da parte di root, e i token di sicurezza isolano le chiamate raw disk/network per processi in sandbox.
   4. Unificatore Percorsi: la traduzione a livello 0 intercetta trasparentemente percorsi Windows (`C:\...`), POSIX (`/home`, `/usr`) e macOS (`/Users`, `/Applications`) normalizzandoli sull'albero nativo OSify (`/Sistema`, `/Applicazioni`, `/Utenti`).
 
-
+## 2026-10-17 — Nuova Tassonomia di Versioning Generazionale: OSify A.0 (A.x.y)
+- **Area**: Rilascio, standardizzazione formale del versioning e identita di sistema
+- **Errore**: Utilizzare il convenzionale schema semantico 1.x.y (es. 1.5.0) che riconduceva il progetto a logiche di release ordinarie non distintive.
+- **Causa radice**: Mancanza di un sistema di nomenclatura generazionale proprietario che separi nettamente le generazioni di OSify dagli schemi convenzionali.
+- **Regola**: Il versioning di OSify adotta la nomenclatura generazionale con lettera alfabetica:
+  1. La release attuale e ufficialmente **OSify A.0**.
+  2. Le release successive della medesima generazione avanzano come `A.1`, `A.2`, `A.3`.
+  3. Gli aggiornamenti incrementali ("versioni piccole") seguono la notazione `A.x.y`, dove `x` e la major di generazione e `y` e il contatore incrementale di aggiornamenti minori (es. `A.0.1`, `A.0.2`, `A.1.1`).
+  4. Nessun riferimento a `1.5.0` deve comparire in alcun file di sistema, badge, header C, fastfetch, terminale o documentazione.
 
 ## 2026-10-17 — Sincronizzazione Binaria Etichette EFI & Prevenzione 'no such device'
 - **Area**: Firmware UEFI, GRUB EFI embedded e masterizzazione xorriso

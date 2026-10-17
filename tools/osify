@@ -127,7 +127,7 @@ cmd_info() {
     echo ""
     echo "${C_BOLD}┌─────────────────────── ⚡ SCHEDA SISTEMA OSIFY ───────────────────────┐${C_RESET}"
     printf "│ ${C_YELLOW}%-15s${C_RESET} : %-52s │\n" "Utente" "$(whoami) @ $(cat /etc/hostname 2>/dev/null || echo osify)"
-    printf "│ ${C_YELLOW}%-15s${C_RESET} : %-52s │\n" "Edizione" "OSify $(cat /etc/osify-version 2>/dev/null || echo '1.5.0') (Vintage Universal)"
+    printf "│ ${C_YELLOW}%-15s${C_RESET} : %-52s │\n" "Edizione" "OSify $(cat /etc/osify-version 2>/dev/null || echo 'A.0') (Vintage Universal)"
     printf "│ ${C_YELLOW}%-15s${C_RESET} : %-52s │\n" "Kernel" "$(uname -srm)"
     printf "│ ${C_YELLOW}%-15s${C_RESET} : %-52s │\n" "Processore" "$CPU_MODEL ($CPU_CORES Core)"
     printf "│ ${C_YELLOW}%-15s${C_RESET} : %-52s │\n" "RAM Utilizzata" "${RAM_USED_MB}MB / ${RAM_TOTAL_MB}MB [${RAM_BAR}] ${RAM_PERCENT}%"

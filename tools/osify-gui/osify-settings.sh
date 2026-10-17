@@ -12,7 +12,7 @@ if [ -n "$DISPLAY" ] && [ ! -t 0 ]; then
     fi
 fi
 
-OSIFY_VER=$(cat /etc/osify-version 2>/dev/null || echo "1.5.0")
+OSIFY_VER=$(cat /etc/osify-version 2>/dev/null || echo "A.0")
 CPU_INFO=$(awk -F: '/model name/ {print $2; exit}' /proc/cpuinfo 2>/dev/null | sed 's/^[ \t]*//' || uname -m)
 RAM_INFO=$(awk '/MemTotal/ {print int($2/1024)" MB"}' /proc/meminfo 2>/dev/null || echo "1024 MB")
 KERNEL_INFO=$(uname -srm)

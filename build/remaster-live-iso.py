@@ -12,7 +12,7 @@ LANCZOS_FILTER = getattr(getattr(Image, 'Resampling', None), 'LANCZOS', getattr(
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 VERSION_FILE = os.path.join(REPO_ROOT, "VERSION")
-OSIFY_VERSION = "1.5.0"
+OSIFY_VERSION = "A.0"
 if os.path.isfile(VERSION_FILE):
     try:
         with open(VERSION_FILE, "r") as f:
