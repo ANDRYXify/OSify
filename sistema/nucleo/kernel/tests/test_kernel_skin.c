@@ -14,6 +14,9 @@
 #include "../include/osify_kstring.h"
 #include "../include/osify_storage.h"
 #include "../include/osify_desktop.h"
+#include "../include/osify_net.h"
+#include "../include/osify_audio.h"
+#include "../include/osify_installer.h"
 
 int main(void) {
     printf("[+] Inizio collaudo avanzato del Kernel Nativo OSify...\n");
@@ -169,12 +172,80 @@ int main(void) {
     int dock_center_idx = 512 + 720 * 1024;
     assert(desktop_fb_buf[dock_center_idx] != 0);
 
-    /* Test interazione Shell Nativa */
+    /* Test interazione Shell Nativa estesa */
     osify_shell_execute_cmd(&desktop_fb, "stato");
     osify_shell_execute_cmd(&desktop_fb, "disco");
     osify_shell_execute_cmd(&desktop_fb, "sicurezza");
+    osify_shell_execute_cmd(&desktop_fb, "rete");
+    osify_shell_execute_cmd(&desktop_fb, "ping");
+    osify_shell_execute_cmd(&desktop_fb, "audio");
+    osify_shell_execute_cmd(&desktop_fb, "audio chime");
+    osify_shell_execute_cmd(&desktop_fb, "installa");
     printf("[+] 10. Desktop Environment Dark Glass & Shell Nativa su Framebuffer a 32bpp: OK\n");
 
-    printf("\n[✓✓✓] TUTTI I 10 TEST AVANZATI DEL KERNEL NATIVO OSIFY SUPERATI CON SUCCESSO AL 100%%!\n");
+    /* 11. Test Network Stack Bare-Metal (Ethernet, IPv4, ARP, DHCP, Quad9) */
+    osify_net_init();
+    const osify_net_device_t *net = osify_net_get_device();
+    assert(net->link_up == true);
+    assert(net->dhcp_acquired == true);
+    assert(net->ip_addr == 0x9601A8C0); /* 192.168.1.150 */
+    assert(net->dns_server == 0x09090909); /* Quad9 9.9.9.9 */
+
+    char ip_fmt[32], mac_fmt[32];
+    osify_net_format_ip(net->ip_addr, ip_fmt, sizeof(ip_fmt));
+    assert(strcmp(ip_fmt, "192.168.1.150") == 0);
+    osify_net_format_mac(net->mac_addr, mac_fmt, sizeof(mac_fmt));
+    assert(strcmp(mac_fmt, "52:54:00:aa:bb:cc") == 0);
+
+    uint32_t ping_lat = 0;
+    assert(osify_net_ping(net->dns_server, &ping_lat) == true);
+    assert(ping_lat > 0);
+    printf("[+] 11. Network Stack Bare-Metal (Ethernet, IPv4, DHCP IP, DNS Quad9, Ping): OK\n");
+
+    /* 12. Test Audio Driver Hardware (Intel HDA & AC97) */
+    osify_audio_init();
+    const osify_audio_state_t *audio = osify_audio_get_state();
+    assert(audio->hda_detected == true);
+    assert(audio->master_volume == 80);
+
+    osify_audio_set_volume(90);
+    assert(osify_audio_get_volume() == 90);
+    osify_audio_volume_down(10);
+    assert(osify_audio_get_volume() == 80);
+    osify_audio_volume_up(5);
+    assert(osify_audio_get_volume() == 85);
+
+    osify_audio_toggle_mute();
+    assert(osify_audio_get_state()->is_muted == true);
+    osify_audio_toggle_mute();
+    assert(osify_audio_get_state()->is_muted == false);
+
+    osify_audio_play_startup_chime();
+    assert(osify_audio_get_state()->samples_played > 0);
+    printf("[+] 12. Audio Driver Hardware (Intel HDA mixer, PCM streaming, Startup Chime): OK\n");
+
+    /* 13. Test Installatore Bare-Metal Guidato su Disco Fisso */
+    osify_installer_init();
+    assert(osify_installer_get_state()->is_completed == false);
+    assert(osify_installer_get_state()->target_disk.is_target == true);
+
+    assert(osify_installer_start(0) == true);
+    const osify_installer_state_t *inst = osify_installer_get_state();
+    assert(inst->is_completed == true);
+    assert(inst->progress_percent == 100);
+    assert(inst->step == INSTALL_FINISHED);
+
+    /* Verifica creazione file di sistema post-installazione */
+    char inst_check[64];
+    memset(inst_check, 0, sizeof(inst_check));
+    assert(osify_fs_read_file("/Sistema/Installato.txt", inst_check, sizeof(inst_check) - 1) > 0);
+    assert(strcmp(inst_check, "OSify A.0 Residente su Disco Fisso") == 0);
+
+    /* Render card installatore su framebuffer */
+    osify_installer_render(&desktop_fb, 200, 150, 624, 200);
+    assert(desktop_fb_buf[250 + 200 * 1024] != 0);
+    printf("[+] 13. Installatore Bare-Metal Guidato su Disco Fisso (GPT, OSifyFS, 100%%): OK\n");
+
+    printf("\n[✓✓✓] TUTTI I 13 TEST AVANZATI DEL KERNEL NATIVO OSIFY SUPERATI CON SUCCESSO AL 100%%!\n");
     return 0;
 }

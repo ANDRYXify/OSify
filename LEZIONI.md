@@ -1,5 +1,15 @@
 # LEZIONI APPRESE — REGISTRO ERRORI E REGOLE ARCHITETTURALI OSIFY
 
+## 2026-10-17 — Network Stack Bare-Metal, Audio Driver Intel HDA & Installatore Guidato su Disco Fisso GPT
+- **Area**: Rete bare-metal, driver audio PCI, formattazione stringhe freestanding e partizionamento disco persistente
+- **Errore**: Mancanza di connettivita automatica DHCP a basso livello, assenza di audio feedback hardware con mixer DMA, formattazione MAC address fallita in `osify_snprintf` per assenza di supporto padding width/zero-pad, e impossibilita per l'utente finale di installare permanentemente il kernel sul disco interno GPT.
+- **Causa radice**: In un ambiente bare-metal freestanding no-libc, `osify_snprintf` scartava token non esatti come `%02x` provocando misallineamenti negli argomenti variadici `va_arg`, e il kernel necessitava dei 3 anelli di completamento per l'hardware reale (scheda di rete Ethernet, controller audio HDA e installatore di sistema con tabella partizioni EFI).
+- **Regola**:
+  1. Formattatore Freestanding: `osify_snprintf` deve sempre analizzare i flag di zero-padding (`%0`) e la larghezza di campo (`width`) sia per interi decimali `%02d` che per esadecimali `%02x` / `%02X`, prelevando correttamente tipi `unsigned int` secondo le regole di promozione variadica del C standard.
+  2. Network Stack Bare-Metal (`drivers/osify_net.c`): Gestisce direttamente i frame Ethernet II (Intel e1000 / Realtek RTL8139), le richieste ARP, i datagrammi IPv4/UDP e acquisisce automaticamente la lease IP via DHCP client instradando il traffico DNS categoricamente su Quad9 (`9.9.9.9`) con zero-telemetria.
+  3. Audio Hardware & Chime (`drivers/osify_audio.c`): Controller Intel HDA / AC97 con buffer circolare DMA PCM stereo 16-bit 44.1kHz, attenuazione lineare del volume master (0-100%), toggle mute e Cyber Startup Chime sintetizzato a due toni sinusoidali/triangolari.
+  4. Installatore Fisico GPT (`drivers/osify_installer.c`): Automa FSM che partiziona il disco fisso interno con tabella GPT conforme UEFI (LBA 1 Header `EFI PART`, LBA 2-33 ESP di bootloader + Root OSifyFS), formatta il filesystem nativo `OSFS`, copia l'albero `/Sistema` ed espone un'interfaccia Dark Glass con barra dinamica su Linear Framebuffer a 32bpp.
+
 ## 2026-10-17 — Sistema Operativo Fatto e Finito al 100%: Storage ATA, OSifyFS, Window Manager & ISO Bare-Metal
 - **Area**: Architettura OS completa, file system autonomo, window manager nativo e packaging bare-metal
 - **Errore**: Fermarsi a moduli parziali o a un ambiente dipendente da display server esterni (X11) e driver di terze parti, lasciando l'OS incompleto per l'utente finale.

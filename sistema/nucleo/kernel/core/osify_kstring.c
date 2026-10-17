@@ -106,6 +106,17 @@ int osify_snprintf(char *str, size_t size, const char *format, ...) {
     while (*format && written + 1 < size) {
         if (*format == '%' && *(format + 1)) {
             format++;
+            bool zero_pad = false;
+            int width = 0;
+            if (*format == '0') {
+                zero_pad = true;
+                format++;
+            }
+            while (*format >= '0' && *format <= '9') {
+                width = width * 10 + (*format - '0');
+                format++;
+            }
+
             if (*format == 's') {
                 const char *s = va_arg(args, const char *);
                 if (!s) s = "(null)";
@@ -113,18 +124,30 @@ int osify_snprintf(char *str, size_t size, const char *format, ...) {
                     str[written++] = *s++;
                 }
             } else if (*format == 'd' || *format == 'u') {
-                uint64_t v = va_arg(args, uint32_t);
+                unsigned int v = va_arg(args, unsigned int);
                 char num_buf[32];
-                u64_to_str(v, num_buf, 10);
+                int num_len = u64_to_str((uint64_t)v, num_buf, 10);
+                while (width > num_len && written + 1 < size) {
+                    str[written++] = zero_pad ? '0' : ' ';
+                    width--;
+                }
                 for (int k = 0; num_buf[k] && written + 1 < size; k++) {
                     str[written++] = num_buf[k];
                 }
             } else if (*format == 'x' || *format == 'X') {
-                uint64_t v = va_arg(args, uint64_t);
+                unsigned int v = va_arg(args, unsigned int);
                 char num_buf[32];
-                u64_to_str(v, num_buf, 16);
+                int num_len = u64_to_str((uint64_t)v, num_buf, 16);
+                while (width > num_len && written + 1 < size) {
+                    str[written++] = zero_pad ? '0' : ' ';
+                    width--;
+                }
                 for (int k = 0; num_buf[k] && written + 1 < size; k++) {
-                    str[written++] = num_buf[k];
+                    char c = num_buf[k];
+                    if (*format == 'X' && c >= 'a' && c <= 'f') {
+                        c = c - 'a' + 'A';
+                    }
+                    str[written++] = c;
                 }
             } else if (*format == '%') {
                 str[written++] = '%';

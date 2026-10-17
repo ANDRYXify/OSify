@@ -5,13 +5,16 @@
  * Ingegnerizzato da Andrea Taliento (ANDRYXify) per OSify
  * Desktop Environment autonomo a 32bpp direttamente su Linear Framebuffer:
  * Dual-Panel (Top Menu Bar a 26px + Floating Dock centrata), Finestre Dark Glass,
- * Cursore del mouse vettoriale e Shell interattiva nativa.
+ * Cursore del mouse vettoriale, Shell interattiva e Integrazione Rete, Audio e Installatore.
  * ==============================================================================
  */
 
 #include "../include/osify_desktop.h"
 #include "../include/osify_kstring.h"
 #include "../include/osify_storage.h"
+#include "../include/osify_net.h"
+#include "../include/osify_audio.h"
+#include "../include/osify_installer.h"
 
 /* Palette Colori Ufficiale Dark Glass OSify */
 #define COLOR_DESKTOP_BG        0xFF0B101D  /* Blu Notte Profondo */
@@ -28,10 +31,11 @@
 static osify_window_t g_windows[MAX_WINDOWS];
 static size_t g_window_count = 0;
 static osify_mouse_cursor_t g_mouse;
+static bool g_show_installer_window = false;
 
 /* Buffer Shell Nativa su Framebuffer */
-#define SHELL_MAX_LINES 12
-#define SHELL_LINE_LEN  80
+#define SHELL_MAX_LINES 14
+#define SHELL_LINE_LEN  90
 static char g_shell_lines[SHELL_MAX_LINES][SHELL_LINE_LEN];
 static size_t g_shell_line_count = 0;
 static char g_cmd_input[SHELL_LINE_LEN];
@@ -44,7 +48,7 @@ void osify_shell_init(void) {
     osify_memset(g_cmd_input, 0, sizeof(g_cmd_input));
 
     osify_strcpy(g_shell_lines[g_shell_line_count++], "OSify A.0 Shell Nativa Bare-Metal (Kernel Livello 0)");
-    osify_strcpy(g_shell_lines[g_shell_line_count++], "Digita 'aiuto' per la lista dei comandi o 'stato'.");
+    osify_strcpy(g_shell_lines[g_shell_line_count++], "Digita 'aiuto' per la lista comandi, 'rete', 'audio' o 'installa'.");
 }
 
 static void shell_append_line(const char *line) {
@@ -60,14 +64,18 @@ static void shell_append_line(const char *line) {
 }
 
 void osify_shell_execute_cmd(osify_framebuffer_t *fb, const char *cmd) {
-    char echo_buf[90];
+    char echo_buf[100];
     osify_snprintf(echo_buf, sizeof(echo_buf), "osify> %s", cmd);
     shell_append_line(echo_buf);
 
     if (osify_strcmp(cmd, "aiuto") == 0 || osify_strcmp(cmd, "help") == 0) {
         shell_append_line("Comandi disponibili:");
-        shell_append_line("  stato     - Mostra telemetria hardware e profilo silicio");
+        shell_append_line("  stato     - Telemetria hardware e profilo silicio");
         shell_append_line("  disco     - Elenco partizioni e file OSifyFS");
+        shell_append_line("  rete      - Stato interfaccia Ethernet, IP e DNS Quad9");
+        shell_append_line("  ping      - Test connettivita ICMP su Quad9 (9.9.9.9)");
+        shell_append_line("  audio     - Stato mixer, volume Intel HDA e Chime");
+        shell_append_line("  installa  - Avvia installatore guidato su disco fisso GPT");
         shell_append_line("  sicurezza - Verifica TPM 2.0, Secure Boot, SIP e Seatbelt");
         shell_append_line("  pulisci   - Svuota lo storico del terminale");
     } else if (osify_strcmp(cmd, "stato") == 0) {
@@ -80,6 +88,42 @@ void osify_shell_execute_cmd(osify_framebuffer_t *fb, const char *cmd) {
         char disco_msg[90];
         osify_snprintf(disco_msg, sizeof(disco_msg), "OSifyFS /Sistema/Versione.txt: '%s'", file_buf);
         shell_append_line(disco_msg);
+    } else if (osify_strcmp(cmd, "rete") == 0 || osify_strcmp(cmd, "ip") == 0) {
+        const osify_net_device_t *net = osify_net_get_device();
+        char ip_str[32], mac_str[32], net_msg[90];
+        osify_net_format_ip(net->ip_addr, ip_str, sizeof(ip_str));
+        osify_net_format_mac(net->mac_addr, mac_str, sizeof(mac_str));
+
+        osify_snprintf(net_msg, sizeof(net_msg), "NIC: %s [MAC: %s]", net->nic_name, mac_str);
+        shell_append_line(net_msg);
+        osify_snprintf(net_msg, sizeof(net_msg), "IP: %s | DHCP: ATTIVO | DNS: 9.9.9.9 (Quad9)", ip_str);
+        shell_append_line(net_msg);
+    } else if (osify_strcmp(cmd, "ping") == 0) {
+        uint32_t lat_ms = 0;
+        const osify_net_device_t *net = osify_net_get_device();
+        if (osify_net_ping(net->dns_server, &lat_ms)) {
+            char ping_msg[90];
+            osify_snprintf(ping_msg, sizeof(ping_msg), "Risposta da 9.9.9.9 (Quad9): bytes=32 tempo=%ums TTL=64", lat_ms);
+            shell_append_line(ping_msg);
+        } else {
+            shell_append_line("Errore ping: rete non raggiungibile.");
+        }
+    } else if (osify_strcmp(cmd, "audio") == 0) {
+        const osify_audio_state_t *aud = osify_audio_get_state();
+        char aud_msg[90];
+        osify_snprintf(aud_msg, sizeof(aud_msg), "Audio: %s | Volume: %u%% | Muto: %s",
+                       aud->card_name, aud->master_volume, aud->is_muted ? "SI" : "NO");
+        shell_append_line(aud_msg);
+        shell_append_line("Formato PCM: 44100Hz 16-bit Stereo | Riproduzione Chime: 'audio chime'");
+    } else if (osify_strcmp(cmd, "audio chime") == 0) {
+        osify_audio_play_startup_chime();
+        shell_append_line("Cyber Startup Chime riprodotto su Intel HDA.");
+    } else if (osify_strcmp(cmd, "installa") == 0 || osify_strcmp(cmd, "installer") == 0) {
+        shell_append_line("Avvio Installatore Bare-Metal OSify A.0 sul disco fisso...");
+        osify_installer_start(0);
+        g_show_installer_window = true;
+        const osify_installer_state_t *inst = osify_installer_get_state();
+        shell_append_line(inst->status_msg);
     } else if (osify_strcmp(cmd, "sicurezza") == 0) {
         shell_append_line("Sicurezza: SIP Immutabile su /Sistema | Seatbelt Sandbox: ATTIVO");
         shell_append_line("Anti-Cheat: TPM 2.0 SHA-256 PCR Enforced | DSE: ATTIVO");
@@ -158,12 +202,13 @@ void osify_desktop_init(osify_framebuffer_t *fb) {
     g_mouse.x = (int)fb->width / 2;
     g_mouse.y = (int)fb->height / 2;
     g_mouse.is_visible = true;
+    g_show_installer_window = false;
 
     /* Inizializza Shell Nativa */
     osify_shell_init();
 
     /* Crea Finestra Terminale Shell di Default */
-    osify_wm_create_window(120, 80, 784, 420, "OSify Terminale Nativo");
+    osify_wm_create_window(80, 50, 864, 440, "OSify Terminale Nativo");
 }
 
 void osify_desktop_render_all(osify_framebuffer_t *fb) {
@@ -175,8 +220,18 @@ void osify_desktop_render_all(osify_framebuffer_t *fb) {
     /* 2. Top Menu Bar macOS-Style a 26px */
     osify_fb_draw_rect(fb, 0, 0, fb->width, 26, COLOR_PANEL_GLASS);
     osify_fb_draw_string(fb, 16, 5, "OSify A.0", COLOR_BORDER_NEON);
-    osify_fb_draw_string(fb, 120, 5, "File  Modifica  Visualizza  Sicurezza  Aiuto", COLOR_TEXT_WHITE);
-    osify_fb_draw_string(fb, fb->width - 160, 5, "12:00  [Sicuro]", COLOR_TEXT_MUTED);
+    osify_fb_draw_string(fb, 120, 5, "File  Modifica  Rete  Audio  Sicurezza  Aiuto", COLOR_TEXT_WHITE);
+
+    /* Telemetria di Rete e Audio nella Top Bar */
+    const osify_net_device_t *net = osify_net_get_device();
+    const osify_audio_state_t *aud = osify_audio_get_state();
+    char top_status[90];
+    char ip_short[24];
+    osify_net_format_ip(net->ip_addr, ip_short, sizeof(ip_short));
+
+    osify_snprintf(top_status, sizeof(top_status), "[IP: %s] [Vol: %u%%] [Sicuro] 12:00",
+                   ip_short, aud->master_volume);
+    osify_fb_draw_string(fb, fb->width - 340, 5, top_status, COLOR_TEXT_MUTED);
 
     /* 3. Disegno Finestre Attive */
     for (size_t i = 0; i < g_window_count; i++) {
@@ -184,20 +239,25 @@ void osify_desktop_render_all(osify_framebuffer_t *fb) {
 
         /* Se e la finestra terminale, renderizza le linee della shell */
         if (osify_strcmp(g_windows[i].title, "OSify Terminale Nativo") == 0) {
-            int text_y = g_windows[i].y + 40;
+            int text_y = g_windows[i].y + 38;
             for (size_t l = 0; l < g_shell_line_count; l++) {
                 osify_fb_draw_string(fb, g_windows[i].x + 20, text_y, g_shell_lines[l], COLOR_TEXT_WHITE);
                 text_y += 20;
             }
-            /* Prompt di input attivo */
-            char prompt_buf[90];
+            /* Prompt di input attivo con cursore lampeggiante */
+            char prompt_buf[100];
             osify_snprintf(prompt_buf, sizeof(prompt_buf), "osify> %s_", g_cmd_input);
             osify_fb_draw_string(fb, g_windows[i].x + 20, text_y, prompt_buf, COLOR_BORDER_NEON);
         }
     }
 
-    /* 4. Floating Dock Inferiore Centrata (Staccata dal fondo a 14px, altezza 54px) */
-    int dock_w = 420;
+    /* 4. Finestra Assistente Installatore Disco Fisso (se attiva) */
+    if (g_show_installer_window) {
+        osify_installer_render(fb, 160, 100, 704, 200);
+    }
+
+    /* 5. Floating Dock Inferiore Centrata (Staccata dal fondo a 14px, altezza 54px) */
+    int dock_w = 460;
     int dock_h = 54;
     int dock_x = ((int)fb->width - dock_w) / 2;
     int dock_y = (int)fb->height - dock_h - 14;
@@ -205,22 +265,21 @@ void osify_desktop_render_all(osify_framebuffer_t *fb) {
     osify_fb_draw_squircle(fb, dock_x, dock_y, dock_w, 18, COLOR_PANEL_GLASS);
     osify_fb_draw_rect(fb, dock_x, dock_y, dock_w, 2, COLOR_BORDER_NEON); /* Neon line */
 
-    /* Icone Squircle macOS nel Dock */
-    const char *dock_labels[] = {"Hub", "Term", "File", "Guard", "Impost"};
-    uint32_t dock_colors[] = {COLOR_BORDER_NEON, COLOR_ACCENT_PURPLE, 0xFF3B82F6, 0xFF10B981, 0xFF64748B};
+    /* Icone Squircle macOS nel Dock con Rete, Audio e Installatore */
+    const char *dock_labels[] = {"Hub", "Term", "Rete", "Audio", "Installa"};
+    uint32_t dock_colors[] = {COLOR_BORDER_NEON, COLOR_ACCENT_PURPLE, 0xFF3B82F6, 0xFF10B981, 0xFFF59E0B};
 
     for (int d = 0; d < 5; d++) {
-        int icon_x = dock_x + 24 + (d * 76);
+        int icon_x = dock_x + 18 + (d * 88);
         int icon_y = dock_y + 8;
         osify_fb_draw_squircle(fb, icon_x, icon_y, 38, 10, dock_colors[d]);
-        osify_fb_draw_string(fb, icon_x + 4, icon_y + 11, dock_labels[d], COLOR_TEXT_WHITE);
+        osify_fb_draw_string(fb, icon_x + 2, icon_y + 11, dock_labels[d], COLOR_TEXT_WHITE);
     }
 
-    /* 5. Cursore Mouse Vettoriale Dark Glass */
+    /* 6. Cursore Mouse Vettoriale Dark Glass */
     if (g_mouse.is_visible) {
         int mx = g_mouse.x;
         int my = g_mouse.y;
-        /* Disegno freccia del cursore */
         for (int row = 0; row < 12; row++) {
             for (int col = 0; col <= row; col++) {
                 if (mx + col < (int)fb->width && my + row < (int)fb->height) {

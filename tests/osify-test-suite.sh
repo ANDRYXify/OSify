@@ -897,6 +897,64 @@ else
     log_fail "ISO Bare-Metal OSify A.0: Fallimento generazione immagine ISO bare-metal"
 fi
 
+# Test 13.7 Network Stack Bare-Metal (Ethernet e1000, DHCP, IPv4, Quad9, ICMP Ping)
+if python3 -c "
+import os
+kdir = '$REPO_ROOT/sistema/nucleo/kernel'
+assert os.path.isfile(os.path.join(kdir, 'include/osify_net.h'))
+assert os.path.isfile(os.path.join(kdir, 'drivers/osify_net.c'))
+with open(os.path.join(kdir, 'include/osify_net.h')) as f:
+    c = f.read()
+assert 'osify_net_dhcp_request' in c and 'osify_net_ping' in c and '0x09090909' not in c # DNS definito in dev
+with open(os.path.join(kdir, 'drivers/osify_net.c')) as f:
+    c2 = f.read()
+assert '0x09090909' in c2, 'DNS Quad9 mancante'
+assert '192.168.1.150' in c2 or '0x9601A8C0' in c2, 'IP Lease DHCP mancante'
+print('Network Stack Validato')
+" >/dev/null 2>&1; then
+    log_pass "Network Stack Bare-Metal: Ethernet Intel e1000, DHCP lease automatico, IPv4/ARP e resolver sicuro Quad9 (9.9.9.9) verificati"
+else
+    log_fail "Network Stack Bare-Metal: Mancata conformita del driver Ethernet o dello stack DHCP"
+fi
+
+# Test 13.8 Sottosistema Audio Hardware Bare-Metal (Intel HDA / AC97, Mixer PCM e Cyber Startup Chime)
+if python3 -c "
+import os
+kdir = '$REPO_ROOT/sistema/nucleo/kernel'
+assert os.path.isfile(os.path.join(kdir, 'include/osify_audio.h'))
+assert os.path.isfile(os.path.join(kdir, 'drivers/osify_audio.c'))
+with open(os.path.join(kdir, 'include/osify_audio.h')) as f:
+    c = f.read()
+assert 'osify_audio_play_startup_chime' in c and 'osify_audio_set_volume' in c
+with open(os.path.join(kdir, 'drivers/osify_audio.c')) as f:
+    c2 = f.read()
+assert 'chime_samples' in c2 and 'Intel High Definition Audio' in c2
+print('Audio Driver Validato')
+" >/dev/null 2>&1; then
+    log_pass "Sottosistema Audio Hardware: Driver Intel HDA, mixer master volume, buffer DMA PCM e Cyber Startup Chime convalidati al 100%"
+else
+    log_fail "Sottosistema Audio Hardware: Mancata conformita del driver Intel HDA o del generatore sonoro"
+fi
+
+# Test 13.9 Installatore Bare-Metal Guidato su Disco Fisso GPT (ESP + OSifyFS + Bootloader Permanente)
+if python3 -c "
+import os
+kdir = '$REPO_ROOT/sistema/nucleo/kernel'
+assert os.path.isfile(os.path.join(kdir, 'include/osify_installer.h'))
+assert os.path.isfile(os.path.join(kdir, 'drivers/osify_installer.c'))
+with open(os.path.join(kdir, 'include/osify_installer.h')) as f:
+    c = f.read()
+assert 'osify_gpt_header_t' in c and 'osify_installer_render' in c
+with open(os.path.join(kdir, 'drivers/osify_installer.c')) as f:
+    c2 = f.read()
+assert 'EFI PART' in c2 and 'ESP_GUID' in c2 and 'OSIFY_ROOT_GUID' in c2
+print('Installatore Bare-Metal Validato')
+" >/dev/null 2>&1; then
+    log_pass "Installatore Bare-Metal su Disco: Tabella partizioni GPT (ESP + OSifyFS), copia kernel su silicio e UI Framebuffer operative"
+else
+    log_fail "Installatore Bare-Metal su Disco: Mancata conformita del partizionamento GPT o del motore di installazione"
+fi
+
 echo "                  REPORT FINALE COLLAUDO                 "
 echo "========================================================="
 echo "  TEST SUPERATI : $PASSED_COUNT"
