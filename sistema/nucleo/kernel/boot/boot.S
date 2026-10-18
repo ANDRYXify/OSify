@@ -72,3 +72,32 @@ halt_loop:
 osify_default_isr:
     iret
 .size osify_default_isr, . - osify_default_isr
+
+/* Native System Call Interrupt Gate (int 0x80) */
+.global osify_syscall_isr
+.type osify_syscall_isr, @function
+osify_syscall_isr:
+    push %ebp
+    push %edi
+    push %esi
+    push %edx
+    push %ecx
+    push %ebx
+
+    /* Chiama il dispatcher C: osify_syscall_dispatch(eax, ebx, ecx, edx) */
+    push %edx
+    push %ecx
+    push %ebx
+    push %eax
+    call osify_syscall_dispatch
+    add $16, %esp
+
+    pop %ebx
+    pop %ecx
+    pop %edx
+    pop %esi
+    pop %edi
+    pop %ebp
+    iret
+.size osify_syscall_isr, . - osify_syscall_isr
+

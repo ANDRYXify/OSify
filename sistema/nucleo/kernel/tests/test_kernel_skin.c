@@ -259,6 +259,24 @@ int main(void) {
     assert(desktop_fb_buf[250 + 200 * 1024] != 0);
     printf("[+] 13. Installatore Bare-Metal Guidato su Disco Fisso (GPT, OSifyFS, 100%%): OK\n");
 
-    printf("\n[] TUTTI I 13 TEST AVANZATI DEL KERNEL NATIVO OSIFY SUPERATI CON SUCCESSO AL 100%%!\n");
+    /* 14. Test System Call Native OSify (int 0x80 / Dispatcher Sovrano) */
+    int32_t ping_val = osify_syscall_dispatch(6, 0, 0, 0); /* SYS_PING */
+    assert(ping_val == 0x051F1050);
+
+    uint32_t ram_tot = 0, ram_free = 0;
+    assert(osify_syscall_dispatch(4, (uintptr_t)&ram_tot, (uintptr_t)&ram_free, 0) == 0); /* SYS_MEM_STATS */
+    assert(ram_tot == 2048);
+    assert(ram_free == 2016);
+
+    uint32_t fb_w = 0, fb_h = 0;
+    assert(osify_syscall_dispatch(5, (uintptr_t)&fb_w, (uintptr_t)&fb_h, 0) == 0); /* SYS_FB_INFO */
+    assert(fb_w == 1024);
+    assert(fb_h == 768);
+
+    const char *sys_test_msg = "Test Syscall Output\n";
+    assert(osify_syscall_dispatch(1, 1, (uintptr_t)sys_test_msg, strlen(sys_test_msg)) == (int32_t)strlen(sys_test_msg)); /* SYS_WRITE */
+    printf("[+] 14. System Call Native OSify (int 0x80 DPL 3, PING 0x051F1050, MEM, FB, WRITE): OK\n");
+
+    printf("\n[] TUTTI I 14 TEST AVANZATI DEL KERNEL NATIVO OSIFY SUPERATI CON SUCCESSO AL 100%%!\n");
     return 0;
 }

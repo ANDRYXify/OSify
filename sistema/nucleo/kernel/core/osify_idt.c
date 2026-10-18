@@ -96,6 +96,10 @@ void osify_idt_init(void) {
         osify_idt_set_gate((uint8_t)i, (uint32_t)(uintptr_t)&osify_default_isr, cs, 0x8E);
     }
 
+    /* Registrazione del Vettore 0x80 (Native System Call Interface) con DPL 3 */
+    extern void osify_syscall_isr(void);
+    osify_idt_set_gate(0x80, (uint32_t)(uintptr_t)&osify_syscall_isr, cs, 0xEE);
+
     osify_serial_print("  -> pic_remap\n");
     osify_pic_remap();
 
@@ -103,5 +107,5 @@ void osify_idt_init(void) {
 #if defined(__x86_64__) || defined(__i386__)
     __asm__ volatile("lidt %0" : : "m"(g_idt_ptr));
 #endif
-    osify_serial_print("  -> idt_init completato con successo\n");
+    osify_serial_print("  -> idt_init completato con successo (int 0x80 attivo)\n");
 }

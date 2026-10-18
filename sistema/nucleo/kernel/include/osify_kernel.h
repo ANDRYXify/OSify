@@ -154,5 +154,9 @@ bool osify_anticheat_check_integrity(uint64_t vaddr, size_t size, uint32_t expec
 int osify_universal_exec(const char *path, osify_subsystem_t forced_subsystem);
 int osify_syscall_dispatcher(uint32_t syscall_num, uint64_t arg1, uint64_t arg2, uint64_t arg3, osify_subsystem_t subsystem);
 
+/* --- System Call Native OSify (int 0x80) --- */
+int32_t osify_syscall(uint32_t num, uintptr_t a1, uintptr_t a2, uintptr_t a3);
+int32_t osify_syscall_dispatch(uint32_t num, uintptr_t a1, uintptr_t a2, uintptr_t a3);
+
 #endif /* OSIFY_KERNEL_H */
 

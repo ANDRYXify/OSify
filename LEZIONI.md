@@ -1,5 +1,15 @@
 # LEZIONI APPRESE — REGISTRO ERRORI E REGOLE ARCHITETTURALI OSIFY
 
+## 2026-10-18 — System Call Dispatcher: Troncamento Puntatori su Host a 64-bit e Salvaguardia IOPL Seriale
+- **Area**: Sottosistema System Call (`osify_syscall.c`, `test_kernel_skin.c`), Gestione Privilegi Ring 3 e Portabilità 32/64 bit
+- **Errore**: Durante l'esecuzione dei test avanzati del kernel (`test_osify_kernel`) su macchina di sviluppo host a 64-bit, il processo subiva un `EXC_BAD_ACCESS` (SIGSEGV a riga `str w8, [x1]`) al collaudo del vettore `SYS_MEM_STATS`.
+- **Causa radice**:
+  1. Il passaggio di puntatori allocati sullo stack host a 64-bit (`&ram_tot`, `&ram_free`) subiva un cast esplicito a `uint32_t`, troncando i 32 bit superiori dell'indirizzo virtuale (es. `0x16f9291d0` -> `0x6f9291d0`). Quando il dispatcher de-referenziava il puntatore castato (`*p_total = 2048`), accedeva a una pagina non mappata.
+  2. La routine di emissione seriale `osify_serial_print` eseguiva istruzioni di I/O su porta fisica (`inb`/`outb` a `0x3F8`) senza verificare se l'hardware seriale fosse attivo o se l'ambiente di esecuzione fosse a Ring 3, scatenando violazioni di privilegio IOPL sui sistemi host.
+- **Regola**:
+  1. Tipi uintptr_t Obbligatori nei Dispatcher: Tutti i registri di transito per argomenti generici o puntatori (`a1`, `a2`, `a3`) devono impiegare categoricamente `uintptr_t`, garantendo l'integrità dei puntatori sia in Ring 0 bare-metal a 32 bit che in ambienti host/emulati a 64 bit.
+  2. Gate di Attivazione I/O Seriale: Le istruzioni `inb`/`outb` su porte fisiche devono essere subordinate al flag di inizializzazione reale `g_serial_hw_active`, prevenendo tentativi illegittimi di I/O in contesti Ring 3.
+
 ## 2026-10-18 — Kernel Nativo Bare-Metal: Registri Vettoriali SSE/XMM, Inizializzazione CR0/CR4 e Protezione Anti-Triple-Fault IDT
 - **Area**: Kernel Nativo Bare-Metal C freestanding (`osify_kernel.elf`), Bootstrap Assembly (`boot.S`), Interrupt Descriptor Table (`osify_idt.c`) e compilazione Clang/LLVM
 - **Errore**: All'avvio del kernel su macchina virtuale QEMU o silicio bare-metal, la macchina subiva un riavvio istantaneo in loop (triple-fault) subito dopo aver stampato la stringa di inizializzazione IDT (`[1/10]`).
