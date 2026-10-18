@@ -21,11 +21,11 @@
   </a>
   &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-x86_64-v3.iso">
-    <img src="https://img.shields.io/badge/OSify_Standard-x86--64--v3_(vA.0)-7C3AED?style=for-the-badge" alt="OSify Standard x86_64-v3"/>
+    <img src="https://img.shields.io/badge/OSify_Standard-x86--64--v3_(vA.1)-7C3AED?style=for-the-badge" alt="OSify Standard x86_64-v3"/>
   </a>
   &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-Vintage-i686.iso">
-    <img src="https://img.shields.io/badge/OSify_Vintage-32--bit_i686_(vA.0)-10B981?style=for-the-badge" alt="OSify Vintage 32-bit i686"/>
+    <img src="https://img.shields.io/badge/OSify_Vintage-32--bit_i686_(vA.1)-10B981?style=for-the-badge" alt="OSify Vintage 32-bit i686"/>
   </a>
   &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-ARM64.iso">
@@ -33,11 +33,11 @@
   </a>
   &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-NoUSB-Windows-Installer.zip">
-    <img src="https://img.shields.io/badge/Installer_Windows-Senza_USB_(vA.0)-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Installer Windows Senza USB"/>
+    <img src="https://img.shields.io/badge/Installer_Windows-Senza_USB_(vA.1)-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Installer Windows Senza USB"/>
   </a>
   &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/releases/latest">
-    <img src="https://img.shields.io/badge/Release-vA.0_Latest-22C55E?style=for-the-badge&logo=github&logoColor=white" alt="Official Release"/>
+    <img src="https://img.shields.io/badge/Release-vA.1_Latest-22C55E?style=for-the-badge&logo=github&logoColor=white" alt="Official Release"/>
   </a>
 </p>
 

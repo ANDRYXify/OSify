@@ -1481,7 +1481,12 @@ LABEL memtest
     # Iniezione GNU Bash statico 32-bit (i386) per esecuzione garantita di tutti gli script
     print("[i] Iniezione binario GNU Bash statico 32-bit (i386)...")
     bash_injected = False
-    for candidate in ["/bin/bash-static", "/usr/bin/bash-static"]:
+    candidates = [
+        os.path.join(REPO_ROOT, "build/cache/bash-static-i386"),
+        "/bin/bash-static",
+        "/usr/bin/bash-static"
+    ]
+    for candidate in candidates:
         if os.path.exists(candidate):
             os.makedirs(os.path.join(r4_work, "bin"), exist_ok=True)
             shutil.copy2(candidate, os.path.join(r4_work, "bin/bash"))
@@ -1490,7 +1495,7 @@ LABEL memtest
             if not os.path.exists(os.path.join(r4_work, "usr/bin/bash")):
                 os.symlink("/bin/bash", os.path.join(r4_work, "usr/bin/bash"))
             bash_injected = True
-            print(f"[[OK]] Inietto bash-static da sistema: {candidate}")
+            print(f"[[OK]] Inietto bash-static da cache/sistema: {candidate}")
             break
 
     if not bash_injected and shutil.which("docker"):
@@ -2977,11 +2982,25 @@ fi
     os.makedirs(OUT_RELEASE_DIR, exist_ok=True)
     out_iso_tmp = os.path.join(work_dir, "OSify-Vintage-i686.iso")
     
+    xorriso_bin = shutil.which("xorriso")
     native_geniso = shutil.which("genisoimage") or shutil.which("mkisofs")
     native_isohybrid = shutil.which("isohybrid")
     isolinux_bin_host = "/usr/lib/ISOLINUX/isolinux.bin"
 
-    if native_geniso and native_isohybrid and os.path.exists(isolinux_bin_host):
+    if xorriso_bin:
+        print("[+] Utilizzo xorriso nativo per generazione ISO ibrida Vintage...")
+        mbr_bin = os.path.join(REPO_ROOT, "build/syslinux_alpine/isohdpfx.bin")
+        mbr_opt = f"-isohybrid-mbr '{mbr_bin}' " if os.path.exists(mbr_bin) else ""
+        cmd_xor = (
+            f"xorriso -as mkisofs -r -J -l "
+            f"-V 'OSIFY_VINTAGE' "
+            f"{mbr_opt}"
+            f"-c boot/isolinux/boot.cat "
+            f"-b boot/isolinux/isolinux.bin -no-emul-boot -boot-load-size 4 -boot-info-table "
+            f"-o '{out_iso_tmp}' '{iso_root}'"
+        )
+        run(cmd_xor)
+    elif native_geniso and native_isohybrid and os.path.exists(isolinux_bin_host):
         print("[+] Utilizzo toolchain nativa host...")
         shutil.copy2(isolinux_bin_host, os.path.join(iso_root, "boot/isolinux/isolinux.bin"))
         for mod in ["ldlinux.c32", "libutil.c32", "libcom32.c32", "menu.c32", "vesamenu.c32"]:
@@ -3160,11 +3179,15 @@ def build_modern_x86_64():
 
     # Estrazione o compilazione runtime bundle desktop X11
     desktop_bundle = "/tmp/test_desktop_x64.tar.gz"
+    cache_bundle = os.path.join(REPO_ROOT, "build/cache/test_desktop_x64.tar.gz")
+    if (not os.path.exists(desktop_bundle) or os.path.getsize(desktop_bundle) < 50 * 1024 * 1024) and os.path.exists(cache_bundle):
+        shutil.copy2(cache_bundle, desktop_bundle)
+
     # Verifica presenza libudev.so.1 nel bundle o rigenerazione forzata
     need_rebuild = True
     if os.path.exists(desktop_bundle) and os.path.getsize(desktop_bundle) > 50 * 1024 * 1024:
-        # Verifica veloce se contiene libudev
-        ret = subprocess.run(f"tar -tzf '{desktop_bundle}' lib/libudev.so.1 2>/dev/null", shell=True)
+        # Verifica veloce se contiene libudev (anche con ./ iniziale)
+        ret = subprocess.run(f"tar -tzf '{desktop_bundle}' | grep -q 'libudev.so.1'", shell=True)
         if ret.returncode == 0:
             need_rebuild = False
 

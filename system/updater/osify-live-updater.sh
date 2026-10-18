@@ -106,7 +106,7 @@ get_remote_version() {
     if [ -z "$remote_ver" ] && command -v wget >/dev/null 2>&1; then
         remote_ver=$(wget -qO- --timeout=5 "$RAW_VERSION_URL" 2>/dev/null | tr -d ' \r\n' | sed 's/^v//' || true)
     fi
-    echo "${remote_ver:-A.0}"
+    echo "${remote_ver:-A.1}"
 }
 
 # ------------------------------------------------------------------------------

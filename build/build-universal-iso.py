@@ -17,8 +17,19 @@ import subprocess
 from PIL import Image
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+VERSION_FILE = os.path.join(REPO_ROOT, "VERSION")
+OSIFY_VERSION = "A.1"
+if os.path.isfile(VERSION_FILE):
+    try:
+        with open(VERSION_FILE, "r") as f:
+            v = f.read().strip()
+            if v:
+                OSIFY_VERSION = v
+    except Exception:
+        pass
+
 OUT_DIR = os.path.join(REPO_ROOT, "build/out/release")
-DEST_UNIVERSAL_ISO = os.path.join(OUT_DIR, "OSify-A.0-Universal.iso")
+DEST_UNIVERSAL_ISO = os.path.join(OUT_DIR, f"OSify-{OSIFY_VERSION}-Universal.iso")
 WORK_DIR = "/tmp/osify_universal_iso_work"
 
 def log(msg):
@@ -72,7 +83,7 @@ def build_universal_iso():
     # 1. Recupero componenti
     vintage_iso = os.path.join(OUT_DIR, "OSify-Vintage-i686.iso")
     modern_iso = os.path.join(OUT_DIR, "OSify-x86_64-v3.iso")
-    baremetal_iso = os.path.join(OUT_DIR, "OSify-A.0-BareMetal.iso")
+    baremetal_iso = os.path.join(OUT_DIR, f"OSify-{OSIFY_VERSION}-BareMetal.iso")
 
     if not os.path.exists(vintage_iso) or not os.path.exists(modern_iso):
         log("Compilazione preventiva delle edizioni 32-bit e 64-bit necessarie...")
@@ -253,7 +264,7 @@ endif
 
     # 8. Masterizzazione con xorriso per supporto Ibrido Universale (MBR + GPT + El Torito EFI + BIOS)
     log("Masterizzazione ISO Ibrida Universale con xorriso (MBR + GPT basdat + El Torito EFI)...")
-    built_iso = os.path.join(WORK_DIR, "OSify-A.0-Universal.iso")
+    built_iso = os.path.join(WORK_DIR, f"OSify-{OSIFY_VERSION}-Universal.iso")
 
     mbr_bin = os.path.join(iso_root, "boot/syslinux/isohdpfx.bin")
     efi_img = os.path.join(iso_root, "boot/grub/efi.img")
@@ -297,7 +308,7 @@ endif
                 if len(parts) == 2:
                     sha_entries[parts[1]] = parts[0]
     
-    sha_entries["OSify-A.0-Universal.iso"] = univ_sha
+    sha_entries[f"OSify-{OSIFY_VERSION}-Universal.iso"] = univ_sha
     with open(sha_path, "w") as f:
         for fname in sorted(sha_entries.keys()):
             f.write(f"{sha_entries[fname]}  {fname}\n")

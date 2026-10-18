@@ -28,4 +28,5 @@ scratch/
 *.a
 *.elf
 sistema/nucleo/kernel/test_osify_kernel
+tools/windows-installer/putty.exe
 

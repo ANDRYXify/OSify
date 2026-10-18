@@ -8,6 +8,17 @@
 5. **Verità Ingegneristica nei Test**: Una funzionalità è considerata "Operativa" nella documentazione solo quando possiede un test automatizzato reale che la verifica empiricamente.
 6. **Imposizione W^X Incondizionata**: Nessuna pagina di memoria — né nel kernel, né in userspace, né nei traduttori JIT — può mai avere contemporaneamente i bit di Scrittura ed Esecuzione attivi (`OSIFY_MAP_W | OSIFY_MAP_X` restituisce sempre errore in `arch_mmu_map`).
 7. **Purezza delle Licenze**: Il codice del kernel e delle librerie di sistema deve essere 100% originale o compatibile con la licenza del progetto; è tassativamente vietato copiare codice GPLv2-only dal kernel Linux.
+
+## 2026-10-19 — Masterizzazione ISO Diskless: Fallback xorriso su macOS, Iniezione Bash Statico 32-bit e Indipendenza da Daemon Docker
+- **Area**: Pipeline di Generazione ISO Universale (`remaster-live-iso.py`), Toolchain di Boot ibrido xorriso e userspace 32-bit
+- **Errore**: Durante la ricompilazione della ISO Vintage 32-bit (`OSify-Vintage-i686.iso`) su ambiente macOS privo del daemon Docker avviato, il processo falliva nell'estrazione di `bash-static:i386` e nella successiva masterizzazione El Torito / isohybrid MBR.
+- **Causa radice**:
+  1. Lo script cercava `bash-static` solo su percorsi host Linux (`/bin/bash-static`, `/usr/bin/bash-static`) ricorrendo a un container Docker Debian/Ubuntu quando assente, senza verificare la cache locale del repository (`build/cache/bash-static-i386`).
+  2. La generazione dell'immagine ibrida MBR si affidava a `genisoimage` ed `isohybrid` invocati dentro Docker anziché sfruttare il binario `xorriso` nativamente presente sul sistema host (`/opt/homebrew/bin/xorriso`), il quale supporta pienamente l'emulazione `mkisofs` con `-isohybrid-mbr`.
+- **Regola**:
+  1. Cache Locale Binari Critici: Qualsiasi binario compilato per architetture target (come `bash-static-i386`) deve essere preservato in `build/cache/` e controllato come primo candidato prima di tentare chiamate a container esterni.
+  2. Priorità xorriso Nativo: Per tutte le operazioni di packaging ISO ibrido (32-bit, 64-bit, ARM64), impiegare prioritariamente `xorriso -as mkisofs` nativo con `-isohybrid-mbr` e percorsi El Torito relativi, eliminando dipendenze rigide da daemon Docker su ambienti macOS/BSD.
+
 ## 2026-10-18 — Gestione GUI Framebuffer: Precedenza Focus Finestre, Font Bitmap ASCII e Mascheramento Privacy IP
 - **Area**: Window Manager Nativo (`osify_desktop_wm.c`), Driver Installatore (`osify_installer.c`), Tipografia Framebuffer e Streamer Privacy
 - **Errore**:
