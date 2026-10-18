@@ -233,3 +233,30 @@ int osify_snprintf(char *str, size_t size, const char *format, ...) {
     va_end(args);
     return (int)written;
 }
+
+/* Runtime Helper Freestanding: Divisione a 64-bit senza dipendenze libgcc */
+uint64_t __udivdi3(uint64_t n, uint64_t d) {
+    if (d == 0) return 0;
+    uint64_t q = 0, r = 0;
+    for (int i = 63; i >= 0; i--) {
+        r = (r << 1) | ((n >> i) & 1ULL);
+        if (r >= d) {
+            r -= d;
+            q |= (1ULL << i);
+        }
+    }
+    return q;
+}
+
+uint64_t __umoddi3(uint64_t n, uint64_t d) {
+    if (d == 0) return 0;
+    uint64_t r = 0;
+    for (int i = 63; i >= 0; i--) {
+        r = (r << 1) | ((n >> i) & 1ULL);
+        if (r >= d) {
+            r -= d;
+        }
+    }
+    return r;
+}
+

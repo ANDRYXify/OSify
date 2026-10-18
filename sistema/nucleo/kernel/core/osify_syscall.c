@@ -17,6 +17,10 @@
 #define OSIFY_SYS_MEM_STATS 4
 #define OSIFY_SYS_FB_INFO   5
 #define OSIFY_SYS_PING      6
+#define OSIFY_SYS_HW_POWER       7
+#define OSIFY_SYS_HETERO_DISPATCH 8
+
+#include "../include/osify_hetero_dispatch.h"
 
 void osify_serial_print(const char *s);
 
@@ -84,6 +88,22 @@ int32_t osify_syscall_dispatch(uint32_t num, uintptr_t a1, uintptr_t a2, uintptr
         case OSIFY_SYS_PING: {
             /* Attestazione ontologica OSify (magic: 0x051F1050) */
             return 0x051F1050;
+        }
+
+        case OSIFY_SYS_HW_POWER: {
+            osify_hardware_skin_t *out_skin = (osify_hardware_skin_t *)(uintptr_t)a1;
+            if (!out_skin) return -1;
+            const osify_hardware_skin_t *act = osify_get_active_skin();
+            if (act) {
+                osify_memcpy(out_skin, act, sizeof(osify_hardware_skin_t));
+                return 0;
+            }
+            return -1;
+        }
+
+        case OSIFY_SYS_HETERO_DISPATCH: {
+            uint32_t task_id = (uint32_t)a1;
+            return osify_task_dispatch(task_id) ? 0 : -1;
         }
 
         default: {

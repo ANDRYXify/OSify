@@ -83,18 +83,44 @@ typedef struct {
 
 /* Descrittore dell'Esoscheletro Hardware OSify */
 typedef struct {
+    /* CPU & Topologia Silicio */
     osify_arch_t    arch;
     osify_profile_t profile;
     char            cpu_vendor[32];
     char            cpu_brand[64];
     uint32_t        cpu_cores;
     uint32_t        cpu_threads;
-    uint64_t        ram_total_bytes;
-    uint64_t        ram_free_bytes;
+    uint32_t        cpu_freq_mhz;         /* Frequenza operativa effettiva in MHz */
+    uint64_t        cpu_peak_gflops;      /* Potenza di calcolo teorica di picco */
+
+    /* Set Istruzioni Vettoriali & SIMD ALU */
+    bool            has_mmx;
+    bool            has_sse;
+    bool            has_sse2;
+    bool            has_sse3;
+    bool            has_ssse3;
+    bool            has_sse4_1;
+    bool            has_sse4_2;
     bool            has_avx;
     bool            has_avx2;
+    bool            has_avx512;
+    bool            has_fma;
     bool            has_neon;
     bool            has_hardware_aes;
+
+    /* Memoria RAM & Throughput */
+    uint64_t        ram_total_bytes;
+    uint64_t        ram_free_bytes;
+    uint32_t        ram_bandwidth_mb_s;   /* Throughput stimato bus di memoria */
+
+    /* Display Controller & GPU Driverless */
+    char            gpu_vendor[32];
+    uint16_t        gpu_pci_vendor_id;
+    uint16_t        gpu_pci_device_id;
+    uint32_t        gpu_bar_addr;
+    uint32_t        gpu_vram_bytes;
+    bool            gpu_accel_available;
+
     osify_framebuffer_t fb;
 } osify_hardware_skin_t;
 
@@ -102,6 +128,12 @@ typedef struct {
 void osify_kernel_early_boot(void *boot_info_ptr);
 void osify_hardware_detect(osify_hardware_skin_t *skin);
 void osify_adaptive_skin_init(osify_hardware_skin_t *skin);
+void osify_hardware_benchmark(osify_hardware_skin_t *skin);
+const osify_hardware_skin_t *osify_get_active_skin(void);
+
+/* --- Rilevamento Bus PCI Driverless --- */
+uint32_t osify_pci_read_config_dword(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset);
+bool     osify_pci_find_display(uint32_t *out_bar, uint16_t *out_vendor, uint16_t *out_device, uint32_t *out_vram_size);
 
 /* --- Gestione Memoria a 4 Livelli (PMM & VMM W^X) --- */
 void osify_pmm_init(uint64_t total_memory_bytes);

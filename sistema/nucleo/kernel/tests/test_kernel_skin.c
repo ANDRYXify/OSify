@@ -19,6 +19,7 @@
 #include "../include/osify_installer.h"
 #include "../include/osify_synch.h"
 #include "../include/osify_capability.h"
+#include "../include/osify_hetero_dispatch.h"
 
 int main(void) {
     printf("[+] Inizio collaudo avanzato del Kernel Nativo OSify...\n");
@@ -302,6 +303,62 @@ int main(void) {
     assert(osify_wait_mux(objs, 3, OSIFY_WAIT_ALL, 0) == 0);
     printf("[+] 15. Sincronizzazione Universale Superset (WaitMux, WaitAny, WaitAll, Semaphores, Events): OK\n");
 
-    printf("\n[] TUTTI I 15 TEST AVANZATI DEL KERNEL NATIVO OSIFY SUPERATI CON SUCCESSO AL 100%%!\n");
+    /* 16. Test Introspezione Potenza Effettiva Silicio & Metriche Hardware */
+    osify_hardware_skin_t pwr_skin;
+    memset(&pwr_skin, 0, sizeof(pwr_skin));
+    pwr_skin.ram_total_bytes = 32ULL * 1024ULL * 1024ULL * 1024ULL;
+    osify_hardware_detect(&pwr_skin);
+    osify_adaptive_skin_init(&pwr_skin);
+
+    assert(pwr_skin.cpu_cores >= 1);
+    assert(pwr_skin.cpu_freq_mhz >= 1000);
+    assert(pwr_skin.cpu_peak_gflops >= 1);
+    assert(strlen(pwr_skin.cpu_brand) > 0);
+    assert(strlen(pwr_skin.gpu_vendor) > 0);
+    assert(pwr_skin.gpu_vram_bytes >= 16 * 1024 * 1024);
+    assert(pwr_skin.profile == PROFILE_EXTREME_PERF);
+    printf("[+] 16. Introspezione Potenza Silicio (Cores: %u, Freq: %u MHz, Peak: %u GFLOPS, GPU: %s): OK\n",
+           pwr_skin.cpu_cores, pwr_skin.cpu_freq_mhz, (uint32_t)pwr_skin.cpu_peak_gflops, pwr_skin.gpu_vendor);
+
+    /* 17. Test Scheduler Eterogeneo & Connettori di Processo (ALU vs SIMD vs GPU vs IO) */
+    osify_hetero_dispatch_init();
+    osify_dispatch_stats_t disp_stats;
+    osify_hetero_get_stats(&disp_stats);
+    assert(disp_stats.total_tasks_dispatched >= 5);
+    assert(disp_stats.tasks_on_alu_scalar >= 1);
+    assert(disp_stats.tasks_on_alu_vector >= 1);
+    assert(disp_stats.tasks_on_gpu_blitter >= 1);
+    assert(disp_stats.tasks_on_async_io >= 1);
+
+    /* Registrazione nuovo task Ring 3 e dispatch su SIMD */
+    assert(osify_task_register(10, "User-DSP-Matrix", WORKLOAD_CRYPTO_MATH, 5) == 0);
+    osify_process_connector_t *conn = osify_task_get(10);
+    assert(conn != NULL);
+    assert(conn->assigned_unit == UNIT_ALU_VECTOR);
+    assert(osify_task_dispatch(10) == true);
+    assert(conn->instructions_executed > 0);
+    printf("[+] 17. Scheduler Eterogeneo & Connettori (ALU Scalare, SIMD Vettoriale, GPU Blitter, Async I/O): OK\n");
+
+    /* 18. Test Blitter Vettoriale Driverless & System Call SYS_HW_POWER / SYS_HETERO_DISPATCH */
+    uint32_t blit_src[256];
+    uint32_t blit_dst[256];
+    for (int i = 0; i < 256; i++) blit_src[i] = 0xAA55AA55;
+    memset(blit_dst, 0, sizeof(blit_dst));
+
+    osify_driverless_copy_buffer(blit_dst, blit_src, 256);
+    assert(blit_dst[0] == 0xAA55AA55);
+    assert(blit_dst[255] == 0xAA55AA55);
+
+    /* Collaudo System Call 7: SYS_HW_POWER */
+    osify_hardware_skin_t sys_skin;
+    memset(&sys_skin, 0, sizeof(sys_skin));
+    assert(osify_syscall_dispatch(7, (uintptr_t)&sys_skin, 0, 0) == 0);
+    assert(sys_skin.cpu_cores >= 1);
+
+    /* Collaudo System Call 8: SYS_HETERO_DISPATCH */
+    assert(osify_syscall_dispatch(8, 10, 0, 0) == 0);
+    printf("[+] 18. Blitter Vettoriale Driverless & System Call Native 7 (HW_POWER) e 8 (HETERO_DISPATCH): OK\n");
+
+    printf("\n[] TUTTI I 18 TEST AVANZATI DEL KERNEL NATIVO OSIFY SUPERATI CON SUCCESSO AL 100%%!\n");
     return 0;
 }

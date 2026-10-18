@@ -32,6 +32,7 @@ def build_kernel():
         "clang -target i386-unknown-none-elf -c boot/boot.S -o boot/boot.elf.o && "
         "for f in core/osify_skin_core.c core/osify_memory.c core/osify_level0_security.c "
         "         core/osify_kstring.c core/osify_idt.c core/osify_main.c core/osify_syscall.c core/osify_synch.c "
+        "         core/osify_hetero_dispatch.c "
         "         security/osify_anticheat_guard.c "
         "         drivers/osify_native_graphics.c drivers/osify_font.c drivers/osify_ps2_input.c "
         "         drivers/osify_storage.c drivers/osify_desktop_wm.c "

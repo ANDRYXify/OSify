@@ -15,6 +15,7 @@
 #include "../include/osify_net.h"
 #include "../include/osify_audio.h"
 #include "../include/osify_installer.h"
+#include "../include/osify_hetero_dispatch.h"
 
 /* Palette Colori Ufficiale Dark Glass OSify */
 #define COLOR_DESKTOP_BG        0xFF0B101D  /* Blu Notte Profondo */
@@ -70,7 +71,8 @@ void osify_shell_execute_cmd(osify_framebuffer_t *fb, const char *cmd) {
 
     if (osify_strcmp(cmd, "aiuto") == 0 || osify_strcmp(cmd, "help") == 0) {
         shell_append_line("Comandi disponibili:");
-        shell_append_line("  stato     - Telemetria hardware e profilo silicio");
+        shell_append_line("  stato     - Telemetria generale e profilo silicio");
+        shell_append_line("  potenza   - Introspezione silicio, GFLOPS, ALU/GPU e Scheduler");
         shell_append_line("  disco     - Elenco partizioni e file OSifyFS");
         shell_append_line("  rete      - Stato interfaccia Ethernet, IP e DNS Quad9");
         shell_append_line("  ping      - Test connettivita ICMP su Quad9 (9.9.9.9)");
@@ -81,6 +83,28 @@ void osify_shell_execute_cmd(osify_framebuffer_t *fb, const char *cmd) {
     } else if (osify_strcmp(cmd, "stato") == 0) {
         shell_append_line("Profilo: OSify A.1 (Naked-Skin Architecture - Zero Bloatware)");
         shell_append_line("Memoria: PMM Bitmap Allocator con protezione W^X attiva");
+    } else if (osify_strcmp(cmd, "potenza") == 0 || osify_strcmp(cmd, "hardware") == 0) {
+        const osify_hardware_skin_t *h = osify_get_active_skin();
+        char msg[96];
+        osify_snprintf(msg, sizeof(msg), "CPU: %s (%s)", h->cpu_brand, h->cpu_vendor);
+        shell_append_line(msg);
+        osify_snprintf(msg, sizeof(msg), "Core: %u fisici, %u logici | Clock: %u MHz | Picco: %u GFLOPS",
+                       h->cpu_cores, h->cpu_threads, h->cpu_freq_mhz, (uint32_t)h->cpu_peak_gflops);
+        shell_append_line(msg);
+        osify_snprintf(msg, sizeof(msg), "ALU SIMD: %s %s %s %s %s (Burst Vector Attivo)",
+                       h->has_sse2 ? "SSE2" : "", h->has_sse4_1 ? "SSE4.1" : "",
+                       h->has_avx ? "AVX" : "", h->has_avx2 ? "AVX2" : "",
+                       h->has_hardware_aes ? "AES-NI" : "");
+        shell_append_line(msg);
+        osify_snprintf(msg, sizeof(msg), "GPU Driverless: %s [VRAM: %u MB]",
+                       h->gpu_vendor, h->gpu_vram_bytes / (1024 * 1024));
+        shell_append_line(msg);
+        osify_dispatch_stats_t st;
+        osify_hetero_get_stats(&st);
+        osify_snprintf(msg, sizeof(msg), "Scheduler: %u Task (ALU Scalare: %u, SIMD: %u, GPU: %u, I/O: %u)",
+                       st.total_tasks_dispatched, st.tasks_on_alu_scalar, st.tasks_on_alu_vector,
+                       st.tasks_on_gpu_blitter, st.tasks_on_async_io);
+        shell_append_line(msg);
     } else if (osify_strcmp(cmd, "disco") == 0) {
         char v_buf[64], a_buf[90];
         osify_memset(v_buf, 0, sizeof(v_buf));
