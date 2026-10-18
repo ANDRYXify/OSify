@@ -1,4 +1,16 @@
 #!/usr/bin/env python3
+# ==============================================================================
+# OSify Interactive QEMU Real-User Test Session
+# ==============================================================================
+# Ingegnerizzato per collaudare il sistema operativo dal vivo come un utente reale:
+# - Avvio e Desktop Cyberpunk 2050 con Streamer Privacy Mode
+# - Toggle Privacy Rete (IP protetto Quad9 vs IP reale)
+# - Silicon Benchmark Sovrano 2050 (ALU, SIMD, RAM Throughput, Blitter 2D)
+# - Cyber Arcade 2050 (Breakout nativo, paddle neon, mattoni cibernetici)
+# - Calcolatrice Scientifica multi-operatore (SQRT, +/-, ^2, MOD)
+# - Esplora File OSifyFS con breadcrumb e scorciatoie cartelle
+# ==============================================================================
+
 import socket
 import subprocess
 import time
@@ -24,7 +36,6 @@ def test_qemu():
     print("[+] Avvio QEMU con ISO Bare-Metal e socket monitor...")
     proc = subprocess.Popen(qemu_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    # Attendi avvio socket
     for _ in range(50):
         if os.path.exists(sock_path):
             break
@@ -35,49 +46,98 @@ def test_qemu():
     client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     client.connect(sock_path)
     time.sleep(0.5)
-    _ = client.recv(4096)
+    try:
+        _ = client.recv(4096)
+    except:
+        pass
 
     def send_mon(cmd):
         client.sendall((cmd + "\n").encode())
-        time.sleep(0.3)
+        time.sleep(0.2)
         try:
             return client.recv(4096).decode()
         except:
             return ""
 
-    print("[+] Cattura screendump QEMU Desktop Boot...")
+    def type_word(word):
+        for ch in word:
+            if ch == ' ':
+                send_mon("sendkey spc")
+            elif ch == '-':
+                send_mon("sendkey minus")
+            elif ch == '_':
+                send_mon("sendkey shift-minus")
+            elif ch == '/':
+                send_mon("sendkey slash")
+            else:
+                send_mon(f"sendkey {ch}")
+            time.sleep(0.04)
+        send_mon("sendkey ret")
+        time.sleep(0.4)
+
+    print("[+] 1. Cattura screendump QEMU Desktop Boot (Privacy Streamer + Icona Arcade)...")
     send_mon("screendump /tmp/qemu_desktop_boot.ppm")
 
-    print("[+] Iniezione comandi utente reale: digitazione 'info'...")
-    for ch in "info":
-        send_mon(f"sendkey {ch}")
-        time.sleep(0.05)
-    send_mon("sendkey ret")
-    time.sleep(0.5)
-
-    print("[+] Iniezione comandi utente reale: digitazione 'calc'...")
-    for ch in "calc":
-        send_mon(f"sendkey {ch}")
-        time.sleep(0.05)
-    send_mon("sendkey ret")
+    print("[+] 2. Apertura Benchmark Silicio Sovrano 2050 ('benchgui')...")
+    type_word("benchgui")
     time.sleep(0.8)
+    print("[+] Cattura screendump QEMU con Benchmark GUI aperto...")
+    send_mon("screendump /tmp/qemu_desktop_bench.ppm")
 
-    print("[+] Cattura screendump QEMU con Calcolatrice aperta...")
+    print("[+] 3. Chiusura Benchmark e apertura Cyber Arcade 2050 ('arcade')...")
+    # Premiamo ESC o digitiamo 'arcade' nel terminale
+    type_word("arcade")
+    time.sleep(0.8)
+    print("[+] Simulazione input giocatore arcade: muovi paddle a destra e a sinistra...")
+    send_mon("sendkey d")
+    time.sleep(0.1)
+    send_mon("sendkey d")
+    time.sleep(0.1)
+    send_mon("sendkey a")
+    time.sleep(0.1)
+    print("[+] Cattura screendump QEMU Cyber Arcade 2050...")
+    send_mon("screendump /tmp/qemu_desktop_arcade.ppm")
+
+    print("[+] 4. Apertura Calcolatrice Scientifica ('calc')...")
+    type_word("calc")
+    time.sleep(0.6)
+    print("[+] Cattura screendump QEMU Calcolatrice Scientifica...")
     send_mon("screendump /tmp/qemu_desktop_calc.ppm")
+
+    print("[+] 5. Apertura Esplora File OSifyFS ('files')...")
+    type_word("files")
+    time.sleep(0.6)
+    print("[+] Cattura screendump QEMU Esplora File OSifyFS...")
+    send_mon("screendump /tmp/qemu_desktop_files.ppm")
+
+    print("[+] 6. Test Streamer Privacy Toggle ('privacy')...")
+    type_word("privacy")
+    time.sleep(0.5)
+    print("[+] Cattura screendump QEMU Privacy Toggle (IP mostrato)...")
+    send_mon("screendump /tmp/qemu_desktop_privacy.ppm")
 
     send_mon("quit")
     client.close()
     proc.terminate()
     proc.wait()
 
-    # Converti PPM in PNG
-    if os.path.exists("/tmp/qemu_desktop_boot.ppm"):
-        Image.open("/tmp/qemu_desktop_boot.ppm").save("build/out/osify_qemu_desktop_boot.png")
-        print("[+] Immagine generata: build/out/osify_qemu_desktop_boot.png")
+    os.makedirs("build/out/screendumps", exist_ok=True)
+    dumps = [
+        ("qemu_desktop_boot", "build/out/screendumps/01_desktop_boot.png"),
+        ("qemu_desktop_bench", "build/out/screendumps/02_silicon_benchmark.png"),
+        ("qemu_desktop_arcade", "build/out/screendumps/03_cyber_arcade.png"),
+        ("qemu_desktop_calc", "build/out/screendumps/04_scientific_calc.png"),
+        ("qemu_desktop_files", "build/out/screendumps/05_file_explorer.png"),
+        ("qemu_desktop_privacy", "build/out/screendumps/06_privacy_toggle.png")
+    ]
 
-    if os.path.exists("/tmp/qemu_desktop_calc.ppm"):
-        Image.open("/tmp/qemu_desktop_calc.ppm").save("build/out/osify_qemu_desktop_calc.png")
-        print("[+] Immagine generata: build/out/osify_qemu_desktop_calc.png")
+    for src_name, dest_png in dumps:
+        ppm_path = f"/tmp/{src_name}.ppm"
+        if os.path.exists(ppm_path):
+            img = Image.open(ppm_path)
+            img.save(dest_png)
+            print(f"[+] Screendump salvato: {dest_png} ({img.size[0]}x{img.size[1]})")
 
 if __name__ == "__main__":
     test_qemu()
+

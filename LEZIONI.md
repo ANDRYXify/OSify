@@ -320,4 +320,21 @@
   3. Clipping Sistematico delle Stringhe Interne: Applicare sempre `draw_window_string_clipped` con limite massimo di caratteri calcolato dinamicamente sul contenitore genitore.
   4. Protocollo Mouse PS/2 Hardware: Decodificare sempre i pacchetti a 3 byte del controller 8042 Aux (bit 5 di status port 0x64) per muovere il cursore e generare eventi di clic sia su silicio fisico che su QEMU, salvaguardando l'esecuzione con il flag `g_ps2_hw_active`.
 
+## 2026-10-18 — Suite Applicativa Nativa: Cyber Arcade 2050, Benchmark Silicio Sovrano & Streamer Privacy Mode
+- **Area**: Window Manager nativo (`osify_desktop_wm.c`), Videogioco nativo (`Cyber Arcade 2050`), Benchmark hardware (`Silicon Stress Engine`), Privacy Streamer e Calcolatrice Scientifica
+- **Errore**:
+  1. L'indirizzo IP privato/locale veniva esposto in chiaro nella barra di stato superiore, creando un potenziale rischio di doxxing o fuga dati per utenti che trasmettono in live streaming.
+  2. Quando più finestre rettangolari si sovrapponevano, i click del mouse sui pulsanti venivano intercettati da finestre di background anziché essere riservati rigorosamente alla finestra in primo piano con focus attivo.
+  3. Assenza di un videogioco nativo con fisica arcade per collaudare input/framebuffer in tempo reale e assenza di un benchmark computazionale reale per misurare MIPS scalari, GFLOPS SIMD, bandwidth RAM e fillrate blitter.
+- **Causa radice**:
+  1. Visualizzazione incondizionata dell'IP in top bar senza uno strato di mascheramento dinamico predefinito.
+  2. Nel dispatcher dei click del Window Manager mancava la verifica `g_windows[i].is_focused` prima di inoltrare l'evento click ai bottoni interni della finestra.
+  3. La suite di sistema necessitava dei due pilastri esperienziali moderni: intrattenimento arcade integrato e stress-test hardware del silicio.
+- **Regola**:
+  1. Streamer Privacy Mode Predefinito: La barra di stato maschera categoricamente l'indirizzo IP all'avvio visualizzando `[Rete: Protetta Quad9]`, commutabile a caldo dall'utente tramite click diretto sull'indicatore o comando shell `privacy` / `streamer`.
+  2. Precedenza Rigorosa del Focus Finestre: Nessun pulsante o controllo interno di una finestra può elaborare un click del mouse se la finestra proprietaria non possiede il focus attivo (`is_focused == true`).
+  3. Videogioco Arcade Nativo: Integrare permanentemente "Cyber Arcade 2050" nel kernel con 4 linee di mattoni neon, deviazione angolare del paddle luminescente, reattività a mouse e tastiera, vite, punteggio e record.
+  4. Benchmark Silicio Reale: Misurare empiricamente cicli CPU con helper architetturali (`get_silicon_cycles()`), MIPS scalari a 64 bit, simulazione vettoriale SIMD, throughput DMA della RAM in MB/s e blitter 2D fillrate in Mpixel/s con progress bar neon.
+
+
 

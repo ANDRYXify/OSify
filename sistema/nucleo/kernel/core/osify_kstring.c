@@ -260,3 +260,22 @@ uint64_t __umoddi3(uint64_t n, uint64_t d) {
     return r;
 }
 
+int64_t __divdi3(int64_t a, int64_t b) {
+    if (b == 0) return 0;
+    int sign = 1;
+    if (a < 0) { sign = -sign; a = -a; }
+    if (b < 0) { sign = -sign; b = -b; }
+    uint64_t res = __udivdi3((uint64_t)a, (uint64_t)b);
+    return sign < 0 ? -(int64_t)res : (int64_t)res;
+}
+
+int64_t __moddi3(int64_t a, int64_t b) {
+    if (b == 0) return 0;
+    int sign = (a < 0) ? -1 : 1;
+    if (a < 0) a = -a;
+    if (b < 0) b = -b;
+    uint64_t res = __umoddi3((uint64_t)a, (uint64_t)b);
+    return sign < 0 ? -(int64_t)res : (int64_t)res;
+}
+
+

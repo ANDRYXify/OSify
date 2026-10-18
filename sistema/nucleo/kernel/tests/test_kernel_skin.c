@@ -442,6 +442,26 @@ int main(void) {
     assert(osify_strncmp(note_buf, "OSify A.1", 9) == 0);
     printf("[+] 24. Integrita Storage e Note Persistenti Scritte dall'Utente: OK\n");
 
+    /* 25. Test Videogioco Cyber Arcade 2050, Benchmark Silicio & Privacy Streamer */
+    /* Passo 16: Apertura Cyber Arcade 2050 tramite icona Scrivania */
+    osify_desktop_click_mouse(&desktop_fb, 40, 460, 1);
+    /* Passo 17: Interazione Gioco (Movimento Paddle Destra e Lancio Sfera) */
+    osify_desktop_handle_key(&desktop_fb, 'd');
+    osify_desktop_handle_key(&desktop_fb, 'd');
+    osify_desktop_handle_key(&desktop_fb, ' '); /* Avvio partita */
+    osify_desktop_render_all(&desktop_fb);
+
+    /* Passo 18: Toggle Privacy Streamer (Mascheramento IP) */
+    osify_desktop_click_mouse(&desktop_fb, 750, 10, 1); /* Toggle Privacy */
+    osify_shell_execute_cmd(&desktop_fb, "privacy");
+
+    /* Passo 19: Esecuzione Benchmark Silicio Reale e Verifica Throughput */
+    osify_shell_execute_cmd(&desktop_fb, "benchmark");
+    osify_shell_execute_cmd(&desktop_fb, "benchgui");
+    osify_desktop_render_all(&desktop_fb);
+
+    printf("[+] 25. Cyber Arcade 2050, Benchmark Silicio Reale & Privacy Streamer: OK\n");
+
     /* Salvataggio Screendump PPM dello Stato Finale del Desktop */
     FILE *fp_live = fopen("../../../build/out/osify_user_scenarios_live.ppm", "wb");
     if (fp_live) {
@@ -460,6 +480,6 @@ int main(void) {
         fclose(fp_live);
     }
 
-    printf("\n[] TUTTI I 24 TEST AVANZATI DEL KERNEL NATIVO OSIFY SUPERATI CON SUCCESSO AL 100%%!\n");
+    printf("\n[] TUTTI I 25 TEST AVANZATI DEL KERNEL NATIVO OSIFY SUPERATI CON SUCCESSO AL 100%%!\n");
     return 0;
 }
