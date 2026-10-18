@@ -20,6 +20,7 @@
 #include "../include/osify_synch.h"
 #include "../include/osify_capability.h"
 #include "../include/osify_hetero_dispatch.h"
+#include "../include/osify_capture_card.h"
 
 int main(void) {
     printf("[+] Inizio collaudo avanzato del Kernel Nativo OSify...\n");
@@ -359,6 +360,21 @@ int main(void) {
     assert(osify_syscall_dispatch(8, 10, 0, 0) == 0);
     printf("[+] 18. Blitter Vettoriale Driverless & System Call Native 7 (HW_POWER) e 8 (HETERO_DISPATCH): OK\n");
 
-    printf("\n[] TUTTI I 18 TEST AVANZATI DEL KERNEL NATIVO OSIFY SUPERATI CON SUCCESSO AL 100%%!\n");
+    /* 19. Test Scheda di Acquisizione Virtuale Diretta (Senza Hardware Esterno) */
+    osify_capture_init(1024, 768, 60);
+    const osify_capture_state_t *cap_st = osify_capture_get_state();
+    assert(cap_st != NULL);
+    assert(cap_st->is_active == true);
+    assert(cap_st->fps == 60);
+    assert(cap_st->width == 1024);
+    assert(cap_st->height == 768);
+
+    /* Simulazione tap su framebuffer */
+    osify_capture_process_frame(&desktop_fb);
+    assert(cap_st->total_frames_captured == 1);
+    assert(cap_st->total_bytes_streamed == (1024 * 768 * 4));
+    printf("[+] 19. Scheda di Acquisizione Virtuale (Direct FB Tap, 60 FPS, Zero Hardware Esterno): OK\n");
+
+    printf("\n[] TUTTI I 19 TEST AVANZATI DEL KERNEL NATIVO OSIFY SUPERATI CON SUCCESSO AL 100%%!\n");
     return 0;
 }

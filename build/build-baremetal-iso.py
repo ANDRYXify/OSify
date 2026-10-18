@@ -37,6 +37,7 @@ def build_kernel():
         "         drivers/osify_native_graphics.c drivers/osify_font.c drivers/osify_ps2_input.c "
         "         drivers/osify_storage.c drivers/osify_desktop_wm.c "
         "         drivers/osify_net.c drivers/osify_audio.c drivers/osify_installer.c "
+        "         drivers/osify_capture_card.c "
         "         compat/osify_universal_bridge.c compat/osify_path_unifier.c "
         "         loaders/osify_binary_loader.c; do "
         "    clang -target i386-unknown-none-elf -ffreestanding -fno-pie -fno-stack-protector -mno-red-zone -mno-sse -mno-sse2 -mno-mmx -Wall -Wextra -O2 -Iinclude -c \"$f\" -o \"${f%.c}.elf.o\" || exit 1; "

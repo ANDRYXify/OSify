@@ -280,3 +280,12 @@
   1. Il sistema deve essere Driverless per quanto possibile: scansione PCI per agganciare direttamente il linear framebuffer di qualsiasi scheda grafica (Intel Iris, AMD Radeon, NVIDIA GeForce, Bochs, VMware) senza richiedere driver proprietari monolitici.
   2. Integrare sempre lo Scheduler Eterogeneo (`osify_hetero_dispatch`) con connettori di processo nativi per smistare automaticamente: compiti logici su ALU scalare, cifratura e matematica su SIMD (SSE2/AVX/NEON), interfaccia su GPU Blitter burst, e periferiche su I/O asincrono.
   3. Nessuna dipendenza da runtime esterni: divisioni a 64-bit in kernel 32-bit devono essere risolte con operandi dimensionalmente corretti o con helper freestanding espliciti (`__udivdi3`, `__umoddi3`).
+
+## 2026-10-18 — Desktop Environment Dark Glass Sovrano, Scheda Acquisizione Integrata e Installazione Reale
+- **Area**: Window Manager nativo, driverless capture subsystem e installatore su disco silicio
+- **Errore**: Presentare un'interfaccia iniziale grezza con sola finestra terminale invece di consegnare un Desktop Environment 2050 completo (wallpaper cyber mesh, icone desktop, HUD laterale risorse, dock glassmorphism e scheda di acquisizione virtuale).
+- **Causa radice**: Non aver dato per scontata la ricchezza visiva e le capacita di acquisizione video interna richieste per un sistema operativo di nuova generazione.
+- **Regola**:
+  1. La GUI deve essere sempre completa al 100%: wallpaper a cyber-mesh sfumato con logo filigrana, icone squircle a doppio strato sulla Scrivania, barra di stato dinamica, pannello HUD laterale per telemetria CPU/RAM/GFLOPS e dock a 6 canali con indicatori attivi.
+  2. Implementare la Scheda di Acquisizione Virtuale nativa (`osify_capture_card`) tramite direct framebuffer tap e ring buffer DMA a 60 FPS, consentendo al sistema di fungere da capture card senza richiedere hardware HDMI esterno.
+  3. Verificare sempre il ciclo di vita reale dell'utente: avvio da supporto, esecuzione comandi CLI e installazione permanente su disco fisso virtuale GPT convalidata visivamente con screendump reali.
