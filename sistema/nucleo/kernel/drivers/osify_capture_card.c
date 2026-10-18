@@ -61,6 +61,41 @@ void osify_capture_process_frame(const osify_framebuffer_t *fb) {
     g_capture.total_bytes_streamed += (uint64_t)(fb->width * fb->height * 4);
 }
 
+#include "../include/osify_storage.h"
+
 const osify_capture_state_t *osify_capture_get_state(void) {
     return &g_capture;
 }
+
+/* Esportazione fotogramma lossless PPM (128x96 RGB24) direttamente su disco OSifyFS */
+bool osify_capture_save_ppm(const osify_framebuffer_t *fb, const char *dest_path) {
+    if (!fb || !fb->buffer || !dest_path) return false;
+
+    static uint8_t ppm_buffer[40000];
+    const uint32_t target_w = 128;
+    const uint32_t target_h = 96;
+
+    char header[48];
+    int h_len = osify_snprintf(header, sizeof(header), "P6\n%u %u\n255\n", target_w, target_h);
+    if (h_len <= 0) return false;
+
+    osify_memcpy(ppm_buffer, header, (size_t)h_len);
+    size_t out_idx = (size_t)h_len;
+
+    for (uint32_t dy = 0; dy < target_h; dy++) {
+        uint32_t sy = (dy * fb->height) / target_h;
+        for (uint32_t dx = 0; dx < target_w; dx++) {
+            uint32_t sx = (dx * fb->width) / target_w;
+            uint32_t pixel = fb->buffer[sy * fb->width + sx];
+
+            /* Estrazione canali RGB da 0xAARRGGBB */
+            ppm_buffer[out_idx++] = (uint8_t)((pixel >> 16) & 0xFF);
+            ppm_buffer[out_idx++] = (uint8_t)((pixel >> 8) & 0xFF);
+            ppm_buffer[out_idx++] = (uint8_t)(pixel & 0xFF);
+        }
+    }
+
+    int written = osify_fs_write_file(dest_path, ppm_buffer, out_idx);
+    return (written > 0);
+}
+

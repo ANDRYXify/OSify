@@ -156,6 +156,7 @@ void osify_fb_init(osify_framebuffer_t *fb, uint32_t width, uint32_t height, voi
 void osify_fb_clear(osify_framebuffer_t *fb, uint32_t hex_color);
 void osify_fb_draw_rect(osify_framebuffer_t *fb, int x, int y, int w, int h, uint32_t hex_color);
 void osify_fb_draw_squircle(osify_framebuffer_t *fb, int x, int y, int size, int radius, uint32_t hex_color);
+void osify_fb_draw_rounded_rect(osify_framebuffer_t *fb, int x, int y, int w, int h, int radius, uint32_t hex_color);
 void osify_fb_draw_char(osify_framebuffer_t *fb, int x, int y, char c, uint32_t fg_color);
 void osify_fb_draw_string(osify_framebuffer_t *fb, int x, int y, const char *str, uint32_t fg_color);
 void osify_fb_swap_buffers(osify_framebuffer_t *fb);

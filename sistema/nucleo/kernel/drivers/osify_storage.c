@@ -175,10 +175,11 @@ int osify_storage_parse_gpt(uint32_t drive, osify_partition_t *partitions, size_
 }
 
 /* Tabella File Virtuali In-Storage per OSifyFS */
-#define MAX_FILES 32
+#define MAX_FILES 48
+#define MAX_FILE_SIZE 65536
 static struct {
     char path[128];
-    uint8_t data[2048];
+    uint8_t data[MAX_FILE_SIZE];
     size_t size;
     bool is_used;
 } s_fs_table[MAX_FILES];
@@ -195,28 +196,95 @@ void osify_fs_init(uint32_t drive) {
     osify_fs_write_file("/Sistema/Driver.txt", "5 Driver: Video, Audio, Rete, Input, Periferiche", 48);
     osify_fs_write_file("/Sistema/Icone.txt", "40+ Icone Squircle native (48px, 64px, 128px)", 45);
     osify_fs_write_file("/UEM/Stato.txt", "Ponte Universale Attivo: Windows NT PE, macOS Mach-O, Linux ELF", 63);
-    osify_fs_write_file("/Utenti/osify/Benvenuto.txt", "Benvenuto nella Scrivania di OSify A.1 Sovrano al 100%!", 54);
+    osify_fs_write_file("/Utenti/Compagno/Benvenuto.txt", "Benvenuto nella Scrivania di OSify A.1 Sovrano al 100%!", 54);
+
+    /* Binari Eseguibili Pre-Caricati per Collaudo UEM e Lancio Immediato */
+    /* 1. App Nativa OSify (.ify) - Magic 'IFY\0' */
+    uint8_t bin_ify[128];
+    osify_memset(bin_ify, 0, sizeof(bin_ify));
+    bin_ify[0] = 'I'; bin_ify[1] = 'F'; bin_ify[2] = 'Y'; bin_ify[3] = 0x00;
+    *(uint32_t *)(&bin_ify[4]) = 1; /* Versione */
+    *(uint64_t *)(&bin_ify[8]) = 0x200100ULL; /* Entry point */
+    osify_strcpy((char *)&bin_ify[16], "Calcolatrice Scientifica 2050");
+    osify_fs_write_file("/Applicazioni/calcolatrice.ify", bin_ify, sizeof(bin_ify));
+
+    /* 2. App Windows NT PE (.exe) - Magic 'MZ' */
+    uint8_t bin_pe[128];
+    osify_memset(bin_pe, 0, sizeof(bin_pe));
+    bin_pe[0] = 'M'; bin_pe[1] = 'Z';
+    *(int32_t *)(&bin_pe[0x3C]) = 0x40; /* e_lfanew -> NT Header offset */
+    osify_fs_write_file("/UEM/compat_win.exe", bin_pe, sizeof(bin_pe));
+
+    /* 3. App Linux ELF (.elf) - Magic 0x7F, 'E', 'L', 'F' */
+    uint8_t bin_elf[128];
+    osify_memset(bin_elf, 0, sizeof(bin_elf));
+    bin_elf[0] = 0x7F; bin_elf[1] = 'E'; bin_elf[2] = 'L'; bin_elf[3] = 'F';
+    *(uint64_t *)(&bin_elf[24]) = 0x401050ULL; /* e_entry */
+    osify_fs_write_file("/UEM/server.elf", bin_elf, sizeof(bin_elf));
+
+    /* 4. App macOS Mach-O 64-bit - Magic 0xFEEDFACF */
+    uint8_t bin_macho[128];
+    osify_memset(bin_macho, 0, sizeof(bin_macho));
+    *(uint32_t *)(&bin_macho[0]) = 0xFEEDFACF;
+    osify_fs_write_file("/UEM/darwin_tool.macho", bin_macho, sizeof(bin_macho));
+}
+
+static bool path_equals_nocase(const char *s1, const char *s2) {
+    if (!s1 || !s2) return false;
+    while (*s1 && *s2) {
+        char c1 = *s1;
+        char c2 = *s2;
+        if (c1 >= 'A' && c1 <= 'Z') c1 += 32;
+        if (c2 >= 'A' && c2 <= 'Z') c2 += 32;
+        if (c1 != c2) return false;
+        s1++;
+        s2++;
+    }
+    return (*s1 == '\0' && *s2 == '\0');
 }
 
 int osify_fs_read_file(const char *path, void *out_buf, size_t max_len) {
     if (!path || !out_buf || max_len == 0) return -1;
 
+    /* 1. Ricerca diretta case-insensitive */
     for (int i = 0; i < MAX_FILES; i++) {
-        if (s_fs_table[i].is_used && osify_strcmp(s_fs_table[i].path, path) == 0) {
+        if (s_fs_table[i].is_used && path_equals_nocase(s_fs_table[i].path, path)) {
             size_t copy_len = (s_fs_table[i].size < max_len) ? s_fs_table[i].size : max_len;
             osify_memcpy(out_buf, s_fs_table[i].data, copy_len);
             return (int)copy_len;
         }
     }
+
+    /* 2. Ricerca con prefisso /Applicazioni/ o /UEM/ se fornito nome relativo */
+    char prefixed[140];
+    if (path[0] != '/') {
+        osify_snprintf(prefixed, sizeof(prefixed), "/Applicazioni/%s", path);
+        for (int i = 0; i < MAX_FILES; i++) {
+            if (s_fs_table[i].is_used && path_equals_nocase(s_fs_table[i].path, prefixed)) {
+                size_t copy_len = (s_fs_table[i].size < max_len) ? s_fs_table[i].size : max_len;
+                osify_memcpy(out_buf, s_fs_table[i].data, copy_len);
+                return (int)copy_len;
+            }
+        }
+        osify_snprintf(prefixed, sizeof(prefixed), "/UEM/%s", path);
+        for (int i = 0; i < MAX_FILES; i++) {
+            if (s_fs_table[i].is_used && path_equals_nocase(s_fs_table[i].path, prefixed)) {
+                size_t copy_len = (s_fs_table[i].size < max_len) ? s_fs_table[i].size : max_len;
+                osify_memcpy(out_buf, s_fs_table[i].data, copy_len);
+                return (int)copy_len;
+            }
+        }
+    }
+
     return -1; /* File non trovato */
 }
 
 int osify_fs_write_file(const char *path, const void *data, size_t len) {
-    if (!path || !data || len == 0 || len > 2048) return -1;
+    if (!path || !data || len == 0 || len > MAX_FILE_SIZE) return -1;
 
     /* Cerca se esiste gia per aggiornarlo */
     for (int i = 0; i < MAX_FILES; i++) {
-        if (s_fs_table[i].is_used && osify_strcmp(s_fs_table[i].path, path) == 0) {
+        if (s_fs_table[i].is_used && path_equals_nocase(s_fs_table[i].path, path)) {
             osify_memcpy(s_fs_table[i].data, data, len);
             s_fs_table[i].size = len;
             return (int)len;

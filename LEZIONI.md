@@ -289,3 +289,20 @@
   1. La GUI deve essere sempre completa al 100%: wallpaper a cyber-mesh sfumato con logo filigrana, icone squircle a doppio strato sulla Scrivania, barra di stato dinamica, pannello HUD laterale per telemetria CPU/RAM/GFLOPS e dock a 6 canali con indicatori attivi.
   2. Implementare la Scheda di Acquisizione Virtuale nativa (`osify_capture_card`) tramite direct framebuffer tap e ring buffer DMA a 60 FPS, consentendo al sistema di fungere da capture card senza richiedere hardware HDMI esterno.
   3. Verificare sempre il ciclo di vita reale dell'utente: avvio da supporto, esecuzione comandi CLI e installazione permanente su disco fisso virtuale GPT convalidata visivamente con screendump reali.
+
+## 2026-10-18 — UEM Bridge Bare-Metal, Formato Esportazione PPM Lossless e Geometria Window Manager
+- **Area**: Window Manager nativo (`osify_desktop_wm.c`), Scheda di Acquisizione (`osify_capture_card.c`), File System Nativo (`osify_storage.c`) e Typography/Graphics
+- **Errore**:
+  1. Le righe di testo lunghe nel terminale e nell'Esplora File sforavano la larghezza della finestra andando a sovrascrivere l'HUD di destra.
+  2. L'invocazione di `osify_fb_draw_squircle` per i pulsanti di cattura generava quadrati 140x140 invece di pulsanti rettangolari arrotondati.
+  3. L'esecuzione dei binari da CLI falliva in assenza di un confronto percorsi case-insensitive o tollerante ai prefissi `/Applicazioni/` e `/UEM/`.
+- **Causa radice**:
+  1. `osify_fb_draw_string` nel terminale disegnava oltre il limite `win->w - 32` senza clipping orizzontale preventivo.
+  2. `osify_fb_draw_squircle` accetta per specifica un parametro quadratico `size`, non larghezza e altezza distinte.
+  3. `osify_fs_read_file` impiegava `osify_strcmp` esatto, rendendo vulnerabile il lookup dei file digitati con maiuscole/minuscole o senza prefisso assoluto.
+- **Regola**:
+  1. Implementare e impiegare categoricamente `osify_fb_draw_rounded_rect(fb, x, y, w, h, radius, color)` per qualsiasi pulsante, card o pannello a estensione rettangolare.
+  2. Applicare sempre il clipping orizzontale a `(win->w - 32) / 9` caratteri su tutte le righe di testo renderizzate dentro le finestre del Window Manager.
+  3. Rendere il filesystem nativo OSifyFS resiliente con lookup case-insensitive (`path_equals_nocase`) e risoluzione automatica dei prefissi `/Applicazioni/` e `/UEM/` per nomi relativi.
+  4. La Scheda di Acquisizione Virtuale deve sempre supportare il salvataggio diretto lossless in formato standard PPM (`osify_capture_save_ppm`) su disco fisso.
+

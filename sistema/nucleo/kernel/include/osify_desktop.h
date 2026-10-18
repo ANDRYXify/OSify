@@ -45,6 +45,8 @@ void osify_desktop_init(osify_framebuffer_t *fb);
 void osify_desktop_render_all(osify_framebuffer_t *fb);
 void osify_desktop_handle_key(osify_framebuffer_t *fb, char c);
 void osify_desktop_move_mouse(osify_framebuffer_t *fb, int new_x, int new_y);
+void osify_desktop_click_mouse(osify_framebuffer_t *fb, int x, int y, uint8_t buttons);
+void osify_desktop_cycle_focus(void);
 
 /* Gestione Finestre */
 osify_window_t *osify_wm_create_window(int x, int y, int w, int h, const char *title);

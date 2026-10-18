@@ -42,4 +42,7 @@ void osify_capture_process_frame(const osify_framebuffer_t *fb);
 /* Accesso allo Stato */
 const osify_capture_state_t *osify_capture_get_state(void);
 
+/* Esportazione fotogramma lossless in formato standard PPM su disco */
+bool osify_capture_save_ppm(const osify_framebuffer_t *fb, const char *dest_path);
+
 #endif /* OSIFY_CAPTURE_CARD_H */

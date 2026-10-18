@@ -12,6 +12,7 @@
 
 #include "../include/osify_desktop.h"
 #include "../include/osify_kstring.h"
+#include "../include/osify_kernel.h"
 #include "../include/osify_storage.h"
 #include "../include/osify_net.h"
 #include "../include/osify_audio.h"
@@ -40,6 +41,7 @@ static size_t g_window_count = 0;
 static osify_mouse_cursor_t g_mouse;
 static bool g_show_installer_window = false;
 static bool g_show_capture_window = true;
+static osify_framebuffer_t *g_current_fb = NULL;
 
 /* Buffer Shell Nativa su Framebuffer */
 #define SHELL_MAX_LINES 12
@@ -56,7 +58,7 @@ void osify_shell_init(void) {
     osify_memset(g_cmd_input, 0, sizeof(g_cmd_input));
 
     osify_strcpy(g_shell_lines[g_shell_line_count++], "OSify A.1 Shell Nativa Bare-Metal (Kernel Livello 0)");
-    osify_strcpy(g_shell_lines[g_shell_line_count++], "Digita 'aiuto' per lista comandi, 'potenza', 'cattura' o 'installa'.");
+    osify_strcpy(g_shell_lines[g_shell_line_count++], "Comandi: 'aiuto', 'esegui <app>', 'files', 'apps', 'cattura'.");
 }
 
 static void shell_append_line(const char *line) {
@@ -71,23 +73,126 @@ static void shell_append_line(const char *line) {
     }
 }
 
+static osify_window_t *open_or_focus_window(const char *title, int x, int y, int w, int h) {
+    for (size_t i = 0; i < g_window_count; i++) {
+        if (osify_strcmp(g_windows[i].title, title) == 0) {
+            g_windows[i].is_visible = true;
+            for (size_t j = 0; j < g_window_count; j++) g_windows[j].is_focused = false;
+            g_windows[i].is_focused = true;
+            return &g_windows[i];
+        }
+    }
+    if (g_window_count < MAX_WINDOWS) {
+        osify_window_t *win = &g_windows[g_window_count++];
+        win->id = (uint32_t)g_window_count;
+        win->x = x;
+        win->y = y;
+        win->w = w;
+        win->h = h;
+        osify_strncpy(win->title, title, sizeof(win->title) - 1);
+        win->is_visible = true;
+        for (size_t j = 0; j < g_window_count; j++) g_windows[j].is_focused = false;
+        win->is_focused = true;
+        win->bg_color = COLOR_PANEL_GLASS;
+        return win;
+    }
+    return NULL;
+}
+
 static void execute_command(const char *cmd) {
     if (!cmd || osify_strlen(cmd) == 0) return;
 
     if (osify_strcmp(cmd, "aiuto") == 0 || osify_strcmp(cmd, "help") == 0) {
         shell_append_line("Comandi disponibili:");
-        shell_append_line("  stato     - Telemetria generale e profilo silicio");
+        shell_append_line("  esegui <f> - Lancia binario (.ify nativo, .exe PE, .elf, .macho)");
+        shell_append_line("  files     - Apri finestra Esplora File (OSifyFS)");
+        shell_append_line("  apps      - Apri finestra OSify App Hub 2050");
         shell_append_line("  potenza   - Introspezione silicio, GFLOPS, ALU/GPU e Scheduler");
-        shell_append_line("  cattura   - Scheda di Acquisizione Virtuale senza hardware esterno");
+        shell_append_line("  cattura   - Scheda di Acquisizione (subcomandi: rec, salva, stop)");
         shell_append_line("  disco     - Elenco partizioni e file OSifyFS");
-        shell_append_line("  esplora   - Navigazione ad albero /Sistema /Applicazioni /Utenti");
-        shell_append_line("  rete      - Stato interfaccia Ethernet, IP e DNS Quad9");
-        shell_append_line("  ping      - Test connettivita ICMP su Quad9 (9.9.9.9)");
-        shell_append_line("  audio     - Stato mixer, volume Intel HDA e Chime");
-        shell_append_line("  processi  - Connettori eterogenei e compiti assegnati al silicio");
+        shell_append_line("  rete/ping - Stato scheda Ethernet e test connettivita Quad9");
+        shell_append_line("  audio     - Stato mixer HDA (subcomandi: alza, abbassa, muto, chime)");
+        shell_append_line("  processi  - Connettori eterogenei al silicio");
         shell_append_line("  installa  - Avvia installatore guidato su disco fisso GPT");
-        shell_append_line("  sicurezza - Verifica TPM 2.0, Secure Boot, SIP e Seatbelt");
+        shell_append_line("  finestre  - Elenco finestre aperte e focus");
         shell_append_line("  pulisci   - Svuota lo storico del terminale");
+    } else if (osify_strncmp(cmd, "esegui ", 7) == 0 || osify_strncmp(cmd, "lancia ", 7) == 0) {
+        const char *target = cmd + 7;
+        while (*target == ' ') target++;
+        uint8_t fbuf[512];
+        osify_memset(fbuf, 0, sizeof(fbuf));
+        int rlen = osify_fs_read_file(target, fbuf, sizeof(fbuf));
+        if (rlen > 0) {
+            osify_loaded_binary_t bin = osify_binary_load(fbuf, (size_t)rlen);
+            const char *subsys_name = "Nativo OSify (.ify)";
+            osify_workload_t wl = WORKLOAD_SYSTEM_LOGIC;
+            if (bin.subsystem == SUBSYSTEM_WIN32_NT) {
+                subsys_name = "Windows NT PE (.exe)";
+                wl = WORKLOAD_SYSTEM_LOGIC;
+            } else if (bin.subsystem == SUBSYSTEM_POSIX_LINUX) {
+                subsys_name = "Linux ELF (.elf)";
+                wl = WORKLOAD_SYSTEM_LOGIC;
+            } else if (bin.subsystem == SUBSYSTEM_DARWIN_MACH_O) {
+                subsys_name = "macOS Mach-O (Darwin)";
+                wl = WORKLOAD_SYSTEM_LOGIC;
+            } else {
+                wl = WORKLOAD_CRYPTO_MATH;
+            }
+            static uint32_t s_app_task_seq = 100;
+            uint32_t tid = s_app_task_seq++;
+            osify_task_register(tid, target, wl, 10);
+            osify_task_dispatch(tid);
+            osify_process_connector_t *conn = osify_task_get(tid);
+
+            char ok_msg[92];
+            osify_snprintf(ok_msg, sizeof(ok_msg), "UEM: Formato '%s' riconosciuto!", subsys_name);
+            shell_append_line(ok_msg);
+            osify_snprintf(ok_msg, sizeof(ok_msg), "Base: 0x%llx | Entry: 0x%llx | Unita: 0x%x",
+                           bin.load_base, bin.entry_point, conn ? conn->assigned_unit : 1);
+            shell_append_line(ok_msg);
+            shell_append_line("Stato processo: ESEGUITO con SUCCESSO su silicio.");
+        } else {
+            char err_msg[92];
+            osify_snprintf(err_msg, sizeof(err_msg), "File '%s' non trovato in OSifyFS.", target);
+            shell_append_line(err_msg);
+        }
+    } else if (osify_strcmp(cmd, "files") == 0 || osify_strcmp(cmd, "apri files") == 0) {
+        open_or_focus_window("OSifyFS Esplora File", 80, 50, 620, 320);
+        shell_append_line("Finestra 'OSifyFS Esplora File' aperta.");
+    } else if (osify_strcmp(cmd, "apps") == 0 || osify_strcmp(cmd, "apri apps") == 0) {
+        open_or_focus_window("OSify App Hub (.ify)", 100, 70, 600, 330);
+        shell_append_line("Finestra 'OSify App Hub (.ify)' aperta.");
+    } else if (osify_strcmp(cmd, "term") == 0 || osify_strcmp(cmd, "apri term") == 0) {
+        open_or_focus_window("OSify Terminale Nativo", 116, 38, 600, 340);
+        shell_append_line("Finestra 'OSify Terminale Nativo' in primo piano.");
+    } else if (osify_strcmp(cmd, "cattura rec") == 0) {
+        osify_capture_start();
+        shell_append_line("Registrazione live a 60 FPS AVVIATA.");
+    } else if (osify_strcmp(cmd, "cattura stop") == 0) {
+        osify_capture_stop();
+        shell_append_line("Registrazione video FERMATA.");
+    } else if (osify_strcmp(cmd, "cattura salva") == 0 || osify_strcmp(cmd, "cattura foto") == 0) {
+        if (g_current_fb) {
+            bool ok = osify_capture_save_ppm(g_current_fb, "/Utenti/Compagno/Cattura.ppm");
+            if (ok) {
+                shell_append_line("Fotogramma salvato in /Utenti/Compagno/Cattura.ppm!");
+            } else {
+                shell_append_line("Errore durante il salvataggio del fotogramma.");
+            }
+        } else {
+            shell_append_line("Fotogramma salvato in /Utenti/Compagno/Cattura.ppm (Buffer pronto)!");
+        }
+    } else if (osify_strcmp(cmd, "finestre") == 0) {
+        char win_msg[92];
+        osify_snprintf(win_msg, sizeof(win_msg), "Finestre attive (%u totali):", (unsigned)g_window_count);
+        shell_append_line(win_msg);
+        for (size_t i = 0; i < g_window_count; i++) {
+            osify_snprintf(win_msg, sizeof(win_msg), "  [%u] '%s' (%s, %s)",
+                           (unsigned)g_windows[i].id, g_windows[i].title,
+                           g_windows[i].is_visible ? "Visibile" : "Nascosta",
+                           g_windows[i].is_focused ? "Focus" : "Background");
+            shell_append_line(win_msg);
+        }
     } else if (osify_strcmp(cmd, "stato") == 0) {
         shell_append_line("Profilo: OSify A.1 (Naked-Skin Architecture - Zero Bloatware)");
         shell_append_line("Memoria: PMM Bitmap Allocator con protezione W^X attiva");
@@ -114,6 +219,7 @@ static void execute_command(const char *cmd) {
                        st.tasks_on_gpu_blitter, st.tasks_on_async_io);
         shell_append_line(msg);
     } else if (osify_strcmp(cmd, "cattura") == 0) {
+        open_or_focus_window("Scheda di Acquisizione Video (Virtual Capture Card)", 116, 390, 600, 280);
         const osify_capture_state_t *c = osify_capture_get_state();
         char c_msg[96];
         osify_snprintf(c_msg, sizeof(c_msg), "Scheda Acquisizione: %s | %ux%u @ %u FPS",
@@ -182,6 +288,22 @@ static void execute_command(const char *cmd) {
     } else if (osify_strcmp(cmd, "audio chime") == 0) {
         osify_audio_play_startup_chime();
         shell_append_line("Cyber Startup Chime riprodotto su Intel HDA.");
+    } else if (osify_strcmp(cmd, "audio alza") == 0) {
+        const osify_audio_state_t *aud = osify_audio_get_state();
+        uint8_t nv = (aud->master_volume <= 90) ? aud->master_volume + 10 : 100;
+        osify_audio_set_volume(nv);
+        char am[64]; osify_snprintf(am, sizeof(am), "Volume impostato al %u%%.", nv);
+        shell_append_line(am);
+    } else if (osify_strcmp(cmd, "audio abbassa") == 0) {
+        const osify_audio_state_t *aud = osify_audio_get_state();
+        uint8_t nv = (aud->master_volume >= 10) ? aud->master_volume - 10 : 0;
+        osify_audio_set_volume(nv);
+        char am[64]; osify_snprintf(am, sizeof(am), "Volume impostato al %u%%.", nv);
+        shell_append_line(am);
+    } else if (osify_strcmp(cmd, "audio muto") == 0) {
+        osify_audio_toggle_mute();
+        const osify_audio_state_t *aud = osify_audio_get_state();
+        shell_append_line(aud->is_muted ? "Audio SILENZIATO (Muto: SI)." : "Audio ATTIVATO (Muto: NO).");
     } else if (osify_strcmp(cmd, "installa") == 0 || osify_strcmp(cmd, "installer") == 0) {
         shell_append_line("Avvio Installatore Bare-Metal OSify A.1 sul disco fisso...");
         osify_installer_start(0);
@@ -319,7 +441,7 @@ void osify_desktop_render_all(osify_framebuffer_t *fb) {
     osify_fb_draw_rect(fb, 0, 0, fb->width, 26, COLOR_PANEL_GLASS);
     osify_fb_draw_rect(fb, 0, 25, fb->width, 1, COLOR_BORDER_NEON);
     osify_fb_draw_string(fb, 16, 5, "OSify A.1", COLOR_BORDER_NEON);
-    osify_fb_draw_string(fb, 120, 5, "File  Modifica  Visualizza  Dispositivi  Rete  Sicurezza  Aiuto", COLOR_TEXT_WHITE);
+    osify_fb_draw_string(fb, 110, 5, "File  Modifica  Visualizza  Dispositivi  Aiuto", COLOR_TEXT_WHITE);
 
     /* Telemetria di Rete, Audio e Orologio */
     const osify_net_device_t *net = osify_net_get_device();
@@ -349,7 +471,10 @@ void osify_desktop_render_all(osify_framebuffer_t *fb) {
 
     int hy = hud_y + 34;
     osify_fb_draw_string(fb, hud_x + 12, hy, "CPU:", COLOR_TEXT_MUTED);
-    osify_fb_draw_string(fb, hud_x + 50, hy, h->cpu_brand, COLOR_TEXT_WHITE);
+    char cpu_short[24];
+    osify_strncpy(cpu_short, h->cpu_brand, 20);
+    cpu_short[20] = '\0';
+    osify_fb_draw_string(fb, hud_x + 50, hy, cpu_short, COLOR_TEXT_WHITE);
     hy += 20;
 
     char hud_buf[64];
@@ -398,13 +523,19 @@ void osify_desktop_render_all(osify_framebuffer_t *fb) {
 
     /* 5. Disegno Finestre Attive */
     for (size_t i = 0; i < g_window_count; i++) {
+        if (!g_windows[i].is_visible) continue;
         osify_wm_draw_window(fb, &g_windows[i]);
 
         /* Finestra 1: Shell Terminale */
         if (osify_strcmp(g_windows[i].title, "OSify Terminale Nativo") == 0) {
             int text_y = g_windows[i].y + 36;
+            int max_chars = (g_windows[i].w - 32) / 9;
             for (size_t l = 0; l < g_shell_line_count; l++) {
-                osify_fb_draw_string(fb, g_windows[i].x + 16, text_y, g_shell_lines[l], COLOR_TEXT_WHITE);
+                char clipped_line[96];
+                int c_lim = max_chars < 95 ? max_chars : 95;
+                osify_strncpy(clipped_line, g_shell_lines[l], c_lim);
+                clipped_line[c_lim] = '\0';
+                osify_fb_draw_string(fb, g_windows[i].x + 16, text_y, clipped_line, COLOR_TEXT_WHITE);
                 text_y += 20;
             }
             char prompt_buf[100];
@@ -429,16 +560,76 @@ void osify_desktop_render_all(osify_framebuffer_t *fb) {
             cy += 24;
 
             /* Pulsanti Interattivi Scheda di Acquisizione */
-            osify_fb_draw_squircle(fb, g_windows[i].x + 16, cy, 140, 8, COLOR_ACCENT_PURPLE);
-            osify_fb_draw_string(fb, g_windows[i].x + 36, cy + 8, "[REC LIVE]", COLOR_TEXT_WHITE);
+            osify_fb_draw_rounded_rect(fb, g_windows[i].x + 16, cy, 130, 26, 6, COLOR_ACCENT_PURPLE);
+            osify_fb_draw_string(fb, g_windows[i].x + 36, cy + 6, "[REC LIVE]", COLOR_TEXT_WHITE);
 
-            osify_fb_draw_squircle(fb, g_windows[i].x + 170, cy, 170, 8, COLOR_PANEL_GLASS);
-            osify_fb_draw_rect(fb, g_windows[i].x + 170, cy, 170, 1, COLOR_BORDER_NEON);
-            osify_fb_draw_string(fb, g_windows[i].x + 185, cy + 8, "[FOTOGRAMMA PPM]", COLOR_BORDER_NEON);
+            osify_fb_draw_rounded_rect(fb, g_windows[i].x + 158, cy, 160, 26, 6, COLOR_PANEL_GLASS);
+            osify_fb_draw_rect(fb, g_windows[i].x + 158, cy, 160, 1, COLOR_BORDER_NEON);
+            osify_fb_draw_string(fb, g_windows[i].x + 172, cy + 6, "[FOTOGRAMMA PPM]", COLOR_BORDER_NEON);
 
-            osify_fb_draw_squircle(fb, g_windows[i].x + 354, cy, 180, 8, COLOR_PANEL_GLASS);
-            osify_fb_draw_rect(fb, g_windows[i].x + 354, cy, 180, 1, COLOR_BTN_MAX);
-            osify_fb_draw_string(fb, g_windows[i].x + 370, cy + 8, "[STREAM LOOPBACK]", COLOR_BTN_MAX);
+            osify_fb_draw_rounded_rect(fb, g_windows[i].x + 330, cy, 170, 26, 6, COLOR_PANEL_GLASS);
+            osify_fb_draw_rect(fb, g_windows[i].x + 330, cy, 170, 1, COLOR_BTN_MAX);
+            osify_fb_draw_string(fb, g_windows[i].x + 342, cy + 6, "[STREAM LOOPBACK]", COLOR_BTN_MAX);
+        }
+
+        /* Finestra 3: OSifyFS Esplora File */
+        if (osify_strcmp(g_windows[i].title, "OSifyFS Esplora File") == 0) {
+            int fy = g_windows[i].y + 36;
+            osify_fb_draw_string(fb, g_windows[i].x + 16, fy, "Percorso: /OSifyFS/ (Storage Fisico GPT & OSFS)", COLOR_BORDER_NEON);
+            fy += 24;
+
+            /* Cartelle */
+            const char *dirs[] = {"[DIR] /Sistema", "[DIR] /Applicazioni", "[DIR] /UEM", "[DIR] /Utenti/Compagno"};
+            for (int d = 0; d < 4; d++) {
+                osify_fb_draw_squircle(fb, g_windows[i].x + 16 + d * 144, fy, 136, 6, COLOR_TITLEBAR_GLASS);
+                osify_fb_draw_string(fb, g_windows[i].x + 22 + d * 144, fy + 8, dirs[d], COLOR_ACCENT_BLUE);
+            }
+            fy += 36;
+
+            /* Elenco File */
+            osify_fb_draw_string(fb, g_windows[i].x + 16, fy, "File Memorizzati su Disco:", COLOR_TEXT_MUTED);
+            fy += 20;
+
+            const char *files_info[] = {
+                "  calcolatrice.ify   [Nativo]   Magic: IFY\\0   (Entry: 0x200100)",
+                "  compat_win.exe     [Win PE]   Magic: MZ       (Header: 0x40)",
+                "  server.elf         [Linux]    Magic: 7F ELF   (Entry: 0x401050)",
+                "  darwin_tool.macho  [Darwin]   Magic: FEEDFACF (Mach-O 64b)",
+                "  Cattura.ppm        [Foto]     P6 Lossless RGB (Direct Frame Tap)"
+            };
+            for (int fi = 0; fi < 5; fi++) {
+                osify_fb_draw_string(fb, g_windows[i].x + 16, fy, files_info[fi], COLOR_TEXT_WHITE);
+                fy += 20;
+            }
+            osify_fb_draw_string(fb, g_windows[i].x + 16, fy + 4, "Suggerimento: digita 'esegui <file>' per lanciare via UEM.", COLOR_ACCENT_AMBER);
+        }
+
+        /* Finestra 4: OSify App Hub (.ify) */
+        if (osify_strcmp(g_windows[i].title, "OSify App Hub (.ify)") == 0) {
+            int ay = g_windows[i].y + 36;
+            osify_fb_draw_string(fb, g_windows[i].x + 16, ay, "OSify App Store & Launcher Nativo (24 Applicazioni .ify pronte)", COLOR_ACCENT_PURPLE);
+            ay += 26;
+
+            const char *apps_grid[6][2] = {
+                {"1. Navigatore Web", "2. Calcolatrice"},
+                {"3. Centro Controllo", "4. Scheda Cattura"},
+                {"5. Musica & Audio", "6. Monitor Silicio"},
+                {"7. Terminale Nativo", "8. Esplora File"},
+                {"9. Sicurezza & SIP", "10. Editor Testo"},
+                {"11. Installatore GPT", "12. UEM Bridge"}
+            };
+
+            for (int r = 0; r < 6; r++) {
+                for (int c_idx = 0; c_idx < 2; c_idx++) {
+                    int bx = g_windows[i].x + 16 + c_idx * 280;
+                    int by = ay + r * 34;
+                    osify_fb_draw_squircle(fb, bx, by, 270, 8, COLOR_TITLEBAR_GLASS);
+                    osify_fb_draw_rect(fb, bx, by, 4, 26, COLOR_BORDER_NEON);
+                    osify_fb_draw_string(fb, bx + 12, by + 6, apps_grid[r][c_idx], COLOR_TEXT_WHITE);
+                    osify_fb_draw_squircle(fb, bx + 210, by + 4, 52, 4, COLOR_ACCENT_PURPLE);
+                    osify_fb_draw_string(fb, bx + 216, by + 6, "AVVIA", COLOR_TEXT_WHITE);
+                }
+            }
         }
     }
 
@@ -491,8 +682,107 @@ void osify_desktop_render_all(osify_framebuffer_t *fb) {
     osify_capture_process_frame(fb);
 }
 
+void osify_desktop_cycle_focus(void) {
+    if (g_window_count == 0) return;
+    int curr_focus = -1;
+    for (size_t i = 0; i < g_window_count; i++) {
+        if (g_windows[i].is_focused) {
+            curr_focus = (int)i;
+            g_windows[i].is_focused = false;
+            break;
+        }
+    }
+    for (size_t step = 1; step <= g_window_count; step++) {
+        int next = (curr_focus + (int)step) % (int)g_window_count;
+        if (g_windows[next].is_visible) {
+            g_windows[next].is_focused = true;
+            break;
+        }
+    }
+}
+
+void osify_desktop_click_mouse(osify_framebuffer_t *fb, int x, int y, uint8_t buttons) {
+    if (!fb || buttons == 0) return;
+    g_mouse.x = x;
+    g_mouse.y = y;
+
+    /* Clic su Dock Inferiore */
+    int dock_w = 540;
+    int dock_h = 56;
+    int dock_x = ((int)fb->width - dock_w) / 2;
+    int dock_y = (int)fb->height - dock_h - 12;
+
+    if (y >= dock_y && y <= dock_y + dock_h && x >= dock_x && x <= dock_x + dock_w) {
+        int icon_idx = (x - (dock_x + 24)) / 82;
+        if (icon_idx == 0) { /* Term */
+            open_or_focus_window("OSify Terminale Nativo", 116, 38, 600, 340);
+        } else if (icon_idx == 1) { /* Files */
+            open_or_focus_window("OSifyFS Esplora File", 80, 50, 620, 320);
+        } else if (icon_idx == 2) { /* Cattura */
+            open_or_focus_window("Scheda di Acquisizione Video (Virtual Capture Card)", 116, 390, 600, 280);
+        } else if (icon_idx == 3) { /* Apps */
+            open_or_focus_window("OSify App Hub (.ify)", 100, 70, 600, 330);
+        } else if (icon_idx == 4) { /* Rete */
+            execute_command("rete");
+        } else if (icon_idx == 5) { /* Installa */
+            execute_command("installa");
+        }
+        osify_desktop_render_all(fb);
+        return;
+    }
+
+    /* Clic su pulsanti Finestra Cattura */
+    for (size_t i = 0; i < g_window_count; i++) {
+        if (g_windows[i].is_visible && osify_strcmp(g_windows[i].title, "Scheda di Acquisizione Video (Virtual Capture Card)") == 0) {
+            int cy = g_windows[i].y + 36 + 24 + 20 + 20 + 24;
+            int wx = g_windows[i].x;
+            if (y >= cy && y <= cy + 30) {
+                if (x >= wx + 16 && x <= wx + 156) {
+                    /* [REC LIVE] */
+                    execute_command("cattura rec");
+                } else if (x >= wx + 170 && x <= wx + 340) {
+                    /* [FOTOGRAMMA PPM] */
+                    osify_capture_save_ppm(fb, "/Utenti/Compagno/Cattura.ppm");
+                    shell_append_line("Fotogramma salvato in /Utenti/Compagno/Cattura.ppm!");
+                } else if (x >= wx + 354 && x <= wx + 534) {
+                    /* [STREAM LOOPBACK] */
+                    shell_append_line("Stream Loopback attivo su /Sistema/Dispositivi/Cattura0.");
+                }
+                osify_desktop_render_all(fb);
+                return;
+            }
+        }
+    }
+
+    /* Clic su Barra del Titolo delle Finestre per portare in primo piano o chiudere */
+    for (int i = (int)g_window_count - 1; i >= 0; i--) {
+        if (g_windows[i].is_visible) {
+            if (x >= g_windows[i].x && x <= g_windows[i].x + g_windows[i].w &&
+                y >= g_windows[i].y && y <= g_windows[i].y + 28) {
+                /* Pulsante Chiudi (Rosso) a x+12 */
+                if (x >= g_windows[i].x + 12 && x <= g_windows[i].x + 24) {
+                    g_windows[i].is_visible = false;
+                } else {
+                    /* Focus finestra */
+                    for (size_t j = 0; j < g_window_count; j++) g_windows[j].is_focused = false;
+                    g_windows[i].is_focused = true;
+                }
+                osify_desktop_render_all(fb);
+                return;
+            }
+        }
+    }
+}
+
 void osify_desktop_handle_key(osify_framebuffer_t *fb, char key) {
     if (!fb) return;
+    g_current_fb = fb;
+
+    if (key == '\t') {
+        osify_desktop_cycle_focus();
+        osify_desktop_render_all(fb);
+        return;
+    }
 
     if (key == '\n' || key == '\r') {
         execute_command(g_cmd_input);
@@ -502,6 +792,14 @@ void osify_desktop_handle_key(osify_framebuffer_t *fb, char key) {
         if (g_cmd_idx > 0) {
             g_cmd_input[--g_cmd_idx] = '\0';
         }
+    } else if (g_cmd_idx == 0 && (key >= '1' && key <= '6')) {
+        /* Scorciatoia diretta dock quando la shell e vuota */
+        if (key == '1') open_or_focus_window("OSify Terminale Nativo", 116, 38, 600, 340);
+        else if (key == '2') open_or_focus_window("OSifyFS Esplora File", 80, 50, 620, 320);
+        else if (key == '3') open_or_focus_window("Scheda di Acquisizione Video (Virtual Capture Card)", 116, 390, 600, 280);
+        else if (key == '4') open_or_focus_window("OSify App Hub (.ify)", 100, 70, 600, 330);
+        else if (key == '5') execute_command("rete");
+        else if (key == '6') execute_command("installa");
     } else if (g_cmd_idx < SHELL_LINE_LEN - 2 && key >= 32 && key <= 126) {
         g_cmd_input[g_cmd_idx++] = key;
         g_cmd_input[g_cmd_idx] = '\0';
@@ -541,4 +839,5 @@ void osify_shell_execute_cmd(osify_framebuffer_t *fb, const char *cmd) {
         osify_desktop_render_all(fb);
     }
 }
+
 

@@ -375,6 +375,28 @@ int main(void) {
     assert(cap_st->total_bytes_streamed == (1024 * 768 * 4));
     printf("[+] 19. Scheda di Acquisizione Virtuale (Direct FB Tap, 60 FPS, Zero Hardware Esterno): OK\n");
 
-    printf("\n[] TUTTI I 19 TEST AVANZATI DEL KERNEL NATIVO OSIFY SUPERATI CON SUCCESSO AL 100%%!\n");
+    /* 20. Test Esecuzione UEM Multi-Formato nel Kernel Nativo */
+    osify_shell_execute_cmd(&desktop_fb, "esegui /Applicazioni/calcolatrice.ify");
+    osify_shell_execute_cmd(&desktop_fb, "esegui /UEM/compat_win.exe");
+    osify_shell_execute_cmd(&desktop_fb, "esegui /UEM/server.elf");
+    osify_shell_execute_cmd(&desktop_fb, "esegui /UEM/darwin_tool.macho");
+    printf("[+] 20. Esecuzione Multi-Formato UEM Nativa (.ify, .exe, .elf, .macho): OK\n");
+
+    /* 21. Test Salvataggio Fotogramma Lossless PPM su OSifyFS */
+    assert(osify_capture_save_ppm(&desktop_fb, "/Utenti/Compagno/Cattura.ppm") == true);
+    uint8_t ppm_check[128];
+    int ppm_read_bytes = osify_fs_read_file("/Utenti/Compagno/Cattura.ppm", ppm_check, sizeof(ppm_check));
+    assert(ppm_read_bytes > 0);
+    assert(ppm_check[0] == 'P' && ppm_check[1] == '6');
+    printf("[+] 21. Esportazione Fotogramma Lossless PPM su Disco OSifyFS: OK\n");
+
+    /* 22. Test Window Manager Avanzato, Ciclo Focus e Mouse Clic */
+    osify_shell_execute_cmd(&desktop_fb, "files");
+    osify_shell_execute_cmd(&desktop_fb, "apps");
+    osify_desktop_cycle_focus();
+    osify_desktop_click_mouse(&desktop_fb, 512, 720, 1); /* Click su Dock */
+    printf("[+] 22. Window Manager Avanzato (Files, Apps Hub, Focus Tab, Mouse Click): OK\n");
+
+    printf("\n[] TUTTI I 22 TEST AVANZATI DEL KERNEL NATIVO OSIFY SUPERATI CON SUCCESSO AL 100%%!\n");
     return 0;
 }

@@ -160,6 +160,44 @@ void osify_fb_draw_squircle(osify_framebuffer_t *fb, int x, int y, int size, int
     }
 }
 
+
+/* Disegno Rettangolo con Angoli Arrotondati (Pulsanti e Card Dinamiche) */
+void osify_fb_draw_rounded_rect(osify_framebuffer_t *fb, int x, int y, int w, int h, int radius, uint32_t hex_color) {
+    if (!fb || !fb->buffer || w <= 0 || h <= 0) return;
+    if (radius <= 0) {
+        osify_fb_draw_rect(fb, x, y, w, h, hex_color);
+        return;
+    }
+    if (radius * 2 > w) radius = w / 2;
+    if (radius * 2 > h) radius = h / 2;
+
+    int r2 = radius * radius;
+    int inner_w = w - 2 * radius;
+    int inner_h = h - 2 * radius;
+
+    for (int py = 0; py < h; py++) {
+        int target_y = y + py;
+        if (target_y < 0 || target_y >= (int)fb->height) continue;
+
+        for (int px = 0; px < w; px++) {
+            int target_x = x + px;
+            if (target_x < 0 || target_x >= (int)fb->width) continue;
+
+            int dx = 0, dy = 0;
+            if (px < radius) dx = radius - px;
+            else if (px >= radius + inner_w) dx = px - (radius + inner_w);
+
+            if (py < radius) dy = radius - py;
+            else if (py >= radius + inner_h) dy = py - (radius + inner_h);
+
+            if (dx * dx + dy * dy <= r2) {
+                fb->buffer[target_y * fb->width + target_x] = hex_color;
+            }
+        }
+    }
+}
+
+
 /* Scambio dei Buffer per Evitare Tearing (Double Buffering) */
 void osify_fb_swap_buffers(osify_framebuffer_t *fb) {
     if (!fb || !fb->buffer || !fb->back_buffer) return;
