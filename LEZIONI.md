@@ -1,5 +1,17 @@
 # LEZIONI APPRESE — REGISTRO ERRORI E REGOLE ARCHITETTURALI OSIFY
 
+## 2026-10-18 — Masterizzazione Ibrida xorriso: Percorsi Relativi El Torito, Pulizia [BOOT] e Integrita Syslinux
+- **Area**: Bootloader ISO Universale Ibrida (UEFI x86_64, BIOS Legacy x86_64, Vintage 32-bit i686) e Packaging xorriso
+- **Errore**: L'avvio dell'ISO Unica Universale e della versione 64-bit su BIOS Legacy in ambiente reale o QEMU si arrestava al prompt Syslinux o a 0% senza procedere all'avvio automatico, e su UEFI la masterizzazione conteneva strutture duplicate o spurie.
+- **Causa radice**:
+  1. Nei comandi `xorriso -as mkisofs`, i percorsi passati a `-c` (`/boot/syslinux/boot.cat`), `-b` (`/boot/syslinux/isolinux.bin`) ed `-e` (`/boot/grub/efi.img`) includevano uno slash iniziale `/`, che in modalità mkisofs può corrompere i percorsi relativi della tabella El Torito.
+  2. L'estrazione preliminare della ISO con `7z x` generava cartelle spurie `[BOOT]` contenenti le immagini d'avvio grezze estratte (`1-Boot-NoEmul.img`, `2-Boot-NoEmul.img`), che venivano poi re-incluse da xorriso sporcando l'indice di boot.
+  3. La presenza di cartelle ridondanti (`boot/isolinux`, `isolinux`) e copie multiple di `isolinux.bin` con stati di patch parziali disallineava il caricamento di `ldlinux.c32`.
+- **Regola**:
+  1. Percorsi Relativi Obbligatori in xorriso: Tutti i parametri El Torito (`-c boot/syslinux/boot.cat`, `-b boot/syslinux/isolinux.bin`, `-e boot/grub/efi.img`) devono categoricamente omettere lo slash iniziale.
+  2. Sanificazione Pre-Masterizzazione: Rimuovere sempre prima di invocare xorriso qualsiasi cartella spuria generata da 7z (`[BOOT]`), qualsiasi cartella duplicata di boot (`boot/isolinux`, `isolinux`) e rigenerare unicamente `boot/syslinux/boot.cat`.
+  3. Configurazione Boot Unificata: Centralizzare i file di configurazione in `boot/syslinux/syslinux.cfg` e `boot/syslinux/isolinux.cfg` con toolchain e moduli `.c32` (ldlinux, libcom32, libutil, vesamenu) coerenti e verificati.
+
 ## 2026-10-18 — UEM Dispatcher Poliglota, Formattatore Freestanding Kernel & Popolamento Userspace Live
 - **Area**: Universal Execution Module (UEM), Freestanding Runtime C (`osify_snprintf`) e Packaging RootFS Live 64-bit / ARM64
 - **Errore**:

@@ -3133,6 +3133,11 @@ def build_modern_x86_64():
     print("[i] Estrazione base 64-bit...")
     run(f"7z x -y '{src_iso}' -o'{iso_root}' > /dev/null")
 
+    # Rimozione cartella spuria [BOOT] estratta da 7z per non inquinare il filesystem ISO
+    boot_spuria = os.path.join(iso_root, "[BOOT]")
+    if os.path.exists(boot_spuria):
+        shutil.rmtree(boot_spuria)
+
     # Patch binaria kernel per azzerare stringhe VGA early console ("Decompressing Linux", "done.")
     for r, _, files in os.walk(iso_root):
         for f in files:
@@ -3365,6 +3370,25 @@ exec openbox-session
     with open(os.path.join(xwrap_dir, "Xwrapper.config"), "w") as f:
         f.write("allowed_users = anybody\nneeds_root_rights = yes\n")
 
+    # Configurazione driver video universale (modesetting per UEFI/KMS/DRI)
+    xconf_d = os.path.join(apkovl_dir, "etc/X11/xorg.conf.d")
+    os.makedirs(xconf_d, exist_ok=True)
+    modesetting_conf = """Section "Device"
+    Identifier "UniversalGraphics"
+    Driver "modesetting"
+    Option "AccelMethod" "none"
+EndSection
+
+Section "Screen"
+    Identifier "UniversalScreen"
+    Device "UniversalGraphics"
+EndSection
+"""
+    with open(os.path.join(xconf_d, "20-modesetting.conf"), "w") as f:
+        f.write(modesetting_conf)
+    with open(os.path.join(xwrap_dir, "xorg.conf"), "w") as f:
+        f.write(modesetting_conf)
+
     # Script supervisore sessione grafica
     session_gui = """#!/bin/sh
 # Supervisore Sessione Desktop OSify 2050
@@ -3380,6 +3404,10 @@ echo "osify" > /etc/hostname 2>/dev/null || true
 grep -q "osify" /etc/hosts 2>/dev/null || echo "127.0.0.1 osify localhost" >> /etc/hosts 2>/dev/null || true
 
 # Permessi dispositivi video, console e log per server X11
+addgroup osify video 2>/dev/null || true
+addgroup osify input 2>/dev/null || true
+addgroup osify audio 2>/dev/null || true
+chmod 777 /dev/dri 2>/dev/null || true
 chmod 666 /dev/tty* /dev/fb* /dev/dri/* 2>/dev/null || true
 mkdir -p /home/osify/.local/share/xorg /tmp/.X11-unix /var/log
 chmod 1777 /tmp /tmp/.X11-unix /var/log 2>/dev/null || true
@@ -3405,8 +3433,19 @@ touch /home/osify/.Xauthority 2>/dev/null || true
 chown -R osify:osify /home/osify 2>/dev/null || true
 
 echo "[OSify-Session] Inizializzazione Display Server Xorg..." > /dev/console 2>/dev/null || true
+echo "[OSify-Session] Inizializzazione Display Server Xorg..." > /dev/ttyS0 2>/dev/null || true
 if [ -x /usr/bin/startx ]; then
-    /usr/bin/startx /home/osify/.xinitrc -- /usr/bin/Xorg :0 vt1 -keeptty 2>&1 | tee -a /var/log/osify-session.log > /dev/console
+    /usr/bin/startx /home/osify/.xinitrc -- /usr/bin/Xorg :0 vt1 -keeptty 2>&1 | tee -a /var/log/osify-session.log > /dev/ttyS0
+fi
+echo "[OSify-Session] startx terminato con codice $?" > /dev/ttyS0 2>/dev/null || true
+if [ -f /var/log/Xorg.0.log ]; then
+    echo "=== DUMP XORG.0.LOG ===" > /dev/ttyS0 2>/dev/null || true
+    cat /var/log/Xorg.0.log > /dev/ttyS0 2>/dev/null || true
+    echo "=== FINE DUMP XORG.0.LOG ===" > /dev/ttyS0 2>/dev/null || true
+fi
+if [ -f /home/osify/.xsession-errors ]; then
+    echo "=== DUMP XSESSION-ERRORS ===" > /dev/ttyS0 2>/dev/null || true
+    cat /home/osify/.xsession-errors > /dev/ttyS0 2>/dev/null || true
 fi
 sleep 2
 """
@@ -3483,7 +3522,7 @@ osify ALL=(ALL) NOPASSWD: ALL
         s_img = Image.open(splash_src).resize((1024, 768), Image.Resampling.LANCZOS)
         s_img.save(os.path.join(iso_root, "fbsplash.ppm"), "PPM")
         with open(os.path.join(iso_root, "fbsplash.cfg"), "w") as f:
-            f.write("BOX 362 550 662 560 #1e293b\nBAR 364 552 660 558 #06b6d4\nIMG_ALIGN=CM\n")
+            f.write("BOX 362 550 662 560 #1e293b\nBAR 364 552 660 558 #06b6d4\nIMG_ALIGN CM\n")
     except Exception:
         pass
 
@@ -3598,29 +3637,33 @@ LABEL rescue
     APPEND modules=loop,squashfs,sd-mod,usb-storage keep_apk_new=yes console=tty1 console=ttyS0 copytoram quiet loglevel=1 rw autologin
 """
     # Configurazione Syslinux ed Isolinux per avvio deterministico Legacy BIOS su qualsiasi firmware
-    for sl_dir in ["boot/syslinux", "boot/isolinux", "isolinux"]:
-        full_sl_dir = os.path.join(iso_root, sl_dir)
-        os.makedirs(full_sl_dir, exist_ok=True)
-        with open(os.path.join(full_sl_dir, "syslinux.cfg"), "w") as f:
-            f.write(syslinux_cfg)
-        with open(os.path.join(full_sl_dir, "isolinux.cfg"), "w") as f:
-            f.write(syslinux_cfg)
-    with open(os.path.join(iso_root, "isolinux.cfg"), "w") as f:
+    sl_dir = os.path.join(iso_root, "boot/syslinux")
+    os.makedirs(sl_dir, exist_ok=True)
+    with open(os.path.join(sl_dir, "syslinux.cfg"), "w") as f:
+        f.write(syslinux_cfg)
+    with open(os.path.join(sl_dir, "isolinux.cfg"), "w") as f:
         f.write(syslinux_cfg)
 
-    # Assicura presenza di isolinux.bin e moduli .c32 in tutte le directory di boot
-    src_sl = os.path.join(iso_root, "boot/syslinux")
-    if os.path.exists(src_sl):
-        for dst_sl_name in ["boot/isolinux", "isolinux"]:
-            dst_sl = os.path.join(iso_root, dst_sl_name)
-            os.makedirs(dst_sl, exist_ok=True)
-            for item in glob.glob(os.path.join(src_sl, "*")):
-                shutil.copy2(item, dst_sl)
+    # Assicura presenza di isolinux.bin e moduli .c32 coerenti da build/syslinux_alpine
+    syslinux_alpine_dir = os.path.join(REPO_ROOT, "build/syslinux_alpine")
+    if os.path.exists(syslinux_alpine_dir):
+        for mod in ["isolinux.bin", "isohdpfx.bin", "ldlinux.c32", "libcom32.c32", "libutil.c32", "vesamenu.c32", "menu.c32", "mboot.c32"]:
+            mod_src = os.path.join(syslinux_alpine_dir, mod)
+            if os.path.exists(mod_src):
+                shutil.copy2(mod_src, os.path.join(sl_dir, mod))
 
-    # Rimozione preventiva del vecchio boot.cat (xorriso lo rigenera fresco)
-    cat_path = os.path.join(iso_root, "boot/syslinux/boot.cat")
-    if os.path.exists(cat_path):
-        os.remove(cat_path)
+    # Rimozione preventiva del vecchio boot.cat e di cartelle o file spuri
+    for spuria in [
+        os.path.join(iso_root, "boot/syslinux/boot.cat"),
+        os.path.join(iso_root, "[BOOT]"),
+        os.path.join(iso_root, "boot/isolinux"),
+        os.path.join(iso_root, "isolinux"),
+        os.path.join(iso_root, "isolinux.cfg")
+    ]:
+        if os.path.isdir(spuria):
+            shutil.rmtree(spuria)
+        elif os.path.isfile(spuria):
+            os.remove(spuria)
 
     mbr_path = os.path.join(iso_root, "boot/syslinux/isohdpfx.bin")
     if os.path.exists(mbr_path):
@@ -3640,9 +3683,9 @@ LABEL rescue
         f"-partition_cyl_align on -partition_offset 0 "
         f"-partition_hd_cyl 64 -partition_sec_hd 32 --mbr-force-bootable "
         f"-iso_mbr_part_type 0x00 "
-        f"-c '/boot/syslinux/boot.cat' "
-        f"-b '/boot/syslinux/isolinux.bin' -no-emul-boot -boot-load-size 4 -boot-info-table "
-        f"-eltorito-alt-boot -e '/boot/grub/efi.img' -no-emul-boot -isohybrid-gpt-basdat "
+        f"-c boot/syslinux/boot.cat "
+        f"-b boot/syslinux/isolinux.bin -no-emul-boot -boot-load-size 4 -boot-info-table "
+        f"-eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat "
         f"-o '{DEST_MODERN_ISO}' '{iso_root}'"
     )
     run(cmd_xorriso)
@@ -3892,6 +3935,24 @@ exec openbox-session
     with open(os.path.join(xwrap_dir, "Xwrapper.config"), "w") as f:
         f.write("allowed_users = anybody\nneeds_root_rights = yes\n")
 
+    xconf_d = os.path.join(apkovl_dir, "etc/X11/xorg.conf.d")
+    os.makedirs(xconf_d, exist_ok=True)
+    modesetting_conf = """Section "Device"
+    Identifier "UniversalGraphics"
+    Driver "modesetting"
+    Option "AccelMethod" "none"
+EndSection
+
+Section "Screen"
+    Identifier "UniversalScreen"
+    Device "UniversalGraphics"
+EndSection
+"""
+    with open(os.path.join(xconf_d, "20-modesetting.conf"), "w") as f:
+        f.write(modesetting_conf)
+    with open(os.path.join(xwrap_dir, "xorg.conf"), "w") as f:
+        f.write(modesetting_conf)
+
     session_gui = """#!/bin/sh
 # Supervisore Sessione Desktop OSify 2050 (ARM64)
 mkdir -p /home/osify/.config/openbox
@@ -4007,7 +4068,7 @@ osify ALL=(ALL) NOPASSWD: ALL
         s_img = Image.open(splash_src).resize((1024, 768), Image.Resampling.LANCZOS)
         s_img.save(os.path.join(iso_root, "fbsplash.ppm"), "PPM")
         with open(os.path.join(iso_root, "fbsplash.cfg"), "w") as f:
-            f.write("BOX 362 550 662 560 #1e293b\nBAR 364 552 660 558 #06b6d4\nIMG_ALIGN=CM\n")
+            f.write("BOX 362 550 662 560 #1e293b\nBAR 364 552 660 558 #06b6d4\nIMG_ALIGN CM\n")
     except Exception:
         pass
 

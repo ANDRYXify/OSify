@@ -110,19 +110,18 @@ def build_universal_iso():
 
     # 4. Moduli Syslinux di auto-rilevamento silicio da toolchain coerente (build/syslinux_alpine)
     syslinux_alpine_dir = os.path.join(REPO_ROOT, "build/syslinux_alpine")
-    for mod in ["isolinux.bin", "isohdpfx.bin", "ldlinux.c32", "libcom32.c32", "libutil.c32", "vesamenu.c32", "ifcpu64.c32", "mboot.c32"]:
+    syslinux_dst_dir = os.path.join(iso_root, "boot/syslinux")
+    os.makedirs(syslinux_dst_dir, exist_ok=True)
+    for mod in ["isolinux.bin", "isohdpfx.bin", "ldlinux.c32", "libcom32.c32", "libutil.c32", "vesamenu.c32", "menu.c32", "ifcpu64.c32", "mboot.c32"]:
         mod_src = os.path.join(syslinux_alpine_dir, mod)
         if os.path.exists(mod_src):
-            for d in ["boot/syslinux", "boot/isolinux", "isolinux"]:
-                tgt_d = os.path.join(iso_root, d)
-                os.makedirs(tgt_d, exist_ok=True)
-                shutil.copy2(mod_src, os.path.join(tgt_d, mod))
+            shutil.copy2(mod_src, os.path.join(syslinux_dst_dir, mod))
 
     # 5. Configurazione Syslinux / Isolinux per BIOS Legacy con Auto-Detect CPU
     isolinux_cfg = """DEFAULT autodetect
 UI vesamenu.c32
 PROMPT 0
-TIMEOUT 15
+TIMEOUT 20
 ONTIMEOUT autodetect
 MENU HIDDEN
 
@@ -150,7 +149,7 @@ LABEL autodetect
 
 LABEL osify64
     MENU LABEL OSify A.0 (64-bit Estremo / Gaming & Desktop)
-    LINUX /boot/vmlinuz-lts
+    KERNEL /boot/vmlinuz-lts
     INITRD /boot/initramfs-lts
     APPEND modules=loop,squashfs,sd-mod,usb-storage keep_apk_new=yes quiet splash loglevel=0 console=tty3 vt.global_cursor_default=0 logo.nologo rw autologin
 
@@ -162,13 +161,13 @@ LABEL osify32
 
 LABEL install
     MENU LABEL Installa OSify su Disco Fisso Permanente (GPT / UEFI)
-    LINUX /boot/vmlinuz-lts
+    KERNEL /boot/vmlinuz-lts
     INITRD /boot/initramfs-lts
     APPEND modules=loop,squashfs,sd-mod,usb-storage keep_apk_new=yes osify.install=1 quiet splash loglevel=0 console=tty3 vt.global_cursor_default=0 logo.nologo rw autologin
 
 LABEL safe
     MENU LABEL OSify A.0 (Modalita Compatibile / Safe Graphics VESA)
-    LINUX /boot/vmlinuz-lts
+    KERNEL /boot/vmlinuz-lts
     INITRD /boot/initramfs-lts
     APPEND modules=loop,squashfs,sd-mod,usb-storage keep_apk_new=yes nomodeset vga=788 quiet loglevel=1 vt.global_cursor_default=0 logo.nologo console=tty1 rw autologin
 
@@ -176,13 +175,10 @@ LABEL memtest
     MENU LABEL Diagnostica Hardware Memoria RAM
     KERNEL /boot/memtest.exe
 """
-    for cfg_dir in ["boot/syslinux", "boot/isolinux", "isolinux"]:
-        cfg_d = os.path.join(iso_root, cfg_dir)
-        os.makedirs(cfg_d, exist_ok=True)
-        with open(os.path.join(cfg_d, "isolinux.cfg"), "w") as f:
-            f.write(isolinux_cfg)
-        with open(os.path.join(cfg_d, "syslinux.cfg"), "w") as f:
-            f.write(isolinux_cfg)
+    with open(os.path.join(syslinux_dst_dir, "isolinux.cfg"), "w") as f:
+        f.write(isolinux_cfg)
+    with open(os.path.join(syslinux_dst_dir, "syslinux.cfg"), "w") as f:
+        f.write(isolinux_cfg)
 
     # 6. Configurazione GRUB per UEFI 64-bit
     grub_cfg = """set timeout=0
@@ -242,23 +238,24 @@ endif
     with open(os.path.join(iso_root, "OSify-Version.txt"), "w") as f:
         f.write("OSify A.0 Universal Cover Nuda (Single Hybrid ISO: UEFI x86_64, BIOS Legacy, Vintage 32-bit)\n")
 
-    # Pulizia vecchi cataloghi di boot per rigenerazione pulita
-    for old_cat in [
+    # Pulizia preventiva del vecchio catalogo e di cartelle o file spuri
+    for spuria in [
         os.path.join(iso_root, "boot/syslinux/boot.cat"),
-        os.path.join(iso_root, "boot/isolinux/boot.cat"),
-        os.path.join(iso_root, "isolinux/boot.cat")
+        os.path.join(iso_root, "[BOOT]"),
+        os.path.join(iso_root, "boot/isolinux"),
+        os.path.join(iso_root, "isolinux"),
+        os.path.join(iso_root, "isolinux.cfg")
     ]:
-        if os.path.exists(old_cat):
-            os.remove(old_cat)
+        if os.path.isdir(spuria):
+            shutil.rmtree(spuria)
+        elif os.path.isfile(spuria):
+            os.remove(spuria)
 
     # 8. Masterizzazione con xorriso per supporto Ibrido Universale (MBR + GPT + El Torito EFI + BIOS)
     log("Masterizzazione ISO Ibrida Universale con xorriso (MBR + GPT basdat + El Torito EFI)...")
     built_iso = os.path.join(WORK_DIR, "OSify-A.0-Universal.iso")
 
     mbr_bin = os.path.join(iso_root, "boot/syslinux/isohdpfx.bin")
-    if not os.path.exists(mbr_bin):
-        mbr_bin = os.path.join(iso_root, "boot/isolinux/isohdpfx.bin")
-
     efi_img = os.path.join(iso_root, "boot/grub/efi.img")
 
     cmd_xorriso = (
@@ -268,9 +265,9 @@ endif
         f"-partition_cyl_align on -partition_offset 0 "
         f"-partition_hd_cyl 64 -partition_sec_hd 32 --mbr-force-bootable "
         f"-iso_mbr_part_type 0x00 "
-        f"-c '/boot/syslinux/boot.cat' "
-        f"-b '/boot/syslinux/isolinux.bin' -no-emul-boot -boot-load-size 4 -boot-info-table "
-        f"-eltorito-alt-boot -e '/boot/grub/efi.img' -no-emul-boot -isohybrid-gpt-basdat "
+        f"-c boot/syslinux/boot.cat "
+        f"-b boot/syslinux/isolinux.bin -no-emul-boot -boot-load-size 4 -boot-info-table "
+        f"-eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat "
         f"-o '{built_iso}' '{iso_root}'"
     )
     run(cmd_xorriso)
