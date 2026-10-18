@@ -1,5 +1,17 @@
 # LEZIONI APPRESE — REGISTRO ERRORI E REGOLE ARCHITETTURALI OSIFY
 
+## 2026-10-18 — Kernel Nativo Bare-Metal: Registri Vettoriali SSE/XMM, Inizializzazione CR0/CR4 e Protezione Anti-Triple-Fault IDT
+- **Area**: Kernel Nativo Bare-Metal C freestanding (`osify_kernel.elf`), Bootstrap Assembly (`boot.S`), Interrupt Descriptor Table (`osify_idt.c`) e compilazione Clang/LLVM
+- **Errore**: All'avvio del kernel su macchina virtuale QEMU o silicio bare-metal, la macchina subiva un riavvio istantaneo in loop (triple-fault) subito dopo aver stampato la stringa di inizializzazione IDT (`[1/10]`).
+- **Causa radice**:
+  1. Durante la compilazione del codice freestanding con Clang a 32-bit (`-target i386-unknown-none-elf -O2`), il compilatore ha auto-vettorizzato le funzioni di memoria standard (`osify_memset`) emettendo istruzioni SSE (`movd %ebx, %xmm0`, `movdqu %xmm0, ...`).
+  2. All'avvio in 32-bit Protected Mode da Multiboot, il processore x86 ha le estensioni SSE disabilitate nei registri di controllo (`CR4.OSFXSR` bit 9 a 0, e `CR0.EM` bit 2 attivo). L'esecuzione di qualsiasi istruzione XMM senza abilitazione preventiva scatena un'eccezione hardware immediata `#UD` (Invalid Opcode, Vector 6).
+  3. L'Interrupt Descriptor Table (`g_idt`) non conteneva gestori validi per i 256 vettori di eccezione, scatenando a cascata un Double Fault (`#DF`, Vector 8) e un Triple-Fault che riavviava deterministicamente la CPU.
+- **Regola**:
+  1. Flag Freestanding Obbligatori: Tutti i moduli del kernel bare-metal devono categoricamente essere compilati con i flag di protezione architetturale `-mno-sse -mno-sse2 -mno-mmx` per impedire la generazione silente di istruzioni vettoriali nel codice di ring 0.
+  2. Abilitazione Hardware Preventiva in Bootstrap: L'entry point assembly (`boot.S`) deve configurare esplicitamente i registri `CR0` (azzeramento bit 2 `EM`, abilitazione bit 1 `MP` e bit 5 `NE`) e `CR4` (abilitazione bit 9 `OSFXSR` e bit 10 `OSXMMEXCPT`), invocando `fninit` prima di passare l'esecuzione al codice C.
+  3. Popolamento Completo Tabella IDT: Inizializzare preventivamente tutti i 256 cancelli della tabella IDT con una ISR di salvaguardia predefinita (`osify_default_isr` con `iret`, flag `0x8E` e selettore codice attivo) e mascherare tutti gli IRQ del PIC (`0xFF`) prima di invocare `lidt`, prevenendo qualsiasi triple-fault all'arrivo di interrupt o tick hardware.
+
 ## 2026-10-18 — Masterizzazione Ibrida xorriso: Percorsi Relativi El Torito, Pulizia [BOOT] e Integrita Syslinux
 - **Area**: Bootloader ISO Universale Ibrida (UEFI x86_64, BIOS Legacy x86_64, Vintage 32-bit i686) e Packaging xorriso
 - **Errore**: L'avvio dell'ISO Unica Universale e della versione 64-bit su BIOS Legacy in ambiente reale o QEMU si arrestava al prompt Syslinux o a 0% senza procedere all'avvio automatico, e su UEFI la masterizzazione conteneva strutture duplicate o spurie.

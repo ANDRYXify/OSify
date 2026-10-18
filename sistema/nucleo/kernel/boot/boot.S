@@ -7,14 +7,21 @@
  */
 
 #define MB_MAGIC    0x1BADB002
-#define MB_FLAGS    0x00000003 /* ALIGN (1<<0) | MEMINFO (1<<1) */
+#define MB_FLAGS    0x00000007 /* ALIGN (1<<0) | MEMINFO (1<<1) | VIDEO (1<<2) */
 #define MB_CHECKSUM -(MB_MAGIC + MB_FLAGS)
 
-.section .multiboot
+.section .multiboot, "a", @progbits
 .align 4
 .long MB_MAGIC
 .long MB_FLAGS
 .long MB_CHECKSUM
+/* Header address fields a 0 per file ELF */
+.long 0, 0, 0, 0, 0
+/* Video Mode Configuration: 1024x768 a 32-bit ARGB Linear Framebuffer */
+.long 0          /* mode_type: 0 = Linear Graphics Mode */
+.long 1024       /* width: 1024 pixel */
+.long 768        /* height: 768 pixel */
+.long 32         /* depth: 32 bpp */
 
 .section .bss
 .align 16
@@ -33,6 +40,17 @@ _start:
     /* Imposta lo stack pointer del kernel */
     mov $stack_top, %esp
 
+    /* Abilita hardware FPU ed SSE (CR0/CR4) */
+    mov %cr0, %edx
+    and $0xFFFFFFFB, %edx /* Disabilita CR0.EM */
+    or $0x00000022, %edx  /* Abilita CR0.MP e CR0.NE */
+    mov %edx, %cr0
+
+    mov %cr4, %edx
+    or $0x00000600, %edx  /* Abilita CR4.OSFXSR (bit 9) e CR4.OSXMMEXCPT (bit 10) */
+    mov %edx, %cr4
+    fninit
+
     /* Passa magic (in EAX) e boot_info (in EBX) come parametri C */
     push %ebx
     push %eax
@@ -47,3 +65,10 @@ halt_loop:
     jmp halt_loop
 
 .size _start, . - _start
+
+/* Default Interrupt Service Routine (Anti-Triple-Fault Gate) */
+.global osify_default_isr
+.type osify_default_isr, @function
+osify_default_isr:
+    iret
+.size osify_default_isr, . - osify_default_isr

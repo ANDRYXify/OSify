@@ -47,7 +47,7 @@ void osify_shell_init(void) {
     g_cmd_idx = 0;
     osify_memset(g_cmd_input, 0, sizeof(g_cmd_input));
 
-    osify_strcpy(g_shell_lines[g_shell_line_count++], "OSify A.0 Shell Nativa Bare-Metal (Kernel Livello 0)");
+    osify_strcpy(g_shell_lines[g_shell_line_count++], "OSify A.1 Shell Nativa Bare-Metal (Kernel Livello 0)");
     osify_strcpy(g_shell_lines[g_shell_line_count++], "Digita 'aiuto' per la lista comandi, 'rete', 'audio' o 'installa'.");
 }
 
@@ -119,7 +119,7 @@ void osify_shell_execute_cmd(osify_framebuffer_t *fb, const char *cmd) {
         osify_audio_play_startup_chime();
         shell_append_line("Cyber Startup Chime riprodotto su Intel HDA.");
     } else if (osify_strcmp(cmd, "installa") == 0 || osify_strcmp(cmd, "installer") == 0) {
-        shell_append_line("Avvio Installatore Bare-Metal OSify A.0 sul disco fisso...");
+        shell_append_line("Avvio Installatore Bare-Metal OSify A.1 sul disco fisso...");
         osify_installer_start(0);
         g_show_installer_window = true;
         const osify_installer_state_t *inst = osify_installer_get_state();
@@ -219,7 +219,7 @@ void osify_desktop_render_all(osify_framebuffer_t *fb) {
 
     /* 2. Top Menu Bar macOS-Style a 26px */
     osify_fb_draw_rect(fb, 0, 0, fb->width, 26, COLOR_PANEL_GLASS);
-    osify_fb_draw_string(fb, 16, 5, "OSify A.0", COLOR_BORDER_NEON);
+    osify_fb_draw_string(fb, 16, 5, "OSify A.1", COLOR_BORDER_NEON);
     osify_fb_draw_string(fb, 120, 5, "File  Modifica  Rete  Audio  Sicurezza  Aiuto", COLOR_TEXT_WHITE);
 
     /* Telemetria di Rete e Audio nella Top Bar */

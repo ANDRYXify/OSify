@@ -127,6 +127,7 @@ void osify_fb_draw_squircle(osify_framebuffer_t *fb, int x, int y, int size, int
 void osify_fb_draw_char(osify_framebuffer_t *fb, int x, int y, char c, uint32_t fg_color);
 void osify_fb_draw_string(osify_framebuffer_t *fb, int x, int y, const char *str, uint32_t fg_color);
 void osify_fb_swap_buffers(osify_framebuffer_t *fb);
+bool osify_bga_set_video_mode(uint32_t width, uint32_t height, uint32_t bpp);
 
 /* --- Caricatore Binari Reale (ELF, PE, Mach-O, .ify) --- */
 typedef struct {

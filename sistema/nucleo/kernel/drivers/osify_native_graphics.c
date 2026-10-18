@@ -95,3 +95,48 @@ void osify_fb_swap_buffers(osify_framebuffer_t *fb) {
         fb->buffer[i] = fb->back_buffer[i];
     }
 }
+
+/* --- Driver Hardware Bochs/QEMU BGA (Bochs Graphics Adapter) --- */
+static inline void outw_io(uint16_t port, uint16_t val) {
+#if defined(__i386__) || defined(__x86_64__)
+    __asm__ volatile ("outw %0, %1" : : "a"(val), "Nd"(port));
+#else
+    (void)port; (void)val;
+#endif
+}
+
+static inline uint16_t inw_io(uint16_t port) {
+#if defined(__i386__) || defined(__x86_64__)
+    uint16_t ret;
+    __asm__ volatile ("inw %1, %0" : "=a"(ret) : "Nd"(port));
+    return ret;
+#else
+    (void)port; return 0;
+#endif
+}
+
+bool osify_bga_set_video_mode(uint32_t width, uint32_t height, uint32_t bpp) {
+    outw_io(0x01CE, 0);
+    uint16_t id = inw_io(0x01CF);
+    if (id < 0xB0C0 || id > 0xB0C6) {
+        return false;
+    }
+    /* Disabilita prima di riconfigurare */
+    outw_io(0x01CE, 4);
+    outw_io(0x01CF, 0);
+
+    /* Imposta parametri geometrici e profondita */
+    outw_io(0x01CE, 1);
+    outw_io(0x01CF, (uint16_t)width);
+    outw_io(0x01CE, 2);
+    outw_io(0x01CF, (uint16_t)height);
+    outw_io(0x01CE, 3);
+    outw_io(0x01CF, (uint16_t)bpp);
+
+    /* Abilita Linear Framebuffer Mode (0x01 | 0x40) */
+    outw_io(0x01CE, 4);
+    outw_io(0x01CF, 0x41);
+
+    return true;
+}
+

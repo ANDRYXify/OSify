@@ -3,7 +3,7 @@
 # OSify Bare-Metal ISO Builder (build/build-baremetal-iso.py)
 # ==============================================================================
 # Ingegnerizzato da Andrea Taliento (ANDRYXify) per OSify
-# Assembla e genera l'immagine ISO autonoma bare-metal OSify-A.0-BareMetal.iso
+# Assembla e genera l'immagine ISO autonoma bare-metal OSify-A.1-BareMetal.iso
 # pronta per essere scritta su pennetta USB e avviata sul silicio.
 # Zero distribuzioni terze: OSify al 100% dal bootloader al desktop.
 # ==============================================================================
@@ -17,8 +17,8 @@ import subprocess
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 KERNEL_DIR = os.path.join(REPO_ROOT, "sistema", "nucleo", "kernel")
 BUILD_OUT  = os.path.join(REPO_ROOT, "build", "out")
-ISO_OUTPUT = os.path.join(BUILD_OUT, "OSify-A.0-BareMetal.iso")
-ISO_LABEL  = "OSIFY_A0"
+ISO_OUTPUT = os.path.join(BUILD_OUT, "OSify-A.1-BareMetal.iso")
+ISO_LABEL  = "OSIFY_A1"
 
 def log(msg):
     print(f"[+] {msg}")
@@ -27,12 +27,29 @@ def ensure_dirs():
     os.makedirs(BUILD_OUT, exist_ok=True)
 
 def build_kernel():
-    log("Compilazione del Kernel Nativo OSify bare-metal...")
-    res = subprocess.run(["make", "-C", KERNEL_DIR, "all"], capture_output=True, text=True)
+    log("Compilazione del Kernel Nativo ELF OSify bare-metal...")
+    compile_cmd = (
+        "clang -target i386-unknown-none-elf -c boot/boot.S -o boot/boot.elf.o && "
+        "for f in core/osify_skin_core.c core/osify_memory.c core/osify_level0_security.c "
+        "         core/osify_kstring.c core/osify_idt.c core/osify_main.c "
+        "         security/osify_anticheat_guard.c "
+        "         drivers/osify_native_graphics.c drivers/osify_font.c drivers/osify_ps2_input.c "
+        "         drivers/osify_storage.c drivers/osify_desktop_wm.c "
+        "         drivers/osify_net.c drivers/osify_audio.c drivers/osify_installer.c "
+        "         compat/osify_universal_bridge.c compat/osify_path_unifier.c "
+        "         loaders/osify_binary_loader.c; do "
+        "    clang -target i386-unknown-none-elf -ffreestanding -fno-pie -fno-stack-protector -mno-red-zone -mno-sse -mno-sse2 -mno-mmx -Wall -Wextra -O2 -Iinclude -c \"$f\" -o \"${f%.c}.elf.o\" || exit 1; "
+        "done && "
+        "/opt/homebrew/bin/i686-elf-ld -T boot/kernel.ld -m elf_i386 -nostdlib -static "
+        "    boot/boot.elf.o "
+        "    core/*.elf.o security/*.elf.o drivers/*.elf.o compat/*.elf.o loaders/*.elf.o "
+        "    -o osify_kernel.elf"
+    )
+    res = subprocess.run(compile_cmd, shell=True, cwd=KERNEL_DIR, capture_output=True, text=True)
     if res.returncode != 0:
-        print(res.stderr)
+        print("Errore compilazione:", res.stderr)
         sys.exit(1)
-    log("Kernel compilato con successo (libosify_kernel.a pronto).")
+    log("Kernel bare-metal compilato con successo (osify_kernel.elf pronto).")
 
 def generate_baremetal_iso():
     log(f"Generazione immagine ISO Bare-Metal: {ISO_OUTPUT}...")
@@ -45,14 +62,14 @@ def generate_baremetal_iso():
     os.makedirs(boot_dir, exist_ok=True)
     os.makedirs(osify_sys_dir, exist_ok=True)
 
-    # 1. Copia del Kernel Nativo OSify
-    kernel_src = os.path.join(KERNEL_DIR, "libosify_kernel.a")
-    kernel_dest = os.path.join(boot_dir, "osify-kernel.bin")
+    # 1. Copia del Kernel Nativo ELF OSify
+    kernel_src = os.path.join(KERNEL_DIR, "osify_kernel.elf")
+    kernel_dest = os.path.join(boot_dir, "osify-kernel.elf")
     shutil.copy2(kernel_src, kernel_dest)
 
     # 2. Manifesto di Identita Autonoma OSify
     with open(os.path.join(iso_root, "OSify-Identity.txt"), "w") as f:
-        f.write("OSify Versione A.0 (Naked-Skin Architecture)\n")
+        f.write("OSify Versione A.1 (Naked-Skin Architecture)\n")
         f.write("Sistema Operativo Autonomo Universale al 100%\n")
         f.write("Ingegnerizzato con orgoglio da Andrea Taliento (ANDRYXify)\n")
 
