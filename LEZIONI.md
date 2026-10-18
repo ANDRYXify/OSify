@@ -301,8 +301,23 @@
   2. `osify_fb_draw_squircle` accetta per specifica un parametro quadratico `size`, non larghezza e altezza distinte.
   3. `osify_fs_read_file` impiegava `osify_strcmp` esatto, rendendo vulnerabile il lookup dei file digitati con maiuscole/minuscole o senza prefisso assoluto.
 - **Regola**:
-  1. Implementare e impiegare categoricamente `osify_fb_draw_rounded_rect(fb, x, y, w, h, radius, color)` per qualsiasi pulsante, card o pannello a estensione rettangolare.
-  2. Applicare sempre il clipping orizzontale a `(win->w - 32) / 9` caratteri su tutte le righe di testo renderizzate dentro le finestre del Window Manager.
-  3. Rendere il filesystem nativo OSifyFS resiliente con lookup case-insensitive (`path_equals_nocase`) e risoluzione automatica dei prefissi `/Applicazioni/` e `/UEM/` per nomi relativi.
-  4. La Scheda di Acquisizione Virtuale deve sempre supportare il salvataggio diretto lossless in formato standard PPM (`osify_capture_save_ppm`) su disco fisso.
+## 2026-10-18 — Card Installatore Rounded Rect, Driver Mouse PS/2 e Calibrazione Spaziale Desktop 1024x768
+- **Area**: Window Manager nativo (`osify_desktop_wm.c`), Driver Input PS/2 (`osify_ps2_input.c`), Card Installatore (`osify_installer.c`) e Typography
+- **Errore**:
+  1. `osify_installer_render` impiegava `osify_fb_draw_squircle` con `w = 720`, generando un quadrato 720x720 che invadeva il desktop e copriva la parte inferiore dello schermo fino a y=820.
+  2. Le etichette lunghe delle sottocartelle in Esplora File (es. `[DIR] /Utenti/Compagno`) e delle finestre di background sforavano la larghezza del contenitore sporgendo a destra oltre la cornice.
+  3. Il posizionamento non sincronizzato delle finestre a `x = 80` provocava una parziale sovrapposizione visiva sulle etichette delle icone desktop a sinistra (`Questo PC`).
+- **Causa radice**:
+  1. Omissione del parametro altezza `h` nell'invocazione di primitive quadratiche `squircle` su componenti a estensione rettangolare.
+  2. Mancanza di un helper di disegno con clipping preventivo dei caratteri (`draw_window_string_clipped`) applicato alle stringhe interne dei componenti secondari.
+  3. Mancata definizione di zone orizzontali stagne per il Desktop Environment a 1024x768.
+- **Regola**:
+  1. Rettangoli Arrotondati Obbligatori: Tutte le card, pannelli e finestre dell'installatore e del Window Manager devono impiegare categoricamente `osify_fb_draw_rounded_rect(fb, x, y, w, h, radius, hex_color)`.
+  2. Tripartizione Rigorosa dello Spazio Orizzontale a 1024x768:
+     - Zona Sinistra Icone Desktop: `x = 0..89` con etichette centrate sotto l'icona (`ix + 24 - len*9/2`) e limite massimo a 89px.
+     - Zona Centrale Finestre: `x = 100..724` con larghezza massima di 624px, impedendo deterministicamente qualsiasi sovrapposizione sulle icone o sull'HUD.
+     - Zona Destra Monitor Silicio: `x = 734..1008`.
+  3. Clipping Sistematico delle Stringhe Interne: Applicare sempre `draw_window_string_clipped` con limite massimo di caratteri calcolato dinamicamente sul contenitore genitore.
+  4. Protocollo Mouse PS/2 Hardware: Decodificare sempre i pacchetti a 3 byte del controller 8042 Aux (bit 5 di status port 0x64) per muovere il cursore e generare eventi di clic sia su silicio fisico che su QEMU, salvaguardando l'esecuzione con il flag `g_ps2_hw_active`.
+
 

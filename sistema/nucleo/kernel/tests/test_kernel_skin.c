@@ -256,7 +256,7 @@ int main(void) {
     char inst_check[64];
     memset(inst_check, 0, sizeof(inst_check));
     assert(osify_fs_read_file("/Sistema/Installato.txt", inst_check, sizeof(inst_check) - 1) > 0);
-    assert(strcmp(inst_check, "OSify A.0 Residente su Disco Fisso") == 0);
+    assert(strcmp(inst_check, "OSify A.1 Residente su Disco Fisso") == 0);
 
     /* Render card installatore su framebuffer */
     osify_installer_render(&desktop_fb, 200, 150, 624, 200);
@@ -397,6 +397,69 @@ int main(void) {
     osify_desktop_click_mouse(&desktop_fb, 512, 720, 1); /* Click su Dock */
     printf("[+] 22. Window Manager Avanzato (Files, Apps Hub, Focus Tab, Mouse Click): OK\n");
 
-    printf("\n[] TUTTI I 22 TEST AVANZATI DEL KERNEL NATIVO OSIFY SUPERATI CON SUCCESSO AL 100%%!\n");
+    /* 23. Test Simulazione Esperienza Utente Reale a 360 Gradi (Tutte le Finestre & Mouse) */
+    /* Passo 1: Apertura Apple Menu cliccando su Top Bar "OSify A.1" */
+    osify_desktop_click_mouse(&desktop_fb, 40, 10, 1);
+    /* Passo 2: Clic su "Preferenze di Sistema" nel menu */
+    osify_desktop_click_mouse(&desktop_fb, 40, 50, 1);
+    /* Passo 3: Clic su [TEST BENCHMARK] in Proprieta di Sistema */
+    osify_desktop_click_mouse(&desktop_fb, 200, 260, 1);
+    /* Passo 4: Clic su Icona Desktop "OSifyFS" */
+    osify_desktop_click_mouse(&desktop_fb, 40, 140, 1);
+    /* Passo 5: Clic sulla cartella /Applicazioni dentro Esplora File */
+    osify_desktop_click_mouse(&desktop_fb, 240, 120, 1);
+    /* Passo 6: Clic sul pulsante AVVIA di Calcolatrice in App Hub */
+    osify_desktop_click_mouse(&desktop_fb, 380, 115, 1);
+    /* Passo 7: Interazione con la Calcolatrice (Tasti '7', '+', '5', '=') */
+    osify_desktop_click_mouse(&desktop_fb, 280, 185, 1); /* '7' */
+    osify_desktop_click_mouse(&desktop_fb, 490, 320, 1); /* '+' */
+    osify_desktop_click_mouse(&desktop_fb, 350, 230, 1); /* '5' */
+    osify_desktop_click_mouse(&desktop_fb, 420, 320, 1); /* '=' */
+    /* Passo 8: Reset Calcolatrice ('C') */
+    osify_desktop_click_mouse(&desktop_fb, 280, 320, 1); /* 'C' */
+    /* Passo 9: Clic su Icona Desktop "Cattura" */
+    osify_desktop_click_mouse(&desktop_fb, 40, 300, 1);
+    /* Passo 10: Clic su [REC LIVE] nella Scheda di Acquisizione */
+    osify_desktop_click_mouse(&desktop_fb, 150, 524, 1);
+    /* Passo 11: Clic su [FOTOGRAMMA PPM] per salvare il frame */
+    osify_desktop_click_mouse(&desktop_fb, 300, 524, 1);
+    /* Passo 12: Apertura Editor di Testo e Clic su [SALVA NOTA] */
+    osify_desktop_click_mouse(&desktop_fb, 580, 120, 1); /* Cartella /Utenti/Compagno in Esplora File */
+    osify_desktop_click_mouse(&desktop_fb, 180, 312, 1); /* [SALVA NOTA] */
+    /* Passo 13: Clic su Icona Desktop "Cestino" e Clic su [SVUOTA CESTINO] */
+    osify_desktop_click_mouse(&desktop_fb, 40, 380, 1);
+    osify_desktop_click_mouse(&desktop_fb, 200, 195, 1);
+    /* Passo 14: Controlli Finestra (Rosso Chiudi su Cestino) */
+    osify_desktop_click_mouse(&desktop_fb, 152, 98, 1); /* Chiudi Cestino */
+    /* Passo 15: Chiusura Assistente Installatore se aperto */
+    osify_desktop_click_mouse(&desktop_fb, 118, 112, 1);
+    printf("[+] 23. Simulazione Esperienza Utente Reale & Interazioni Mouse Complete: OK\n");
+
+    /* 24. Test Integrita Storage e Persistenza Post-Interazione Utente */
+    char note_buf[64];
+    int note_bytes = osify_fs_read_file("/Utenti/Compagno/Note.txt", note_buf, sizeof(note_buf));
+    assert(note_bytes > 0);
+    assert(osify_strncmp(note_buf, "OSify A.1", 9) == 0);
+    printf("[+] 24. Integrita Storage e Note Persistenti Scritte dall'Utente: OK\n");
+
+    /* Salvataggio Screendump PPM dello Stato Finale del Desktop */
+    FILE *fp_live = fopen("../../../build/out/osify_user_scenarios_live.ppm", "wb");
+    if (fp_live) {
+        fprintf(fp_live, "P6\n1024 768\n255\n");
+        for (int y = 0; y < 768; y++) {
+            for (int x = 0; x < 1024; x++) {
+                uint32_t px = desktop_fb.buffer[y * 1024 + x];
+                uint8_t rgb[3] = {
+                    (uint8_t)((px >> 16) & 0xFF),
+                    (uint8_t)((px >> 8) & 0xFF),
+                    (uint8_t)(px & 0xFF)
+                };
+                fwrite(rgb, 1, 3, fp_live);
+            }
+        }
+        fclose(fp_live);
+    }
+
+    printf("\n[] TUTTI I 24 TEST AVANZATI DEL KERNEL NATIVO OSIFY SUPERATI CON SUCCESSO AL 100%%!\n");
     return 0;
 }

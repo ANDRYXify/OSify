@@ -91,8 +91,8 @@ bool osify_installer_start(uint32_t target_disk) {
     g_installer.step = INSTALL_COPYING_KERNEL;
     g_installer.progress_percent = 65;
     osify_strcpy(g_installer.status_msg, "Formattazione OSifyFS e copia albero /Sistema...");
-    osify_fs_write_file("/Sistema/Versione.txt", "OSify A.0", 9);
-    osify_fs_write_file("/Sistema/Installato.txt", "OSify A.0 Residente su Disco Fisso", 35);
+    osify_fs_write_file("/Sistema/Versione.txt", "OSify A.1 Sovrano", 17);
+    osify_fs_write_file("/Sistema/Installato.txt", "OSify A.1 Residente su Disco Fisso", 35);
     osify_fs_write_file("/Sistema/Nucleo/kernel.bin", "OSIFY_KERNEL_ELF_BINARY", 23);
 
     /* 4. Scrittura Bootloader Permanente UEFI / Multiboot */
@@ -111,27 +111,33 @@ bool osify_installer_start(uint32_t target_disk) {
 
 void osify_installer_render(osify_framebuffer_t *fb, int x, int y, int w, int h) {
     if (!fb || !fb->buffer) return;
-    (void)h;
 
     /* Card Dark Glass con bordi arrotondati e bordo neon */
-    osify_fb_draw_squircle(fb, x, y, w, 16, 0xFF141C2E);
-    osify_fb_draw_rect(fb, x, y, w, 4, 0xFF06B6D4); /* Neon Top Border */
+    osify_fb_draw_rounded_rect(fb, x, y, w, h, 10, 0xFF141C2E);
+    osify_fb_draw_rect(fb, x, y, w, 28, 0xFF0D1527);
+    osify_fb_draw_rect(fb, x, y, w, 1, 0xFF06B6D4);
+
+    /* Pulsanti Stile macOS */
+    osify_fb_draw_squircle(fb, x + 12, y + 8, 12, 6, 0xFFEF4444); /* Rosso Chiudi */
+    osify_fb_draw_squircle(fb, x + 30, y + 8, 12, 6, 0xFFF59E0B); /* Giallo */
+    osify_fb_draw_squircle(fb, x + 48, y + 8, 12, 6, 0xFF10B981); /* Verde */
+    osify_fb_draw_string(fb, x + 70, y + 6, "Installatore Permanente OSify (GPT & Silicio)", 0xFFF8FAFC);
 
     /* Titolo dell'Assistente di Installazione */
-    osify_fb_draw_string(fb, x + 24, y + 20, "INSTALLATORE DISCO OSIFY A.0", 0xFF06B6D4);
-    osify_fb_draw_string(fb, x + 24, y + 46, "Installazione Permanente su Disco Fisso Silicio", 0xFFF8FAFC);
+    osify_fb_draw_string(fb, x + 24, y + 36, "INSTALLATORE DISCO OSIFY A.1", 0xFF06B6D4);
+    osify_fb_draw_string(fb, x + 24, y + 58, "Installazione Permanente su Disco Fisso Silicio", 0xFFF8FAFC);
 
     /* Dettaglio disco target */
     char disk_info_str[90];
     osify_snprintf(disk_info_str, sizeof(disk_info_str), "Disco Target: [%s]", g_installer.target_disk.model);
-    osify_fb_draw_string(fb, x + 24, y + 74, disk_info_str, 0xFF8B5CF6);
+    osify_fb_draw_string(fb, x + 24, y + 80, disk_info_str, 0xFF8B5CF6);
 
     /* Messaggio di stato operativo */
     osify_fb_draw_string(fb, x + 24, y + 104, g_installer.status_msg, 0xFF94A3B8);
 
     /* Barra di Avanzamento Dinamica Dark Glass */
     int bar_x = x + 24;
-    int bar_y = y + 135;
+    int bar_y = y + 130;
     int bar_w = w - 88;
     int bar_h = 18;
 
