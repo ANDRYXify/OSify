@@ -52,82 +52,162 @@ def build_kernel():
     log("Kernel bare-metal compilato con successo (osify_kernel.elf pronto).")
 
 def generate_baremetal_iso():
-    log(f"Generazione immagine ISO Bare-Metal: {ISO_OUTPUT}...")
+    log(f"Generazione immagine ISO Bare-Metal COMPLETA: {ISO_OUTPUT}...")
     iso_root = os.path.join(BUILD_OUT, "iso_baremetal_root")
     if os.path.exists(iso_root):
         shutil.rmtree(iso_root)
+    os.makedirs(iso_root, exist_ok=True)
     
     boot_dir = os.path.join(iso_root, "boot")
-    osify_sys_dir = os.path.join(iso_root, "Sistema")
+    syslinux_dir = os.path.join(boot_dir, "syslinux")
+    grub_dir = os.path.join(boot_dir, "grub")
     os.makedirs(boot_dir, exist_ok=True)
-    os.makedirs(osify_sys_dir, exist_ok=True)
+    os.makedirs(syslinux_dir, exist_ok=True)
+    os.makedirs(grub_dir, exist_ok=True)
 
-    # 1. Copia del Kernel Nativo ELF OSify
+    # 1. Copia del Kernel Nativo ELF OSify Bare-Metal
     kernel_src = os.path.join(KERNEL_DIR, "osify_kernel.elf")
     kernel_dest = os.path.join(boot_dir, "osify-kernel.elf")
     shutil.copy2(kernel_src, kernel_dest)
+    log(f"Kernel nativo installato in ISO: {kernel_dest}")
 
-    # 2. Manifesto di Identita Autonoma OSify
+    # 2. Setup Bootloader Multiboot Syslinux (mboot.c32) per BIOS/Bare-Metal
+    syslinux_src_dir = os.path.join(REPO_ROOT, "build", "syslinux_alpine")
+    required_boot_files = [
+        "isolinux.bin", "ldlinux.c32", "libcom32.c32", "libutil.c32",
+        "mboot.c32", "isohdpfx.bin"
+    ]
+    for bf in required_boot_files:
+        src_f = os.path.join(syslinux_src_dir, bf)
+        if os.path.exists(src_f):
+            shutil.copy2(src_f, os.path.join(syslinux_dir, bf))
+    
+    isolinux_cfg = (
+        "DEFAULT osify\n"
+        "PROMPT 0\n"
+        "TIMEOUT 10\n"
+        "LABEL osify\n"
+        "    MENU LABEL OSify vA.1 Bare-Metal Nativo (100% Autonomo)\n"
+        "    KERNEL mboot.c32\n"
+        "    APPEND /boot/osify-kernel.elf\n"
+    )
+    with open(os.path.join(syslinux_dir, "isolinux.cfg"), "w") as f:
+        f.write(isolinux_cfg)
+    with open(os.path.join(syslinux_dir, "syslinux.cfg"), "w") as f:
+        f.write(isolinux_cfg)
+
+    # 3. Setup GRUB Multiboot config
+    grub_cfg = (
+        "set timeout=0\n"
+        "set default=0\n\n"
+        "menuentry 'OSify vA.1 Bare-Metal Nativo' {\n"
+        "    multiboot /boot/osify-kernel.elf\n"
+        "    boot\n"
+        "}\n"
+    )
+    with open(os.path.join(grub_dir, "grub.cfg"), "w") as f:
+        f.write(grub_cfg)
+
+    # 4. Impacchettamento Completo di TUTTO l'albero di sistema e Userspace OSify
+    log("Integrazione dell'intero userspace nativo OSify...")
+    dirs_to_package = [
+        ("sistema", "Sistema"),
+        ("system", "System"),
+        ("applicazioni", "Applicazioni"),
+        ("uem", "UEM"),
+        ("desktop", "Desktop"),
+        ("tools", "Strumenti"),
+        ("security", "Sicurezza"),
+        ("network", "Rete"),
+        ("docs", "Documenti"),
+        ("services", "Servizi"),
+        ("audio", "Audio"),
+        ("emulation", "Emulazione"),
+        ("blocks", "Blocchi"),
+        ("streaming", "Streaming")
+    ]
+
+    def ignore_patterns(path, names):
+        ignored = []
+        for n in names:
+            if n.endswith(".o") and not n.endswith(".elf.o"):
+                ignored.append(n)
+            elif n in [".git", ".DS_Store", "__pycache__", ".pytest_cache"]:
+                ignored.append(n)
+        return set(ignored)
+
+    for src_rel, dst_rel in dirs_to_package:
+        src_path = os.path.join(REPO_ROOT, src_rel)
+        dst_path = os.path.join(iso_root, dst_rel)
+        if os.path.exists(src_path):
+            shutil.copytree(src_path, dst_path, ignore=ignore_patterns, dirs_exist_ok=True)
+            log(f"  -> Integrato comparto: {src_rel} => /{dst_rel}")
+
+    # Creazione profilo utente predefinito
+    utenti_dir = os.path.join(iso_root, "Utenti", "Compagno")
+    for udir in ["Scrivania", "Documenti", "Scaricati", "Applicazioni", "Impostazioni"]:
+        os.makedirs(os.path.join(utenti_dir, udir), exist_ok=True)
+
+    # Identita e Manifesto Autonomo
     with open(os.path.join(iso_root, "OSify-Identity.txt"), "w") as f:
         f.write("OSify Versione A.1 (Naked-Skin Architecture)\n")
         f.write("Sistema Operativo Autonomo Universale al 100%\n")
         f.write("Ingegnerizzato con orgoglio da Andrea Taliento (ANDRYXify)\n")
+        f.write("Stato: Indipendente, Completo, Zero Basi Terze.\n")
 
-    # 3. Creazione del file ISO binario avviabile
-    # Genera un'immagine ISO 9660 standard con Primary Volume Descriptor (PVD)
-    sector_size = 2048
-    total_sectors = 1024 # 2MB ISO minima di avvio bare-metal
-    iso_data = bytearray(total_sectors * sector_size)
+    manifesto_path = os.path.join(REPO_ROOT, "desktop", "manifesto.json")
+    if os.path.exists(manifesto_path):
+        shutil.copy2(manifesto_path, os.path.join(iso_root, "manifesto.json"))
 
-    # Settori di sistema 0-15 (riservati per MBR/El Torito)
-    # Primary Volume Descriptor a Settore 16 (0x8000)
-    pvd_offset = 16 * sector_size
-    iso_data[pvd_offset] = 1 # Type: PVD
-    iso_data[pvd_offset + 1:pvd_offset + 6] = b"CD001" # Standard Identifier
-    iso_data[pvd_offset + 6] = 1 # Version
+    # 5. Generazione dell'immagine ISO con xorriso
+    log("Masterizzazione ISO con xorriso...")
+    xorriso_bin = "/opt/homebrew/bin/xorriso"
+    if not os.path.exists(xorriso_bin):
+        xorriso_bin = shutil.which("xorriso")
+    if not xorriso_bin:
+        raise RuntimeError("xorriso non trovato nel sistema!")
 
-    # System Identifier & Volume Identifier
-    sys_id = b"OSIFY BARE-METAL".ljust(32, b" ")
-    vol_id = ISO_LABEL.encode("ascii").ljust(32, b" ")
-    iso_data[pvd_offset + 8:pvd_offset + 40] = sys_id
-    iso_data[pvd_offset + 40:pvd_offset + 72] = vol_id
+    mbr_bin = os.path.join(syslinux_dir, "isohdpfx.bin")
+    boot_bin = "boot/syslinux/isolinux.bin"
+    boot_cat = "boot/syslinux/boot.cat"
 
-    # Volume Space Size (Little Endian + Big Endian a offset 80)
-    struct.pack_into("<I", iso_data, pvd_offset + 80, total_sectors)
-    struct.pack_into(">I", iso_data, pvd_offset + 84, total_sectors)
+    cmd = [
+        xorriso_bin,
+        "-as", "mkisofs",
+        "-r", "-J", "-joliet-long",
+        "-V", ISO_LABEL,
+        "-isohybrid-mbr", mbr_bin,
+        "-partition_cyl_align", "on",
+        "-partition_offset", "0",
+        "-c", boot_cat,
+        "-b", boot_bin,
+        "-no-emul-boot",
+        "-boot-load-size", "4",
+        "-boot-info-table",
+        "-o", ISO_OUTPUT,
+        iso_root
+    ]
 
-    # Volume Set Size & Sequence Number
-    struct.pack_into("<H", iso_data, pvd_offset + 120, 1)
-    struct.pack_into(">H", iso_data, pvd_offset + 122, 1)
-    struct.pack_into("<H", iso_data, pvd_offset + 124, 1)
-    struct.pack_into(">H", iso_data, pvd_offset + 126, 1)
+    log(f"Esecuzione: {' '.join(cmd)}")
+    res = subprocess.run(cmd, capture_output=True, text=True)
+    if res.returncode != 0:
+        log(f"ERRORE xorriso: {res.stderr}")
+        sys.exit(1)
 
-    # Logical Block Size: 2048
-    struct.pack_into("<H", iso_data, pvd_offset + 128, 2048)
-    struct.pack_into(">H", iso_data, pvd_offset + 130, 2048)
+    iso_bytes = os.path.getsize(ISO_OUTPUT)
+    iso_mb = iso_bytes / (1024 * 1024)
+    log(f"ISO Bare-Metal generata con successo: {ISO_OUTPUT} ({iso_mb:.2f} MB, {iso_bytes} bytes).")
 
-    # Volume Descriptor Set Terminator a Settore 17
-    term_offset = 17 * sector_size
-    iso_data[term_offset] = 255 # Type: Terminator
-    iso_data[term_offset + 1:term_offset + 6] = b"CD001"
-    iso_data[term_offset + 6] = 1
-
-    # Inserimento del Kernel Nativo all'interno del filesystem dell'ISO
-    with open(kernel_dest, "rb") as kf:
-        k_bytes = kf.read()
-    kernel_start_sector = 32
-    kernel_offset = kernel_start_sector * sector_size
-    iso_data[kernel_offset:kernel_offset + len(k_bytes)] = k_bytes
-
-    # Scrittura dell'ISO sul disco
-    with open(ISO_OUTPUT, "wb") as f:
-        f.write(iso_data)
-
-    log(f"ISO Bare-Metal generata con successo: {ISO_OUTPUT} ({len(iso_data)} bytes).")
+    # Copia anche in release
+    release_dir = os.path.join(BUILD_OUT, "release")
+    os.makedirs(release_dir, exist_ok=True)
+    release_iso = os.path.join(release_dir, "OSify-A.1-BareMetal.iso")
+    shutil.copy2(ISO_OUTPUT, release_iso)
+    log(f"ISO Bare-Metal copiata in release: {release_iso}")
     return True
 
 def main():
-    log("=== Avvio Pipeline ISO Bare-Metal OSify A.0 ===")
+    log("=== Avvio Pipeline ISO Bare-Metal OSify A.1 COMPLETA ===")
     ensure_dirs()
     build_kernel()
     generate_baremetal_iso()
@@ -135,3 +215,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

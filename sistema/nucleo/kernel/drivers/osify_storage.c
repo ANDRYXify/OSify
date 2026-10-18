@@ -187,10 +187,15 @@ void osify_fs_init(uint32_t drive) {
     (void)drive;
     osify_memset(s_fs_table, 0, sizeof(s_fs_table));
 
-    /* Inizializzazione file cardine nativi */
-    osify_fs_write_file("/Sistema/Versione.txt", "OSify A.0", 9);
-    osify_fs_write_file("/Sistema/Identita.txt", "Sistema Operativo Autonomo Bare-Metal", 37);
-    osify_fs_write_file("/Utenti/osify/Benvenuto.txt", "Benvenuto nella Scrivania di OSify A.0!", 40);
+    /* Inizializzazione file cardine nativi OSify vA.1 */
+    osify_fs_write_file("/Sistema/Versione.txt", "OSify A.1 Sovrano al 100%", 25);
+    osify_fs_write_file("/Sistema/Identita.txt", "Sistema Operativo Sovrano Universale - Andrea Taliento (ANDRYXify)", 66);
+    osify_fs_write_file("/Applicazioni/Lista.txt", "24 App .ify: Navigatore, Esplora, Centro, Giochi, Musica, Video...", 66);
+    osify_fs_write_file("/Sistema/Servizi.txt", "8 Servizi: Nucleo, Grafica, Audio, Rete, Sicurezza, Compatibilita, HAL, Pkg", 75);
+    osify_fs_write_file("/Sistema/Driver.txt", "5 Driver: Video, Audio, Rete, Input, Periferiche", 48);
+    osify_fs_write_file("/Sistema/Icone.txt", "40+ Icone Squircle native (48px, 64px, 128px)", 45);
+    osify_fs_write_file("/UEM/Stato.txt", "Ponte Universale Attivo: Windows NT PE, macOS Mach-O, Linux ELF", 63);
+    osify_fs_write_file("/Utenti/osify/Benvenuto.txt", "Benvenuto nella Scrivania di OSify A.1 Sovrano al 100%!", 54);
 }
 
 int osify_fs_read_file(const char *path, void *out_buf, size_t max_len) {

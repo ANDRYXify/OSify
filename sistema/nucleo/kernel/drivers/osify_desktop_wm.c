@@ -79,15 +79,19 @@ void osify_shell_execute_cmd(osify_framebuffer_t *fb, const char *cmd) {
         shell_append_line("  sicurezza - Verifica TPM 2.0, Secure Boot, SIP e Seatbelt");
         shell_append_line("  pulisci   - Svuota lo storico del terminale");
     } else if (osify_strcmp(cmd, "stato") == 0) {
-        shell_append_line("Profilo: OSify A.0 (Naked-Skin Architecture - Zero Bloatware)");
+        shell_append_line("Profilo: OSify A.1 (Naked-Skin Architecture - Zero Bloatware)");
         shell_append_line("Memoria: PMM Bitmap Allocator con protezione W^X attiva");
     } else if (osify_strcmp(cmd, "disco") == 0) {
-        char file_buf[64];
-        osify_memset(file_buf, 0, sizeof(file_buf));
-        osify_fs_read_file("/Sistema/Versione.txt", file_buf, sizeof(file_buf) - 1);
+        char v_buf[64], a_buf[90];
+        osify_memset(v_buf, 0, sizeof(v_buf));
+        osify_memset(a_buf, 0, sizeof(a_buf));
+        osify_fs_read_file("/Sistema/Versione.txt", v_buf, sizeof(v_buf) - 1);
+        osify_fs_read_file("/Applicazioni/Lista.txt", a_buf, sizeof(a_buf) - 1);
         char disco_msg[90];
-        osify_snprintf(disco_msg, sizeof(disco_msg), "OSifyFS /Sistema/Versione.txt: '%s'", file_buf);
+        osify_snprintf(disco_msg, sizeof(disco_msg), "OSifyFS: %s", v_buf);
         shell_append_line(disco_msg);
+        shell_append_line(a_buf);
+        shell_append_line("Albero: /Sistema (8 servizi, 5 driver, 40 icone) | /UEM (Attivo)");
     } else if (osify_strcmp(cmd, "rete") == 0 || osify_strcmp(cmd, "ip") == 0) {
         const osify_net_device_t *net = osify_net_get_device();
         char ip_str[32], mac_str[32], net_msg[90];

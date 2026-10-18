@@ -263,5 +263,11 @@
   3. `osify-bootsplash` deve avere un contatore di fotogrammi a uscita automatica (massimo ~1.6 secondi a 100%) e la sessione desktop utente non deve mai bloccarne l'esecuzione in modo sincrono.
   4. L'avvio della sessione grafica deve essere orchestrato deterministicamente sia da `rcS` che da `/etc/inittab` (`tty1::respawn:/usr/bin/slim -nodaemon`) con credenziali e XAUTHORITY configurati per l'utente nativo `osify`.
 
-
-
+## 2026-10-18 — Completezza Assoluta delle Immagini ISO Bare-Metal e dell'Userspace Nativo
+- **Area**: Pipeline di build delle immagini ISO, packaging userspace e collaudo bare-metal
+- **Errore**: Generazione di un'immagine ISO minimale da 2MB contenente esclusivamente il kernel ELF e priva dell'intero userspace nativo (24 applicazioni .ify, servizi, driver, icone e gerarchia file system completa).
+- **Causa radice**: `build/build-baremetal-iso.py` allocava un array di byte prefissato da 2MB scrivendo a mano il descrittore PVD per testare il solo avvio del kernel, senza pacchettizzare i comparti applicativi e di sistema con il motore di masterizzazione completo.
+- **Regola**:
+  1. Nessuna immagine di OSify puo mai essere uno stub parziale: ogni ISO deve contenere l'intera distribuzione a pieno titolo (/Sistema, /System, /Applicazioni con tutte le 24 app .ify, /UEM, /Desktop, /Strumenti, /Sicurezza, /Rete, /Documenti, /Utenti).
+  2. La pipeline di build bare-metal deve sempre utilizzare `xorriso` con flag `-r -J -joliet-long`, MBR ibrido, El Torito e modulo multiboot `mboot.c32`, garantendo boot reale e accesso completo all'albero di archiviazione.
+  3. Vietato chiedere al Compagno "cosa manca per": analizzare, progettare e consegnare l'opera completa e rifinita in ogni dettaglio.

@@ -26,5 +26,6 @@ scratch/
 # C compiled binaries and objects
 *.o
 *.a
+*.elf
 sistema/nucleo/kernel/test_osify_kernel
 

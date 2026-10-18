@@ -163,7 +163,7 @@ int main(void) {
     osify_memset(fs_read_buf, 0, sizeof(fs_read_buf));
     int read_bytes = osify_fs_read_file("/Sistema/Versione.txt", fs_read_buf, sizeof(fs_read_buf) - 1);
     assert(read_bytes > 0);
-    assert(osify_strcmp(fs_read_buf, "OSify A.0") == 0);
+    assert(osify_strncmp(fs_read_buf, "OSify A.1", 9) == 0);
 
     /* Scrittura nuovo file utente */
     const char *test_doc = "Progetto OSify Completato al 100%";
