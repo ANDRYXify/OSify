@@ -8,6 +8,24 @@
 5. **Verità Ingegneristica nei Test**: Una funzionalità è considerata "Operativa" nella documentazione solo quando possiede un test automatizzato reale che la verifica empiricamente.
 6. **Imposizione W^X Incondizionata**: Nessuna pagina di memoria — né nel kernel, né in userspace, né nei traduttori JIT — può mai avere contemporaneamente i bit di Scrittura ed Esecuzione attivi (`OSIFY_MAP_W | OSIFY_MAP_X` restituisce sempre errore in `arch_mmu_map`).
 7. **Purezza delle Licenze**: Il codice del kernel e delle librerie di sistema deve essere 100% originale o compatibile con la licenza del progetto; è tassativamente vietato copiare codice GPLv2-only dal kernel Linux.
+## 2026-10-18 — Gestione GUI Framebuffer: Precedenza Focus Finestre, Font Bitmap ASCII e Mascheramento Privacy IP
+- **Area**: Window Manager Nativo (`osify_desktop_wm.c`), Driver Installatore (`osify_installer.c`), Tipografia Framebuffer e Streamer Privacy
+- **Errore**:
+  1. Durante l'interazione con finestre multiple sovrapposte (es. clic su pulsanti in Editor di Testo o Esplora File), il clic veniva intercettato da finestre sottostanti (Cyber Arcade o Installatore permanente) anziché dalla finestra in primo piano attiva.
+  2. In finestre con stringhe lunghe (es. dettagli disco nell'Installatore) il testo oltrepassava il bordo destro della finestra e si sovrapponeva graficamente all'HUD di sistema sulla destra.
+  3. L'uso di caratteri unicode multibyte come en-dash `—` (0xE2 0x80 0x94) in stringhe di sistema (es. OBS Studio) produceva sequenze di caratteri errate (`Γçö`) poiché il renderizzatore tipografico bitmap a 8x16 opera in puro ASCII a singolo byte.
+  4. L'indirizzo IP di rete locale appariva in chiaro nella barra superiore di stato esponendo le coordinate di connessione in caso di trasmissioni live streaming broadcast.
+- **Causa radice**:
+  1. Omissione del controllo `g_windows[i].is_focused` nei gestori dei clic di alcune finestre, unita alla persistenza di finestre modali o wizard aperte che non cedevano il fuoco all'apertura di nuovi applicativi.
+  2. Lunghezza delle stringhe dinamiche superiore allo spazio visivo disponibile nella larghezza standard delle finestre (620 pixel a 8 pixel/carattere).
+  3. Mancata corrispondenza tra codifica sorgente UTF-8 e tabella glifi monospazio a 256 caratteri del kernel freestanding.
+  4. Configurazione iniziale del Window Manager che stampava l'indirizzo IP direttamente senza una modalità privacy attiva di default.
+- **Regola**:
+  1. Verifica Focus Obbligatoria su Tutti i Clic: Qualsiasi ciclo di gestione eventi clic per pulsanti, aree client o controlli di finestra deve verificare categoricamente `g_windows[i].is_visible && g_windows[i].is_focused`, garantendo che solo la finestra in primo piano risponda agli input.
+  2. Disattivazione Automatica Modali all'Apertura Applicazioni: L'invocazione di `open_or_focus_window` per qualsiasi nuova applicazione deve chiudere o minimizzare automaticamente assistenti di installazione o overlay a tutto schermo (`g_show_installer_window = false`).
+  3. Purezza ASCII nei Testi del Kernel: Nei file C del kernel e nei driver grafici è categoricamente vietato l'uso di caratteri unicode multibyte (trattini lunghi, virgolette tipografiche, simboli grafici non-ASCII); utilizzare unicamente caratteri ASCII standard compatibili con la tabella glifi 8x16.
+  4. Privacy Streamer di Default: La barra di sistema deve mascherare l'indirizzo IP all'avvio mostrando `[Rete: Protetta Quad9]`, consentendo lo sblocco dell'IP in chiaro solo tramite clic esplicito dell'utente sull'area di stato o comando `privacy`/`streamer`.
+  5. Calcolo Margini Stringhe Finestra: Tutte le stringhe dinamiche formattate nelle finestre devono essere dimensionate per non superare mai `(win->w - 40) / 8` caratteri, prevenendo qualsiasi sovrapposizione visiva con cornici o componenti esterni.
 
 ## 2026-10-18 — System Call Dispatcher: Troncamento Puntatori su Host a 64-bit e Salvaguardia IOPL Seriale
 - **Area**: Sottosistema System Call (`osify_syscall.c`, `test_kernel_skin.c`), Gestione Privilegi Ring 3 e Portabilità 32/64 bit

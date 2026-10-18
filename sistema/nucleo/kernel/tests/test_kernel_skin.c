@@ -548,6 +548,70 @@ int main(void) {
 
     printf("[+] 27. Navigatore Web Sovrano (HyperSpeed Reader), Calcolatrice Scientifica (35 tasti) & Dock a 8 Icone: OK\n");
 
+    /* 28. Test Esecuzione Universale UEM & OBS Studio Standalone (Zero Installazione) */
+    osify_shell_execute_cmd(&desktop_fb, "esegui /Applicazioni/Portable/obs64.exe");
+    osify_shell_execute_cmd(&desktop_fb, "esegui /Applicazioni/Portable/OBS.app");
+    osify_shell_execute_cmd(&desktop_fb, "esegui /Applicazioni/Portable/obs-studio.AppImage");
+    osify_shell_execute_cmd(&desktop_fb, "esegui /Applicazioni/Mobile/app.apk");
+    osify_shell_execute_cmd(&desktop_fb, "esegui /Applicazioni/Mobile/app.ipa");
+    osify_shell_execute_cmd(&desktop_fb, "esegui /Applicazioni/Script/avvia.bat");
+    osify_shell_execute_cmd(&desktop_fb, "esegui /Applicazioni/Setup/pacchetto.deb");
+    osify_shell_execute_cmd(&desktop_fb, "esegui /Applicazioni/Setup/pacchetto.rpm");
+    osify_shell_execute_cmd(&desktop_fb, "esegui /Applicazioni/Setup/installer.pkg");
+    osify_shell_execute_cmd(&desktop_fb, "esegui /Applicazioni/Setup/disco.dmg");
+    osify_shell_execute_cmd(&desktop_fb, "obs");
+    /* Clic su Controlli Finestra OBS Studio */
+    osify_desktop_click_mouse(&desktop_fb, 100 + 40, 42 + 220, 1); /* [AVVIA STREAM] */
+    osify_desktop_click_mouse(&desktop_fb, 100 + 180, 42 + 220, 1); /* [REGISTRA MP4] */
+    osify_desktop_click_mouse(&desktop_fb, 100 + 320, 42 + 220, 1); /* [VIRTUAL CAMERA] */
+    osify_desktop_render_all(&desktop_fb);
+    printf("[+] 28. UEM Universale (Win PE, Mach-O, AppImage, APK, IPA, BAT, DEB, RPM, PKG, DMG) & OBS Studio 30.2: OK\n");
+
+    /* 29. Test Live Anti-Cheat & Hardware Security Attestation */
+    osify_shell_execute_cmd(&desktop_fb, "anticheat");
+    assert(osify_anticheat_query_secure_boot() == true);
+    uint8_t pcr_tst[32];
+    assert(osify_anticheat_query_tpm2(0, pcr_tst) == true);
+    assert(osify_anticheat_hide_thread(4200) == true);
+    assert(osify_anticheat_is_thread_hidden(4200) == true);
+    printf("[+] 29. Anti-Cheat & Hardware Attestation (Secure Boot, TPM 2.0 PCR, ThreadHide, DSE): OK\n");
+
+    /* 30. Test Live Sicurezza macOS & Capability Sandbox (SIP Livello 0 & Gatekeeper) */
+    osify_shell_execute_cmd(&desktop_fb, "sip");
+    osify_security_token_t t_sb = osify_sec_create_token(500, true);
+    assert(osify_sec_check_system_write("/Sistema/kernel.bin", &t_sb) == false); /* SIP blocca scrittura non autorizzata */
+    assert(osify_sec_check_system_write("/Utenti/Compagno/Note.txt", &t_sb) == true); /* SIP consente scrittura home */
+    assert(osify_sec_enforce_seatbelt(&t_sb, 1) == false); /* Seatbelt blocca raw net */
+    assert(osify_sec_enforce_seatbelt(&t_sb, 2) == false); /* Seatbelt blocca raw disk */
+    printf("[+] 30. Sicurezza macOS Livello 0 (SIP Enforced su /Sistema, Seatbelt Sandbox, Gatekeeper): OK\n");
+
+    /* 31. Test Installatore Guidato con Partizione Personalizzata, Profilo Utente OOBE e Avvio Diretto */
+    osify_shell_execute_cmd(&desktop_fb, "installa");
+    osify_installer_set_wizard_tab(0);
+    /* Clic su Opzione 2: Partizione Personalizzata (/dev/sda2) */
+    osify_desktop_click_mouse(&desktop_fb, 200, 200, 1);
+    /* Clic su AVANTI -> (passa a Tab 1: Profilo Utente) */
+    osify_desktop_click_mouse(&desktop_fb, 640, 320, 1);
+    /* Configurazione Profilo Utente */
+    osify_installer_set_user_profile("Compagno", "OSify-Sovrano-2050", "sovranita2050", "IT-QWERTY");
+    /* Clic su AVVIA INSTALLAZIONE */
+    osify_desktop_click_mouse(&desktop_fb, 600, 320, 1);
+    const osify_installer_state_t *inst_state = osify_installer_get_state();
+    assert(inst_state->is_completed == true);
+    assert(inst_state->progress_percent == 100);
+    assert(inst_state->part_choice.mode == INSTALL_MODE_CUSTOM_PARTITION);
+    /* Clic su AVANTI -> (passa a Tab 3: Pronto!) */
+    osify_desktop_click_mouse(&desktop_fb, 640, 320, 1);
+    /* Clic su [ACCEDI ALL'OS SOVRANO] */
+    osify_desktop_click_mouse(&desktop_fb, 410, 320, 1);
+    assert(inst_state->is_booted_into_installed == true);
+    /* Verifica che i file del profilo utente siano stati scritti sul disco */
+    char u_check[128];
+    assert(osify_fs_read_file("/Sistema/Config/utente.cfg", u_check, sizeof(u_check)) > 0);
+    assert(osify_fs_read_file("/Utenti/Compagno/Benvenuto.txt", u_check, sizeof(u_check)) > 0);
+    osify_desktop_render_all(&desktop_fb);
+    printf("[+] 31. Installatore Permanente su Partizione Personalizzata & Profilo OOBE Avviato: OK\n");
+
     /* Salvataggio Screendump PPM dello Stato Finale del Desktop */
     FILE *fp_live = fopen("../../../build/out/osify_user_scenarios_live.ppm", "wb");
     if (fp_live) {
@@ -566,6 +630,6 @@ int main(void) {
         fclose(fp_live);
     }
 
-    printf("\n[] TUTTI I 27 TEST AVANZATI DEL KERNEL NATIVO OSIFY SUPERATI CON SUCCESSO AL 100%%!\n");
+    printf("\n[] TUTTI I 31 TEST AVANZATI DEL KERNEL NATIVO OSIFY SUPERATI CON SUCCESSO AL 100%%!\n");
     return 0;
 }

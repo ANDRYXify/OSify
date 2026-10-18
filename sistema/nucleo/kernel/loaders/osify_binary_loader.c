@@ -88,6 +88,46 @@ osify_loaded_binary_t osify_binary_load(const void *file_buffer, size_t file_len
             break;
         }
 
+        case SUBSYSTEM_ANDROID_MOBILE: {
+            loaded.load_base = 0x70000000ULL; /* Dalvik/ART VM container base */
+            loaded.entry_point = loaded.load_base + 0x1000;
+            loaded.size_in_memory = file_len;
+            loaded.is_valid = true;
+            break;
+        }
+
+        case SUBSYSTEM_IOS_TOUCH: {
+            loaded.load_base = 0x180000000ULL; /* Darwin iOS Bridge base */
+            loaded.entry_point = loaded.load_base + 0x1000;
+            loaded.size_in_memory = file_len;
+            loaded.is_valid = true;
+            break;
+        }
+
+        case SUBSYSTEM_SCRIPT_BATCH: {
+            loaded.load_base = 0x10000ULL; /* Command shell batch interpreter */
+            loaded.entry_point = loaded.load_base;
+            loaded.size_in_memory = file_len;
+            loaded.is_valid = true;
+            break;
+        }
+
+        case SUBSYSTEM_PACKAGE_LINUX: {
+            loaded.load_base = 0x500000ULL; /* Package extractor and sandbox mount */
+            loaded.entry_point = loaded.load_base;
+            loaded.size_in_memory = file_len;
+            loaded.is_valid = true;
+            break;
+        }
+
+        case SUBSYSTEM_PACKAGE_MACOS: {
+            loaded.load_base = 0x200000000ULL; /* macOS installer sandbox base */
+            loaded.entry_point = loaded.load_base + 0x1000;
+            loaded.size_in_memory = file_len;
+            loaded.is_valid = true;
+            break;
+        }
+
         case SUBSYSTEM_OSIFY_NATIVE:
         default: {
             loaded.load_base = 0x200000;

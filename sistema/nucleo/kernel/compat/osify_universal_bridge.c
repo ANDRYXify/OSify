@@ -18,6 +18,10 @@
 #define MACHO_MAGIC_64      0xFEEDFACF  /* Mach-O 64-bit */
 #define MACHO_CIGAM_64      0xCFFAEDFE  /* Mach-O 64-bit Reverse */
 #define OSIFY_MAGIC_U32     0x00594649  /* 'I', 'F', 'Y', 0x00 */
+#define ZIP_PK_MAGIC_U32    0x04034B50  /* 'P', 'K', 0x03, 0x04 (APK/IPA/JAR) */
+#define AR_DEB_MAGIC_U32    0x68637261  /* '!<arch>' per pacchetti .deb */
+#define RPM_MAGIC_U32       0xDBEEABED  /* 0xED, 0xAB, 0xEE, 0xDB per .rpm */
+#define XAR_PKG_MAGIC_U32   0x21726178  /* 'x', 'a', 'r', '!' per macOS .pkg */
 
 /* Riconoscimento Istantaneo del Formato Eseguibile */
 osify_subsystem_t osify_detect_binary_format(const void *header_bytes, size_t len) {
@@ -27,6 +31,7 @@ osify_subsystem_t osify_detect_binary_format(const void *header_bytes, size_t le
 
     uint32_t magic32 = *(const uint32_t *)header_bytes;
     uint16_t magic16 = *(const uint16_t *)header_bytes;
+    const uint8_t *raw = (const uint8_t *)header_bytes;
 
     if (magic32 == OSIFY_MAGIC_U32) {
         return SUBSYSTEM_OSIFY_NATIVE;
@@ -39,6 +44,27 @@ osify_subsystem_t osify_detect_binary_format(const void *header_bytes, size_t le
     }
     if (magic32 == MACHO_MAGIC_32 || magic32 == MACHO_MAGIC_64 || magic32 == MACHO_CIGAM_64) {
         return SUBSYSTEM_DARWIN_MACH_O;
+    }
+    if (magic32 == ZIP_PK_MAGIC_U32) {
+        /* Controllo firma mobile interna: Android APK vs iOS IPA */
+        for (size_t i = 4; i + 8 < len && i < 256; i++) {
+            if (raw[i] == 'P' && raw[i+1] == 'a' && raw[i+2] == 'y' && raw[i+3] == 'l') {
+                return SUBSYSTEM_IOS_TOUCH;
+            }
+        }
+        return SUBSYSTEM_ANDROID_MOBILE;
+    }
+    if (magic32 == RPM_MAGIC_U32 || (raw[0] == '!' && raw[1] == '<' && raw[2] == 'a')) {
+        return SUBSYSTEM_PACKAGE_LINUX;
+    }
+    if (magic32 == XAR_PKG_MAGIC_U32 || (raw[0] == 'k' && raw[1] == 'o' && raw[2] == 'l' && raw[3] == 'y')) {
+        return SUBSYSTEM_PACKAGE_MACOS;
+    }
+    /* Controllo script batch (@echo, REM, set, call) */
+    if ((raw[0] == '@' && (raw[1] == 'e' || raw[1] == 'E')) ||
+        (raw[0] == 'R' && raw[1] == 'E' && raw[2] == 'M') ||
+        (raw[0] == 'r' && raw[1] == 'e' && raw[2] == 'm')) {
+        return SUBSYSTEM_SCRIPT_BATCH;
     }
 
     /* Fallback sicuro al runtime nativo OSify */

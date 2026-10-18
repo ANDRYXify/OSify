@@ -24,6 +24,7 @@ char  *osify_strcpy(char *dest, const char *src);
 char  *osify_strncpy(char *dest, const char *src, size_t n);
 int    osify_strcmp(const char *s1, const char *s2);
 int    osify_strncmp(const char *s1, const char *s2, size_t n);
+const char *osify_strstr(const char *haystack, const char *needle);
 
 int    osify_snprintf(char *str, size_t size, const char *format, ...);
 

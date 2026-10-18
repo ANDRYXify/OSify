@@ -175,7 +175,7 @@ int osify_storage_parse_gpt(uint32_t drive, osify_partition_t *partitions, size_
 }
 
 /* Tabella File Virtuali In-Storage per OSifyFS */
-#define MAX_FILES 48
+#define MAX_FILES 96
 #define MAX_FILE_SIZE 65536
 static struct {
     char path[128];
@@ -195,38 +195,127 @@ void osify_fs_init(uint32_t drive) {
     osify_fs_write_file("/Sistema/Servizi.txt", "8 Servizi: Nucleo, Grafica, Audio, Rete, Sicurezza, Compatibilita, HAL, Pkg", 75);
     osify_fs_write_file("/Sistema/Driver.txt", "5 Driver: Video, Audio, Rete, Input, Periferiche", 48);
     osify_fs_write_file("/Sistema/Icone.txt", "40+ Icone Squircle native (48px, 64px, 128px)", 45);
-    osify_fs_write_file("/UEM/Stato.txt", "Ponte Universale Attivo: Windows NT PE, macOS Mach-O, Linux ELF", 63);
+    osify_fs_write_file("/UEM/Stato.txt", "Ponte Universale Attivo: Windows NT PE, macOS Mach-O, Linux ELF, Mobile, Pkg", 76);
     osify_fs_write_file("/Utenti/Compagno/Benvenuto.txt", "Benvenuto nella Scrivania di OSify A.1 Sovrano al 100%!", 54);
+    osify_fs_write_file("/Utenti/Compagno/Note.txt", "Note personali dell'utente. Sistema pronto per l'uso a 360 gradi.", 65);
+    osify_fs_write_file("/Utenti/Compagno/Documenti/Progetto.txt", "Documento di progetto OSify A.1 Sovrano.", 40);
 
     /* Binari Eseguibili Pre-Caricati per Collaudo UEM e Lancio Immediato */
     /* 1. App Nativa OSify (.ify) - Magic 'IFY\0' */
     uint8_t bin_ify[128];
     osify_memset(bin_ify, 0, sizeof(bin_ify));
     bin_ify[0] = 'I'; bin_ify[1] = 'F'; bin_ify[2] = 'Y'; bin_ify[3] = 0x00;
-    *(uint32_t *)(&bin_ify[4]) = 1; /* Versione */
-    *(uint64_t *)(&bin_ify[8]) = 0x200100ULL; /* Entry point */
+    *(uint32_t *)(&bin_ify[4]) = 1;
+    *(uint64_t *)(&bin_ify[8]) = 0x200100ULL;
     osify_strcpy((char *)&bin_ify[16], "Calcolatrice Scientifica 2050");
     osify_fs_write_file("/Applicazioni/calcolatrice.ify", bin_ify, sizeof(bin_ify));
 
-    /* 2. App Windows NT PE (.exe) - Magic 'MZ' */
+    /* 2. Cyber Arcade Nativo (.ify) */
+    uint8_t bin_arc[128];
+    osify_memset(bin_arc, 0, sizeof(bin_arc));
+    bin_arc[0] = 'I'; bin_arc[1] = 'F'; bin_arc[2] = 'Y'; bin_arc[3] = 0x00;
+    *(uint32_t *)(&bin_arc[4]) = 1;
+    *(uint64_t *)(&bin_arc[8]) = 0x200200ULL;
+    osify_strcpy((char *)&bin_arc[16], "Cyber Arcade 2050 (Breakout Neon)");
+    osify_fs_write_file("/Applicazioni/arcade2050.ify", bin_arc, sizeof(bin_arc));
+
+    /* 3. App Windows NT PE (.exe) - Magic 'MZ' */
     uint8_t bin_pe[128];
     osify_memset(bin_pe, 0, sizeof(bin_pe));
     bin_pe[0] = 'M'; bin_pe[1] = 'Z';
     *(int32_t *)(&bin_pe[0x3C]) = 0x40; /* e_lfanew -> NT Header offset */
+    bin_pe[0x40] = 'P'; bin_pe[0x41] = 'E';
     osify_fs_write_file("/UEM/compat_win.exe", bin_pe, sizeof(bin_pe));
 
-    /* 3. App Linux ELF (.elf) - Magic 0x7F, 'E', 'L', 'F' */
+    /* 4. App Linux ELF (.elf) - Magic 0x7F, 'E', 'L', 'F' */
     uint8_t bin_elf[128];
     osify_memset(bin_elf, 0, sizeof(bin_elf));
     bin_elf[0] = 0x7F; bin_elf[1] = 'E'; bin_elf[2] = 'L'; bin_elf[3] = 'F';
     *(uint64_t *)(&bin_elf[24]) = 0x401050ULL; /* e_entry */
     osify_fs_write_file("/UEM/server.elf", bin_elf, sizeof(bin_elf));
 
-    /* 4. App macOS Mach-O 64-bit - Magic 0xFEEDFACF */
+    /* 5. App macOS Mach-O 64-bit - Magic 0xFEEDFACF */
     uint8_t bin_macho[128];
     osify_memset(bin_macho, 0, sizeof(bin_macho));
     *(uint32_t *)(&bin_macho[0]) = 0xFEEDFACF;
     osify_fs_write_file("/UEM/darwin_tool.macho", bin_macho, sizeof(bin_macho));
+
+    /* 6. OBS Studio Standalone Portabile Windows 64-bit (obs64.exe) */
+    uint8_t bin_obs_pe[256];
+    osify_memset(bin_obs_pe, 0, sizeof(bin_obs_pe));
+    bin_obs_pe[0] = 'M'; bin_obs_pe[1] = 'Z';
+    *(int32_t *)(&bin_obs_pe[0x3C]) = 0x40;
+    bin_obs_pe[0x40] = 'P'; bin_obs_pe[0x41] = 'E';
+    osify_strcpy((char *)&bin_obs_pe[0x60], "OBS Studio 30.2 64-bit Portable");
+    osify_fs_write_file("/Applicazioni/Portable/obs64.exe", bin_obs_pe, sizeof(bin_obs_pe));
+
+    /* 7. OBS Studio Standalone Portabile macOS App Bundle (OBS.app) */
+    uint8_t bin_obs_macho[256];
+    osify_memset(bin_obs_macho, 0, sizeof(bin_obs_macho));
+    *(uint32_t *)(&bin_obs_macho[0]) = 0xFEEDFACF;
+    osify_strcpy((char *)&bin_obs_macho[32], "OBS.app/Contents/MacOS/obs (Darwin)");
+    osify_fs_write_file("/Applicazioni/Portable/OBS.app", bin_obs_macho, sizeof(bin_obs_macho));
+
+    /* 8. OBS Studio Standalone Portabile Linux (obs-studio.AppImage) */
+    uint8_t bin_obs_appimage[256];
+    osify_memset(bin_obs_appimage, 0, sizeof(bin_obs_appimage));
+    bin_obs_appimage[0] = 0x7F; bin_obs_appimage[1] = 'E'; bin_obs_appimage[2] = 'L'; bin_obs_appimage[3] = 'F';
+    bin_obs_appimage[8] = 'A'; bin_obs_appimage[9] = 'I'; bin_obs_appimage[10] = 0x02; /* AppImage signature */
+    *(uint64_t *)(&bin_obs_appimage[24]) = 0x402000ULL;
+    osify_strcpy((char *)&bin_obs_appimage[40], "OBS-Studio-Portable.AppImage");
+    osify_fs_write_file("/Applicazioni/Portable/obs-studio.AppImage", bin_obs_appimage, sizeof(bin_obs_appimage));
+
+    /* 9. Pacchetto Windows MSI Installer (/Applicazioni/Setup/installer.msi) */
+    uint8_t bin_msi[128];
+    osify_memset(bin_msi, 0, sizeof(bin_msi));
+    bin_msi[0] = 'M'; bin_msi[1] = 'Z';
+    *(int32_t *)(&bin_msi[0x3C]) = 0x40;
+    bin_msi[0x40] = 'P'; bin_msi[0x41] = 'E';
+    osify_fs_write_file("/Applicazioni/Setup/installer.msi", bin_msi, sizeof(bin_msi));
+
+    /* 10. Script Windows Batch (.bat) */
+    const char *bat_script = "@echo off\nREM OSify Windows Batch Runner\necho Avvio processo batch...\npause\n";
+    osify_fs_write_file("/Applicazioni/Script/avvia.bat", bat_script, osify_strlen(bat_script));
+
+    /* 11. Pacchetto Linux Debian (.deb) */
+    uint8_t bin_deb[128];
+    osify_memset(bin_deb, 0, sizeof(bin_deb));
+    bin_deb[0] = '!'; bin_deb[1] = '<'; bin_deb[2] = 'a'; bin_deb[3] = 'r';
+    bin_deb[4] = 'c'; bin_deb[5] = 'h'; bin_deb[6] = '>'; bin_deb[7] = '\n';
+    osify_strcpy((char *)&bin_deb[8], "debian-binary\n");
+    osify_fs_write_file("/Applicazioni/Setup/pacchetto.deb", bin_deb, sizeof(bin_deb));
+
+    /* 12. Pacchetto Linux RPM (.rpm) */
+    uint8_t bin_rpm[128];
+    osify_memset(bin_rpm, 0, sizeof(bin_rpm));
+    *(uint32_t *)(&bin_rpm[0]) = 0xDBEEABED; /* RPM magic */
+    osify_fs_write_file("/Applicazioni/Setup/pacchetto.rpm", bin_rpm, sizeof(bin_rpm));
+
+    /* 13. Pacchetto macOS PKG Installer (.pkg) */
+    uint8_t bin_pkg[128];
+    osify_memset(bin_pkg, 0, sizeof(bin_pkg));
+    *(uint32_t *)(&bin_pkg[0]) = 0x21726178; /* 'xar!' */
+    osify_fs_write_file("/Applicazioni/Setup/installer.pkg", bin_pkg, sizeof(bin_pkg));
+
+    /* 14. Immagine Disco macOS DMG (.dmg) */
+    uint8_t bin_dmg[128];
+    osify_memset(bin_dmg, 0, sizeof(bin_dmg));
+    bin_dmg[0] = 'k'; bin_dmg[1] = 'o'; bin_dmg[2] = 'l'; bin_dmg[3] = 'y';
+    osify_fs_write_file("/Applicazioni/Setup/disco.dmg", bin_dmg, sizeof(bin_dmg));
+
+    /* 15. Applicazione Android Mobile (.apk) */
+    uint8_t bin_apk[128];
+    osify_memset(bin_apk, 0, sizeof(bin_apk));
+    *(uint32_t *)(&bin_apk[0]) = 0x04034B50; /* PK\x03\x04 */
+    osify_strcpy((char *)&bin_apk[30], "AndroidManifest.xml");
+    osify_fs_write_file("/Applicazioni/Mobile/app.apk", bin_apk, sizeof(bin_apk));
+
+    /* 16. Applicazione iOS Touch (.ipa) */
+    uint8_t bin_ipa[128];
+    osify_memset(bin_ipa, 0, sizeof(bin_ipa));
+    *(uint32_t *)(&bin_ipa[0]) = 0x04034B50; /* PK\x03\x04 */
+    osify_strcpy((char *)&bin_ipa[30], "Payload/App.app/Info.plist");
+    osify_fs_write_file("/Applicazioni/Mobile/app.ipa", bin_ipa, sizeof(bin_ipa));
 }
 
 static bool path_equals_nocase(const char *s1, const char *s2) {

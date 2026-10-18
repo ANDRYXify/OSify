@@ -43,8 +43,13 @@ typedef enum {
 typedef enum {
     SUBSYSTEM_OSIFY_NATIVE = 1, /* Formato proprietario .ify con manifesto e sandbox */
     SUBSYSTEM_POSIX_LINUX,      /* Compatibilita binaria ELF (syscall Linux tradotte a caldo) */
-    SUBSYSTEM_WIN32_NT,         /* Compatibilita binaria PE (.exe Windows tradotti al silicio) */
-    SUBSYSTEM_DARWIN_MACH_O     /* Compatibilita binaria Mach-O (macOS nativo su ARM/x86) */
+    SUBSYSTEM_WIN32_NT,         /* Compatibilita binaria PE (.exe/.msi Windows tradotti al silicio) */
+    SUBSYSTEM_DARWIN_MACH_O,    /* Compatibilita binaria Mach-O (macOS nativo .app/Mach-O) */
+    SUBSYSTEM_ANDROID_MOBILE,   /* Compatibilita Android (.apk Package con Manifest e ART VM) */
+    SUBSYSTEM_IOS_TOUCH,        /* Compatibilita iOS (.ipa Package con Payload Mach-O ARM) */
+    SUBSYSTEM_SCRIPT_BATCH,     /* Script batch Windows (.bat, .cmd) */
+    SUBSYSTEM_PACKAGE_LINUX,    /* Pacchetti Linux (.deb, .rpm, .AppImage) */
+    SUBSYSTEM_PACKAGE_MACOS     /* Pacchetti macOS (.pkg, .dmg) */
 } osify_subsystem_t;
 
 /* Permessi Memoria Virtuale W^X */

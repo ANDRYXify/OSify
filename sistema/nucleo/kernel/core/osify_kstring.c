@@ -75,6 +75,26 @@ int osify_strncmp(const char *s1, const char *s2, size_t n) {
     return *(const unsigned char *)s1 - *(const unsigned char *)s2;
 }
 
+const char *osify_strstr(const char *haystack, const char *needle) {
+    if (!haystack || !needle) return NULL;
+    if (*needle == '\0') return haystack;
+    for (; *haystack; haystack++) {
+        const char *h = haystack;
+        const char *n = needle;
+        while (*h && *n) {
+            char ch = *h;
+            char cn = *n;
+            if (ch >= 'A' && ch <= 'Z') ch += 32;
+            if (cn >= 'A' && cn <= 'Z') cn += 32;
+            if (ch != cn) break;
+            h++;
+            n++;
+        }
+        if (*n == '\0') return haystack;
+    }
+    return NULL;
+}
+
 /* Formattatore numerico bare-metal autonomo per snprintf */
 static int u64_to_str(uint64_t val, char *buf, int base, bool uppercase) {
     char tmp[65];

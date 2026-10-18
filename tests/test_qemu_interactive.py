@@ -146,6 +146,24 @@ def test_qemu():
     print("[+] Cattura screendump QEMU Tema Tokyo Synthwave...")
     send_mon("screendump /tmp/qemu_desktop_synthwave.ppm")
 
+    print("[+] 11. Apertura OBS Studio 30.2 Sovrano Standalone ('obs')...")
+    type_word("tema obsidian") # Ripristino tema Dark Glass per chiarezza
+    time.sleep(0.3)
+    type_word("sfondo grid")
+    time.sleep(0.3)
+    type_word("obs")
+    time.sleep(0.8)
+    print("[+] Cattura screendump QEMU OBS Studio 30.2...")
+    send_mon("screendump /tmp/qemu_desktop_obs.ppm")
+    send_mon("sendkey esc")
+    time.sleep(0.4)
+
+    print("[+] 12. Apertura Assistente di Installazione Permanente su Disco Fisso ('installa')...")
+    type_word("installa")
+    time.sleep(0.8)
+    print("[+] Cattura screendump QEMU Assistente Installatore...")
+    send_mon("screendump /tmp/qemu_desktop_installer.ppm")
+
     send_mon("quit")
     client.close()
     proc.terminate()
@@ -162,7 +180,9 @@ def test_qemu():
         ("qemu_desktop_browser", "build/out/screendumps/07_web_browser.png"),
         ("qemu_desktop_personalizza", "build/out/screendumps/08_personalizzazione_temi.png"),
         ("qemu_desktop_matrix", "build/out/screendumps/09_tema_matrix_live.png"),
-        ("qemu_desktop_synthwave", "build/out/screendumps/10_tema_synthwave_stars.png")
+        ("qemu_desktop_synthwave", "build/out/screendumps/10_tema_synthwave_stars.png"),
+        ("qemu_desktop_obs", "build/out/screendumps/11_obs_studio_live.png"),
+        ("qemu_desktop_installer", "build/out/screendumps/12_installer_wizard.png")
     ]
 
     for src_name, dest_png in dumps:
