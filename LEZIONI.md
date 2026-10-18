@@ -1,5 +1,14 @@
 # LEZIONI APPRESE — REGISTRO ERRORI E REGOLE ARCHITETTURALI OSIFY
 
+## LE 7 LEGGI INVIOLABILI DEL CODICE OSIFY (CONTROPIANO SOVRANO v2.0)
+1. **Isolamento Architetturale Assoluto**: Nessun registro di controllo CPU (`CR3`, `TTBR0`, `satp`), istruzione assembly o primitiva di virtualizzazione (`vmxon`, `hvc`) può comparire fuori da `sistema/nucleo/arch/<arch>/`.
+2. **Principio del Superset Nativo**: Quando un sottosistema del kernel viene progettato (IPC `RingBus`, sincronizzazione `WaitMux`, VMM multi-granularità, TLS switching), deve essere un *superset* proprietario capace di soddisfare nativamente OSify, Windows NT, macOS Darwin e Linux, mai un clone limitato di uno solo di essi.
+3. **Sicurezza Hardware prima della Compatibilità Cieca**: Nessun codice binario di terze parti (driver `.sys`, `.kext`, moduli kernel esterni) può mai entrare nel Ring 0 nativo di OSify; qualsiasi driver esterno a livello kernel deve essere confinato in una **Cella Aegis (HVCS)** via `arch_hv.h` (SLAT/EPT/Stage-2).
+4. **Zero Indirizzi Magici**: Nessun driver può usare porte I/O o indirizzi MMIO cablati nel codice (eccetto i driver esplicitamente confinati in `driver/x86_legacy/` per target Vintage i686); tutta la scoperta hardware avviene via PCIe ECAM, ACPI o DeviceTree.
+5. **Verità Ingegneristica nei Test**: Una funzionalità è considerata "Operativa" nella documentazione solo quando possiede un test automatizzato reale che la verifica empiricamente.
+6. **Imposizione W^X Incondizionata**: Nessuna pagina di memoria — né nel kernel, né in userspace, né nei traduttori JIT — può mai avere contemporaneamente i bit di Scrittura ed Esecuzione attivi (`OSIFY_MAP_W | OSIFY_MAP_X` restituisce sempre errore in `arch_mmu_map`).
+7. **Purezza delle Licenze**: Il codice del kernel e delle librerie di sistema deve essere 100% originale o compatibile con la licenza del progetto; è tassativamente vietato copiare codice GPLv2-only dal kernel Linux.
+
 ## 2026-10-18 — System Call Dispatcher: Troncamento Puntatori su Host a 64-bit e Salvaguardia IOPL Seriale
 - **Area**: Sottosistema System Call (`osify_syscall.c`, `test_kernel_skin.c`), Gestione Privilegi Ring 3 e Portabilità 32/64 bit
 - **Errore**: Durante l'esecuzione dei test avanzati del kernel (`test_osify_kernel`) su macchina di sviluppo host a 64-bit, il processo subiva un `EXC_BAD_ACCESS` (SIGSEGV a riga `str w8, [x1]`) al collaudo del vettore `SYS_MEM_STATS`.

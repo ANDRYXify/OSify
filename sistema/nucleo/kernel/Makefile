@@ -11,7 +11,7 @@ CFLAGS ?= -Wall -Wextra -O2 -Iinclude -std=c99
 AR ?= ar
 
 SRC_CORE = core/osify_skin_core.c core/osify_memory.c core/osify_level0_security.c \
-           core/osify_kstring.c core/osify_idt.c core/osify_main.c core/osify_syscall.c
+           core/osify_kstring.c core/osify_idt.c core/osify_main.c core/osify_syscall.c core/osify_synch.c
 SRC_SEC  = security/osify_anticheat_guard.c
 SRC_DRV  = drivers/osify_native_graphics.c drivers/osify_font.c drivers/osify_ps2_input.c \
            drivers/osify_storage.c drivers/osify_desktop_wm.c \

@@ -17,6 +17,8 @@
 #include "../include/osify_net.h"
 #include "../include/osify_audio.h"
 #include "../include/osify_installer.h"
+#include "../include/osify_synch.h"
+#include "../include/osify_capability.h"
 
 int main(void) {
     printf("[+] Inizio collaudo avanzato del Kernel Nativo OSify...\n");
@@ -277,6 +279,29 @@ int main(void) {
     assert(osify_syscall_dispatch(1, 1, (uintptr_t)sys_test_msg, strlen(sys_test_msg)) == (int32_t)strlen(sys_test_msg)); /* SYS_WRITE */
     printf("[+] 14. System Call Native OSify (int 0x80 DPL 3, PING 0x051F1050, MEM, FB, WRITE): OK\n");
 
-    printf("\n[] TUTTI I 14 TEST AVANZATI DEL KERNEL NATIVO OSIFY SUPERATI CON SUCCESSO AL 100%%!\n");
+    /* 15. Test Sincronizzazione Universale Superset (WaitMux, WaitAny, WaitAll) */
+    osify_synch_hdr_t ev1, ev2, sem1;
+    osify_synch_init(&ev1, OSIFY_SYNCH_EVENT, false);
+    osify_synch_init(&ev2, OSIFY_SYNCH_EVENT, false);
+    osify_synch_init(&sem1, OSIFY_SYNCH_SEMAPHORE, false);
+
+    osify_synch_hdr_t *objs[3] = { &ev1, &ev2, &sem1 };
+
+    /* Nessun oggetto pronto */
+    assert(osify_wait_mux(objs, 3, OSIFY_WAIT_ANY, 0) == -2);
+    assert(osify_wait_mux(objs, 3, OSIFY_WAIT_ALL, 0) == -2);
+
+    /* Segnala ev2 -> WaitAny deve ritornare indice 1 */
+    osify_synch_signal(&ev2);
+    assert(osify_wait_mux(objs, 3, OSIFY_WAIT_ANY, 0) == 1);
+    assert(osify_wait_mux(objs, 3, OSIFY_WAIT_ALL, 0) == -2); /* Non tutti sono pronti */
+
+    /* Segnala anche ev1 e sem1 -> WaitAll deve ritornare 0 (successo) */
+    osify_synch_signal(&ev1);
+    osify_synch_signal(&sem1);
+    assert(osify_wait_mux(objs, 3, OSIFY_WAIT_ALL, 0) == 0);
+    printf("[+] 15. Sincronizzazione Universale Superset (WaitMux, WaitAny, WaitAll, Semaphores, Events): OK\n");
+
+    printf("\n[] TUTTI I 15 TEST AVANZATI DEL KERNEL NATIVO OSIFY SUPERATI CON SUCCESSO AL 100%%!\n");
     return 0;
 }
