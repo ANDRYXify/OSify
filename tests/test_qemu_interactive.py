@@ -97,12 +97,16 @@ def test_qemu():
     time.sleep(0.1)
     print("[+] Cattura screendump QEMU Cyber Arcade 2050...")
     send_mon("screendump /tmp/qemu_desktop_arcade.ppm")
+    send_mon("sendkey esc")
+    time.sleep(0.4)
 
     print("[+] 4. Apertura Calcolatrice Scientifica ('calc')...")
     type_word("calc")
     time.sleep(0.6)
     print("[+] Cattura screendump QEMU Calcolatrice Scientifica...")
     send_mon("screendump /tmp/qemu_desktop_calc.ppm")
+    send_mon("sendkey esc")
+    time.sleep(0.4)
 
     print("[+] 5. Apertura Esplora File OSifyFS ('files')...")
     type_word("files")
@@ -116,19 +120,25 @@ def test_qemu():
     print("[+] Cattura screendump QEMU Privacy Toggle (IP mostrato)...")
     send_mon("screendump /tmp/qemu_desktop_privacy.ppm")
 
-    print("[+] 7. Apertura Centro Personalizzazione & Temi 2050 ('personalizza')...")
+    print("[+] 7. Apertura Navigatore Web Sovrano HyperSpeed ('web')...")
+    type_word("web")
+    time.sleep(0.8)
+    print("[+] Cattura screendump QEMU Navigatore Web Sovrano...")
+    send_mon("screendump /tmp/qemu_desktop_browser.ppm")
+
+    print("[+] 8. Apertura Centro Personalizzazione & Temi 2050 ('personalizza')...")
     type_word("personalizza")
     time.sleep(0.8)
     print("[+] Cattura screendump QEMU Centro Personalizzazione...")
     send_mon("screendump /tmp/qemu_desktop_personalizza.ppm")
 
-    print("[+] 8. Applicazione a caldo Tema Matrix Hacker ('tema matrix')...")
+    print("[+] 9. Applicazione a caldo Tema Matrix Hacker ('tema matrix')...")
     type_word("tema matrix")
     time.sleep(0.6)
     print("[+] Cattura screendump QEMU Tema Matrix Hacker...")
     send_mon("screendump /tmp/qemu_desktop_matrix.ppm")
 
-    print("[+] 9. Applicazione a caldo Tema Tokyo Synthwave & Campo Stellare ('tema synth', 'sfondo stars')...")
+    print("[+] 10. Applicazione a caldo Tema Tokyo Synthwave & Campo Stellare ('tema synth', 'sfondo stars')...")
     type_word("tema synth")
     time.sleep(0.4)
     type_word("sfondo stars")
@@ -149,9 +159,10 @@ def test_qemu():
         ("qemu_desktop_calc", "build/out/screendumps/04_scientific_calc.png"),
         ("qemu_desktop_files", "build/out/screendumps/05_file_explorer.png"),
         ("qemu_desktop_privacy", "build/out/screendumps/06_privacy_toggle.png"),
-        ("qemu_desktop_personalizza", "build/out/screendumps/07_personalizzazione_temi.png"),
-        ("qemu_desktop_matrix", "build/out/screendumps/08_tema_matrix_live.png"),
-        ("qemu_desktop_synthwave", "build/out/screendumps/09_tema_synthwave_stars.png")
+        ("qemu_desktop_browser", "build/out/screendumps/07_web_browser.png"),
+        ("qemu_desktop_personalizza", "build/out/screendumps/08_personalizzazione_temi.png"),
+        ("qemu_desktop_matrix", "build/out/screendumps/09_tema_matrix_live.png"),
+        ("qemu_desktop_synthwave", "build/out/screendumps/10_tema_synthwave_stars.png")
     ]
 
     for src_name, dest_png in dumps:

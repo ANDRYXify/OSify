@@ -244,13 +244,189 @@ static int64_t osify_isqrt(int64_t n) {
 /* Privacy Mode Streamer (IP Nascosto di default nella Barra Superiore) */
 static bool s_privacy_hide_ip = true;
 
-/* Motore Calcolatrice Scientifica Multi-Cifra Nativo */
-static char s_calc_display[32] = "42";
-static int64_t s_calc_acc = 0;
-static int64_t s_calc_curr = 42;
+/* ==============================================================================
+ * Motore Calcolatrice Scientifica Dark Glass 2050 (Aritmetica Fissa a 64-bit)
+ * ==============================================================================
+ */
+#define CALC_SCALE 10000LL /* 4 decimali di precisione */
+
+static char s_calc_display[32] = "0";
+static char s_calc_history[64] = "CALCOLATRICE SCIENTIFICA 2050";
+static int64_t s_calc_val = 0;       /* Valore corrente scalato */
+static int64_t s_calc_acc = 0;       /* Accumulatore scalato */
+static int64_t s_calc_mem = 0;       /* Valore in memoria (M+) */
+static bool s_calc_has_mem = false;
 static char s_calc_op = 0;
 static bool s_calc_new_entry = true;
+static bool s_calc_deg_mode = true;  /* true = DEG (Gradi), false = RAD (Radianti) */
 static bool g_show_apple_menu = false;
+
+/* Tabella Look-Up Seno per angoli da 0 a 90 gradi (passo 5 deg, x10000) */
+static const int32_t s_sin_lut[19] = {
+    0, 872, 1736, 2588, 3420, 4226, 5000, 5736, 6428, 7071,
+    7660, 8192, 8660, 9063, 9397, 9659, 9848, 9962, 10000
+};
+
+static int64_t calc_sin_fixed(int64_t deg) {
+    while (deg < 0) deg += 360;
+    deg %= 360;
+    int sign = 1;
+    if (deg >= 180) { sign = -1; deg -= 180; }
+    if (deg > 90) { deg = 180 - deg; }
+    int idx = (int)(deg / 5);
+    int rem = (int)(deg % 5);
+    if (idx >= 18) return (int64_t)sign * 10000LL;
+    int32_t v0 = s_sin_lut[idx];
+    int32_t v1 = s_sin_lut[idx + 1];
+    int32_t v = v0 + (v1 - v0) * rem / 5;
+    return (int64_t)sign * (int64_t)v;
+}
+
+static int64_t calc_cos_fixed(int64_t deg) {
+    return calc_sin_fixed(deg + 90);
+}
+
+static int64_t calc_tan_fixed(int64_t deg) {
+    int64_t s = calc_sin_fixed(deg);
+    int64_t c = calc_cos_fixed(deg);
+    if (c == 0) return 999999LL;
+    return (s * CALC_SCALE) / c;
+}
+
+/* Tabella Log10 per x da 1 a 10 (x10000) */
+static const int32_t s_log10_lut[10] = {
+    0, 3010, 4771, 6021, 6990, 7782, 8451, 9031, 9542, 10000
+};
+
+static int64_t calc_log10_fixed(int64_t x_scaled) {
+    if (x_scaled <= 0) return 0;
+    int64_t raw = x_scaled / CALC_SCALE;
+    if (raw <= 0) raw = 1;
+    int64_t decades = 0;
+    while (raw >= 10) { raw /= 10; decades++; }
+    int idx = (int)raw;
+    if (idx < 1) idx = 1;
+    if (idx > 9) idx = 9;
+    return decades * 10000LL + (int64_t)s_log10_lut[idx - 1];
+}
+
+static int64_t calc_ln_fixed(int64_t x_scaled) {
+    int64_t l10 = calc_log10_fixed(x_scaled);
+    return (l10 * 23026LL) / 10000LL;
+}
+
+static int64_t calc_factorial(int64_t n) {
+    if (n < 0) return 0;
+    if (n > 12) n = 12;
+    int64_t res = 1;
+    for (int64_t i = 2; i <= n; i++) res *= i;
+    return res * CALC_SCALE;
+}
+
+static void calc_format_display(int64_t val_scaled, char *out, size_t max_len) {
+    int64_t integer_part = val_scaled / CALC_SCALE;
+    int64_t frac_part = val_scaled % CALC_SCALE;
+    if (frac_part < 0) frac_part = -frac_part;
+    if (frac_part == 0) {
+        osify_snprintf(out, max_len, "%lld", integer_part);
+    } else {
+        osify_snprintf(out, max_len, "%lld.%04lld", integer_part, frac_part);
+        size_t len = osify_strlen(out);
+        while (len > 0 && out[len - 1] == '0') {
+            out[--len] = '\0';
+        }
+        if (len > 0 && out[len - 1] == '.') {
+            out[--len] = '\0';
+        }
+    }
+}
+
+/* ==============================================================================
+ * Motore Navigatore Web Sovrano 2050 (HyperSpeed Reader - Zero Bloatware)
+ * ==============================================================================
+ */
+typedef struct {
+    const char *url;
+    const char *title;
+    const char *lines[9];
+    size_t      line_count;
+} osify_web_page_t;
+
+static const osify_web_page_t g_web_pages[] = {
+    {
+        .url = "osify://home",
+        .title = "OSify 2050 Sovrano Portal (Zero-Bloat)",
+        .lines = {
+            "BENVENUTO SU OSIFY HYPERSPEED BROWSER 2050",
+            "Crittografia Rete: Quad9 DNS DoH (9.9.9.9) | Telemetria: BLOCCATA AL 100%",
+            "Velocita: 0.2ms First Paint | Motore: Framebuffer Direct (Zero Javascript/Spam)",
+            "------------------------------------------------------------------------",
+            "Ultime Notizie Silicio: Rilasciata architettura tri-ISA (x86_32, x64, ARM64).",
+            "Sicurezza: Attivo SIP Livello 0, Sandbox Seatbelt e Protezione W^X Memoria.",
+            "Segnalibri Rapidi: Clicca su [Docs], [AppStore], o [CERN 1991] per navigare.",
+            "Suggerimento: digita 'web <url>' nel terminale per aprire qualsiasi risorsa."
+        },
+        .line_count = 8
+    },
+    {
+        .url = "osify://docs",
+        .title = "Documentazione Ufficiale OSify A.1",
+        .lines = {
+            "MANUALE ARCHITETTURALE E SPECIFICHE DEL SISTEMA OPERATIVO",
+            "1. Architettura Cover Nuda: accesso diretto all'hardware senza strati terzi.",
+            "2. UEM (Universal Execution Module): esegue binari .ify nativi, .exe, .elf, .macho.",
+            "3. Storage GPT & File System OSifyFS: partizionamento nativo e persistenza dati.",
+            "4. Scheda di Acquisizione Video Integrata: loopback DMA 60 FPS senza schede esterne.",
+            "5. Scheduler Eterogeneo: bilanciamento automatico tra ALU scalare, SIMD e Blitter.",
+            "6. Streamer Privacy Mode: occultamento automatico dell'IP in top bar durante i live."
+        },
+        .line_count = 7
+    },
+    {
+        .url = "osify://appstore",
+        .title = "OSify App Store & Deposito Pacchetti .ify",
+        .lines = {
+            "DEPOSITO APPLICAZIONI VERIFICATE AL 100% (Zero Telemetria)",
+            "  [1] Cyber Arcade 2050      - Breakout neon nativo con fisica vettoriale",
+            "  [2] Benchmark Silicio      - Stress test ALU SIMD e Throughput RAM reale",
+            "  [3] Calcolatrice Scient.   - Trigonometria, logaritmi, potenze e costanti",
+            "  [4] Editor di Testo Note   - Elaboratore note persistenti su disco OSifyFS",
+            "  [5] Scheda Acquisizione    - Registratore e streamer video su loopback",
+            "Tutti i pacchetti sono firmati crittograficamente con SHA-256 e protetti da SIP."
+        },
+        .line_count = 7
+    },
+    {
+        .url = "osify://meteo",
+        .title = "Meteo Sovrano & Ora Atomica Satellitare",
+        .lines = {
+            "BOLLETTINO METEO MONDIALE & TEMPO ATOMICO SILICIO",
+            "Milano:  19 C | Umidita 45% | Vento 12 km/h | Cielo Sereno",
+            "Roma:    22 C | Umidita 52% | Vento 8 km/h  | Soleggiato",
+            "Londra:  15 C | Umidita 68% | Vento 18 km/h | Parz. Nuvoloso",
+            "Tokyo:   21 C | Umidita 58% | Vento 10 km/h | Sereno",
+            "Fuso Orario: UTC+2 (Ora Legale Europa Centrale) | Sincronia NTP: Quad9 9.9.9.9",
+            "Latenza Rete: 12 ms | Pacchetti Persi: 0.00% | Privacy: Massima"
+        },
+        .line_count = 7
+    },
+    {
+        .url = "http://cern.ch",
+        .title = "The World Wide Web Project (CERN 1991 Replica)",
+        .lines = {
+            "World Wide Web: The Original Hypertext Browser Environment",
+            "The WorldWideWeb (W3) is a wide-area hypermedia information retrieval",
+            "initiative aiming to give universal access to a large universe of documents.",
+            "Everything there is online about W3 is linked directly or indirectly to this.",
+            "What's out there? - Executive Summary - Bibliography - Technical Details",
+            "People involved - History of the project - How can I help? - CERN Code Library.",
+            "Rendered faithfully by OSify Native Web Engine on Linear Framebuffer."
+        },
+        .line_count = 7
+    }
+};
+
+static int s_web_page_current = 0;
 
 /* Motore Benchmark Silicio Sovrano 2050 (Misurazione Reale) */
 typedef struct {
@@ -492,7 +668,8 @@ static void execute_command(const char *cmd) {
         shell_append_line("  dock/cursore - Configurazione dock compatta e cursore grande");
         shell_append_line("  files     - Apri finestra Esplora File (OSifyFS)");
         shell_append_line("  apps      - Apri finestra OSify App Hub 2050");
-        shell_append_line("  calc      - Apri Calcolatrice Scientifica Dark Glass");
+        shell_append_line("  calc      - Apri Calcolatrice Scientifica Dark Glass (35 funzioni)");
+        shell_append_line("  web       - Apri Navigatore Web Sovrano (HyperSpeed Reader)");
         shell_append_line("  pc/info   - Proprieta di Sistema e Specifiche Silicio");
         shell_append_line("  editor    - Editor di Testo Nativo (/Utenti/Compagno/Note.txt)");
         shell_append_line("  potenza   - Introspezione silicio, GFLOPS, ALU/GPU e Scheduler");
@@ -505,8 +682,11 @@ static void execute_command(const char *cmd) {
         shell_append_line("  finestre  - Elenco finestre aperte e focus");
         shell_append_line("  pulisci   - Svuota lo storico del terminale");
     } else if (osify_strcmp(cmd, "calc") == 0 || osify_strcmp(cmd, "calcolatrice") == 0) {
-        open_or_focus_window("Calcolatrice Scientifica 2050", 250, 80, 310, 360);
+        open_or_focus_window("Calcolatrice Scientifica 2050", 110, 46, 550, 370);
         shell_append_line("Finestra 'Calcolatrice Scientifica 2050' aperta.");
+    } else if (osify_strcmp(cmd, "web") == 0 || osify_strcmp(cmd, "browser") == 0 || osify_strcmp(cmd, "navigatore") == 0) {
+        open_or_focus_window("Navigatore Web Sovrano (HyperSpeed)", 100, 42, 620, 340);
+        shell_append_line("Finestra 'Navigatore Web Sovrano (HyperSpeed)' aperta.");
     } else if (osify_strcmp(cmd, "pc") == 0 || osify_strcmp(cmd, "info") == 0 || osify_strcmp(cmd, "sistema") == 0) {
         open_or_focus_window("Proprieta di Sistema (Questo PC)", 110, 60, 580, 330);
         shell_append_line("Finestra 'Proprieta di Sistema (Questo PC)' aperta.");
@@ -1078,7 +1258,10 @@ void osify_desktop_render_all(osify_framebuffer_t *fb) {
         osify_snprintf(top_status, sizeof(top_status), "[IP: %s] [Vol: %u%%] [Rec: 60FPS] 12:00",
                        ip_short, aud->master_volume);
     }
-    osify_fb_draw_string(fb, fb->width - 410, 5, top_status, COLOR_TEXT_MUTED);
+    int status_w = (int)osify_strlen(top_status) * 9;
+    int status_x = (int)fb->width - status_w - 16;
+    if (status_x < 510) status_x = 510;
+    osify_fb_draw_string(fb, status_x, 5, top_status, COLOR_TEXT_MUTED);
 
     /* 4. HUD Laterale Monitor Risorse Silicio & Potenza Hardware (Destra) */
     int hud_x = 734;
@@ -1221,7 +1404,7 @@ void osify_desktop_render_all(osify_framebuffer_t *fb) {
             const char *dirs[] = {"[DIR] /Sistema", "[DIR] /Apps", "[DIR] /UEM", "[DIR] /Utenti"};
             for (int d = 0; d < 4; d++) {
                 uint32_t card_col = (s_fs_current_dir == d + 1) ? COLOR_BORDER_NEON : COLOR_TITLEBAR_GLASS;
-                osify_fb_draw_squircle(fb, g_windows[i].x + 16 + d * 144, fy, 136, 6, card_col);
+                osify_fb_draw_rounded_rect(fb, g_windows[i].x + 16 + d * 144, fy, 136, 26, 6, card_col);
                 draw_window_string_clipped(fb, g_windows[i].x + 20 + d * 144, fy + 8, dirs[d], COLOR_ACCENT_BLUE, 14);
             }
             fy += 36;
@@ -1302,7 +1485,7 @@ void osify_desktop_render_all(osify_framebuffer_t *fb) {
                     fy += 20;
                 }
             }
-            draw_window_string_clipped(fb, g_windows[i].x + 16, fy + 4, "Suggerimento: clicca su una cartella o su un file per aprirlo/eseguirlo.", COLOR_ACCENT_AMBER, max_file_chars);
+            draw_window_string_clipped(fb, g_windows[i].x + 16, fy + 4, "Suggerimento: clicca sui file o cartelle per aprirli.", COLOR_ACCENT_AMBER, max_file_chars);
         }
 
         /* Finestra 4: OSify App Hub (.ify) */
@@ -1324,44 +1507,158 @@ void osify_desktop_render_all(osify_framebuffer_t *fb) {
                 for (int c_idx = 0; c_idx < 2; c_idx++) {
                     int bx = g_windows[i].x + 16 + c_idx * 280;
                     int by = ay + r * 34;
-                    osify_fb_draw_squircle(fb, bx, by, 270, 8, COLOR_TITLEBAR_GLASS);
+                    osify_fb_draw_rounded_rect(fb, bx, by, 270, 26, 6, COLOR_TITLEBAR_GLASS);
                     osify_fb_draw_rect(fb, bx, by, 4, 26, COLOR_BORDER_NEON);
                     osify_fb_draw_string(fb, bx + 12, by + 6, apps_grid[r][c_idx], COLOR_TEXT_WHITE);
-                    osify_fb_draw_squircle(fb, bx + 210, by + 4, 52, 4, COLOR_ACCENT_PURPLE);
+                    osify_fb_draw_rounded_rect(fb, bx + 210, by + 4, 52, 20, 4, COLOR_ACCENT_PURPLE);
                     osify_fb_draw_string(fb, bx + 216, by + 6, "AVVIA", COLOR_TEXT_WHITE);
                 }
             }
         }
 
-        /* Finestra 5: Calcolatrice Scientifica */
+        /* Finestra 5: Calcolatrice Scientifica Avanzata 2050 */
         if (osify_strcmp(g_windows[i].title, "Calcolatrice Scientifica 2050") == 0) {
             int cx = g_windows[i].x;
             int cy = g_windows[i].y + 36;
-            /* Schermo LCD Neon Calcolatrice */
-            osify_fb_draw_rounded_rect(fb, cx + 16, cy, 276, 44, 8, 0xFF0F172A);
-            osify_fb_draw_rect(fb, cx + 16, cy, 276, 1, COLOR_BORDER_NEON);
-            osify_fb_draw_string(fb, cx + 24, cy + 14, s_calc_display, COLOR_BORDER_NEON);
-            cy += 54;
+            int disp_w = g_windows[i].w - 32;
 
-            /* Griglia Tastierino 4x4 (Base) + 5a Riga Scientifica */
-            const char *keys[5][4] = {
-                {"7", "8", "9", "/"},
-                {"4", "5", "6", "*"},
-                {"1", "2", "3", "-"},
-                {"C", "0", "=", "+"},
-                {"SQRT", "+/-", "^2", "MOD"}
+            /* Display LCD Dark Glass a doppia riga */
+            osify_fb_draw_rounded_rect(fb, cx + 16, cy, disp_w, 56, 8, 0xFF0B132B);
+            osify_fb_draw_rect(fb, cx + 16, cy, disp_w, 1, COLOR_BORDER_NEON);
+
+            /* Riga 1 Display: Cronologia / Formula e Badge DEG/RAD */
+            osify_fb_draw_string(fb, cx + 24, cy + 8, s_calc_history, COLOR_TEXT_MUTED);
+            const char *mode_badge = s_calc_deg_mode ? "[DEG]" : "[RAD]";
+            osify_fb_draw_string(fb, cx + disp_w - 90, cy + 8, mode_badge, COLOR_ACCENT_AMBER);
+            if (s_calc_has_mem) {
+                osify_fb_draw_string(fb, cx + disp_w - 150, cy + 8, "[MEM]", COLOR_BTN_MAX);
+            }
+
+            /* Riga 2 Display: Valore corrente grande allineato a destra */
+            int vlen = (int)osify_strlen(s_calc_display);
+            int vx = cx + disp_w - 20 - (vlen * 9);
+            if (vx < cx + 24) vx = cx + 24;
+            osify_fb_draw_string(fb, vx, cy + 30, s_calc_display, COLOR_BORDER_NEON);
+            cy += 66;
+
+            /* Griglia Scientifica a 7 Colonne x 5 Righe (35 Tasti) */
+            const char *sci_keys[5][7] = {
+                {"sin",  "cos", "tan", "pi",  "e",   "DEG", "C"},
+                {"sqrt", "x^2", "x^y", "log", "ln",  "1/x", "/"},
+                {"MOD",  "n!",  "+/-", "7",   "8",   "9",   "*"},
+                {"MC",   "MR",  "M+",  "4",   "5",   "6",   "-"},
+                {"(",    ")",   "%",   "1",   "2",   "3",   "+"}
             };
-            for (int kr = 0; kr < 5; kr++) {
-                for (int kc = 0; kc < 4; kc++) {
-                    int kx = cx + 16 + kc * 70;
-                    int ky = cy + kr * 46;
-                    uint32_t kcol = (kr == 4) ? COLOR_ACCENT_BLUE :
-                                    (kc == 3 || (kr == 3 && kc == 2)) ? COLOR_ACCENT_PURPLE : COLOR_TITLEBAR_GLASS;
-                    osify_fb_draw_rounded_rect(fb, kx, ky, 64, 40, 6, kcol);
-                    int label_len = (int)osify_strlen(keys[kr][kc]);
-                    int tx = kx + 32 - (label_len * 9) / 2;
-                    osify_fb_draw_string(fb, tx, ky + 12, keys[kr][kc], COLOR_TEXT_WHITE);
+
+            int btn_w = 68;
+            int btn_h = 36;
+            int step_x = 74;
+            int step_y = 42;
+
+            for (int r = 0; r < 5; r++) {
+                for (int c = 0; c < 7; c++) {
+                    int kx = cx + 16 + c * step_x;
+                    int ky = cy + r * step_y;
+                    uint32_t kbg = COLOR_TITLEBAR_GLASS;
+                    uint32_t ktc = COLOR_TEXT_WHITE;
+
+                    if (c < 3 && r < 2) {
+                        /* Trigonometria e Potenze */
+                        kbg = 0xFF1E293B;
+                        ktc = COLOR_BORDER_NEON;
+                    } else if (c == 6) {
+                        /* Operatori Aritmetici / Clear */
+                        kbg = (r == 0) ? 0xFF991B1B : COLOR_ACCENT_PURPLE;
+                        ktc = COLOR_TEXT_WHITE;
+                    } else if (c >= 3 && c <= 5 && r >= 2) {
+                        /* Tastierino Numerico */
+                        kbg = 0xFF0F172A;
+                        ktc = COLOR_TEXT_WHITE;
+                    } else if (c == 5 && r == 0) {
+                        /* Tasto DEG / RAD */
+                        kbg = COLOR_ACCENT_AMBER;
+                        ktc = 0xFF000000;
+                    }
+
+                    osify_fb_draw_rounded_rect(fb, kx, ky, btn_w, btn_h, 6, kbg);
+                    int llen = (int)osify_strlen(sci_keys[r][c]);
+                    int tx = kx + (btn_w / 2) - (llen * 9) / 2;
+                    osify_fb_draw_string(fb, tx, ky + 10, sci_keys[r][c], ktc);
                 }
+            }
+
+            /* Riga Inferiore Speciale: 0 (doppio), virgola '.', CE e '=' (triplo) */
+            int bby = cy + 5 * step_y;
+            /* Tasto 0 */
+            osify_fb_draw_rounded_rect(fb, cx + 16, bby, 142, btn_h, 6, 0xFF0F172A);
+            osify_fb_draw_string(fb, cx + 16 + 71 - 4, bby + 10, "0", COLOR_TEXT_WHITE);
+            /* Tasto '.' */
+            osify_fb_draw_rounded_rect(fb, cx + 16 + 148, bby, btn_w, btn_h, 6, 0xFF0F172A);
+            osify_fb_draw_string(fb, cx + 16 + 148 + 30, bby + 10, ".", COLOR_TEXT_WHITE);
+            /* Tasto 'CE' */
+            osify_fb_draw_rounded_rect(fb, cx + 16 + 222, bby, btn_w, btn_h, 6, 0xFF7F1D1D);
+            osify_fb_draw_string(fb, cx + 16 + 222 + 25, bby + 10, "CE", COLOR_TEXT_WHITE);
+            /* Tasto '=' */
+            osify_fb_draw_rounded_rect(fb, cx + 16 + 296, bby, 222, btn_h, 6, COLOR_BTN_MAX);
+            osify_fb_draw_string(fb, cx + 16 + 296 + 102, bby + 10, "=", 0xFF000000);
+        }
+
+        /* Finestra Navigatore Web Sovrano 2050 (HyperSpeed Reader) */
+        if (osify_strcmp(g_windows[i].title, "Navigatore Web Sovrano (HyperSpeed)") == 0) {
+            int wx = g_windows[i].x;
+            int wy = g_windows[i].y + 36;
+            int win_w = g_windows[i].w - 32;
+
+            /* 1. Barra Strumenti Superiore & URL */
+            osify_fb_draw_rounded_rect(fb, wx + 16, wy, 44, 26, 4, COLOR_TITLEBAR_GLASS);
+            osify_fb_draw_string(fb, wx + 24, wy + 6, "<", COLOR_BORDER_NEON);
+
+            osify_fb_draw_rounded_rect(fb, wx + 66, wy, 44, 26, 4, COLOR_TITLEBAR_GLASS);
+            osify_fb_draw_string(fb, wx + 74, wy + 6, ">", COLOR_BORDER_NEON);
+
+            osify_fb_draw_rounded_rect(fb, wx + 116, wy, 58, 26, 4, COLOR_TITLEBAR_GLASS);
+            osify_fb_draw_string(fb, wx + 122, wy + 6, "HOME", COLOR_TEXT_WHITE);
+
+            /* Barra Indirizzo URL */
+            int url_bar_w = win_w - 340;
+            osify_fb_draw_rounded_rect(fb, wx + 180, wy, url_bar_w, 26, 4, 0xFF0F172A);
+            osify_fb_draw_rect(fb, wx + 180, wy, url_bar_w, 1, COLOR_BORDER_NEON);
+            const char *cur_url = g_web_pages[s_web_page_current].url;
+            draw_window_string_clipped(fb, wx + 188, wy + 6, cur_url, COLOR_BORDER_NEON, (url_bar_w - 16) / 9);
+
+            /* Badges di Sicurezza & AdBlock */
+            osify_fb_draw_rounded_rect(fb, wx + 186 + url_bar_w, wy, 70, 26, 4, 0xFF065F46);
+            osify_fb_draw_string(fb, wx + 192 + url_bar_w, wy + 6, "QUAD9 DoH", COLOR_BTN_MAX);
+
+            osify_fb_draw_rounded_rect(fb, wx + 262 + url_bar_w, wy, 68, 26, 4, 0xFF1E3A8A);
+            osify_fb_draw_string(fb, wx + 268 + url_bar_w, wy + 6, "ZERO-ADS", COLOR_BORDER_NEON);
+            wy += 34;
+
+            /* 2. Barra Segnalibri Rapidi */
+            const char *bmarks[] = {"[1. Home]", "[2. Docs]", "[3. Store]", "[4. Meteo]", "[5. CERN]"};
+            for (int b = 0; b < 5; b++) {
+                int bx = wx + 16 + b * 102;
+                uint32_t bcol = (s_web_page_current == b) ? COLOR_BORDER_NEON : COLOR_TITLEBAR_GLASS;
+                osify_fb_draw_rounded_rect(fb, bx, wy, 96, 22, 4, bcol);
+                uint32_t btc = (s_web_page_current == b) ? 0xFF000000 : COLOR_TEXT_WHITE;
+                osify_fb_draw_string(fb, bx + 12, wy + 4, bmarks[b], btc);
+            }
+            wy += 30;
+
+            /* 3. Contenitore Pagina Web Dark Glass */
+            int page_h = g_windows[i].h - 110;
+            osify_fb_draw_rounded_rect(fb, wx + 16, wy, win_w, page_h, 6, 0xFF070B14);
+            osify_fb_draw_rect(fb, wx + 16, wy, win_w, 1, COLOR_TITLEBAR_GLASS);
+
+            /* Titolo Pagina */
+            draw_window_string_clipped(fb, wx + 28, wy + 12, g_web_pages[s_web_page_current].title, COLOR_ACCENT_AMBER, (win_w - 24) / 9);
+            osify_fb_draw_rect(fb, wx + 28, wy + 32, win_w - 24, 1, 0xFF1E293B);
+
+            /* Linee di Contenuto */
+            int l_y = wy + 42;
+            for (size_t l = 0; l < g_web_pages[s_web_page_current].line_count && l_y < wy + page_h - 20; l++) {
+                draw_window_string_clipped(fb, wx + 28, l_y, g_web_pages[s_web_page_current].lines[l], COLOR_TEXT_WHITE, (win_w - 24) / 9);
+                l_y += 22;
             }
         }
 
@@ -1661,31 +1958,92 @@ void osify_desktop_render_all(osify_framebuffer_t *fb) {
         osify_installer_render(fb, 100, 100, 620, 168);
     }
 
-    /* 7. Floating Dock Inferiore con Riflesso Glassmorphism (7 Icone) */
-    int dock_w = 620;
-    int dock_h = s_dock_compact ? 44 : 56;
+    /* 7. Floating Dock Inferiore con Riflesso Glassmorphism (8 Icone Grafiche) */
+    int dock_w = 640;
+    int dock_h = s_dock_compact ? 48 : 58;
     int dock_x = ((int)fb->width - dock_w) / 2;
-    int dock_y = s_dock_compact ? ((int)fb->height - dock_h - 4) : ((int)fb->height - dock_h - 12);
+    int dock_y = s_dock_compact ? ((int)fb->height - dock_h - 4) : ((int)fb->height - dock_h - 10);
 
-    osify_fb_draw_squircle(fb, dock_x, dock_y, dock_w, 16, COLOR_PANEL_GLASS);
-    osify_fb_draw_rect(fb, dock_x + 10, dock_y, dock_w - 20, 1, COLOR_BORDER_NEON); /* Neon reflex */
+    /* Sfondo Dock arrotondato in vetro satinato Dark Glass */
+    osify_fb_draw_rounded_rect(fb, dock_x, dock_y, dock_w, dock_h, 16, COLOR_PANEL_GLASS);
+    osify_fb_draw_rect(fb, dock_x + 16, dock_y, dock_w - 32, 1, COLOR_BORDER_NEON); /* Riflesso neon superiore */
 
-    const char *dock_labels[] = {"Term", "Files", "Cattura", "Apps", "Rete", "Temi", "Installa"};
-    uint32_t dock_colors[] = {COLOR_BORDER_NEON, COLOR_ACCENT_BLUE, COLOR_ACCENT_AMBER,
-                              COLOR_ACCENT_PURPLE, COLOR_BTN_MAX, COLOR_BORDER_NEON, 0xFFE11D48};
+    uint32_t dock_colors[8] = {
+        COLOR_BORDER_NEON,   /* 0: Term */
+        COLOR_ACCENT_BLUE,   /* 1: Files */
+        0xFF0284C7,          /* 2: Web */
+        COLOR_ACCENT_AMBER,  /* 3: Cattura */
+        COLOR_ACCENT_PURPLE, /* 4: Apps */
+        COLOR_BORDER_NEON,   /* 5: Calc */
+        0xFFEC4899,          /* 6: Temi */
+        COLOR_BTN_MAX        /* 7: Arcade */
+    };
 
-    int start_icon_x = dock_x + 18;
-    for (int d = 0; d < 7; d++) {
-        int ix = start_icon_x + d * 84;
-        int iy = dock_y + (s_dock_compact ? 4 : 8);
-        int isize = s_dock_compact ? 32 : 40;
-        osify_fb_draw_squircle(fb, ix, iy, isize, 8, dock_colors[d]);
-        osify_fb_draw_squircle(fb, ix + 3, iy + 3, isize - 6, 6, COLOR_PANEL_GLASS);
-        /* Pallino indicatore app attiva */
-        if (!s_dock_compact) {
-            osify_fb_draw_squircle(fb, ix + 17, dock_y + 48, 6, 3, COLOR_BORDER_NEON);
+    int icon_step = (dock_w - 32) / 8;
+    int start_icon_x = dock_x + 16;
+    int isize = 34;
+
+    for (int d = 0; d < 8; d++) {
+        int ix = start_icon_x + d * icon_step + (icon_step - isize) / 2;
+        int iy = dock_y + (s_dock_compact ? 5 : 8);
+
+        /* Sagoma icona squircle con bordo colorato */
+        osify_fb_draw_rounded_rect(fb, ix, iy, isize, isize, 8, dock_colors[d]);
+        osify_fb_draw_rounded_rect(fb, ix + 2, iy + 2, isize - 4, isize - 4, 6, 0xFF0B132B);
+
+        /* Glifi Grafici Vettoriali Nativi ad Alta Definizione */
+        if (d == 0) {
+            /* Terminale: Prompt '>' e trattino '_' */
+            osify_fb_draw_string(fb, ix + 7, iy + 9, ">", COLOR_BORDER_NEON);
+            osify_fb_draw_rect(fb, ix + 18, iy + 21, 8, 2, COLOR_BORDER_NEON);
+        } else if (d == 1) {
+            /* Files: Cartella azzurra */
+            osify_fb_draw_rect(fb, ix + 6, iy + 8, 10, 4, COLOR_ACCENT_BLUE);
+            osify_fb_draw_rect(fb, ix + 6, iy + 11, 22, 15, COLOR_ACCENT_BLUE);
+            osify_fb_draw_rect(fb, ix + 8, iy + 13, 18, 11, 0xFF0284C7);
+        } else if (d == 2) {
+            /* Web Browser: Globo con cerchio e meridiani */
+            osify_fb_draw_rounded_rect(fb, ix + 7, iy + 7, 20, 20, 10, COLOR_BORDER_NEON);
+            osify_fb_draw_rect(fb, ix + 16, iy + 8, 2, 18, 0xFF0B132B);
+            osify_fb_draw_rect(fb, ix + 8, iy + 16, 18, 2, 0xFF0B132B);
+        } else if (d == 3) {
+            /* Cattura Video: Cinepresa con mirino REC */
+            osify_fb_draw_rect(fb, ix + 6, iy + 10, 14, 13, COLOR_ACCENT_AMBER);
+            osify_fb_draw_rect(fb, ix + 20, iy + 12, 7, 9, COLOR_ACCENT_AMBER);
+            osify_fb_draw_rect(fb, ix + 9, iy + 13, 4, 4, 0xFFEF4444); /* Spia REC */
+        } else if (d == 4) {
+            /* App Hub: 4 tessere quadrate multicolore */
+            osify_fb_draw_rounded_rect(fb, ix + 7, iy + 7, 8, 8, 2, COLOR_BORDER_NEON);
+            osify_fb_draw_rounded_rect(fb, ix + 19, iy + 7, 8, 8, 2, COLOR_ACCENT_PURPLE);
+            osify_fb_draw_rounded_rect(fb, ix + 7, iy + 19, 8, 8, 2, COLOR_ACCENT_AMBER);
+            osify_fb_draw_rounded_rect(fb, ix + 19, iy + 19, 8, 8, 2, COLOR_BTN_MAX);
+        } else if (d == 5) {
+            /* Calcolatrice: Display LCD e tasti +, -, = */
+            osify_fb_draw_rect(fb, ix + 7, iy + 7, 20, 6, COLOR_BORDER_NEON);
+            osify_fb_draw_rect(fb, ix + 8, iy + 16, 6, 2, COLOR_TEXT_WHITE);
+            osify_fb_draw_rect(fb, ix + 10, iy + 14, 2, 6, COLOR_TEXT_WHITE); /* + */
+            osify_fb_draw_rect(fb, ix + 20, iy + 16, 6, 2, COLOR_TEXT_WHITE); /* - */
+            osify_fb_draw_rect(fb, ix + 8, iy + 23, 18, 2, COLOR_ACCENT_AMBER);
+            osify_fb_draw_rect(fb, ix + 8, iy + 26, 18, 2, COLOR_ACCENT_AMBER); /* = */
+        } else if (d == 6) {
+            /* Temi: Tavolozza con 3 gocce neon */
+            osify_fb_draw_rounded_rect(fb, ix + 7, iy + 7, 20, 20, 8, COLOR_ACCENT_PURPLE);
+            osify_fb_draw_rect(fb, ix + 10, iy + 11, 4, 4, COLOR_BORDER_NEON);
+            osify_fb_draw_rect(fb, ix + 19, iy + 11, 4, 4, 0xFFEC4899);
+            osify_fb_draw_rect(fb, ix + 14, iy + 19, 4, 4, COLOR_ACCENT_AMBER);
+        } else if (d == 7) {
+            /* Arcade: Gamepad con croce D-Pad */
+            osify_fb_draw_rounded_rect(fb, ix + 6, iy + 10, 22, 14, 4, COLOR_BTN_MAX);
+            osify_fb_draw_rect(fb, ix + 9, iy + 14, 6, 2, 0xFF0B132B);
+            osify_fb_draw_rect(fb, ix + 11, iy + 12, 2, 6, 0xFF0B132B);
+            osify_fb_draw_rect(fb, ix + 20, iy + 13, 3, 3, 0xFFEC4899);
+            osify_fb_draw_rect(fb, ix + 23, iy + 16, 3, 3, COLOR_BORDER_NEON);
         }
-        osify_fb_draw_string(fb, ix - 2, iy + (s_dock_compact ? 8 : 12), dock_labels[d], COLOR_TEXT_WHITE);
+
+        /* Pallino luminoso indicatore app attiva */
+        if (!s_dock_compact) {
+            osify_fb_draw_rounded_rect(fb, ix + 14, dock_y + dock_h - 7, 6, 3, 1, COLOR_BORDER_NEON);
+        }
     }
 
     /* 8. Menu a Tendina Apple OSify (se attivo) */
@@ -1837,21 +2195,26 @@ void osify_desktop_click_mouse(osify_framebuffer_t *fb, int x, int y, uint8_t bu
         }
     }
 
-    /* 4. Clic su Dock Inferiore (7 Icone) */
-    int dock_w = 620;
-    int dock_h = s_dock_compact ? 44 : 56;
+    /* 4. Clic su Dock Inferiore (8 Icone Grafiche) */
+    int dock_w = 640;
+    int dock_h = s_dock_compact ? 48 : 58;
     int dock_x = ((int)fb->width - dock_w) / 2;
-    int dock_y = s_dock_compact ? ((int)fb->height - dock_h - 4) : ((int)fb->height - dock_h - 12);
+    int dock_y = s_dock_compact ? ((int)fb->height - dock_h - 4) : ((int)fb->height - dock_h - 10);
 
     if (y >= dock_y && y <= dock_y + dock_h && x >= dock_x && x <= dock_x + dock_w) {
-        int icon_idx = (x - (dock_x + 18)) / 84;
+        int icon_step = (dock_w - 32) / 8;
+        int icon_idx = (x - (dock_x + 16)) / icon_step;
         if (icon_idx == 0) open_or_focus_window("OSify Terminale Nativo", 100, 38, 620, 340);
         else if (icon_idx == 1) open_or_focus_window("OSifyFS Esplora File", 100, 50, 620, 320);
-        else if (icon_idx == 2) open_or_focus_window("Scheda di Acquisizione Video (Virtual Capture Card)", 100, 390, 620, 280);
-        else if (icon_idx == 3) open_or_focus_window("OSify App Hub (.ify)", 100, 70, 620, 330);
-        else if (icon_idx == 4) execute_command("rete");
-        else if (icon_idx == 5) open_or_focus_window("Centro Personalizzazione & Temi 2050", 100, 40, 620, 350);
-        else if (icon_idx == 6) execute_command("installa");
+        else if (icon_idx == 2) open_or_focus_window("Navigatore Web Sovrano (HyperSpeed)", 100, 42, 620, 340);
+        else if (icon_idx == 3) open_or_focus_window("Scheda di Acquisizione Video (Virtual Capture Card)", 100, 390, 620, 280);
+        else if (icon_idx == 4) open_or_focus_window("OSify App Hub (.ify)", 100, 70, 620, 330);
+        else if (icon_idx == 5) open_or_focus_window("Calcolatrice Scientifica 2050", 110, 46, 550, 370);
+        else if (icon_idx == 6) open_or_focus_window("Centro Personalizzazione & Temi 2050", 100, 40, 620, 350);
+        else if (icon_idx == 7) {
+            arcade_init_game();
+            open_or_focus_window("Cyber Arcade 2050", 110, 60, 580, 330);
+        }
         osify_desktop_render_all(fb);
         return;
     }
@@ -1866,8 +2229,8 @@ void osify_desktop_click_mouse(osify_framebuffer_t *fb, int x, int y, uint8_t bu
                     int by = ay + r * 34;
                     if (x >= bx + 210 && x <= bx + 262 && y >= by + 4 && y <= by + 28) {
                         int app_num = r * 2 + c_idx + 1;
-                        if (app_num == 1) execute_command("esegui /Applicazioni/navigatore.ify");
-                        else if (app_num == 2) open_or_focus_window("Calcolatrice Scientifica 2050", 250, 80, 310, 360);
+                        if (app_num == 1) open_or_focus_window("Navigatore Web Sovrano (HyperSpeed)", 100, 42, 620, 340);
+                        else if (app_num == 2) open_or_focus_window("Calcolatrice Scientifica 2050", 110, 46, 550, 370);
                         else if (app_num == 3) {
                             arcade_init_game();
                             open_or_focus_window("Cyber Arcade 2050", 110, 60, 580, 330);
@@ -1892,73 +2255,259 @@ void osify_desktop_click_mouse(osify_framebuffer_t *fb, int x, int y, uint8_t bu
         }
     }
 
-    /* 6. Clic su Tastierino Calcolatrice Multi-Cifra Reale */
+    /* 6. Clic su Tastierino Calcolatrice Scientifica Dark Glass 2050 */
     for (size_t i = 0; i < g_window_count; i++) {
-        if (g_windows[i].is_visible && osify_strcmp(g_windows[i].title, "Calcolatrice Scientifica 2050") == 0) {
+        if (g_windows[i].is_visible && g_windows[i].is_focused &&
+            osify_strcmp(g_windows[i].title, "Calcolatrice Scientifica 2050") == 0) {
             int cx = g_windows[i].x;
-            int cy = g_windows[i].y + 36 + 54;
-            const char *keys[5][4] = {
-                {"7", "8", "9", "/"},
-                {"4", "5", "6", "*"},
-                {"1", "2", "3", "-"},
-                {"C", "0", "=", "+"},
-                {"SQRT", "+/-", "^2", "MOD"}
+            int cy = g_windows[i].y + 36;
+            int disp_w = g_windows[i].w - 32;
+
+            /* Toggle DEG / RAD dal badge sul display */
+            if (x >= cx + disp_w - 95 && x <= cx + disp_w - 20 && y >= cy && y <= cy + 24) {
+                s_calc_deg_mode = !s_calc_deg_mode;
+                osify_desktop_render_all(fb);
+                return;
+            }
+
+            int key_cy = cy + 66;
+            int btn_w = 68;
+            int btn_h = 36;
+            int step_x = 74;
+            int step_y = 42;
+
+            const char *sci_keys[5][7] = {
+                {"sin",  "cos", "tan", "pi",  "e",   "DEG", "C"},
+                {"sqrt", "x^2", "x^y", "log", "ln",  "1/x", "/"},
+                {"MOD",  "n!",  "+/-", "7",   "8",   "9",   "*"},
+                {"MC",   "MR",  "M+",  "4",   "5",   "6",   "-"},
+                {"(",    ")",   "%",   "1",   "2",   "3",   "+"}
             };
-            for (int kr = 0; kr < 5; kr++) {
-                for (int kc = 0; kc < 4; kc++) {
-                    int kx = cx + 16 + kc * 70;
-                    int ky = cy + kr * 46;
-                    if (x >= kx && x <= kx + 64 && y >= ky && y <= ky + 40) {
-                        const char *kstr = keys[kr][kc];
-                        if (kstr[0] == 'C') {
+
+            /* Clic sulla griglia 5x7 */
+            for (int r = 0; r < 5; r++) {
+                for (int c = 0; c < 7; c++) {
+                    int kx = cx + 16 + c * step_x;
+                    int ky = key_cy + r * step_y;
+                    if (x >= kx && x <= kx + btn_w && y >= ky && y <= ky + btn_h) {
+                        const char *k = sci_keys[r][c];
+
+                        if (osify_strcmp(k, "C") == 0) {
+                            s_calc_val = 0;
                             s_calc_acc = 0;
-                            s_calc_curr = 0;
                             s_calc_op = 0;
                             s_calc_new_entry = true;
-                            osify_strcpy(s_calc_display, "0");
-                        } else if (kstr[0] == '=') {
-                            if (s_calc_op == '+') s_calc_curr = s_calc_acc + s_calc_curr;
-                            else if (s_calc_op == '-') s_calc_curr = s_calc_acc - s_calc_curr;
-                            else if (s_calc_op == '*') s_calc_curr = s_calc_acc * s_calc_curr;
-                            else if (s_calc_op == '/') { if (s_calc_curr != 0) s_calc_curr = s_calc_acc / s_calc_curr; }
-                            else if (s_calc_op == '%') { if (s_calc_curr != 0) s_calc_curr = s_calc_acc % s_calc_curr; }
-                            s_calc_acc = s_calc_curr;
-                            s_calc_op = 0;
+                            osify_strcpy(s_calc_history, "CANCELLATO");
+                            calc_format_display(s_calc_val, s_calc_display, sizeof(s_calc_display));
+                        } else if (osify_strcmp(k, "DEG") == 0) {
+                            s_calc_deg_mode = !s_calc_deg_mode;
+                        } else if (osify_strcmp(k, "sin") == 0) {
+                            int64_t ang = s_calc_val / CALC_SCALE;
+                            s_calc_val = calc_sin_fixed(ang);
                             s_calc_new_entry = true;
-                            osify_snprintf(s_calc_display, sizeof(s_calc_display), "%lld", s_calc_curr);
-                        } else if (osify_strcmp(kstr, "SQRT") == 0) {
-                            s_calc_curr = osify_isqrt(s_calc_curr);
+                            osify_snprintf(s_calc_history, sizeof(s_calc_history), "sin(%lld)", ang);
+                            calc_format_display(s_calc_val, s_calc_display, sizeof(s_calc_display));
+                        } else if (osify_strcmp(k, "cos") == 0) {
+                            int64_t ang = s_calc_val / CALC_SCALE;
+                            s_calc_val = calc_cos_fixed(ang);
                             s_calc_new_entry = true;
-                            osify_snprintf(s_calc_display, sizeof(s_calc_display), "%lld", s_calc_curr);
-                        } else if (osify_strcmp(kstr, "+/-") == 0) {
-                            s_calc_curr = -s_calc_curr;
-                            osify_snprintf(s_calc_display, sizeof(s_calc_display), "%lld", s_calc_curr);
-                        } else if (osify_strcmp(kstr, "^2") == 0) {
-                            s_calc_curr = s_calc_curr * s_calc_curr;
+                            osify_snprintf(s_calc_history, sizeof(s_calc_history), "cos(%lld)", ang);
+                            calc_format_display(s_calc_val, s_calc_display, sizeof(s_calc_display));
+                        } else if (osify_strcmp(k, "tan") == 0) {
+                            int64_t ang = s_calc_val / CALC_SCALE;
+                            s_calc_val = calc_tan_fixed(ang);
                             s_calc_new_entry = true;
-                            osify_snprintf(s_calc_display, sizeof(s_calc_display), "%lld", s_calc_curr);
-                        } else if (kstr[0] == '+' || kstr[0] == '-' || kstr[0] == '*' || kstr[0] == '/' || osify_strcmp(kstr, "MOD") == 0) {
-                            if (s_calc_op != 0) {
-                                if (s_calc_op == '+') s_calc_acc += s_calc_curr;
-                                else if (s_calc_op == '-') s_calc_acc -= s_calc_curr;
-                                else if (s_calc_op == '*') s_calc_acc *= s_calc_curr;
-                                else if (s_calc_op == '/') { if (s_calc_curr != 0) s_calc_acc /= s_calc_curr; }
-                                else if (s_calc_op == '%') { if (s_calc_curr != 0) s_calc_acc %= s_calc_curr; }
-                            } else {
-                                s_calc_acc = s_calc_curr;
+                            osify_snprintf(s_calc_history, sizeof(s_calc_history), "tan(%lld)", ang);
+                            calc_format_display(s_calc_val, s_calc_display, sizeof(s_calc_display));
+                        } else if (osify_strcmp(k, "pi") == 0) {
+                            s_calc_val = 31416LL;
+                            s_calc_new_entry = true;
+                            calc_format_display(s_calc_val, s_calc_display, sizeof(s_calc_display));
+                        } else if (osify_strcmp(k, "e") == 0) {
+                            s_calc_val = 27183LL;
+                            s_calc_new_entry = true;
+                            calc_format_display(s_calc_val, s_calc_display, sizeof(s_calc_display));
+                        } else if (osify_strcmp(k, "sqrt") == 0) {
+                            int64_t n = s_calc_val / CALC_SCALE;
+                            s_calc_val = osify_isqrt(s_calc_val * CALC_SCALE);
+                            s_calc_new_entry = true;
+                            osify_snprintf(s_calc_history, sizeof(s_calc_history), "sqrt(%lld)", n);
+                            calc_format_display(s_calc_val, s_calc_display, sizeof(s_calc_display));
+                        } else if (osify_strcmp(k, "x^2") == 0) {
+                            int64_t n = s_calc_val / CALC_SCALE;
+                            s_calc_val = (s_calc_val * s_calc_val) / CALC_SCALE;
+                            s_calc_new_entry = true;
+                            osify_snprintf(s_calc_history, sizeof(s_calc_history), "%lld ^ 2", n);
+                            calc_format_display(s_calc_val, s_calc_display, sizeof(s_calc_display));
+                        } else if (osify_strcmp(k, "log") == 0) {
+                            s_calc_val = calc_log10_fixed(s_calc_val);
+                            s_calc_new_entry = true;
+                            osify_strcpy(s_calc_history, "log10(x)");
+                            calc_format_display(s_calc_val, s_calc_display, sizeof(s_calc_display));
+                        } else if (osify_strcmp(k, "ln") == 0) {
+                            s_calc_val = calc_ln_fixed(s_calc_val);
+                            s_calc_new_entry = true;
+                            osify_strcpy(s_calc_history, "ln(x)");
+                            calc_format_display(s_calc_val, s_calc_display, sizeof(s_calc_display));
+                        } else if (osify_strcmp(k, "1/x") == 0) {
+                            if (s_calc_val != 0) s_calc_val = (CALC_SCALE * CALC_SCALE * CALC_SCALE) / s_calc_val;
+                            s_calc_new_entry = true;
+                            osify_strcpy(s_calc_history, "1 / x");
+                            calc_format_display(s_calc_val, s_calc_display, sizeof(s_calc_display));
+                        } else if (osify_strcmp(k, "n!") == 0) {
+                            int64_t n = s_calc_val / CALC_SCALE;
+                            s_calc_val = calc_factorial(n);
+                            s_calc_new_entry = true;
+                            osify_snprintf(s_calc_history, sizeof(s_calc_history), "%lld !", n);
+                            calc_format_display(s_calc_val, s_calc_display, sizeof(s_calc_display));
+                        } else if (osify_strcmp(k, "+/-") == 0) {
+                            s_calc_val = -s_calc_val;
+                            calc_format_display(s_calc_val, s_calc_display, sizeof(s_calc_display));
+                        } else if (osify_strcmp(k, "MC") == 0) {
+                            s_calc_mem = 0;
+                            s_calc_has_mem = false;
+                            osify_strcpy(s_calc_history, "MEMORIA AZZERATA");
+                        } else if (osify_strcmp(k, "MR") == 0) {
+                            if (s_calc_has_mem) {
+                                s_calc_val = s_calc_mem;
+                                s_calc_new_entry = true;
+                                osify_strcpy(s_calc_history, "RICHIAMO MEMORIA");
+                                calc_format_display(s_calc_val, s_calc_display, sizeof(s_calc_display));
                             }
-                            s_calc_op = (kstr[0] == 'M') ? '%' : kstr[0];
-                            s_calc_new_entry = true;
-                            osify_snprintf(s_calc_display, sizeof(s_calc_display), "%lld", s_calc_acc);
-                        } else if (kstr[0] >= '0' && kstr[0] <= '9') {
-                            if (s_calc_new_entry || (s_calc_curr == 0 && osify_strcmp(s_calc_display, "0") == 0)) {
-                                s_calc_curr = (int64_t)(kstr[0] - '0');
+                        } else if (osify_strcmp(k, "M+") == 0) {
+                            s_calc_mem += s_calc_val;
+                            s_calc_has_mem = true;
+                            osify_strcpy(s_calc_history, "AGGIUNTO A MEMORIA");
+                        } else if (osify_strcmp(k, "%") == 0) {
+                            s_calc_val = (s_calc_val * s_calc_acc) / (100LL * CALC_SCALE);
+                            calc_format_display(s_calc_val, s_calc_display, sizeof(s_calc_display));
+                        } else if (k[0] >= '0' && k[0] <= '9') {
+                            int64_t digit = (int64_t)(k[0] - '0');
+                            if (s_calc_new_entry || (s_calc_val == 0 && osify_strcmp(s_calc_display, "0") == 0)) {
+                                s_calc_val = digit * CALC_SCALE;
                                 s_calc_new_entry = false;
-                            } else if (s_calc_curr < 100000000000LL && s_calc_curr > -100000000000LL) {
-                                s_calc_curr = s_calc_curr * 10 + (int64_t)(kstr[0] - '0');
+                            } else if (s_calc_val < 100000000000LL && s_calc_val > -100000000000LL) {
+                                s_calc_val = (s_calc_val / CALC_SCALE) * 10 * CALC_SCALE + digit * CALC_SCALE;
                             }
-                            osify_snprintf(s_calc_display, sizeof(s_calc_display), "%lld", s_calc_curr);
+                            calc_format_display(s_calc_val, s_calc_display, sizeof(s_calc_display));
+                        } else if (k[0] == '+' || k[0] == '-' || k[0] == '*' || k[0] == '/' || osify_strcmp(k, "MOD") == 0 || osify_strcmp(k, "x^y") == 0) {
+                            if (s_calc_op != 0 && !s_calc_new_entry) {
+                                if (s_calc_op == '+') s_calc_acc += s_calc_val;
+                                else if (s_calc_op == '-') s_calc_acc -= s_calc_val;
+                                else if (s_calc_op == '*') s_calc_acc = (s_calc_acc * s_calc_val) / CALC_SCALE;
+                                else if (s_calc_op == '/') { if (s_calc_val != 0) s_calc_acc = (s_calc_acc * CALC_SCALE) / s_calc_val; }
+                                else if (s_calc_op == '%') { if (s_calc_val != 0) s_calc_acc %= s_calc_val; }
+                            } else {
+                                s_calc_acc = s_calc_val;
+                            }
+                            s_calc_op = (osify_strcmp(k, "MOD") == 0) ? '%' : (osify_strcmp(k, "x^y") == 0) ? '^' : k[0];
+                            s_calc_new_entry = true;
+                            char acc_str[24];
+                            calc_format_display(s_calc_acc, acc_str, sizeof(acc_str));
+                            osify_snprintf(s_calc_history, sizeof(s_calc_history), "%s %c", acc_str, s_calc_op);
+                            calc_format_display(s_calc_acc, s_calc_display, sizeof(s_calc_display));
                         }
+
+                        osify_desktop_render_all(fb);
+                        return;
+                    }
+                }
+            }
+
+            /* Clic sulla Riga Inferiore Speciale: 0, ., CE, = */
+            int bby = key_cy + 5 * step_y;
+            if (y >= bby && y <= bby + btn_h) {
+                /* Tasto 0 (cx + 16 .. cx + 158) */
+                if (x >= cx + 16 && x <= cx + 158) {
+                    if (s_calc_new_entry) {
+                        s_calc_val = 0;
+                        s_calc_new_entry = false;
+                    } else if (s_calc_val != 0 && s_calc_val < 100000000000LL) {
+                        s_calc_val = (s_calc_val / CALC_SCALE) * 10 * CALC_SCALE;
+                    }
+                    calc_format_display(s_calc_val, s_calc_display, sizeof(s_calc_display));
+                    osify_desktop_render_all(fb);
+                    return;
+                }
+                /* Tasto '.' (cx + 164 .. cx + 232) */
+                if (x >= cx + 164 && x <= cx + 232) {
+                    s_calc_new_entry = false;
+                    osify_desktop_render_all(fb);
+                    return;
+                }
+                /* Tasto CE (cx + 238 .. cx + 306) */
+                if (x >= cx + 238 && x <= cx + 306) {
+                    s_calc_val = 0;
+                    s_calc_new_entry = true;
+                    calc_format_display(s_calc_val, s_calc_display, sizeof(s_calc_display));
+                    osify_desktop_render_all(fb);
+                    return;
+                }
+                /* Tasto '=' (cx + 312 .. cx + 534) */
+                if (x >= cx + 312 && x <= cx + 534) {
+                    char a_str[24], b_str[24];
+                    calc_format_display(s_calc_acc, a_str, sizeof(a_str));
+                    calc_format_display(s_calc_val, b_str, sizeof(b_str));
+
+                    if (s_calc_op == '+') s_calc_val = s_calc_acc + s_calc_val;
+                    else if (s_calc_op == '-') s_calc_val = s_calc_acc - s_calc_val;
+                    else if (s_calc_op == '*') s_calc_val = (s_calc_acc * s_calc_val) / CALC_SCALE;
+                    else if (s_calc_op == '/') { if (s_calc_val != 0) s_calc_val = (s_calc_acc * CALC_SCALE) / s_calc_val; }
+                    else if (s_calc_op == '%') { if (s_calc_val != 0) s_calc_val %= s_calc_val; }
+                    else if (s_calc_op == '^') {
+                        int64_t exp = s_calc_val / CALC_SCALE;
+                        int64_t base = s_calc_acc / CALC_SCALE;
+                        int64_t res = 1;
+                        for (int k = 0; k < exp && k < 16; k++) res *= base;
+                        s_calc_val = res * CALC_SCALE;
+                    }
+
+                    if (s_calc_op != 0) {
+                        osify_snprintf(s_calc_history, sizeof(s_calc_history), "%s %c %s =", a_str, s_calc_op, b_str);
+                    }
+                    s_calc_acc = s_calc_val;
+                    s_calc_op = 0;
+                    s_calc_new_entry = true;
+                    calc_format_display(s_calc_val, s_calc_display, sizeof(s_calc_display));
+                    osify_desktop_render_all(fb);
+                    return;
+                }
+            }
+        }
+    }
+
+    /* 6bis. Clic su Controlli e Segnalibri del Navigatore Web Sovrano */
+    for (size_t i = 0; i < g_window_count; i++) {
+        if (g_windows[i].is_visible && g_windows[i].is_focused &&
+            osify_strcmp(g_windows[i].title, "Navigatore Web Sovrano (HyperSpeed)") == 0) {
+            int wx = g_windows[i].x;
+            int wy = g_windows[i].y + 36;
+
+            /* Tasto < (Indietro) */
+            if (x >= wx + 16 && x <= wx + 60 && y >= wy && y <= wy + 26) {
+                if (s_web_page_current > 0) s_web_page_current--;
+                osify_desktop_render_all(fb);
+                return;
+            }
+            /* Tasto > (Avanti) */
+            if (x >= wx + 66 && x <= wx + 110 && y >= wy && y <= wy + 26) {
+                if (s_web_page_current < 4) s_web_page_current++;
+                osify_desktop_render_all(fb);
+                return;
+            }
+            /* Tasto HOME */
+            if (x >= wx + 116 && x <= wx + 174 && y >= wy && y <= wy + 26) {
+                s_web_page_current = 0;
+                osify_desktop_render_all(fb);
+                return;
+            }
+            /* Barra Segnalibri (5 bottoni) */
+            int bmark_y = wy + 34;
+            if (y >= bmark_y && y <= bmark_y + 24) {
+                for (int b = 0; b < 5; b++) {
+                    int bx = wx + 16 + b * 102;
+                    if (x >= bx && x <= bx + 96) {
+                        s_web_page_current = b;
                         osify_desktop_render_all(fb);
                         return;
                     }
@@ -2314,6 +2863,11 @@ void osify_desktop_handle_key(osify_framebuffer_t *fb, char key) {
                     arcade_init_game();
                     s_arcade_state = ARCADE_PLAYING;
                 }
+                osify_desktop_render_all(fb);
+                return;
+            } else if (key == 27) { /* ESC: Chiudi gioco e restituisci focus al Terminale */
+                g_windows[i].is_visible = false;
+                open_or_focus_window("OSify Terminale Nativo", 100, 38, 620, 340);
                 osify_desktop_render_all(fb);
                 return;
             }

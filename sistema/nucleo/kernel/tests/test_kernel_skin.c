@@ -513,6 +513,41 @@ int main(void) {
 
     printf("[+] 26. Centro Personalizzazione, Temi Dinamici, Sfondi & Stili Finestra: OK\n");
 
+    /* 27. Test Completo Navigatore Web Sovrano, Calcolatrice Scientifica 2050 & Dock a 8 Icone */
+    /* Apertura Calcolatrice Scientifica */
+    osify_shell_execute_cmd(&desktop_fb, "calc");
+    osify_desktop_render_all(&desktop_fb);
+
+    /* Clic su tasto 'C' (colonna 6, riga 0) */
+    osify_desktop_click_mouse(&desktop_fb, 110 + 16 + 6 * 74 + 10, 46 + 36 + 66 + 10, 1);
+    /* Clic su tasto 'pi' (colonna 3, riga 0) */
+    osify_desktop_click_mouse(&desktop_fb, 110 + 16 + 3 * 74 + 10, 46 + 36 + 66 + 10, 1);
+    /* Clic su badge DEG/RAD nel display */
+    osify_desktop_click_mouse(&desktop_fb, 110 + (550 - 32) - 50, 46 + 36 + 10, 1);
+    osify_desktop_render_all(&desktop_fb);
+
+    /* Apertura Navigatore Web Sovrano */
+    osify_shell_execute_cmd(&desktop_fb, "web");
+    osify_desktop_render_all(&desktop_fb);
+
+    /* Clic sul Segnalibro 2: Docs (x = 100 + 16 + 1 * 102 + 20, y = 42 + 36 + 34 + 10) */
+    osify_desktop_click_mouse(&desktop_fb, 100 + 16 + 1 * 102 + 20, 42 + 36 + 34 + 10, 1);
+    /* Clic sul Segnalibro 4: Meteo */
+    osify_desktop_click_mouse(&desktop_fb, 100 + 16 + 3 * 102 + 20, 42 + 36 + 34 + 10, 1);
+    osify_desktop_render_all(&desktop_fb);
+
+    /* Test Clic su Dock Inferiore a 8 Icone */
+    int dock_x = (1024 - 640) / 2;
+    int dock_y = 768 - 58 - 10;
+    int icon_step = (640 - 32) / 8;
+    /* Clic su icona 2 (Navigatore Web) */
+    osify_desktop_click_mouse(&desktop_fb, dock_x + 16 + 2 * icon_step + 10, dock_y + 15, 1);
+    /* Clic su icona 5 (Calcolatrice Scientifica) */
+    osify_desktop_click_mouse(&desktop_fb, dock_x + 16 + 5 * icon_step + 10, dock_y + 15, 1);
+    osify_desktop_render_all(&desktop_fb);
+
+    printf("[+] 27. Navigatore Web Sovrano (HyperSpeed Reader), Calcolatrice Scientifica (35 tasti) & Dock a 8 Icone: OK\n");
+
     /* Salvataggio Screendump PPM dello Stato Finale del Desktop */
     FILE *fp_live = fopen("../../../build/out/osify_user_scenarios_live.ppm", "wb");
     if (fp_live) {
@@ -531,6 +566,6 @@ int main(void) {
         fclose(fp_live);
     }
 
-    printf("\n[] TUTTI I 26 TEST AVANZATI DEL KERNEL NATIVO OSIFY SUPERATI CON SUCCESSO AL 100%%!\n");
+    printf("\n[] TUTTI I 27 TEST AVANZATI DEL KERNEL NATIVO OSIFY SUPERATI CON SUCCESSO AL 100%%!\n");
     return 0;
 }

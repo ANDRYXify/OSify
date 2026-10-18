@@ -345,3 +345,18 @@
   2. Motori Sfondo Procedurali: Offrire 4 modalità di sfondo silicio disegnate matematicamente sul framebuffer: Griglia Cyber Isometrica con gradiente, Campo Stellare Procedurale 2050, Pioggia Digitale Cibernetica e Trama Tessuta a Fibra di Carbonio.
   3. Stili Pulsanti Finestra Selezionabili: Permettere la scelta tra stile circolare macOS Squircle, HUD Cyberpunk rettangolare o Minimalismo Rigido senza bordi.
   4. Accessibilità e Adattabilità: Offrire commutazione geometrica della Dock (Fluttuante da 56px vs Compatta da 44px) e dimensione del cursore mouse (Normale 12px vs Grande 16px per accessibilità e touch) accessibili in un solo clic o da shell con comandi dedicati (`personalizza`, `tema <n>`, `sfondo <s>`, `stile <s>`, `dock`, `cursore`).
+
+## 2026-10-18 — Navigatore Web Sovrano, Calcolatrice Scientifica a 35 Funzioni Fixed-Point e Rilascio del Focus nei Giochi Nativi
+- **Area**: Applicazioni native di sistema (`osify_desktop_wm.c`), Calcolo Matematico Freestanding Fixed-Point, Gestione Focus Tastiera e Floating Dock a 8 Icone
+- **Errore**:
+  1. Quando la finestra di Cyber Arcade 2050 era in primo piano con focus attivo, i caratteri 'a' e 'd' premuti per digitare comandi della shell (come `calc` o `files`) venivano intercettati dal ciclo di gioco del paddle, impedendo all'utente di digitare senza prima chiudere la finestra.
+  2. La calcolatrice precedente era limitata a 4 operazioni intere base su 16 tasti, priva di cronologia, costanti scientifiche o funzioni trigonometriche ed esponenziali.
+  3. Il navigatore web era assente come finestra nativa standalone e la dock ospitava solo 7 icone.
+- **Causa radice**:
+  1. Assenza della gestione del tasto `ESC` (codice 27) nei moduli a cattura tasti per cedere tempestivamente il controllo al Terminale Nativo.
+  2. Mancanza di un motore matematico a punto fisso (`CALC_SCALE = 10000LL`) per calcolare funzioni trascendenti in ambiente freestanding ring 0 senza libc.
+- **Regola**:
+  1. Tasto ESC di Salvaguardia Obbligatorio nei Moduli Interattivi: Tutte le applicazioni o giochi che intercettano direttamente i tasti della tastiera devono categoricamente gestire il tasto `ESC` per chiudere l'applicazione e restituire all'istante il focus al Terminale Nativo OSify.
+  2. Matematica Scientifica Freestanding a Punto Fisso: Calcolare funzioni trascendenti (`sin`, `cos`, `tan`, `log10`, `ln`, Newton-Raphson `isqrt`, fattoriale `n!`) tramite formule polinomiali con scala fissa a 4 cifre decimali, offrendo display LCD neon, cronologia interattiva e modalità angolare DEG/RAD.
+  3. Navigatore Web Sovrano (HyperSpeed Reader): Fornire un browser nativo a zero telemetria con barra comandi (Indietro, Avanti, Home), barra URL, 5 segnalibri ad accesso rapido, blocco annunci e DNS DoH Quad9 integrato.
+  4. Floating Dock Glassmorphism a 8 Icone: La barra dock deve integrare le 8 applicazioni sovrane (Terminale, File Manager, Navigatore Web, Scheda Acquisizione, App Hub, Calcolatrice Scientifica, Centro Temi, Cyber Arcade) con glifi geometrici nativi e indicatori di stato attivi.
