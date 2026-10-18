@@ -336,5 +336,12 @@
   3. Videogioco Arcade Nativo: Integrare permanentemente "Cyber Arcade 2050" nel kernel con 4 linee di mattoni neon, deviazione angolare del paddle luminescente, reattività a mouse e tastiera, vite, punteggio e record.
   4. Benchmark Silicio Reale: Misurare empiricamente cicli CPU con helper architetturali (`get_silicon_cycles()`), MIPS scalari a 64 bit, simulazione vettoriale SIMD, throughput DMA della RAM in MB/s e blitter 2D fillrate in Mpixel/s con progress bar neon.
 
-
-
+## 2026-10-18 — Centro Personalizzazione Dinamico, Motore Temi Hot-Reload & Sfondi Procedurali
+- **Area**: Window Manager nativo (`osify_desktop_wm.c`), Personalizzazione Desktop (`osify_desktop.h`), Rendering Procedurale e Palette Silicio Ring 0
+- **Errore**: I sistemi operativi convenzionali forzano una palette grafica rigida o richiedono il riavvio dell'ambiente per cambiare colori, sfondi o stili di finestra, limitando l'adattabilità dell'interfaccia a preferenze di contrasto, accessibilità o illuminazione ambientale.
+- **Causa radice**: Assenza di una struttura unificata di configurazione estetica con ricaricamento istantaneo (zero latenza) direttamente nel renderer del Framebuffer.
+- **Regola**:
+  1. Motore Temi Dinamico Hot-Reload: Tutti i componenti del desktop (sfondi, barre del titolo, pannelli glass, contorni neon, icone, HUD silicio e cursore mouse vettoriale) devono leggere i colori dalla struttura attiva `s_active_theme`, consentendo il cambio a caldo istantaneo tra i 5 preset sovrani (Obsidian Cyber, Matrix Hacker, Tokyo Synthwave, Amber Retro 1985, OLED Stealth Pure).
+  2. Motori Sfondo Procedurali: Offrire 4 modalità di sfondo silicio disegnate matematicamente sul framebuffer: Griglia Cyber Isometrica con gradiente, Campo Stellare Procedurale 2050, Pioggia Digitale Cibernetica e Trama Tessuta a Fibra di Carbonio.
+  3. Stili Pulsanti Finestra Selezionabili: Permettere la scelta tra stile circolare macOS Squircle, HUD Cyberpunk rettangolare o Minimalismo Rigido senza bordi.
+  4. Accessibilità e Adattabilità: Offrire commutazione geometrica della Dock (Fluttuante da 56px vs Compatta da 44px) e dimensione del cursore mouse (Normale 12px vs Grande 16px per accessibilità e touch) accessibili in un solo clic o da shell con comandi dedicati (`personalizza`, `tema <n>`, `sfondo <s>`, `stile <s>`, `dock`, `cursore`).

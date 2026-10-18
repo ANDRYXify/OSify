@@ -20,21 +20,151 @@
 #include "../include/osify_hetero_dispatch.h"
 #include "../include/osify_capture_card.h"
 
-/* Palette Colori Ufficiale Dark Glass OSify */
-#define COLOR_DESKTOP_BG_TOP    0xFF060913  /* Ossidiana Notte Sfumata */
-#define COLOR_DESKTOP_BG_BOT    0xFF0B1424  /* Blu Notte Profondo */
-#define COLOR_GRID_CYBER        0xFF0E1E32  /* Griglia Isometrica Cyber */
-#define COLOR_PANEL_GLASS       0xFF111827  /* Dark Glass Card */
-#define COLOR_TITLEBAR_GLASS    0xFF1F2937  /* Barra Titolo Finestra */
-#define COLOR_BORDER_NEON       0xFF06B6D4  /* Ciano Elettrico */
-#define COLOR_ACCENT_PURPLE     0xFF8B5CF6  /* Viola Cyber */
-#define COLOR_ACCENT_BLUE       0xFF3B82F6  /* Blu Elettrico */
-#define COLOR_ACCENT_AMBER      0xFFF59E0B  /* Ambra Dorato */
-#define COLOR_BTN_CLOSE         0xFFEF4444  /* Rosso macOS */
-#define COLOR_BTN_MIN           0xFFF59E0B  /* Giallo macOS */
-#define COLOR_BTN_MAX           0xFF10B981  /* Verde macOS */
-#define COLOR_TEXT_WHITE        0xFFF8FAFC  /* Bianco Testo */
-#define COLOR_TEXT_MUTED        0xFF94A3B8  /* Grigio Ardesia */
+/* ==============================================================================
+ * Motore di Personalizzazione Sovrano (Temi, Sfondi, Stili Finestre & Cursori)
+ * ==============================================================================
+ */
+typedef int osify_theme_id_t;
+typedef int osify_wallpaper_t;
+typedef int osify_window_style_t;
+
+typedef struct {
+    const char *name;
+    uint32_t bg_top;
+    uint32_t bg_bot;
+    uint32_t grid;
+    uint32_t panel_glass;
+    uint32_t titlebar_glass;
+    uint32_t border_neon;
+    uint32_t accent_purple;
+    uint32_t accent_blue;
+    uint32_t accent_amber;
+    uint32_t btn_max;
+    uint32_t text_white;
+    uint32_t text_muted;
+    uint32_t mouse_color;
+} osify_theme_t;
+
+static const osify_theme_t g_preset_themes[THEME_COUNT] = {
+    {
+        .name = "Obsidian Cyber",
+        .bg_top = 0xFF060913, .bg_bot = 0xFF0B1424, .grid = 0xFF0E1E32,
+        .panel_glass = 0xFF111827, .titlebar_glass = 0xFF1F2937,
+        .border_neon = 0xFF06B6D4, .accent_purple = 0xFF8B5CF6,
+        .accent_blue = 0xFF3B82F6, .accent_amber = 0xFFF59E0B,
+        .btn_max = 0xFF10B981, .text_white = 0xFFF8FAFC, .text_muted = 0xFF94A3B8,
+        .mouse_color = 0xFF06B6D4
+    },
+    {
+        .name = "Matrix Hacker",
+        .bg_top = 0xFF020D06, .bg_bot = 0xFF051C0C, .grid = 0xFF0A3317,
+        .panel_glass = 0xFF041409, .titlebar_glass = 0xFF0A2B15,
+        .border_neon = 0xFF00FF66, .accent_purple = 0xFF10B981,
+        .accent_blue = 0xFF059669, .accent_amber = 0xFFA3E635,
+        .btn_max = 0xFF00FF66, .text_white = 0xFFD1FAE5, .text_muted = 0xFF34D399,
+        .mouse_color = 0xFF00FF66
+    },
+    {
+        .name = "Tokyo Synthwave",
+        .bg_top = 0xFF120B24, .bg_bot = 0xFF1E0E38, .grid = 0xFF2D1B4E,
+        .panel_glass = 0xFF1A1033, .titlebar_glass = 0xFF2A1B4E,
+        .border_neon = 0xFFEC4899, .accent_purple = 0xFFA855F7,
+        .accent_blue = 0xFF6366F1, .accent_amber = 0xFFF43F5E,
+        .btn_max = 0xFF10B981, .text_white = 0xFFFDF2F8, .text_muted = 0xFFC084FC,
+        .mouse_color = 0xFFEC4899
+    },
+    {
+        .name = "Amber Retro 1985",
+        .bg_top = 0xFF140D04, .bg_bot = 0xFF211506, .grid = 0xFF362208,
+        .panel_glass = 0xFF1C1205, .titlebar_glass = 0xFF2E1F0B,
+        .border_neon = 0xFFF59E0B, .accent_purple = 0xFFEA580C,
+        .accent_blue = 0xFFD97706, .accent_amber = 0xFFFBBF24,
+        .btn_max = 0xFF84CC16, .text_white = 0xFFFEF3C7, .text_muted = 0xFFD97706,
+        .mouse_color = 0xFFF59E0B
+    },
+    {
+        .name = "OLED Stealth Pure",
+        .bg_top = 0xFF000000, .bg_bot = 0xFF000000, .grid = 0xFF111111,
+        .panel_glass = 0xFF0A0A0A, .titlebar_glass = 0xFF171717,
+        .border_neon = 0xFFE2E8F0, .accent_purple = 0xFF94A3B8,
+        .accent_blue = 0xFF64748B, .accent_amber = 0xFF475569,
+        .btn_max = 0xFF10B981, .text_white = 0xFFFFFFFF, .text_muted = 0xFF71717A,
+        .mouse_color = 0xFFFFFFFF
+    }
+};
+
+static int s_current_theme_id = THEME_OBSIDIAN;
+static osify_theme_t s_active_theme = {
+    .name = "Obsidian Cyber",
+    .bg_top = 0xFF060913, .bg_bot = 0xFF0B1424, .grid = 0xFF0E1E32,
+    .panel_glass = 0xFF111827, .titlebar_glass = 0xFF1F2937,
+    .border_neon = 0xFF06B6D4, .accent_purple = 0xFF8B5CF6,
+    .accent_blue = 0xFF3B82F6, .accent_amber = 0xFFF59E0B,
+    .btn_max = 0xFF10B981, .text_white = 0xFFF8FAFC, .text_muted = 0xFF94A3B8,
+    .mouse_color = 0xFF06B6D4
+};
+
+static int s_current_wallpaper = WALLPAPER_GRID;
+static int s_window_style = WINDOW_STYLE_MACOS;
+static bool s_dock_compact = false;
+static bool s_mouse_large = false;
+
+/* Macro dinamiche per i colori: aggiornate istantaneamente a caldo */
+#define COLOR_DESKTOP_BG_TOP    (s_active_theme.bg_top)
+#define COLOR_DESKTOP_BG_BOT    (s_active_theme.bg_bot)
+#define COLOR_GRID_CYBER        (s_active_theme.grid)
+#define COLOR_PANEL_GLASS       (s_active_theme.panel_glass)
+#define COLOR_TITLEBAR_GLASS    (s_active_theme.titlebar_glass)
+#define COLOR_BORDER_NEON       (s_active_theme.border_neon)
+#define COLOR_ACCENT_PURPLE     (s_active_theme.accent_purple)
+#define COLOR_ACCENT_BLUE       (s_active_theme.accent_blue)
+#define COLOR_ACCENT_AMBER      (s_active_theme.accent_amber)
+#define COLOR_BTN_CLOSE         0xFFEF4444
+#define COLOR_BTN_MIN           0xFFF59E0B
+#define COLOR_BTN_MAX           (s_active_theme.btn_max)
+#define COLOR_TEXT_WHITE        (s_active_theme.text_white)
+#define COLOR_TEXT_MUTED        (s_active_theme.text_muted)
+
+void osify_desktop_set_theme(int theme_id) {
+    if (theme_id < 0 || theme_id >= THEME_COUNT) return;
+    s_current_theme_id = theme_id;
+    s_active_theme = g_preset_themes[theme_id];
+}
+
+int osify_desktop_get_theme(void) {
+    return s_current_theme_id;
+}
+
+void osify_desktop_set_wallpaper(int wp_id) {
+    if (wp_id < 0 || wp_id >= WALLPAPER_COUNT) return;
+    s_current_wallpaper = wp_id;
+}
+
+int osify_desktop_get_wallpaper(void) {
+    return s_current_wallpaper;
+}
+
+void osify_desktop_set_window_style(int style_id) {
+    if (style_id >= 0 && style_id <= 2) {
+        s_window_style = style_id;
+    }
+}
+
+int osify_desktop_get_window_style(void) {
+    return s_window_style;
+}
+
+void osify_desktop_toggle_dock_style(void) {
+    s_dock_compact = !s_dock_compact;
+}
+
+void osify_desktop_toggle_cursor_size(void) {
+    s_mouse_large = !s_mouse_large;
+}
+
+uint32_t osify_desktop_get_color_neon(void) {
+    return s_active_theme.border_neon;
+}
 
 static osify_window_t g_windows[MAX_WINDOWS];
 static size_t g_window_count = 0;
@@ -42,6 +172,7 @@ static osify_mouse_cursor_t g_mouse;
 static bool g_show_installer_window = false;
 static bool g_show_capture_window = true;
 osify_framebuffer_t *g_current_fb = NULL;
+
 
 osify_framebuffer_t *osify_desktop_get_fb(void) {
     return g_current_fb;
@@ -354,6 +485,11 @@ static void execute_command(const char *cmd) {
         shell_append_line("  arcade    - Avvia videogioco Cyber Arcade 2050");
         shell_append_line("  benchmark - Stress test ALU SIMD & misura GFLOPS e RAM");
         shell_append_line("  privacy   - Attiva/disattiva modalita Streamer (maschera IP)");
+        shell_append_line("  personalizza - Centro Personalizzazione & Temi 2050");
+        shell_append_line("  tema <n>  - Cambia tema (obsidian, matrix, synth, amber, oled)");
+        shell_append_line("  sfondo <s>- Cambia sfondo (grid, stars, matrix, carbon)");
+        shell_append_line("  stile <s> - Stile bottoni finestre (macos, cyber, minimal)");
+        shell_append_line("  dock/cursore - Configurazione dock compatta e cursore grande");
         shell_append_line("  files     - Apri finestra Esplora File (OSifyFS)");
         shell_append_line("  apps      - Apri finestra OSify App Hub 2050");
         shell_append_line("  calc      - Apri Calcolatrice Scientifica Dark Glass");
@@ -601,6 +737,78 @@ static void execute_command(const char *cmd) {
         g_show_installer_window = true;
         const osify_installer_state_t *inst = osify_installer_get_state();
         shell_append_line(inst->status_msg);
+    } else if (osify_strcmp(cmd, "personalizza") == 0 || osify_strcmp(cmd, "preferenze") == 0 ||
+               osify_strcmp(cmd, "temi") == 0 || osify_strcmp(cmd, "settings") == 0) {
+        open_or_focus_window("Centro Personalizzazione & Temi 2050", 100, 40, 620, 350);
+        shell_append_line("Finestra 'Centro Personalizzazione & Temi 2050' aperta.");
+    } else if (osify_strcmp(cmd, "tema") == 0 || osify_strcmp(cmd, "theme") == 0) {
+        shell_append_line("Preset Temi disponibili ('tema <nome>'):");
+        shell_append_line("  1. obsidian   - Dark Glass Notte & Ciano Neon (Default)");
+        shell_append_line("  2. matrix     - Verde Fosforo & Nero Hacker");
+        shell_append_line("  3. synth      - Magenta Elettrico & Notte Tokyo");
+        shell_append_line("  4. amber      - Ambra Fosforo Caldo 1985");
+        shell_append_line("  5. oled       - Bianco Titanio & Contrasto Puro");
+        char c_msg[64];
+        osify_snprintf(c_msg, sizeof(c_msg), "Tema attivo: %s", s_active_theme.name);
+        shell_append_line(c_msg);
+    } else if (osify_strcmp(cmd, "tema obsidian") == 0) {
+        osify_desktop_set_theme(THEME_OBSIDIAN);
+        shell_append_line("Tema impostato: Obsidian Cyber.");
+    } else if (osify_strcmp(cmd, "tema matrix") == 0) {
+        osify_desktop_set_theme(THEME_MATRIX);
+        shell_append_line("Tema impostato: Matrix Hacker.");
+    } else if (osify_strcmp(cmd, "tema synth") == 0 || osify_strcmp(cmd, "tema tokyo") == 0) {
+        osify_desktop_set_theme(THEME_SYNTH);
+        shell_append_line("Tema impostato: Tokyo Synthwave.");
+    } else if (osify_strcmp(cmd, "tema amber") == 0 || osify_strcmp(cmd, "tema retro") == 0) {
+        osify_desktop_set_theme(THEME_AMBER);
+        shell_append_line("Tema impostato: Amber Retro 1985.");
+    } else if (osify_strcmp(cmd, "tema oled") == 0 || osify_strcmp(cmd, "tema stealth") == 0) {
+        osify_desktop_set_theme(THEME_OLED);
+        shell_append_line("Tema impostato: OLED Stealth Pure.");
+    } else if (osify_strcmp(cmd, "sfondo") == 0 || osify_strcmp(cmd, "wallpaper") == 0) {
+        shell_append_line("Motori Sfondo Scrivania ('sfondo <tipo>'):");
+        shell_append_line("  1. grid       - Griglia Cyber Isometrica con gradiente");
+        shell_append_line("  2. stars      - Campo Stellare Procedurale 2050");
+        shell_append_line("  3. matrix     - Pioggia Digitale Cibernetica");
+        shell_append_line("  4. carbon     - Trama Tessuta a Fibra di Carbonio");
+        const char *wp_names[] = {"Griglia Cyber", "Campo Stellare", "Pioggia Matrix", "Fibra Carbonio"};
+        char w_msg[64];
+        osify_snprintf(w_msg, sizeof(w_msg), "Sfondo attivo: %s", wp_names[s_current_wallpaper]);
+        shell_append_line(w_msg);
+    } else if (osify_strcmp(cmd, "sfondo grid") == 0) {
+        osify_desktop_set_wallpaper(WALLPAPER_GRID);
+        shell_append_line("Sfondo impostato: Griglia Cyber.");
+    } else if (osify_strcmp(cmd, "sfondo stars") == 0) {
+        osify_desktop_set_wallpaper(WALLPAPER_STARS);
+        shell_append_line("Sfondo impostato: Campo Stellare 2050.");
+    } else if (osify_strcmp(cmd, "sfondo matrix") == 0) {
+        osify_desktop_set_wallpaper(WALLPAPER_MATRIX);
+        shell_append_line("Sfondo impostato: Pioggia Digitale Matrix.");
+    } else if (osify_strcmp(cmd, "sfondo carbon") == 0) {
+        osify_desktop_set_wallpaper(WALLPAPER_CARBON);
+        shell_append_line("Sfondo impostato: Fibra di Carbonio.");
+    } else if (osify_strcmp(cmd, "stile") == 0) {
+        shell_append_line("Stili Finestra ('stile <tipo>'): macos, cyber, minimal");
+        const char *st_names[] = {"macOS Squircle", "Cyberpunk HUD", "Minimal Rigido"};
+        char s_msg[64];
+        osify_snprintf(s_msg, sizeof(s_msg), "Stile attivo: %s", st_names[s_window_style]);
+        shell_append_line(s_msg);
+    } else if (osify_strcmp(cmd, "stile macos") == 0) {
+        osify_desktop_set_window_style(WINDOW_STYLE_MACOS);
+        shell_append_line("Stile finestre: macOS Squircle.");
+    } else if (osify_strcmp(cmd, "stile cyber") == 0) {
+        osify_desktop_set_window_style(WINDOW_STYLE_CYBERPUNK);
+        shell_append_line("Stile finestre: Cyberpunk HUD.");
+    } else if (osify_strcmp(cmd, "stile minimal") == 0) {
+        osify_desktop_set_window_style(WINDOW_STYLE_MINIMAL);
+        shell_append_line("Stile finestre: Minimal Rigido.");
+    } else if (osify_strcmp(cmd, "dock") == 0 || osify_strcmp(cmd, "dock stile") == 0) {
+        osify_desktop_toggle_dock_style();
+        shell_append_line(s_dock_compact ? "Dock: modalita COMPATTA attivata." : "Dock: modalita FLUTTUANTE attivata.");
+    } else if (osify_strcmp(cmd, "cursore") == 0 || osify_strcmp(cmd, "mouse") == 0) {
+        osify_desktop_toggle_cursor_size();
+        shell_append_line(s_mouse_large ? "Cursore: dimensione GRANDE (Accessibilita)." : "Cursore: dimensione NORMALE.");
     } else if (osify_strcmp(cmd, "sicurezza") == 0) {
         shell_append_line("Sicurezza: SIP Immutabile su /Sistema | Seatbelt Sandbox: ATTIVO");
         shell_append_line("Anti-Cheat: TPM 2.0 SHA-256 PCR Enforced | DSE: ATTIVO");
@@ -666,10 +874,23 @@ void osify_wm_draw_window(osify_framebuffer_t *fb, const osify_window_t *win) {
     /* Bordo Neon Ciano a 1px */
     osify_fb_draw_rect(fb, win->x, win->y, win->w, 1, win->is_focused ? COLOR_BORDER_NEON : COLOR_ACCENT_PURPLE);
 
-    /* 3. Pulsanti Stile macOS (Rosso, Giallo, Verde) */
-    osify_fb_draw_squircle(fb, win->x + 12, win->y + 8, 12, 6, COLOR_BTN_CLOSE);
-    osify_fb_draw_squircle(fb, win->x + 30, win->y + 8, 12, 6, COLOR_BTN_MIN);
-    osify_fb_draw_squircle(fb, win->x + 48, win->y + 8, 12, 6, COLOR_BTN_MAX);
+    /* 3. Pulsanti Barra del Titolo (Stile Personalizzabile) */
+    if (s_window_style == WINDOW_STYLE_MACOS) {
+        osify_fb_draw_squircle(fb, win->x + 12, win->y + 8, 12, 6, COLOR_BTN_CLOSE);
+        osify_fb_draw_squircle(fb, win->x + 30, win->y + 8, 12, 6, COLOR_BTN_MIN);
+        osify_fb_draw_squircle(fb, win->x + 48, win->y + 8, 12, 6, COLOR_BTN_MAX);
+    } else if (s_window_style == WINDOW_STYLE_CYBERPUNK) {
+        osify_fb_draw_rect(fb, win->x + 10, win->y + 7, 14, 14, COLOR_BTN_CLOSE);
+        osify_fb_draw_rect(fb, win->x + 12, win->y + 9, 10, 10, COLOR_PANEL_GLASS);
+        osify_fb_draw_rect(fb, win->x + 28, win->y + 7, 14, 14, COLOR_BTN_MIN);
+        osify_fb_draw_rect(fb, win->x + 30, win->y + 9, 10, 10, COLOR_PANEL_GLASS);
+        osify_fb_draw_rect(fb, win->x + 46, win->y + 7, 14, 14, COLOR_BORDER_NEON);
+        osify_fb_draw_rect(fb, win->x + 48, win->y + 9, 10, 10, COLOR_PANEL_GLASS);
+    } else {
+        osify_fb_draw_rect(fb, win->x + 12, win->y + 13, 10, 2, COLOR_BTN_CLOSE);
+        osify_fb_draw_rect(fb, win->x + 30, win->y + 13, 10, 2, COLOR_BTN_MIN);
+        osify_fb_draw_rect(fb, win->x + 48, win->y + 13, 10, 2, COLOR_BTN_MAX);
+    }
 
     /* 4. Titolo Finestra */
     osify_fb_draw_string(fb, win->x + 70, win->y + 6, win->title, COLOR_TEXT_WHITE);
@@ -691,21 +912,70 @@ static void draw_window_string_clipped(osify_framebuffer_t *fb, int x, int y, co
 void osify_desktop_render_all(osify_framebuffer_t *fb) {
     if (!fb || !fb->buffer) return;
 
-    /* 1. Sfondo Scrivania Gradiente Dark Glass con Cyber Mesh Isometrico */
-    for (uint32_t py = 0; py < fb->height; py++) {
-        uint32_t *row = &fb->buffer[py * fb->width];
-        /* Interpolazione gradiente top-bot */
-        uint32_t r = 6 + (py * (11 - 6)) / fb->height;
-        uint32_t g = 9 + (py * (20 - 9)) / fb->height;
-        uint32_t b = 19 + (py * (36 - 19)) / fb->height;
-        uint32_t bg_col = 0xFF000000 | (r << 16) | (g << 8) | b;
+    /* 1. Sfondo Scrivania Personalizzabile a 4 Motori Procedurali */
+    if (s_current_wallpaper == WALLPAPER_STARS) {
+        /* Campo Stellare Procedurale 2050 */
+        for (uint32_t py = 0; py < fb->height; py++) {
+            uint32_t *row = &fb->buffer[py * fb->width];
+            for (uint32_t px = 0; px < fb->width; px++) {
+                uint32_t hash = ((px * 1664525u) ^ (py * 1013904223u));
+                uint32_t star = (hash >> 16) & 0x3FF;
+                if (star == 42) {
+                    row[px] = 0xFFFFFFFF; /* Stella Bianca Luminosa */
+                } else if (star == 108) {
+                    row[px] = COLOR_BORDER_NEON; /* Stella Neon */
+                } else if (star == 256) {
+                    row[px] = COLOR_ACCENT_AMBER; /* Stella Ambra */
+                } else {
+                    row[px] = COLOR_DESKTOP_BG_TOP;
+                }
+            }
+        }
+    } else if (s_current_wallpaper == WALLPAPER_MATRIX) {
+        /* Pioggia Digitale Cibernetica Matrix */
+        for (uint32_t py = 0; py < fb->height; py++) {
+            uint32_t *row = &fb->buffer[py * fb->width];
+            for (uint32_t px = 0; px < fb->width; px++) {
+                if ((px % 16 == 0) && (((py + (px * 7)) % 52) < 14)) {
+                    row[px] = ((py % 52) == 0) ? 0xFFFFFFFF : COLOR_BORDER_NEON;
+                } else {
+                    row[px] = COLOR_DESKTOP_BG_TOP;
+                }
+            }
+        }
+    } else if (s_current_wallpaper == WALLPAPER_CARBON) {
+        /* Trama Tessuta a Fibra di Carbonio */
+        for (uint32_t py = 0; py < fb->height; py++) {
+            uint32_t *row = &fb->buffer[py * fb->width];
+            for (uint32_t px = 0; px < fb->width; px++) {
+                bool block = ((px / 4) + (py / 4)) % 2 == 0;
+                bool edge = (px % 4 == 0) || (py % 4 == 0);
+                uint32_t c = block ? (edge ? 0xFF141A24 : 0xFF080B10) : (edge ? 0xFF222B3A : 0xFF141A24);
+                row[px] = c;
+            }
+        }
+    } else {
+        /* Default: Cyber Mesh Isometrico con Gradiente */
+        uint32_t top_r = (COLOR_DESKTOP_BG_TOP >> 16) & 0xFF;
+        uint32_t top_g = (COLOR_DESKTOP_BG_TOP >> 8) & 0xFF;
+        uint32_t top_b = COLOR_DESKTOP_BG_TOP & 0xFF;
+        uint32_t bot_r = (COLOR_DESKTOP_BG_BOT >> 16) & 0xFF;
+        uint32_t bot_g = (COLOR_DESKTOP_BG_BOT >> 8) & 0xFF;
+        uint32_t bot_b = COLOR_DESKTOP_BG_BOT & 0xFF;
 
-        for (uint32_t px = 0; px < fb->width; px++) {
-            /* Griglia Cyber a passi di 32px */
-            if ((px % 32 == 0) || (py % 32 == 0)) {
-                row[px] = COLOR_GRID_CYBER;
-            } else {
-                row[px] = bg_col;
+        for (uint32_t py = 0; py < fb->height; py++) {
+            uint32_t *row = &fb->buffer[py * fb->width];
+            uint32_t r = top_r + (py * (bot_r - top_r)) / fb->height;
+            uint32_t g = top_g + (py * (bot_g - top_g)) / fb->height;
+            uint32_t b = top_b + (py * (bot_b - top_b)) / fb->height;
+            uint32_t bg_col = 0xFF000000 | (r << 16) | (g << 8) | b;
+
+            for (uint32_t px = 0; px < fb->width; px++) {
+                if ((px % 32 == 0) || (py % 32 == 0)) {
+                    row[px] = COLOR_GRID_CYBER;
+                } else {
+                    row[px] = bg_col;
+                }
             }
         }
     }
@@ -717,28 +987,71 @@ void osify_desktop_render_all(osify_framebuffer_t *fb) {
     osify_fb_draw_squircle(fb, center_x - 45, center_y - 45, 90, 18, 0xFF0E2A3E);
     osify_fb_draw_squircle(fb, center_x - 20, center_y - 20, 40, 8, COLOR_BORDER_NEON);
 
-    /* 2. Icone Native della Scrivania (Sinistra) */
+    /* 2. Icone Native della Scrivania (Sinistra, 7 Icone) */
     struct {
         const char *label;
         uint32_t color;
         int y;
+        int icon_type; /* 0: PC, 1: FS, 2: App, 3: Cam, 4: Trash, 5: Arcade, 6: Themes */
     } desktop_icons[] = {
-        {"Questo PC",  COLOR_BORDER_NEON,   42},
-        {"OSifyFS",    COLOR_ACCENT_BLUE,   122},
-        {"App .ify",   COLOR_ACCENT_PURPLE, 202},
-        {"Cattura",    COLOR_ACCENT_AMBER,  282},
-        {"Cestino",    COLOR_BTN_CLOSE,     362},
-        {"Arcade",     COLOR_BTN_MAX,       442}
+        {"Questo PC",  COLOR_BORDER_NEON,   42, 0},
+        {"OSifyFS",    COLOR_ACCENT_BLUE,   122, 1},
+        {"App .ify",   COLOR_ACCENT_PURPLE, 202, 2},
+        {"Cattura",    COLOR_ACCENT_AMBER,  282, 3},
+        {"Cestino",    COLOR_BTN_CLOSE,     362, 4},
+        {"Arcade",     COLOR_BTN_MAX,       442, 5},
+        {"Temi",       COLOR_ACCENT_PURPLE, 522, 6}
     };
 
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < 7; i++) {
         int ix = 24;
         int iy = desktop_icons[i].y;
         /* Icona Squircle con riflesso */
         osify_fb_draw_squircle(fb, ix, iy, 48, 12, desktop_icons[i].color);
         osify_fb_draw_squircle(fb, ix + 4, iy + 4, 40, 8, COLOR_PANEL_GLASS);
-        /* Simbolo icona interno */
-        osify_fb_draw_rect(fb, ix + 16, iy + 16, 16, 16, desktop_icons[i].color);
+
+        /* Simboli grafici interni ricchi e distintivi */
+        int itype = desktop_icons[i].icon_type;
+        if (itype == 0) {
+            /* Monitor con base */
+            osify_fb_draw_rect(fb, ix + 14, iy + 14, 20, 14, desktop_icons[i].color);
+            osify_fb_draw_rect(fb, ix + 16, iy + 16, 16, 10, COLOR_PANEL_GLASS);
+            osify_fb_draw_rect(fb, ix + 22, iy + 28, 4, 4, desktop_icons[i].color);
+            osify_fb_draw_rect(fb, ix + 18, iy + 32, 12, 2, desktop_icons[i].color);
+        } else if (itype == 1) {
+            /* Cartella con linguetta */
+            osify_fb_draw_rect(fb, ix + 14, iy + 15, 8, 4, desktop_icons[i].color);
+            osify_fb_draw_rect(fb, ix + 14, iy + 18, 20, 14, desktop_icons[i].color);
+            osify_fb_draw_rect(fb, ix + 16, iy + 20, 16, 10, COLOR_PANEL_GLASS);
+        } else if (itype == 2) {
+            /* Cubo App .ify */
+            osify_fb_draw_rect(fb, ix + 15, iy + 15, 18, 18, desktop_icons[i].color);
+            osify_fb_draw_rect(fb, ix + 18, iy + 18, 12, 12, COLOR_PANEL_GLASS);
+            osify_fb_draw_rect(fb, ix + 22, iy + 22, 4, 4, COLOR_BORDER_NEON);
+        } else if (itype == 3) {
+            /* Obiettivo Camera */
+            osify_fb_draw_rect(fb, ix + 14, iy + 16, 20, 15, desktop_icons[i].color);
+            osify_fb_draw_rect(fb, ix + 18, iy + 13, 6, 3, desktop_icons[i].color);
+            osify_fb_draw_squircle(fb, ix + 19, iy + 19, 10, 4, COLOR_PANEL_GLASS);
+            osify_fb_draw_rect(fb, ix + 22, iy + 22, 4, 4, COLOR_ACCENT_AMBER);
+        } else if (itype == 4) {
+            /* Cestino */
+            osify_fb_draw_rect(fb, ix + 16, iy + 14, 16, 3, desktop_icons[i].color);
+            osify_fb_draw_rect(fb, ix + 17, iy + 18, 14, 15, desktop_icons[i].color);
+            osify_fb_draw_rect(fb, ix + 19, iy + 20, 10, 11, COLOR_PANEL_GLASS);
+        } else if (itype == 5) {
+            /* D-Pad Arcade */
+            osify_fb_draw_rect(fb, ix + 21, iy + 14, 6, 20, desktop_icons[i].color);
+            osify_fb_draw_rect(fb, ix + 14, iy + 21, 20, 6, desktop_icons[i].color);
+            osify_fb_draw_rect(fb, ix + 22, iy + 22, 4, 4, COLOR_TEXT_WHITE);
+        } else {
+            /* Temi: 4 quadratini neon di palette */
+            osify_fb_draw_rect(fb, ix + 15, iy + 15, 8, 8, COLOR_BORDER_NEON);
+            osify_fb_draw_rect(fb, ix + 25, iy + 15, 8, 8, COLOR_ACCENT_PURPLE);
+            osify_fb_draw_rect(fb, ix + 15, iy + 25, 8, 8, COLOR_ACCENT_AMBER);
+            osify_fb_draw_rect(fb, ix + 25, iy + 25, 8, 8, COLOR_BTN_MAX);
+        }
+
         /* Etichetta testuale perfettamente centrata */
         int label_len = (int)osify_strlen(desktop_icons[i].label);
         int label_x = (ix + 24) - (label_len * 9) / 2;
@@ -1248,6 +1561,99 @@ void osify_desktop_render_all(osify_framebuffer_t *fb) {
                 osify_fb_draw_string(fb, arena_x + (arena_w - 400) / 2 + 18, arena_y + arena_h / 2 - 8, "VITTORIA SOVRANA! MATTONCINI DISTRUTTI!", COLOR_TEXT_WHITE);
             }
         }
+
+        /* Finestra 11: Centro Personalizzazione & Temi 2050 */
+        if (osify_strcmp(g_windows[i].title, "Centro Personalizzazione & Temi 2050") == 0) {
+            int wy = g_windows[i].y + 34;
+            int wx = g_windows[i].x;
+            int max_chars = (g_windows[i].w - 32) / 9;
+
+            draw_window_string_clipped(fb, wx + 16, wy, "PRESET TEMI DI SISTEMA (Clicca per applicare a caldo):", COLOR_BORDER_NEON, max_chars);
+            wy += 20;
+
+            const char *preset_labels[] = {"1. OBSIDIAN", "2. MATRIX", "3. SYNTHWAVE", "4. AMBER RETRO", "5. OLED STEALTH"};
+            int btn_xs[] = {16, 132, 248, 364, 480};
+            int btn_ws[] = {110, 110, 110, 110, 120};
+            for (int t = 0; t < 5; t++) {
+                uint32_t bcol = (s_current_theme_id == t) ? COLOR_BORDER_NEON : COLOR_TITLEBAR_GLASS;
+                osify_fb_draw_rounded_rect(fb, wx + btn_xs[t], wy, btn_ws[t], 24, 4, bcol);
+                if (s_current_theme_id == t) {
+                    osify_fb_draw_rect(fb, wx + btn_xs[t] + 2, wy + 2, btn_ws[t] - 4, 20, COLOR_PANEL_GLASS);
+                }
+                osify_fb_draw_string(fb, wx + btn_xs[t] + 8, wy + 4, preset_labels[t], (s_current_theme_id == t) ? COLOR_BORDER_NEON : COLOR_TEXT_WHITE);
+            }
+            wy += 34;
+
+            draw_window_string_clipped(fb, wx + 16, wy, "MOTORE GRAFICO SFONDO SCRIVANIA:", COLOR_ACCENT_AMBER, max_chars);
+            wy += 20;
+            const char *wp_labels[] = {"[GRIGLIA CYBER]", "[CAMPO STELLARE]", "[PIOGGIA MATRIX]", "[FIBRA CARBONIO]"};
+            int wp_xs[] = {16, 158, 300, 442};
+            int wp_ws[] = {136, 136, 136, 146};
+            for (int w = 0; w < 4; w++) {
+                uint32_t bcol = (s_current_wallpaper == w) ? COLOR_ACCENT_AMBER : COLOR_TITLEBAR_GLASS;
+                osify_fb_draw_rounded_rect(fb, wx + wp_xs[w], wy, wp_ws[w], 22, 4, bcol);
+                if (s_current_wallpaper == w) {
+                    osify_fb_draw_rect(fb, wx + wp_xs[w] + 2, wy + 2, wp_ws[w] - 4, 18, COLOR_PANEL_GLASS);
+                }
+                osify_fb_draw_string(fb, wx + wp_xs[w] + 8, wy + 3, wp_labels[w], (s_current_wallpaper == w) ? COLOR_ACCENT_AMBER : COLOR_TEXT_WHITE);
+            }
+            wy += 32;
+
+            draw_window_string_clipped(fb, wx + 16, wy, "STILE PULSANTI FINESTRA:", COLOR_ACCENT_PURPLE, max_chars);
+            wy += 20;
+            const char *st_labels[] = {"[STILE MACOS]", "[CYBERPUNK HUD]", "[MINIMAL RIGIDO]"};
+            int st_xs[] = {16, 158, 304};
+            int st_ws[] = {136, 140, 140};
+            for (int s = 0; s < 3; s++) {
+                uint32_t bcol = (s_window_style == s) ? COLOR_ACCENT_PURPLE : COLOR_TITLEBAR_GLASS;
+                osify_fb_draw_rounded_rect(fb, wx + st_xs[s], wy, st_ws[s], 22, 4, bcol);
+                if (s_window_style == s) {
+                    osify_fb_draw_rect(fb, wx + st_xs[s] + 2, wy + 2, st_ws[s] - 4, 18, COLOR_PANEL_GLASS);
+                }
+                osify_fb_draw_string(fb, wx + st_xs[s] + 8, wy + 3, st_labels[s], (s_window_style == s) ? COLOR_ACCENT_PURPLE : COLOR_TEXT_WHITE);
+            }
+            wy += 32;
+
+            draw_window_string_clipped(fb, wx + 16, wy, "GEOMETRIA DOCK, CURSORE & PRIVACY RETE:", COLOR_BTN_MAX, max_chars);
+            wy += 20;
+            const char *dock_txt = s_dock_compact ? "[DOCK: COMPATTA]" : "[DOCK: FLUTTUANTE]";
+            osify_fb_draw_rounded_rect(fb, wx + 16, wy, 160, 22, 4, COLOR_TITLEBAR_GLASS);
+            osify_fb_draw_rect(fb, wx + 16, wy, 160, 1, COLOR_BTN_MAX);
+            osify_fb_draw_string(fb, wx + 22, wy + 3, dock_txt, COLOR_BTN_MAX);
+
+            const char *curs_txt = s_mouse_large ? "[CURSORE: GRANDE]" : "[CURSORE: NORMALE]";
+            osify_fb_draw_rounded_rect(fb, wx + 182, wy, 160, 22, 4, COLOR_TITLEBAR_GLASS);
+            osify_fb_draw_rect(fb, wx + 182, wy, 160, 1, COLOR_BORDER_NEON);
+            osify_fb_draw_string(fb, wx + 188, wy + 3, curs_txt, COLOR_BORDER_NEON);
+
+            const char *priv_txt = s_privacy_hide_ip ? "[STREAMER PRIVACY: ON]" : "[STREAMER PRIVACY: OFF]";
+            osify_fb_draw_rounded_rect(fb, wx + 348, wy, 210, 22, 4, COLOR_TITLEBAR_GLASS);
+            osify_fb_draw_rect(fb, wx + 348, wy, 210, 1, s_privacy_hide_ip ? COLOR_BTN_MAX : COLOR_BTN_CLOSE);
+            osify_fb_draw_string(fb, wx + 354, wy + 3, priv_txt, s_privacy_hide_ip ? COLOR_BTN_MAX : COLOR_BTN_CLOSE);
+            wy += 30;
+
+            /* Badge Anteprima di Stato */
+            osify_fb_draw_rounded_rect(fb, wx + 16, wy, g_windows[i].w - 32, 48, 6, COLOR_PANEL_GLASS);
+            osify_fb_draw_rect(fb, wx + 16, wy, g_windows[i].w - 32, 1, COLOR_BORDER_NEON);
+            char prev_info[96];
+            const char *wp_names[] = {"Griglia Cyber", "Campo Stellare", "Pioggia Matrix", "Fibra Carbonio"};
+            const char *st_names[] = {"macOS Squircle", "Cyberpunk HUD", "Minimal Rigido"};
+            osify_snprintf(prev_info, sizeof(prev_info), "Attivo: %s | Sfondo: %s | Bottoni: %s",
+                           s_active_theme.name, wp_names[s_current_wallpaper], st_names[s_window_style]);
+            draw_window_string_clipped(fb, wx + 24, wy + 8, prev_info, COLOR_TEXT_WHITE, max_chars - 4);
+
+            /* Quadratini Micro-Palette */
+            int pal_x = wx + 24;
+            int pal_y = wy + 28;
+            uint32_t pal_samples[] = {s_active_theme.border_neon, s_active_theme.accent_purple,
+                                      s_active_theme.accent_amber, s_active_theme.btn_max,
+                                      s_active_theme.panel_glass, s_active_theme.bg_bot};
+            for (int p = 0; p < 6; p++) {
+                osify_fb_draw_rect(fb, pal_x + p * 20, pal_y, 14, 14, pal_samples[p]);
+                osify_fb_draw_rect(fb, pal_x + p * 20, pal_y, 14, 1, COLOR_TEXT_WHITE);
+            }
+            osify_fb_draw_string(fb, pal_x + 130, pal_y + 1, "Palette Ring 0 Live & Hot-Reload Attivo!", COLOR_BORDER_NEON);
+        }
     }
 
     /* 6. Finestra Installatore Guidato su Disco Fisso (se attiva) */
@@ -1255,28 +1661,31 @@ void osify_desktop_render_all(osify_framebuffer_t *fb) {
         osify_installer_render(fb, 100, 100, 620, 168);
     }
 
-    /* 7. Floating Dock Inferiore con Riflesso Glassmorphism */
-    int dock_w = 540;
-    int dock_h = 56;
+    /* 7. Floating Dock Inferiore con Riflesso Glassmorphism (7 Icone) */
+    int dock_w = 620;
+    int dock_h = s_dock_compact ? 44 : 56;
     int dock_x = ((int)fb->width - dock_w) / 2;
-    int dock_y = (int)fb->height - dock_h - 12;
+    int dock_y = s_dock_compact ? ((int)fb->height - dock_h - 4) : ((int)fb->height - dock_h - 12);
 
     osify_fb_draw_squircle(fb, dock_x, dock_y, dock_w, 16, COLOR_PANEL_GLASS);
     osify_fb_draw_rect(fb, dock_x + 10, dock_y, dock_w - 20, 1, COLOR_BORDER_NEON); /* Neon reflex */
 
-    const char *dock_labels[] = {"Term", "Files", "Cattura", "Apps", "Rete", "Installa"};
+    const char *dock_labels[] = {"Term", "Files", "Cattura", "Apps", "Rete", "Temi", "Installa"};
     uint32_t dock_colors[] = {COLOR_BORDER_NEON, COLOR_ACCENT_BLUE, COLOR_ACCENT_AMBER,
-                              COLOR_ACCENT_PURPLE, COLOR_BTN_MAX, 0xFFE11D48};
+                              COLOR_ACCENT_PURPLE, COLOR_BTN_MAX, COLOR_BORDER_NEON, 0xFFE11D48};
 
-    int start_icon_x = dock_x + 24;
-    for (int d = 0; d < 6; d++) {
-        int ix = start_icon_x + d * 82;
-        int iy = dock_y + 8;
-        osify_fb_draw_squircle(fb, ix, iy, 40, 10, dock_colors[d]);
-        osify_fb_draw_squircle(fb, ix + 4, iy + 4, 32, 8, COLOR_PANEL_GLASS);
+    int start_icon_x = dock_x + 18;
+    for (int d = 0; d < 7; d++) {
+        int ix = start_icon_x + d * 84;
+        int iy = dock_y + (s_dock_compact ? 4 : 8);
+        int isize = s_dock_compact ? 32 : 40;
+        osify_fb_draw_squircle(fb, ix, iy, isize, 8, dock_colors[d]);
+        osify_fb_draw_squircle(fb, ix + 3, iy + 3, isize - 6, 6, COLOR_PANEL_GLASS);
         /* Pallino indicatore app attiva */
-        osify_fb_draw_squircle(fb, ix + 17, dock_y + 48, 6, 3, COLOR_BORDER_NEON);
-        osify_fb_draw_string(fb, ix - 4, iy + 12, dock_labels[d], COLOR_TEXT_WHITE);
+        if (!s_dock_compact) {
+            osify_fb_draw_squircle(fb, ix + 17, dock_y + 48, 6, 3, COLOR_BORDER_NEON);
+        }
+        osify_fb_draw_string(fb, ix - 2, iy + (s_dock_compact ? 8 : 12), dock_labels[d], COLOR_TEXT_WHITE);
     }
 
     /* 8. Menu a Tendina Apple OSify (se attivo) */
@@ -1293,7 +1702,7 @@ void osify_desktop_render_all(osify_framebuffer_t *fb) {
 
         const char *menu_items[] = {
             "  Informazioni su OSify",
-            "  Preferenze di Sistema",
+            "  Preferenze & Temi",
             "  App Hub (.ify)",
             "  Terminale Nativo",
             "  Cattura Schermo (PPM)",
@@ -1306,17 +1715,18 @@ void osify_desktop_render_all(osify_framebuffer_t *fb) {
         }
     }
 
-    /* 9. Cursore del Mouse Vettoriale con Ombra */
+    /* 9. Cursore del Mouse Vettoriale con Ombra (Dimensioni e Colore Dinamico) */
     if (g_mouse.is_visible) {
         int mx = g_mouse.x;
         int my = g_mouse.y;
+        int c_size = s_mouse_large ? 18 : 12;
         /* Ombra */
-        osify_fb_draw_rect(fb, mx + 1, my + 1, 10, 10, 0xFF000000);
-        /* Cursore a punta */
-        for (int row = 0; row < 12; row++) {
+        osify_fb_draw_rect(fb, mx + 1, my + 1, c_size, c_size, 0xFF000000);
+        /* Cursore a punta coordinato con il colore del tema */
+        for (int row = 0; row < c_size; row++) {
             for (int col = 0; col <= row; col++) {
                 if (mx + col < (int)fb->width && my + row < (int)fb->height) {
-                    fb->buffer[(my + row) * fb->width + (mx + col)] = COLOR_BORDER_NEON;
+                    fb->buffer[(my + row) * fb->width + (mx + col)] = s_active_theme.mouse_color;
                 }
             }
         }
@@ -1369,7 +1779,7 @@ void osify_desktop_click_mouse(osify_framebuffer_t *fb, int x, int y, uint8_t bu
         int item_idx = (y - 26) / 24;
         g_show_apple_menu = false;
         if (item_idx == 0) open_or_focus_window("Proprieta di Sistema (Questo PC)", 110, 60, 580, 330);
-        else if (item_idx == 1) open_or_focus_window("Proprieta di Sistema (Questo PC)", 110, 60, 580, 330);
+        else if (item_idx == 1) open_or_focus_window("Centro Personalizzazione & Temi 2050", 100, 40, 620, 350);
         else if (item_idx == 2) open_or_focus_window("OSify App Hub (.ify)", 100, 70, 620, 330);
         else if (item_idx == 3) open_or_focus_window("OSify Terminale Nativo", 100, 38, 620, 340);
         else if (item_idx == 4) {
@@ -1393,7 +1803,7 @@ void osify_desktop_click_mouse(osify_framebuffer_t *fb, int x, int y, uint8_t bu
         }
     }
 
-    /* 3. Clic su Icone Scrivania (Sinistra) */
+    /* 3. Clic su Icone Scrivania (Sinistra, 7 Icone) */
     if (x >= 18 && x <= 80) {
         if (y >= 38 && y <= 100) {
             open_or_focus_window("Proprieta di Sistema (Questo PC)", 110, 60, 580, 330);
@@ -1420,23 +1830,28 @@ void osify_desktop_click_mouse(osify_framebuffer_t *fb, int x, int y, uint8_t bu
             open_or_focus_window("Cyber Arcade 2050", 110, 60, 580, 330);
             osify_desktop_render_all(fb);
             return;
+        } else if (y >= 518 && y <= 580) {
+            open_or_focus_window("Centro Personalizzazione & Temi 2050", 100, 40, 620, 350);
+            osify_desktop_render_all(fb);
+            return;
         }
     }
 
-    /* 4. Clic su Dock Inferiore */
-    int dock_w = 540;
-    int dock_h = 56;
+    /* 4. Clic su Dock Inferiore (7 Icone) */
+    int dock_w = 620;
+    int dock_h = s_dock_compact ? 44 : 56;
     int dock_x = ((int)fb->width - dock_w) / 2;
-    int dock_y = (int)fb->height - dock_h - 12;
+    int dock_y = s_dock_compact ? ((int)fb->height - dock_h - 4) : ((int)fb->height - dock_h - 12);
 
     if (y >= dock_y && y <= dock_y + dock_h && x >= dock_x && x <= dock_x + dock_w) {
-        int icon_idx = (x - (dock_x + 24)) / 82;
+        int icon_idx = (x - (dock_x + 18)) / 84;
         if (icon_idx == 0) open_or_focus_window("OSify Terminale Nativo", 100, 38, 620, 340);
         else if (icon_idx == 1) open_or_focus_window("OSifyFS Esplora File", 100, 50, 620, 320);
         else if (icon_idx == 2) open_or_focus_window("Scheda di Acquisizione Video (Virtual Capture Card)", 100, 390, 620, 280);
         else if (icon_idx == 3) open_or_focus_window("OSify App Hub (.ify)", 100, 70, 620, 330);
         else if (icon_idx == 4) execute_command("rete");
-        else if (icon_idx == 5) execute_command("installa");
+        else if (icon_idx == 5) open_or_focus_window("Centro Personalizzazione & Temi 2050", 100, 40, 620, 350);
+        else if (icon_idx == 6) execute_command("installa");
         osify_desktop_render_all(fb);
         return;
     }
@@ -1755,6 +2170,88 @@ void osify_desktop_click_mouse(osify_framebuffer_t *fb, int x, int y, uint8_t bu
         }
     }
 
+    /* 13bis. Clic su Controlli Finestra Centro Personalizzazione & Temi 2050 */
+    for (size_t i = 0; i < g_window_count; i++) {
+        if (g_windows[i].is_visible && g_windows[i].is_focused &&
+            osify_strcmp(g_windows[i].title, "Centro Personalizzazione & Temi 2050") == 0) {
+            int wx = g_windows[i].x;
+            int wy = g_windows[i].y + 34;
+
+            /* Clic su Preset Temi (riga 1) */
+            if (y >= wy + 20 && y <= wy + 44) {
+                int btn_xs[] = {16, 132, 248, 364, 480};
+                int btn_ws[] = {110, 110, 110, 110, 120};
+                for (int t = 0; t < 5; t++) {
+                    if (x >= wx + btn_xs[t] && x <= wx + btn_xs[t] + btn_ws[t]) {
+                        osify_desktop_set_theme(t);
+                        char tmsg[80];
+                        osify_snprintf(tmsg, sizeof(tmsg), "Tema applicato a caldo: %s!", s_active_theme.name);
+                        shell_append_line(tmsg);
+                        osify_desktop_render_all(fb);
+                        return;
+                    }
+                }
+            }
+
+            /* Clic su Sfondi Scrivania (riga 2) */
+            int wy_wp = wy + 54 + 20;
+            if (y >= wy_wp && y <= wy_wp + 24) {
+                int wp_xs[] = {16, 158, 300, 442};
+                int wp_ws[] = {136, 136, 136, 146};
+                for (int w = 0; w < 4; w++) {
+                    if (x >= wx + wp_xs[w] && x <= wx + wp_xs[w] + wp_ws[w]) {
+                        osify_desktop_set_wallpaper(w);
+                        const char *wp_names[] = {"Griglia Cyber", "Campo Stellare", "Pioggia Matrix", "Fibra Carbonio"};
+                        char wmsg[80];
+                        osify_snprintf(wmsg, sizeof(wmsg), "Sfondo Scrivania cambiato in: %s!", wp_names[w]);
+                        shell_append_line(wmsg);
+                        osify_desktop_render_all(fb);
+                        return;
+                    }
+                }
+            }
+
+            /* Clic su Stile Finestre (riga 3) */
+            int wy_st = wy_wp + 32 + 20;
+            if (y >= wy_st && y <= wy_st + 24) {
+                int st_xs[] = {16, 158, 304};
+                int st_ws[] = {136, 140, 140};
+                for (int s = 0; s < 3; s++) {
+                    if (x >= wx + st_xs[s] && x <= wx + st_xs[s] + st_ws[s]) {
+                        osify_desktop_set_window_style(s);
+                        const char *st_names[] = {"macOS Squircle", "Cyberpunk HUD", "Minimal Rigido"};
+                        char smsg[80];
+                        osify_snprintf(smsg, sizeof(smsg), "Stile bottoni finestra impostato su: %s!", st_names[s]);
+                        shell_append_line(smsg);
+                        osify_desktop_render_all(fb);
+                        return;
+                    }
+                }
+            }
+
+            /* Clic su Dock, Cursore & Privacy (riga 4) */
+            int wy_misc = wy_st + 32 + 20;
+            if (y >= wy_misc && y <= wy_misc + 24) {
+                if (x >= wx + 16 && x <= wx + 176) {
+                    osify_desktop_toggle_dock_style();
+                    shell_append_line(s_dock_compact ? "Dock: modalita COMPATTA attiva." : "Dock: modalita FLUTTUANTE attiva.");
+                    osify_desktop_render_all(fb);
+                    return;
+                } else if (x >= wx + 182 && x <= wx + 342) {
+                    osify_desktop_toggle_cursor_size();
+                    shell_append_line(s_mouse_large ? "Cursore: dimensione GRANDE (Accessibilita)." : "Cursore: dimensione NORMALE.");
+                    osify_desktop_render_all(fb);
+                    return;
+                } else if (x >= wx + 348 && x <= wx + 558) {
+                    s_privacy_hide_ip = !s_privacy_hide_ip;
+                    shell_append_line(s_privacy_hide_ip ? "Privacy Streamer: ATTIVATA (IP mascherato)." : "Privacy Streamer: DISATTIVATA (IP in chiaro).");
+                    osify_desktop_render_all(fb);
+                    return;
+                }
+            }
+        }
+    }
+
     /* 14. Clic su Barra del Titolo delle Finestre per Z-Order, Chiudi (Rosso), Minimizza (Giallo), Massimizza (Verde) */
     for (int i = (int)g_window_count - 1; i >= 0; i--) {
         if (g_windows[i].is_visible) {
@@ -1837,15 +2334,16 @@ void osify_desktop_handle_key(osify_framebuffer_t *fb, char key) {
         if (g_cmd_idx > 0) {
             g_cmd_input[--g_cmd_idx] = '\0';
         }
-    } else if (g_cmd_idx == 0 && (key >= '1' && key <= '7')) {
+    } else if (g_cmd_idx == 0 && (key >= '1' && key <= '8')) {
         /* Scorciatoia diretta dock quando la shell e vuota */
         if (key == '1') open_or_focus_window("OSify Terminale Nativo", 100, 38, 620, 340);
         else if (key == '2') open_or_focus_window("OSifyFS Esplora File", 100, 50, 620, 320);
         else if (key == '3') open_or_focus_window("Scheda di Acquisizione Video (Virtual Capture Card)", 100, 390, 620, 280);
         else if (key == '4') open_or_focus_window("OSify App Hub (.ify)", 100, 70, 620, 330);
         else if (key == '5') execute_command("rete");
-        else if (key == '6') execute_command("installa");
-        else if (key == '7') {
+        else if (key == '6') open_or_focus_window("Centro Personalizzazione & Temi 2050", 100, 40, 620, 350);
+        else if (key == '7') execute_command("installa");
+        else if (key == '8') {
             arcade_init_game();
             open_or_focus_window("Cyber Arcade 2050", 110, 60, 580, 330);
         }

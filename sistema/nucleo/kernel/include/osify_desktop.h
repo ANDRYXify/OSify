@@ -50,6 +50,41 @@ void osify_desktop_cycle_focus(void);
 osify_framebuffer_t *osify_desktop_get_fb(void);
 void osify_desktop_set_fb(osify_framebuffer_t *fb);
 
+/* Motore di Personalizzazione Desktop & Temi */
+enum {
+    THEME_OBSIDIAN = 0,
+    THEME_MATRIX   = 1,
+    THEME_SYNTH    = 2,
+    THEME_AMBER    = 3,
+    THEME_OLED     = 4,
+    THEME_COUNT    = 5
+};
+
+enum {
+    WALLPAPER_GRID   = 0,
+    WALLPAPER_STARS  = 1,
+    WALLPAPER_MATRIX = 2,
+    WALLPAPER_CARBON = 3,
+    WALLPAPER_COUNT  = 4
+};
+
+enum {
+    WINDOW_STYLE_MACOS     = 0,
+    WINDOW_STYLE_CYBERPUNK = 1,
+    WINDOW_STYLE_MINIMAL   = 2,
+    WINDOW_STYLE_COUNT     = 3
+};
+
+void osify_desktop_set_theme(int theme_id);
+int  osify_desktop_get_theme(void);
+void osify_desktop_set_wallpaper(int wp_id);
+int  osify_desktop_get_wallpaper(void);
+void osify_desktop_set_window_style(int style_id);
+int  osify_desktop_get_window_style(void);
+void osify_desktop_toggle_dock_style(void);
+void osify_desktop_toggle_cursor_size(void);
+uint32_t osify_desktop_get_color_neon(void);
+
 /* Gestione Finestre */
 osify_window_t *osify_wm_create_window(int x, int y, int w, int h, const char *title);
 void osify_wm_draw_window(osify_framebuffer_t *fb, const osify_window_t *win);
@@ -60,3 +95,4 @@ void osify_shell_input_char(osify_framebuffer_t *fb, char c);
 void osify_shell_execute_cmd(osify_framebuffer_t *fb, const char *cmd);
 
 #endif /* OSIFY_DESKTOP_H */
+

@@ -462,6 +462,57 @@ int main(void) {
 
     printf("[+] 25. Cyber Arcade 2050, Benchmark Silicio Reale & Privacy Streamer: OK\n");
 
+    /* 26. Test Completo Centro Personalizzazione, Temi Dinamici, Sfondi & Stili Finestra */
+    /* Passo 20: Applicazione a caldo dei 5 temi e verifica palette silicio */
+    osify_desktop_set_theme(THEME_MATRIX);
+    assert(osify_desktop_get_color_neon() == 0xFF00FF66);
+    osify_desktop_set_theme(THEME_SYNTH);
+    assert(osify_desktop_get_color_neon() == 0xFFEC4899);
+    osify_desktop_set_theme(THEME_AMBER);
+    assert(osify_desktop_get_color_neon() == 0xFFF59E0B);
+    osify_desktop_set_theme(THEME_OLED);
+    assert(osify_desktop_get_color_neon() == 0xFFE2E8F0);
+    osify_desktop_set_theme(THEME_OBSIDIAN);
+    assert(osify_desktop_get_color_neon() == 0xFF06B6D4);
+
+    /* Passo 21: Test dei 4 motori di rendering sfondo procedurale */
+    osify_desktop_set_wallpaper(WALLPAPER_STARS);
+    osify_desktop_render_all(&desktop_fb);
+    osify_desktop_set_wallpaper(WALLPAPER_MATRIX);
+    osify_desktop_render_all(&desktop_fb);
+    osify_desktop_set_wallpaper(WALLPAPER_CARBON);
+    osify_desktop_render_all(&desktop_fb);
+    osify_desktop_set_wallpaper(WALLPAPER_GRID);
+    osify_desktop_render_all(&desktop_fb);
+
+    /* Passo 22: Stili bottoni finestra, geometria dock e dimensione cursore */
+    osify_desktop_set_window_style(WINDOW_STYLE_CYBERPUNK);
+    osify_desktop_render_all(&desktop_fb);
+    osify_desktop_set_window_style(WINDOW_STYLE_MINIMAL);
+    osify_desktop_render_all(&desktop_fb);
+    osify_desktop_set_window_style(WINDOW_STYLE_MACOS);
+    osify_desktop_toggle_dock_style(); /* Dock compatta */
+    osify_desktop_toggle_cursor_size(); /* Cursore grande */
+    osify_desktop_render_all(&desktop_fb);
+
+    /* Passo 23: Apertura Centro Personalizzazione tramite 7a icona Desktop */
+    osify_desktop_click_mouse(&desktop_fb, 40, 540, 1);
+    /* Clic su Preset Tokyo Synthwave (pulsante 3) */
+    osify_desktop_click_mouse(&desktop_fb, 100 + 260, 40 + 60, 1);
+    /* Clic su Sfondo Campo Stellare (pulsante 2) */
+    osify_desktop_click_mouse(&desktop_fb, 100 + 170, 40 + 115, 1);
+    /* Test comandi shell di personalizzazione */
+    osify_shell_execute_cmd(&desktop_fb, "personalizza");
+    osify_shell_execute_cmd(&desktop_fb, "tema matrix");
+    osify_shell_execute_cmd(&desktop_fb, "sfondo carbon");
+    osify_shell_execute_cmd(&desktop_fb, "stile cyber");
+    osify_shell_execute_cmd(&desktop_fb, "tema obsidian"); /* Ripristino default per scatti ufficiali */
+    osify_shell_execute_cmd(&desktop_fb, "sfondo grid");
+    osify_shell_execute_cmd(&desktop_fb, "stile macos");
+    osify_desktop_render_all(&desktop_fb);
+
+    printf("[+] 26. Centro Personalizzazione, Temi Dinamici, Sfondi & Stili Finestra: OK\n");
+
     /* Salvataggio Screendump PPM dello Stato Finale del Desktop */
     FILE *fp_live = fopen("../../../build/out/osify_user_scenarios_live.ppm", "wb");
     if (fp_live) {
@@ -480,6 +531,6 @@ int main(void) {
         fclose(fp_live);
     }
 
-    printf("\n[] TUTTI I 25 TEST AVANZATI DEL KERNEL NATIVO OSIFY SUPERATI CON SUCCESSO AL 100%%!\n");
+    printf("\n[] TUTTI I 26 TEST AVANZATI DEL KERNEL NATIVO OSIFY SUPERATI CON SUCCESSO AL 100%%!\n");
     return 0;
 }
