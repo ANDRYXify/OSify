@@ -153,3 +153,24 @@ Tutte le 6 fasi (dalla Fase 0 alla Fase 5) sono state completate, collaudate e v
 | **`OSify-Windows-Installer.zip`** | 1.1 MB | `947ff78d64f02d1df1d068cf9de23c7d3af189e055cc97871ef0d289b948fd20` |
 | **`OSify-NoUSB-Windows-Installer.zip`**| 932 KB | `6a408ee52dff5d11f0d749e3d8648b0bcda9521b3dd41ddb85c763710ddba3f1` |
 | **`SHA256SUMS.txt`** | 631 B | Checksum di verifica per tutti gli asset sopra elencati |
+
+---
+
+## 7. Audit & Bonifica Errori Critici Codebase (18 Ottobre 2026)
+
+In risposta all'ispezione approfondita del codice sorgente su tutti i sottosistemi, sono state diagnosticate e bonificate 5 criticità strutturali:
+
+1. **Popolamento Completo Userspace RootFS Live (64-bit e ARM64)**:
+   - *Problema*: i symlink in `/usr/bin/` (`osify-hub`, `osify-wifi`, `osify-ctl`, ecc.) puntavano alla cartella `/opt/osify/...` inesistente nel rootfs Alpine diskless; inoltre `/usr/bin/osify-exec`, le voci `.desktop` e `mimeapps.list` non venivano iniettati.
+   - *Soluzione*: implementata la funzione unificata `populate_osify_userspace(apkovl_dir)` in `build/remaster-live-iso.py` che copia direttamente i binari eseguibili con permessi `0o755` in `usr/bin/` e `usr/local/bin/`, inietta tutti i `.desktop` in `usr/share/applications/`, sincronizza `mimeapps.list` e crea la struttura di retrocompatibilità in `/opt/osify/`.
+2. **Eliminazione Duplicazione Argomenti nei Runner UEM**:
+   - *Problema*: `osify-pe-runner.sh`, `osify-wasm-runner.sh`, `osify-cross-runner.sh`, `osify-dos-runner.sh` e `osify-java-runner.sh` invocavano `exec <runtime> "$FILE" "$@"` senza `shift`, duplicando il nome del file target nei parametri (`wine app.exe app.exe /arg`).
+   - *Soluzione*: inserita l'istruzione `shift` obbligatoria dopo la validazione del primo argomento in tutti i runner.
+3. **Resilienza Dispatcher Poliglota & Sniffing Multi-Tool**:
+   - *Problema*: in assenza del comando `od`, il magic sniffing falliva silente tentando l'esecuzione diretta del binario (`Exec format error`); inoltre l'assenza del suffisso `.sh` nel runner bloccava l'esecuzione.
+   - *Soluzione*: introdotto sniffing a tripla sonda (`od`, `hexdump`, `python3`), funzione di risoluzione universale `run_uem_module` (con e senza `.sh` su tutti i percorsi di sistema), e mappatura di sicurezza basata sulle estensioni (`.exe`, `.apk`, `.wasm`, `.jar`, `.app`, `.com`, `.ify`).
+4. **Formattazione Freestanding Kernel (`osify_snprintf`)**:
+   - *Problema*: `%d` castava a unsigned stampando numeri enormi per interi negativi senza il segno `-`; `%p` (puntatori) e `%c` (caratteri) erano omessi sfasando l'allineamento dei successivi `va_arg`.
+   - *Soluzione*: riscritta `osify_snprintf` con gestione sicura dei negativi (anti-overflow su `INT64_MIN`), implementazione completa di `%p` (`0x...` o `(nil)`), `%c`, `%x`/`%X`, modificatori long `%ld`/`%lu`/`%lx`, e copertura tramite test di regressione in `sistema/nucleo/kernel/tests/test_kernel_skin.c`.
+5. **Autonomia Lessicale**: rimossi riferimenti residui a package manager terzi (`pacman`) in `osify-dos-runner.sh` e `osify-java-runner.sh`.
+

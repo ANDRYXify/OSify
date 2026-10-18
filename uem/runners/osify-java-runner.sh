@@ -14,10 +14,11 @@ if [[ -z "$JAVA_FILE" || ! -f "$JAVA_FILE" ]]; then
     echo "[ERRORE] File Java/JAR non valido: $JAVA_FILE" >&2
     exit 1
 fi
+shift
 
 if ! command -v java >/dev/null 2>&1; then
     echo "[ERRORE] Java Runtime Environment (JRE) non installato nel sistema." >&2
-    echo "         Installa OpenJDK con: pacman -S jre-openjdk-headless" >&2
+    echo "         Installa il runtime Java tramite il Centro OSify." >&2
     exit 1
 fi
 
@@ -26,12 +27,12 @@ JAVA_BASENAME="$(basename "$JAVA_FILE")"
 
 # Controllo se e' un archivio JAR o un file .class singolo
 if [[ "$JAVA_FILE" =~ \.jar$ ]] || file -b "$JAVA_FILE" 2>/dev/null | grep -qi "zip\|jar"; then
-    exec java -jar "$JAVA_FILE" "${@:2}"
+    exec java -jar "$JAVA_FILE" "$@"
 elif [[ "$JAVA_FILE" =~ \.class$ ]]; then
     CLASS_NAME="${JAVA_BASENAME%.class}"
     cd "$JAVA_DIR"
-    exec java "$CLASS_NAME" "${@:2}"
+    exec java "$CLASS_NAME" "$@"
 else
     # Fallback su tentativo di esecuzione diretta JAR
-    exec java -jar "$JAVA_FILE" "${@:2}"
+    exec java -jar "$JAVA_FILE" "$@"
 fi

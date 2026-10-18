@@ -1,5 +1,21 @@
 # LEZIONI APPRESE — REGISTRO ERRORI E REGOLE ARCHITETTURALI OSIFY
 
+## 2026-10-18 — UEM Dispatcher Poliglota, Formattatore Freestanding Kernel & Popolamento Userspace Live
+- **Area**: Universal Execution Module (UEM), Freestanding Runtime C (`osify_snprintf`) e Packaging RootFS Live 64-bit / ARM64
+- **Errore**:
+  1. I collegamenti in `/usr/bin/` (`osify-hub`, `osify-wifi`, `osify-ctl`, ecc.) nella ISO 64-bit e ARM64 puntavano a `/opt/osify/...` inesistente nel rootfs Alpine diskless, rendendo inerte il click sulle icone della Dock e mancava `/usr/bin/osify-exec`.
+  2. Nei runner UEM (`osify-pe-runner.sh`, `osify-wasm-runner.sh`, `osify-cross-runner.sh`, `osify-dos-runner.sh`, `osify-java-runner.sh`), l'invocazione di `exec runtime "$FILE" "$@"` senza `shift` preventivo passava il nome del binario due volte consecutive, corrompendo gli argomenti a riga di comando.
+  3. Nel dispatcher UEM, l'assenza del tool `od` provocava la mancata rilevazione del magic number lasciando cadere l'esecuzione di `.exe` su un tentativo diretto di kernel exec con `Exec format error`, e l'invocazione rigida di `osify-pe-runner.sh` falliva in assenza del suffisso `.sh`.
+  4. In `osify_kstring.c`, `%d` trattava i valori come unsigned stampando numeri positivi enormi per interi negativi senza il segno `-`, mentre `%p` (puntatori) e `%c` (caratteri) non erano implementati provocando lo scarto dei token senza consumare `va_arg` e sfasando gli argomenti variadici successivi.
+  5. Nei messaggi di errore di `osify-dos-runner.sh` e `osify-java-runner.sh` comparivano residui testuali di package manager terzi (`pacman -S`).
+- **Causa radice**: Assunzione scorretta sulla presenza implicita di cartelle `/opt/osify` e comandi esterni (`od`) nei rootfs diskless minimali; omissione di `shift` post-assegnazione del primo argomento negli script shell; parser freestanding incompleto per formati C standard.
+- **Regola**:
+  1. Popolamento Completo Userspace: La funzione `populate_osify_userspace` deve copiare direttamente tutti i binari di sistema, script UEM e utility in `usr/bin/` e `usr/local/bin/` (con bit `0o755`), copiare tutti i `.desktop` e le associazioni `mimeapps.list` in `etc/xdg` e `usr/share/applications`, e replicare la gerarchia in `/opt/osify` per retrocompatibilità totale.
+  2. Argomenti Puliti nei Runner: Ogni runner shell che memorizza `$1` in una variabile (`BIN_FILE`, `EXE_FILE`, ecc.) deve eseguire immediatamente `shift` prima di passare `"$@"` al runtime sottostante.
+  3. Sniffing Multi-Tool e Fallback Estensione: Il dispatcher universale deve tentare la lettura dei primi byte con `od`, `hexdump` o `python3`, disporre di fallback infallibile basato sull'estensione del file (`.exe`, `.apk`, `.wasm`, `.jar`, `.app`, ecc.), e risolvere i moduli runner tramite `run_uem_module` scansionando indifferentemente varianti con e senza suffisso `.sh` nei percorsi di sistema.
+  4. Formattazione Freestanding Robusta: `osify_snprintf` deve gestire correttamente il segno negativo per `%d`/`%i` (con salvaguardia anti-overflow su `INT64_MIN`), i puntatori `%p` (con prefisso `0x` o `(nil)`), i caratteri `%c`, il padding numerico con zeri (`%0`), e i modificatori di lunghezza long (`%ld`, `%lu`, `%lx`).
+  5. Autonomia Testuale Assoluta: Nessun comando o riferimento a distribuzioni Linux terze (`pacman`, `apt`, `dnf`) deve comparire negli output dei runner o nel codice di OSify.
+
 ## 2026-10-17 — Bootloader Ibrido Universale: El Torito EFI, Partizione GPT isohybrid-gpt-basdat e Auto-Detect ifcpu64
 - **Area**: Bootloader ISO Universale Ibrida (UEFI x86_64, BIOS Legacy x86_64, Vintage 32-bit i686)
 - **Errore**: L'immagine ISO Universale `OSify-A.0-Universal.iso` non veniva avviata su macchine o VM UEFI cadendo nella `UEFI Interactive Shell v2.2` (EDK II), mentre su hardware BIOS legacy con GPU moderne si arrestava su uno schermo nero.

@@ -1581,6 +1581,18 @@ LABEL memtest
     shutil.copy2(os.path.join(REPO_ROOT, "uem/runners/osify-wasm-runner.sh"), os.path.join(bin_dir, "osify-wasm-runner"))
     shutil.copy2(os.path.join(REPO_ROOT, "uem/runners/osify-java-runner.sh"), os.path.join(bin_dir, "osify-java-runner"))
     shutil.copy2(os.path.join(REPO_ROOT, "uem/runners/osify-cross-runner.sh"), os.path.join(bin_dir, "osify-cross-runner"))
+    for r_sh in [
+        "osify-pe-runner.sh", "osify-apk-runner.sh", "osify-macho-runner.sh",
+        "osify-ipa-runner.sh", "osify-dos-runner.sh", "osify-wasm-runner.sh",
+        "osify-java-runner.sh", "osify-cross-runner.sh", "osify-universal-dispatcher.sh",
+        "osify-inspect.sh"
+    ]:
+        src_sh = os.path.join(REPO_ROOT, "uem/runners", r_sh)
+        if os.path.exists(src_sh):
+            shutil.copy2(src_sh, os.path.join(bin_dir, r_sh))
+            os.chmod(os.path.join(bin_dir, r_sh), 0o755)
+            shutil.copy2(src_sh, os.path.join(r4_work, "usr/local/bin", r_sh))
+            os.chmod(os.path.join(r4_work, "usr/local/bin", r_sh), 0o755)
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-hub.sh"), os.path.join(bin_dir, "osify-hub"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-hub.py"), os.path.join(bin_dir, "osify-hub.py"))
     shutil.copy2(os.path.join(REPO_ROOT, "tools/osify-gui/osify-hub.py"), os.path.join(r4_work, "usr/local/bin/osify-hub.py"))
@@ -3006,6 +3018,98 @@ fi
     shutil.copy2(DEST_VINTAGE_ISO, DEST_SANDBOX_VINTAGE)
     print(f"[[OK]] OSify Vintage 32-bit Ibrida creata: {DEST_VINTAGE_ISO} ({os.path.getsize(DEST_VINTAGE_ISO)/(1024*1024):.1f} MB)")
 
+def populate_osify_userspace(apkovl_dir):
+    """Copia tutti i binari, runner UEM, desktop entries e associazioni MIME nell'apkovl."""
+    usr_bin = os.path.join(apkovl_dir, "usr/bin")
+    usr_local_bin = os.path.join(apkovl_dir, "usr/local/bin")
+    os.makedirs(usr_bin, exist_ok=True)
+    os.makedirs(usr_local_bin, exist_ok=True)
+
+    # 1. Desktop Entry e Associazioni MIME
+    apps_dst = os.path.join(apkovl_dir, "usr/share/applications")
+    os.makedirs(apps_dst, exist_ok=True)
+    apps_src = os.path.join(REPO_ROOT, "desktop/applications")
+    if os.path.exists(apps_src):
+        for f in os.listdir(apps_src):
+            if f.endswith(".desktop"):
+                shutil.copy2(os.path.join(apps_src, f), os.path.join(apps_dst, f))
+
+    mime_src = os.path.join(REPO_ROOT, "desktop/mime/mimeapps.list")
+    if os.path.exists(mime_src):
+        for m_dest in [
+            os.path.join(apkovl_dir, "usr/share/applications/mimeapps.list"),
+            os.path.join(apkovl_dir, "etc/xdg/mimeapps.list"),
+            os.path.join(apkovl_dir, "home/osify/.config/mimeapps.list")
+        ]:
+            os.makedirs(os.path.dirname(m_dest), exist_ok=True)
+            shutil.copy2(mime_src, m_dest)
+
+    # 2. Toolchain e Runner UEM
+    bin_mappings = [
+        ("uem/runners/osify-universal-dispatcher.sh", ["osify-exec", "osify-universal-dispatcher.sh"]),
+        ("uem/runners/osify-pe-runner.sh", ["osify-pe-runner", "osify-pe-runner.sh"]),
+        ("uem/runners/osify-dos-runner.sh", ["osify-dos-runner", "osify-dos-runner.sh"]),
+        ("uem/runners/osify-apk-runner.sh", ["osify-apk-runner", "osify-apk-runner.sh"]),
+        ("uem/runners/osify-ipa-runner.sh", ["osify-ipa-runner", "osify-ipa-runner.sh"]),
+        ("uem/runners/osify-wasm-runner.sh", ["osify-wasm-runner", "osify-wasm-runner.sh"]),
+        ("uem/runners/osify-java-runner.sh", ["osify-java-runner", "osify-java-runner.sh"]),
+        ("uem/runners/osify-macho-runner.sh", ["osify-macho-runner", "osify-macho-runner.sh"]),
+        ("uem/runners/osify-cross-runner.sh", ["osify-cross-runner", "osify-cross-runner.sh"]),
+        ("uem/runners/osify-inspect.sh", ["osify-inspect", "osify-inspect.sh"]),
+        ("tools/osify-ctl", ["osify-ctl", "osify"]),
+        ("tools/osify-gui/osify-hub.sh", ["osify-hub"]),
+        ("tools/osify-gui/osify-hub.py", ["osify-hub.py"]),
+        ("tools/osify-gui/osify-games.sh", ["osify-games"]),
+        ("network/osify-wifi-gui.sh", ["osify-wifi"]),
+        ("network/osify-wifi-gui.py", ["osify-wifi-gui.py"]),
+        ("network/osify-wifi-manager.sh", ["osify-wifi-manager"]),
+        ("system/installer/osify-disk-installer.sh", ["osify-disk-installer", "osify-install"]),
+        ("tools/osify-gui/osify-install-gui.sh", ["osify-install-gui"]),
+        ("security/privacy/osify-privacy-vault.sh", ["osify-privacy-vault"]),
+        ("security/adaptive/osify-adaptive-security.sh", ["osify-adaptive-security"]),
+        ("tools/osify-gui/osify-welcome.sh", ["osify-welcome"]),
+        ("tools/osify-gui/osify-welcome-wizard.py", ["osify-welcome-wizard.py"]),
+        ("tools/osify-gui/osify-profile-setup.sh", ["osify-profile-setup"]),
+        ("tools/osify-gui/osify-user-manager.sh", ["osify-user-manager", "osify-users"]),
+        ("system/autotune/osify-autotune.sh", ["osify-autotune"]),
+        ("system/autotune/osify-hw-probe.sh", ["osify-hw-probe"]),
+        ("system/storage/osify-memory-cleaner.sh", ["osify-cleanmem"]),
+        ("system/storage/osify-storage-governor.sh", ["osify-storage-governor", "osify-eject"]),
+        ("system/input/osify-input-manager.sh", ["osify-input"]),
+        ("tools/osify-gui/osify-hud.sh", ["osify-hud"]),
+        ("tools/osify-gui/osify-taskmanager.sh", ["osify-taskmanager"]),
+        ("tools/osify-gui/osify-settings.sh", ["osify-settings"]),
+        ("tools/osify-gui/osify-terminal.sh", ["osify-terminal"]),
+        ("tools/osify-gui/osify-browser.sh", ["osify-browser"]),
+        ("tools/osify-gui/osify-developer.sh", ["osify-developer"]),
+        ("audio/osify-sound-manager.sh", ["osify-sound-manager", "osify-audio"]),
+        ("tools/osify-gui/osify-video-capture.sh", ["osify-video-capture", "osify-capture"]),
+        ("tools/osify-gui/osify-phone-companion.sh", ["osify-phone-companion", "osify-phone"]),
+        ("tools/osify-gui/osify-display-switch.sh", ["osify-display-switch", "osify-display"]),
+        ("tools/osify-gui/osify-smart-customizer.sh", ["osify-smart-customizer", "osify-appearance", "osify-customizer"]),
+        ("tools/osify-gui/osify-media-processor.py", ["osify-media-processor"]),
+        ("tools/osify-gui/osify-cyber-dock.sh", ["osify-cyber-dock"]),
+        ("tools/osify-gui/osify-app-drawer.py", ["osify-app-drawer.py"]),
+    ]
+
+    for rel_src, dst_names in bin_mappings:
+        full_src = os.path.join(REPO_ROOT, rel_src)
+        if os.path.exists(full_src):
+            for dname in dst_names:
+                for bdir in [usr_bin, usr_local_bin]:
+                    target = os.path.join(bdir, dname)
+                    shutil.copy2(full_src, target)
+                    os.chmod(target, 0o755)
+
+    # 3. Creazione /opt/osify compatibilità
+    for rel_src, dst_names in bin_mappings:
+        full_src = os.path.join(REPO_ROOT, rel_src)
+        if os.path.exists(full_src):
+            opt_dest = os.path.join(apkovl_dir, "opt/osify", rel_src)
+            os.makedirs(os.path.dirname(opt_dest), exist_ok=True)
+            shutil.copy2(full_src, opt_dest)
+            os.chmod(opt_dest, 0o755)
+
 def build_modern_x86_64():
     print("=========================================================")
     print(" [2/2] Costruzione OSify Modern 64-bit (x86-64-v3 Gaming)")
@@ -3361,25 +3465,8 @@ osify ALL=(ALL) NOPASSWD: ALL
     with open(os.path.join(apkovl_dir, "etc/hostname"), "w") as f:
         f.write("osify-station\n")
 
-    # Link rapidi
-    usr_bin = os.path.join(apkovl_dir, "usr/bin")
-    os.makedirs(usr_bin, exist_ok=True)
-    for src_l, dst_l in [
-        ("/opt/osify/network/osify-wifi-gui.sh", "osify-wifi"),
-        ("/opt/osify/system/installer/osify-disk-installer.sh", "osify-install"),
-        ("/opt/osify/tools/osify-gui/osify-hub.sh", "osify-hub"),
-        ("/opt/osify/tools/osify-gui/osify-games.sh", "osify-games"),
-        ("/opt/osify/tools/osify-ctl", "osify-ctl"),
-        ("/opt/osify/tools/osify-ctl", "osify"),
-        ("/opt/osify/security/privacy/osify-privacy-vault.sh", "osify-privacy-vault"),
-        ("/opt/osify/security/adaptive/osify-adaptive-security.sh", "osify-adaptive-security"),
-    ]:
-        lp = os.path.join(usr_bin, dst_l)
-        if not os.path.exists(lp):
-            try:
-                os.symlink(src_l, lp)
-            except Exception:
-                pass
+    # Popolamento completo binari OSify, runner UEM, desktop entries e MIME
+    populate_osify_userspace(apkovl_dir)
 
     # Permessi universali utente osify per X11
     run(f"chmod -R 777 '{os.path.join(apkovl_dir, 'home/osify')}' 2>/dev/null || true")
@@ -3904,24 +3991,8 @@ osify ALL=(ALL) NOPASSWD: ALL
     with open(os.path.join(apkovl_dir, "etc/hostname"), "w") as f:
         f.write("osify-station\n")
 
-    usr_bin = os.path.join(apkovl_dir, "usr/bin")
-    os.makedirs(usr_bin, exist_ok=True)
-    for src_l, dst_l in [
-        ("/opt/osify/network/osify-wifi-gui.sh", "osify-wifi"),
-        ("/opt/osify/system/installer/osify-disk-installer.sh", "osify-install"),
-        ("/opt/osify/tools/osify-gui/osify-hub.sh", "osify-hub"),
-        ("/opt/osify/tools/osify-gui/osify-games.sh", "osify-games"),
-        ("/opt/osify/tools/osify-ctl", "osify-ctl"),
-        ("/opt/osify/tools/osify-ctl", "osify"),
-        ("/opt/osify/security/privacy/osify-privacy-vault.sh", "osify-privacy-vault"),
-        ("/opt/osify/security/adaptive/osify-adaptive-security.sh", "osify-adaptive-security"),
-    ]:
-        lp = os.path.join(usr_bin, dst_l)
-        if not os.path.exists(lp):
-            try:
-                os.symlink(src_l, lp)
-            except Exception:
-                pass
+    # Popolamento completo binari OSify, runner UEM, desktop entries e MIME
+    populate_osify_userspace(apkovl_dir)
 
     run(f"chmod -R 777 '{os.path.join(apkovl_dir, 'home/osify')}' 2>/dev/null || true")
 

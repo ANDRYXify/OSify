@@ -39,24 +39,70 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Funzione universale per individuare ed eseguire i moduli runner di compatibilità OSify
+run_uem_module() {
+    local runner_name="$1"
+    shift
+    for cand in \
+        "$SCRIPT_DIR/${runner_name}.sh" \
+        "$SCRIPT_DIR/${runner_name}" \
+        "/usr/local/bin/${runner_name}.sh" \
+        "/usr/local/bin/${runner_name}" \
+        "/usr/bin/${runner_name}.sh" \
+        "/usr/bin/${runner_name}" \
+        "/Sistema/Servizi/Compatibilita/${runner_name}.sh" \
+        "/Sistema/Servizi/Compatibilita/${runner_name}" \
+        "/Sistema/Servizi/UEM/${runner_name}.sh" \
+        "/Sistema/Servizi/UEM/${runner_name}" \
+        "/Sistema/Servizi/${runner_name}" \
+        "/opt/osify/uem/runners/${runner_name}.sh" \
+        "/opt/osify/uem/runners/${runner_name}"; do
+        if [[ -x "$cand" && ! -d "$cand" ]]; then
+            exec "$cand" "$@"
+        fi
+    done
+
+    # Fallback con interprete bash se il file esiste ma manca il bit eseguibile
+    for cand in \
+        "$SCRIPT_DIR/${runner_name}.sh" \
+        "$SCRIPT_DIR/${runner_name}" \
+        "/usr/local/bin/${runner_name}.sh" \
+        "/usr/local/bin/${runner_name}" \
+        "/usr/bin/${runner_name}.sh" \
+        "/usr/bin/${runner_name}"; do
+        if [[ -f "$cand" && ! -d "$cand" ]]; then
+            exec bash "$cand" "$@"
+        fi
+    done
+
+    echo "[OSify UEM] Errore: modulo di compatibilità '${runner_name}' non trovato nel sistema." >&2
+    exit 127
+}
+
 # Se e' un pacchetto o bundle nativo OSify (.ify)
 if [[ "$TARGET" =~ \.ify/?$ ]]; then
     if [ -x "/Sistema/Servizi/GestorePacchetti.ify" ]; then
         exec "/Sistema/Servizi/GestorePacchetti.ify" "$TARGET" "${@:2}"
-    else
+    elif [ -x "$SCRIPT_DIR/../../sistema/servizi/GestorePacchetti.ify" ]; then
         exec "$SCRIPT_DIR/../../sistema/servizi/GestorePacchetti.ify" "$TARGET" "${@:2}"
+    else
+        run_uem_module "GestorePacchetti.ify" "$TARGET" "${@:2}"
     fi
 fi
 
 # Se e' una cartella .app di macOS
 if [[ -d "$TARGET" && "$TARGET" =~ \.app/?$ ]]; then
-    exec "$SCRIPT_DIR/osify-macho-runner.sh" "$TARGET" "${@:2}"
+    run_uem_module "osify-macho-runner" "$TARGET" "${@:2}"
 fi
 
-# Lettura primi 4 byte esadecimali
+# Lettura primi 4 byte esadecimali (supporto multi-tool: od, hexdump o python3)
 HEX_MAGIC=""
 if command -v od >/dev/null 2>&1; then
     HEX_MAGIC=$(od -An -N 4 -t x1 "$TARGET" 2>/dev/null | tr -d ' \n' || echo "")
+elif command -v hexdump >/dev/null 2>&1; then
+    HEX_MAGIC=$(hexdump -v -n 4 -e '1/1 "%02x"' "$TARGET" 2>/dev/null || echo "")
+elif command -v python3 >/dev/null 2>&1; then
+    HEX_MAGIC=$(python3 -c 'import sys; f=open(sys.argv[1],"rb"); print(f.read(4).hex())' "$TARGET" 2>/dev/null || echo "")
 fi
 
 # 1. Riconoscimento MS-DOS / Windows PE (Magic: 4d5a = "MZ")
@@ -64,57 +110,67 @@ if [[ "$HEX_MAGIC" =~ ^4d5a ]]; then
     PE_OFFSET=0
     if command -v od >/dev/null 2>&1; then
         PE_OFFSET=$(od -An -j 60 -N 4 -t u4 "$TARGET" 2>/dev/null | tr -d ' ' || echo "0")
+    elif command -v hexdump >/dev/null 2>&1; then
+        PE_OFFSET=$(hexdump -s 60 -n 4 -e '1/4 "%u"' "$TARGET" 2>/dev/null || echo "0")
+    elif command -v python3 >/dev/null 2>&1; then
+        PE_OFFSET=$(python3 -c 'import sys, struct; f=open(sys.argv[1],"rb"); f.seek(60); print(struct.unpack("<I", f.read(4))[0])' "$TARGET" 2>/dev/null || echo "0")
     fi
     if [[ "$PE_OFFSET" =~ ^[0-9]+$ ]] && [[ "$PE_OFFSET" -ge 64 ]]; then
         SIG=$(dd if="$TARGET" bs=1 skip="$PE_OFFSET" count=2 2>/dev/null || echo "")
         if [[ "$SIG" == "PE" ]]; then
-            exec "$SCRIPT_DIR/osify-pe-runner.sh" "$TARGET" "${@:2}"
+            run_uem_module "osify-pe-runner" "$TARGET" "${@:2}"
         fi
     fi
     # Se non c'e' header PE, e' un binario MS-DOS a 16-bit
-    exec "$SCRIPT_DIR/osify-dos-runner.sh" "$TARGET" "${@:2}"
+    run_uem_module "osify-dos-runner" "$TARGET" "${@:2}"
 fi
 
 # 2. Riconoscimento WebAssembly (Magic: 0061736d = "\x00asm")
 if [[ "$HEX_MAGIC" =~ ^0061736d ]]; then
-    exec "$SCRIPT_DIR/osify-wasm-runner.sh" "$TARGET" "${@:2}"
+    run_uem_module "osify-wasm-runner" "$TARGET" "${@:2}"
 fi
 
 # 3. Riconoscimento Java / Mach-O Fat Binary (Magic: cafebabe)
 if [[ "$HEX_MAGIC" =~ ^cafebabe ]]; then
-    # Distinzione tra Java .class e Mach-O Fat Binary
-    # In Java class i byte 4-7 contengono minor e major version (es. 00000034)
-    VER_BYTE=$(od -An -j 4 -N 4 -t x1 "$TARGET" 2>/dev/null | tr -d ' ' || echo "")
+    VER_BYTE=""
+    if command -v od >/dev/null 2>&1; then
+        VER_BYTE=$(od -An -j 4 -N 4 -t x1 "$TARGET" 2>/dev/null | tr -d ' ' || echo "")
+    elif command -v hexdump >/dev/null 2>&1; then
+        VER_BYTE=$(hexdump -s 4 -n 4 -e '1/1 "%02x"' "$TARGET" 2>/dev/null || echo "")
+    fi
     if [[ "$VER_BYTE" =~ ^0000 ]]; then
-        exec "$SCRIPT_DIR/osify-java-runner.sh" "$TARGET" "${@:2}"
+        run_uem_module "osify-java-runner" "$TARGET" "${@:2}"
     else
-        exec "$SCRIPT_DIR/osify-macho-runner.sh" "$TARGET" "${@:2}"
+        run_uem_module "osify-macho-runner" "$TARGET" "${@:2}"
     fi
 fi
 
 # 4. Riconoscimento Mach-O Darwin (Magic: feedface, feedfacf, cffaedfe, cefaedfe)
 if [[ "$HEX_MAGIC" =~ ^(feedface|feedfacf|cffaedfe|cefaedfe) ]]; then
-    exec "$SCRIPT_DIR/osify-macho-runner.sh" "$TARGET" "${@:2}"
+    run_uem_module "osify-macho-runner" "$TARGET" "${@:2}"
 fi
 
 # 5. Riconoscimento Archivi PKZIP (Magic: 504b0304 = "PK\x03\x04")
 if [[ "$HEX_MAGIC" =~ ^504b0304 ]]; then
     if [[ "$TARGET" =~ \.apk$ ]] || (command -v unzip >/dev/null 2>&1 && unzip -l "$TARGET" 2>/dev/null | grep -q "AndroidManifest.xml"); then
-        exec "$SCRIPT_DIR/osify-apk-runner.sh" "$TARGET" "${@:2}"
+        run_uem_module "osify-apk-runner" "$TARGET" "${@:2}"
     elif [[ "$TARGET" =~ \.ipa$ ]] || (command -v unzip >/dev/null 2>&1 && unzip -l "$TARGET" 2>/dev/null | grep -qE "Payload/[^/]+\.app"); then
-        exec "$SCRIPT_DIR/osify-ipa-runner.sh" "$TARGET" "${@:2}"
+        run_uem_module "osify-ipa-runner" "$TARGET" "${@:2}"
     elif [[ "$TARGET" =~ \.jar$ ]] || (command -v unzip >/dev/null 2>&1 && unzip -l "$TARGET" 2>/dev/null | grep -q "META-INF/MANIFEST.MF"); then
-        exec "$SCRIPT_DIR/osify-java-runner.sh" "$TARGET" "${@:2}"
+        run_uem_module "osify-java-runner" "$TARGET" "${@:2}"
     fi
 fi
 
 # 6. Riconoscimento ELF Linux (Magic: 7f454c46 = "\x7fELF")
 if [[ "$HEX_MAGIC" =~ ^7f454c46 ]]; then
-    # Rilevamento architettura target del binario ELF
-    TARGET_MACHINE=$(od -An -j 18 -N 2 -t x2 "$TARGET" 2>/dev/null | tr -d ' ' || echo "")
+    TARGET_MACHINE=""
+    if command -v od >/dev/null 2>&1; then
+        TARGET_MACHINE=$(od -An -j 18 -N 2 -t x2 "$TARGET" 2>/dev/null | tr -d ' ' || echo "")
+    elif command -v hexdump >/dev/null 2>&1; then
+        TARGET_MACHINE=$(hexdump -s 18 -n 2 -e '1/2 "%04x"' "$TARGET" 2>/dev/null || echo "")
+    fi
     HOST_ARCH="$(uname -m)"
-    
-    # 0003 = x86 (i386/i686), 003e = x86_64, 0028 = ARM, 00b7 = AArch64, 00f3 = RISC-V 64
+
     IS_NATIVE=0
     if [[ "$HOST_ARCH" == "x86_64" && "$TARGET_MACHINE" == "003e" ]]; then IS_NATIVE=1; fi
     if [[ "$HOST_ARCH" =~ ^(i686|i386)$ && "$TARGET_MACHINE" == "0003" ]]; then IS_NATIVE=1; fi
@@ -124,18 +180,40 @@ if [[ "$HEX_MAGIC" =~ ^7f454c46 ]]; then
         chmod +x "$TARGET" 2>/dev/null || true
         exec "$TARGET" "${@:2}"
     else
-        exec "$SCRIPT_DIR/osify-cross-runner.sh" "$TARGET" "${@:2}"
+        run_uem_module "osify-cross-runner" "$TARGET" "${@:2}"
     fi
 fi
 
-# 7. Script interpretati con Shebang o estensioni note
+# 7. Script interpretati con Shebang (#!)
 FIRST_TWO=$(dd if="$TARGET" bs=1 count=2 2>/dev/null || echo "")
 if [[ "$FIRST_TWO" == "#!" ]]; then
     chmod +x "$TARGET" 2>/dev/null || true
     exec "$TARGET" "${@:2}"
 fi
 
+# 8. Mappatura deterministica basata su estensione (fallback infallibile)
 case "$TARGET" in
+    *.exe|*.EXE|*.msi|*.MSI|*.dll|*.DLL)
+        run_uem_module "osify-pe-runner" "$TARGET" "${@:2}"
+        ;;
+    *.com|*.COM)
+        run_uem_module "osify-dos-runner" "$TARGET" "${@:2}"
+        ;;
+    *.apk|*.APK|*.aab|*.AAB)
+        run_uem_module "osify-apk-runner" "$TARGET" "${@:2}"
+        ;;
+    *.ipa|*.IPA)
+        run_uem_module "osify-ipa-runner" "$TARGET" "${@:2}"
+        ;;
+    *.wasm|*.WASM)
+        run_uem_module "osify-wasm-runner" "$TARGET" "${@:2}"
+        ;;
+    *.jar|*.JAR|*.class|*.CLASS)
+        run_uem_module "osify-java-runner" "$TARGET" "${@:2}"
+        ;;
+    *.app|*.APP)
+        run_uem_module "osify-macho-runner" "$TARGET" "${@:2}"
+        ;;
     *.py)   exec python3 "$TARGET" "${@:2}" ;;
     *.js|*.mjs) exec node "$TARGET" "${@:2}" ;;
     *.sh|*.bash) exec bash "$TARGET" "${@:2}" ;;
@@ -143,7 +221,6 @@ case "$TARGET" in
     *.lua)  exec lua "$TARGET" "${@:2}" ;;
     *.pl)   exec perl "$TARGET" "${@:2}" ;;
     *.rb)   exec ruby "$TARGET" "${@:2}" ;;
-    *.com)  exec "$SCRIPT_DIR/osify-dos-runner.sh" "$TARGET" "${@:2}" ;;
 esac
 
 # Fallback finale: tentativo di esecuzione diretta

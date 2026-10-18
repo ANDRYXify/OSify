@@ -76,8 +76,8 @@ int osify_strncmp(const char *s1, const char *s2, size_t n) {
 }
 
 /* Formattatore numerico bare-metal autonomo per snprintf */
-static int u64_to_str(uint64_t val, char *buf, int base) {
-    char tmp[32];
+static int u64_to_str(uint64_t val, char *buf, int base, bool uppercase) {
+    char tmp[65];
     int i = 0, j = 0;
     if (val == 0) {
         buf[0] = '0';
@@ -85,9 +85,13 @@ static int u64_to_str(uint64_t val, char *buf, int base) {
         return 1;
     }
     while (val > 0) {
-        int rem = val % base;
-        tmp[i++] = (rem < 10) ? ('0' + rem) : ('a' + rem - 10);
-        val /= base;
+        int rem = (int)(val % (uint64_t)base);
+        if (rem < 10) {
+            tmp[i++] = (char)('0' + rem);
+        } else {
+            tmp[i++] = (char)((uppercase ? 'A' : 'a') + rem - 10);
+        }
+        val /= (uint64_t)base;
     }
     while (i > 0) {
         buf[j++] = tmp[--i];
@@ -108,6 +112,8 @@ int osify_snprintf(char *str, size_t size, const char *format, ...) {
             format++;
             bool zero_pad = false;
             int width = 0;
+            bool is_long = false;
+
             if (*format == '0') {
                 zero_pad = true;
                 format++;
@@ -116,17 +122,66 @@ int osify_snprintf(char *str, size_t size, const char *format, ...) {
                 width = width * 10 + (*format - '0');
                 format++;
             }
+            if (*format == 'l') {
+                is_long = true;
+                format++;
+                if (*format == 'l') {
+                    format++; /* ignora secondo 'l' se presente (es. %lld) */
+                }
+            }
 
             if (*format == 's') {
                 const char *s = va_arg(args, const char *);
                 if (!s) s = "(null)";
+                int s_len = (int)osify_strlen(s);
+                while (width > s_len && written + 1 < size) {
+                    str[written++] = ' ';
+                    width--;
+                }
                 while (*s && written + 1 < size) {
                     str[written++] = *s++;
                 }
-            } else if (*format == 'd' || *format == 'u') {
-                unsigned int v = va_arg(args, unsigned int);
+            } else if (*format == 'c') {
+                char c = (char)va_arg(args, int);
+                while (width > 1 && written + 1 < size) {
+                    str[written++] = ' ';
+                    width--;
+                }
+                if (written + 1 < size) {
+                    str[written++] = c;
+                }
+            } else if (*format == 'd' || *format == 'i') {
+                int64_t val = is_long ? (int64_t)va_arg(args, long) : (int64_t)va_arg(args, int);
+                bool negative = false;
+                uint64_t uval;
+                if (val < 0) {
+                    negative = true;
+                    uval = (uint64_t)(-(val + 1)) + 1; /* safe against INT64_MIN overflow */
+                } else {
+                    uval = (uint64_t)val;
+                }
                 char num_buf[32];
-                int num_len = u64_to_str((uint64_t)v, num_buf, 10);
+                int num_len = u64_to_str(uval, num_buf, 10, false);
+                int total_len = num_len + (negative ? 1 : 0);
+
+                if (negative && zero_pad && written + 1 < size) {
+                    str[written++] = '-';
+                    negative = false;
+                }
+                while (width > total_len && written + 1 < size) {
+                    str[written++] = zero_pad ? '0' : ' ';
+                    width--;
+                }
+                if (negative && written + 1 < size) {
+                    str[written++] = '-';
+                }
+                for (int k = 0; num_buf[k] && written + 1 < size; k++) {
+                    str[written++] = num_buf[k];
+                }
+            } else if (*format == 'u') {
+                uint64_t uval = is_long ? (uint64_t)va_arg(args, unsigned long) : (uint64_t)va_arg(args, unsigned int);
+                char num_buf[32];
+                int num_len = u64_to_str(uval, num_buf, 10, false);
                 while (width > num_len && written + 1 < size) {
                     str[written++] = zero_pad ? '0' : ' ';
                     width--;
@@ -135,22 +190,38 @@ int osify_snprintf(char *str, size_t size, const char *format, ...) {
                     str[written++] = num_buf[k];
                 }
             } else if (*format == 'x' || *format == 'X') {
-                unsigned int v = va_arg(args, unsigned int);
+                uint64_t uval = is_long ? (uint64_t)va_arg(args, unsigned long) : (uint64_t)va_arg(args, unsigned int);
                 char num_buf[32];
-                int num_len = u64_to_str((uint64_t)v, num_buf, 16);
+                int num_len = u64_to_str(uval, num_buf, 16, (*format == 'X'));
                 while (width > num_len && written + 1 < size) {
                     str[written++] = zero_pad ? '0' : ' ';
                     width--;
                 }
                 for (int k = 0; num_buf[k] && written + 1 < size; k++) {
-                    char c = num_buf[k];
-                    if (*format == 'X' && c >= 'a' && c <= 'f') {
-                        c = c - 'a' + 'A';
+                    str[written++] = num_buf[k];
+                }
+            } else if (*format == 'p') {
+                void *ptr = va_arg(args, void *);
+                if (!ptr) {
+                    const char *nil_str = "(nil)";
+                    while (*nil_str && written + 1 < size) {
+                        str[written++] = *nil_str++;
                     }
-                    str[written++] = c;
+                } else {
+                    if (written + 2 < size) {
+                        str[written++] = '0';
+                        str[written++] = 'x';
+                    }
+                    char ptr_buf[32];
+                    u64_to_str((uint64_t)(uintptr_t)ptr, ptr_buf, 16, false);
+                    for (int k = 0; ptr_buf[k] && written + 1 < size; k++) {
+                        str[written++] = ptr_buf[k];
+                    }
                 }
             } else if (*format == '%') {
                 str[written++] = '%';
+            } else {
+                str[written++] = *format;
             }
         } else {
             str[written++] = *format;

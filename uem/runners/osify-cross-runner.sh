@@ -16,6 +16,7 @@ if [[ -z "$BIN_FILE" || ! -f "$BIN_FILE" ]]; then
     echo "[ERRORE] File eseguibile non valido: $BIN_FILE" >&2
     exit 1
 fi
+shift
 
 HOST_ARCH="$(uname -m)"
 TARGET_ARCH="unknown"

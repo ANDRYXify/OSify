@@ -935,7 +935,6 @@ else
     log_fail "Sottosistema Audio Hardware: Mancata conformita del driver Intel HDA o del generatore sonoro"
 fi
 
-# Test 13.9 Installatore Bare-Metal Guidato su Disco Fisso GPT (ESP + OSifyFS + Bootloader Permanente)
 if python3 -c "
 import os
 kdir = '$REPO_ROOT/sistema/nucleo/kernel'
@@ -952,6 +951,42 @@ print('Installatore Bare-Metal Validato')
     log_pass "Installatore Bare-Metal su Disco: Tabella partizioni GPT (ESP + OSifyFS), copia kernel su silicio e UI Framebuffer operative"
 else
     log_fail "Installatore Bare-Metal su Disco: Mancata conformita del partizionamento GPT o del motore di installazione"
+fi
+
+# Test 13.10 Regressione Libreria Freestanding (Formattazione %d Negativi, %p, %c)
+if (cd "$REPO_ROOT/sistema/nucleo/kernel" && make test >/dev/null 2>&1); then
+    log_pass "Libreria Freestanding Kernel: Formattazione %d negativi, %p puntatori, %c caratteri e %x validata"
+else
+    log_fail "Libreria Freestanding Kernel: Errore nei test di regressione di osify_snprintf o kstring"
+fi
+
+# Test 13.11 Regressione Universal Execution Core & Integrita Packaging Userspace
+if python3 -c "
+import os, subprocess
+repo = '$REPO_ROOT'
+# Verifica dispatcher UEM
+disp = os.path.join(repo, 'uem/runners/osify-universal-dispatcher.sh')
+with open(disp) as f:
+    c = f.read()
+assert 'run_uem_module' in c and 'osify-pe-runner' in c
+# Verifica assenza duplicazione argomenti (\$@ senza shift) nei runner
+for r in ['osify-pe-runner.sh', 'osify-wasm-runner.sh', 'osify-cross-runner.sh', 'osify-dos-runner.sh', 'osify-java-runner.sh']:
+    rf = os.path.join(repo, 'uem/runners', r)
+    with open(rf) as f:
+        rc = f.read()
+    assert 'shift' in rc, f'shift mancante in {r}'
+    assert 'pacman -S' not in rc, f'pacman residuo in {r}'
+# Verifica populate_osify_userspace nel remaster
+remaster = os.path.join(repo, 'build/remaster-live-iso.py')
+with open(remaster) as f:
+    rmc = f.read()
+assert 'def populate_osify_userspace' in rmc
+assert 'osify-exec' in rmc and 'osify-pe-runner.sh' in rmc
+print('UEM & Userspace Regression Pass')
+" >/dev/null 2>&1; then
+    log_pass "Universal Execution Module: Dispatcher poliglota, integrita argomenti runner e assenza residui distro terze validati"
+else
+    log_fail "Universal Execution Module: Rilevati difetti nei runner UEM o nella pipeline di packaging userspace"
 fi
 
 echo "                  REPORT FINALE COLLAUDO                 "

@@ -14,6 +14,7 @@ if [[ -z "$WASM_FILE" || ! -f "$WASM_FILE" ]]; then
     echo "[ERRORE] File WebAssembly non valido: $WASM_FILE" >&2
     exit 1
 fi
+shift
 
 if command -v wasmtime >/dev/null 2>&1; then
     exec wasmtime run "$WASM_FILE" "$@"

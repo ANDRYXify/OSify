@@ -16,6 +16,7 @@ if [[ -z "$EXE_FILE" || ! -f "$EXE_FILE" ]]; then
     echo "[ERRORE] File eseguibile non valido: $EXE_FILE" >&2
     exit 1
 fi
+shift
 
 HOST_ARCH="$(uname -m)"
 HAS_VULKAN=0

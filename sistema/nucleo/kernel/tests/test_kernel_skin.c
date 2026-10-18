@@ -132,6 +132,19 @@ int main(void) {
     osify_snprintf(test_buf, sizeof(test_buf), "Kernel %s A.%d", "Nativo", 0);
     assert(osify_strcmp(test_buf, "Kernel Nativo A.0") == 0);
 
+    /* Test formattazione interi negativi */
+    osify_snprintf(test_buf, sizeof(test_buf), "Temp: %d C", -15);
+    assert(osify_strcmp(test_buf, "Temp: -15 C") == 0);
+
+    /* Test caratteri %c e puntatori %p */
+    void *dummy_ptr = (void *)0x1000;
+    osify_snprintf(test_buf, sizeof(test_buf), "Code: %c, Ptr: %p", 'Z', dummy_ptr);
+    assert(osify_strcmp(test_buf, "Code: Z, Ptr: 0x1000") == 0);
+
+    /* Test padding esadecimale e puntatore NULL */
+    osify_snprintf(test_buf, sizeof(test_buf), "Port: 0x%04x, Null: %p", 0x1f0, (void *)0);
+    assert(osify_strcmp(test_buf, "Port: 0x01f0, Null: (nil)") == 0);
+
     /* Test Keyboard ring buffer */
     void osify_keyboard_init(void);
     char osify_keyboard_get_key(void);

@@ -16,6 +16,7 @@ if [[ -z "$DOS_FILE" || ! -f "$DOS_FILE" ]]; then
     echo "[ERRORE] File MS-DOS non valido: $DOS_FILE" >&2
     exit 1
 fi
+shift
 
 DOS_DIR="$(cd "$(dirname "$DOS_FILE")" && pwd)"
 DOS_NAME="$(basename "$DOS_FILE")"
@@ -28,7 +29,7 @@ if command -v od >/dev/null 2>&1; then
         if [[ "$SIGNATURE" == "PE" ]]; then
             # E' un file PE Windows mascherato da MZ: inoltra al runner PE
             SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-            exec "$SCRIPT_DIR/osify-pe-runner.sh" "$DOS_FILE" "${@:2}"
+            exec "$SCRIPT_DIR/osify-pe-runner.sh" "$DOS_FILE" "$@"
         fi
     fi
 fi
@@ -41,7 +42,7 @@ elif command -v dosbox >/dev/null 2>&1; then
 elif command -v dosemu >/dev/null 2>&1; then
     exec dosemu -dumb -E "$DOS_NAME"
 else
-    echo "[ERRORE] Nessun runtime MS-DOS trovato (installa dosbox-staging o dosemu2)." >&2
-    echo "         Installa il pacchetto con: pacman -S dosbox-staging" >&2
+    echo "[ERRORE] Nessun runtime MS-DOS trovato (dosbox-staging o dosemu2)." >&2
+    echo "         Installa il modulo MS-DOS tramite il Centro OSify." >&2
     exit 1
 fi
