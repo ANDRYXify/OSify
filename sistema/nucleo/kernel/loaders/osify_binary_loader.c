@@ -61,9 +61,20 @@ osify_loaded_binary_t osify_binary_load(const void *file_buffer, size_t file_len
 
     switch (subsys) {
         case SUBSYSTEM_POSIX_LINUX: {
-            const elf64_hdr_t *elf = (const elf64_hdr_t *)file_buffer;
-            loaded.entry_point = elf->e_entry;
-            loaded.load_base = 0x400000; /* Standard ELF load address */
+            const uint8_t *raw_elf = (const uint8_t *)file_buffer;
+            uint8_t elf_class = raw_elf[4]; /* 1 = ELF32, 2 = ELF64 */
+            if (elf_class == 1 && file_len >= 52) {
+                /* ELF 32-bit: entry point a offset 24 (uint32_t) */
+                loaded.entry_point = *(const uint32_t *)(raw_elf + 24);
+                loaded.load_base = 0x08048000ULL;
+            } else if (file_len >= 64) {
+                /* ELF 64-bit: entry point a offset 24 (uint64_t) */
+                loaded.entry_point = *(const uint64_t *)(raw_elf + 24);
+                loaded.load_base = 0x400000ULL;
+            } else {
+                loaded.entry_point = 0x401050ULL;
+                loaded.load_base = 0x400000ULL;
+            }
             loaded.size_in_memory = file_len;
             loaded.is_valid = true;
             break;
@@ -71,11 +82,38 @@ osify_loaded_binary_t osify_binary_load(const void *file_buffer, size_t file_len
 
         case SUBSYSTEM_WIN32_NT: {
             const pe_dos_hdr_t *dos = (const pe_dos_hdr_t *)file_buffer;
-            if (dos->e_lfanew > 0 && (size_t)dos->e_lfanew + 24 < file_len) {
-                loaded.load_base = 0x140000000ULL; /* Default 64-bit PE ImageBase */
-                loaded.entry_point = loaded.load_base + 0x1000;
-                loaded.size_in_memory = file_len;
-                loaded.is_valid = true;
+            if (dos->e_lfanew > 0 && (size_t)dos->e_lfanew + 24 <= file_len) {
+                const uint8_t *nt = (const uint8_t *)file_buffer + dos->e_lfanew;
+                /* Verifica Signature "PE\0\0" */
+                if (nt[0] == 'P' && nt[1] == 'E' && nt[2] == 0 && nt[3] == 0 && (size_t)dos->e_lfanew + 64 <= file_len) {
+                    uint16_t opt_magic = *(const uint16_t *)(nt + 24);
+                    uint32_t entry_rva = *(const uint32_t *)(nt + 40);
+                    if (opt_magic == 0x010B) {
+                        /* PE32 Standard (32-bit) */
+                        uint32_t img_base = *(const uint32_t *)(nt + 52);
+                        uint32_t img_size = *(const uint32_t *)(nt + 80);
+                        loaded.load_base = img_base ? img_base : 0x00400000ULL;
+                        loaded.entry_point = loaded.load_base + entry_rva;
+                        loaded.size_in_memory = img_size ? img_size : file_len;
+                    } else if (opt_magic == 0x020B) {
+                        /* PE32+ (64-bit) */
+                        uint64_t img_base = *(const uint64_t *)(nt + 48);
+                        uint32_t img_size = *(const uint32_t *)(nt + 80);
+                        loaded.load_base = img_base ? img_base : 0x140000000ULL;
+                        loaded.entry_point = loaded.load_base + entry_rva;
+                        loaded.size_in_memory = img_size ? img_size : file_len;
+                    } else {
+                        loaded.load_base = 0x00400000ULL;
+                        loaded.entry_point = loaded.load_base + entry_rva;
+                        loaded.size_in_memory = file_len;
+                    }
+                    loaded.is_valid = true;
+                } else {
+                    loaded.load_base = 0x140000000ULL;
+                    loaded.entry_point = loaded.load_base + 0x1000;
+                    loaded.size_in_memory = file_len;
+                    loaded.is_valid = true;
+                }
             }
             break;
         }

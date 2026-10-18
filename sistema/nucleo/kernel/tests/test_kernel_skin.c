@@ -376,6 +376,21 @@ int main(void) {
     printf("[+] 19. Scheda di Acquisizione Virtuale (Direct FB Tap, 60 FPS, Zero Hardware Esterno): OK\n");
 
     /* 20. Test Esecuzione UEM Multi-Formato nel Kernel Nativo */
+    uint8_t win_chk[128];
+    int win_len = osify_fs_read_file("/UEM/compat_win.exe", win_chk, sizeof(win_chk));
+    assert(win_len > 0);
+    assert(win_chk[0] == 'M' && win_chk[1] == 'Z'); /* DOS Header */
+
+    uint8_t elf_chk[128];
+    int elf_len = osify_fs_read_file("/UEM/server.elf", elf_chk, sizeof(elf_chk));
+    assert(elf_len > 0);
+    assert(elf_chk[0] == 0x7F && elf_chk[1] == 'E' && elf_chk[2] == 'L' && elf_chk[3] == 'F');
+
+    uint8_t mac_chk[128];
+    int mac_len = osify_fs_read_file("/UEM/darwin_tool.macho", mac_chk, sizeof(mac_chk));
+    assert(mac_len > 0);
+    assert(*(uint32_t *)mac_chk == 0xFEEDFACF || *(uint32_t *)mac_chk == 0xCFFAEDFE);
+
     osify_shell_execute_cmd(&desktop_fb, "esegui /Applicazioni/calcolatrice.ify");
     osify_shell_execute_cmd(&desktop_fb, "esegui /UEM/compat_win.exe");
     osify_shell_execute_cmd(&desktop_fb, "esegui /UEM/server.elf");

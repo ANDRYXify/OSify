@@ -10,6 +10,7 @@
 
 #include "../include/osify_storage.h"
 #include "../include/osify_kstring.h"
+#include "../include/real_binaries_data.h"
 
 /* Registri Controller ATA Primario */
 #define ATA_PRIMARY_DATA         0x1F0
@@ -219,26 +220,14 @@ void osify_fs_init(uint32_t drive) {
     osify_strcpy((char *)&bin_arc[16], "Cyber Arcade 2050 (Breakout Neon)");
     osify_fs_write_file("/Applicazioni/arcade2050.ify", bin_arc, sizeof(bin_arc));
 
-    /* 3. App Windows NT PE (.exe) - Magic 'MZ' */
-    uint8_t bin_pe[128];
-    osify_memset(bin_pe, 0, sizeof(bin_pe));
-    bin_pe[0] = 'M'; bin_pe[1] = 'Z';
-    *(int32_t *)(&bin_pe[0x3C]) = 0x40; /* e_lfanew -> NT Header offset */
-    bin_pe[0x40] = 'P'; bin_pe[0x41] = 'E';
-    osify_fs_write_file("/UEM/compat_win.exe", bin_pe, sizeof(bin_pe));
+    /* 3. App Windows NT PE (.exe) - Binario PE32 Reale Compilato con MinGW */
+    osify_fs_write_file("/UEM/compat_win.exe", g_real_bin_pe, g_real_bin_pe_len);
 
-    /* 4. App Linux ELF (.elf) - Magic 0x7F, 'E', 'L', 'F' */
-    uint8_t bin_elf[128];
-    osify_memset(bin_elf, 0, sizeof(bin_elf));
-    bin_elf[0] = 0x7F; bin_elf[1] = 'E'; bin_elf[2] = 'L'; bin_elf[3] = 'F';
-    *(uint64_t *)(&bin_elf[24]) = 0x401050ULL; /* e_entry */
-    osify_fs_write_file("/UEM/server.elf", bin_elf, sizeof(bin_elf));
+    /* 4. App Linux ELF (.elf) - Binario ELF 32-bit Reale */
+    osify_fs_write_file("/UEM/server.elf", g_real_bin_elf, g_real_bin_elf_len);
 
-    /* 5. App macOS Mach-O 64-bit - Magic 0xFEEDFACF */
-    uint8_t bin_macho[128];
-    osify_memset(bin_macho, 0, sizeof(bin_macho));
-    *(uint32_t *)(&bin_macho[0]) = 0xFEEDFACF;
-    osify_fs_write_file("/UEM/darwin_tool.macho", bin_macho, sizeof(bin_macho));
+    /* 5. App macOS Mach-O 64-bit - Binario Mach-O Reale */
+    osify_fs_write_file("/UEM/darwin_tool.macho", g_real_bin_macho, g_real_bin_macho_len);
 
     /* 6. OBS Studio Standalone Portabile Windows 64-bit (obs64.exe) */
     uint8_t bin_obs_pe[256];

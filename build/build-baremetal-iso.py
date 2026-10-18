@@ -150,6 +150,34 @@ def generate_baremetal_iso():
     for udir in ["Scrivania", "Documenti", "Scaricati", "Applicazioni", "Impostazioni"]:
         os.makedirs(os.path.join(utenti_dir, udir), exist_ok=True)
 
+    # Inclusione Programmi Reali Multi-Piattaforma (Windows PE, Linux ELF, macOS Mach-O)
+    real_bin_dir = os.path.join(REPO_ROOT, "uem", "binari_reali")
+    if os.path.exists(real_bin_dir):
+        win_dir = os.path.join(iso_root, "UEM", "Windows")
+        linux_dir = os.path.join(iso_root, "UEM", "Linux")
+        mac_dir = os.path.join(iso_root, "UEM", "macOS")
+        os.makedirs(win_dir, exist_ok=True)
+        os.makedirs(linux_dir, exist_ok=True)
+        os.makedirs(mac_dir, exist_ok=True)
+        for f in ["compat_win.exe", "compat_win64.exe", "putty.exe", "7z.exe", "syslinux.exe"]:
+            src = os.path.join(real_bin_dir, f)
+            if os.path.exists(src):
+                shutil.copy2(src, os.path.join(win_dir, f))
+                # Copia anche in UEM radice per accesso diretto
+                if f == "compat_win.exe":
+                    shutil.copy2(src, os.path.join(iso_root, "UEM", f))
+        for f in ["server.elf"]:
+            src = os.path.join(real_bin_dir, f)
+            if os.path.exists(src):
+                shutil.copy2(src, os.path.join(linux_dir, f))
+                shutil.copy2(src, os.path.join(iso_root, "UEM", f))
+        for f in ["darwin_tool.macho"]:
+            src = os.path.join(real_bin_dir, f)
+            if os.path.exists(src):
+                shutil.copy2(src, os.path.join(mac_dir, f))
+                shutil.copy2(src, os.path.join(iso_root, "UEM", f))
+        log("  -> Inclusi programmi reali: Windows (PuTTY, 7-Zip, Syslinux, WinCompat), Linux (server.elf), macOS (darwin_tool.macho)")
+
     # Identita e Manifesto Autonomo
     with open(os.path.join(iso_root, "OSify-Identity.txt"), "w") as f:
         f.write("OSify Versione A.1 (Naked-Skin Architecture)\n")
