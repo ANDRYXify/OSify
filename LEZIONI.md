@@ -9,6 +9,21 @@
 6. **Imposizione W^X Incondizionata**: Nessuna pagina di memoria — né nel kernel, né in userspace, né nei traduttori JIT — può mai avere contemporaneamente i bit di Scrittura ed Esecuzione attivi (`OSIFY_MAP_W | OSIFY_MAP_X` restituisce sempre errore in `arch_mmu_map`).
 7. **Purezza delle Licenze**: Il codice del kernel e delle librerie di sistema deve essere 100% originale o compatibile con la licenza del progetto; è tassativamente vietato copiare codice GPLv2-only dal kernel Linux.
 
+## 2026-10-19 — Aritmetica 64-bit Freestanding, Navigazione Cartelle Persistente e Benchmark Silicio
+- **Area**: Kernel Freestanding (`osify_kstring.c`), Window Manager (`osify_desktop_wm.c`) e Benchmark Hardware
+- **Errore**:
+  1. Durante l'esecuzione di calcoli a 64-bit (MIPS, Throughput RAM, matrici SIMD) su target x86 32-bit freestanding (`-nostdlib`), il compilatore o linker richiedeva i simboli helper runtime `__divdi3` e `__moddi3` (divisione e modulo 64-bit con segno), scatenando un errore di unresolved symbol in assenza di `libgcc`.
+  2. In Esplora File (OSifyFS), la navigazione all'interno di una cartella nascondeva i segnalibri rapidi delle directory principali (`/Sistema`, `/Apps`, `/UEM`, `/Utenti`), impedendo all'utente di saltare direttamente tra i vari comparti di sistema senza tornare ripetutamente indietro.
+  3. L'interrogazione dei contatori di cicli hardware per il benchmark su silicio falliva la compilazione incrociata tra host (Apple Silicon/ARM64) e target (x86_32 bare-metal) se vincolata a una sola istruzione assembly specifica (`rdtsc`).
+- **Causa radice**:
+  1. Le CPU x86 a 32-bit non possiedono un'istruzione di divisione a 64-bit nativa; quando il codice esegue `/` o `%` su `int64_t`, Clang/GCC inserisce chiamate a runtime helper standard non forniti in ambienti freestanding puri.
+  2. Le schede directory erano subordinate alla visualizzazione della cartella radice anziché essere renderizzate come barra di navigazione fissa sempre accessibile.
+  3. Assenza di una funzione di astrazione architetturale con branching condizionale del preprocessore (`__i386__` / `__x86_64__` vs `__aarch64__`).
+- **Regola**:
+  1. Helper 64-bit Freestanding Obbligatori: Qualsiasi kernel o modulo freestanding deve includere nativamente le implementazioni di `__divdi3` e `__moddi3` (basate su algoritmo di divisione bit-a-bit su valori assoluti) per garantire l'indipendenza totale da librerie esterne del compilatore.
+  2. Barra Navigazione Cartelle Persistente: Nei file manager a finestre, i segnalibri dei comparti principali devono rimanere sempre visibili e cliccabili indipendentemente dal livello di profondità dell'albero delle cartelle.
+  3. Lettura Cicli Hardware Portabile: `get_silicon_cycles()` deve implementare `rdtsc` su x86/x86_64, `cntvct_el0` su ARM64/Apple Silicon e fallback a tick di sistema su altre architetture, assicurando compilazione senza errori sia su host di sviluppo che su silicio target.
+
 ## 2026-10-19 — Masterizzazione ISO Diskless: Fallback xorriso su macOS, Iniezione Bash Statico 32-bit e Indipendenza da Daemon Docker
 - **Area**: Pipeline di Generazione ISO Universale (`remaster-live-iso.py`), Toolchain di Boot ibrido xorriso e userspace 32-bit
 - **Errore**: Durante la ricompilazione della ISO Vintage 32-bit (`OSify-Vintage-i686.iso`) su ambiente macOS privo del daemon Docker avviato, il processo falliva nell'estrazione di `bash-static:i386` e nella successiva masterizzazione El Torito / isohybrid MBR.

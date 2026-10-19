@@ -3758,18 +3758,25 @@ def build_arm64():
     os.makedirs(os.path.join(apkovl_dir, "home/osify"), exist_ok=True)
 
     desktop_bundle = "/tmp/test_desktop_arm64.tar.gz"
+    cache_bundle = os.path.join(REPO_ROOT, "build/cache/test_desktop_arm64.tar.gz")
+    if (not os.path.exists(desktop_bundle) or os.path.getsize(desktop_bundle) < 50 * 1024 * 1024) and os.path.exists(cache_bundle):
+        shutil.copy2(cache_bundle, desktop_bundle)
+
     need_rebuild_arm = True
     if os.path.exists(desktop_bundle) and os.path.getsize(desktop_bundle) > 50 * 1024 * 1024:
-        ret = subprocess.run(f"tar -tzf '{desktop_bundle}' lib/libudev.so.1 2>/dev/null", shell=True)
+        ret = subprocess.run(f"tar -tzf '{desktop_bundle}' | grep -q 'libudev.so.1'", shell=True)
         if ret.returncode == 0:
             need_rebuild_arm = False
 
     if need_rebuild_arm:
         print("[+] Generazione bundle X11/Desktop ARM64 con /lib e libudev in container Docker...")
-        run("docker run --rm --platform linux/arm64 -v /tmp:/out alpine:3.20 sh -c '"
-            "apk update -q && apk add -q --no-cache xinit xorg-server xf86-video-modesetting xf86-input-libinput "
-            "openbox pcmanfm tint2 feh sakura dbus font-dejavu yad mesa-dri-gallium which eudev eudev-libs && "
-            "tar -czf /out/test_desktop_arm64.tar.gz /lib /usr /etc/xdg /etc/X11 /etc/fonts /etc/gtk-3.0 /etc/pango /var/lib/dbus 2>/dev/null || true'")
+        try:
+            run("docker run --rm --platform linux/arm64 -v /tmp:/out alpine:3.20 sh -c '"
+                "apk update -q && apk add -q --no-cache xinit xorg-server xf86-video-modesetting xf86-input-libinput "
+                "openbox pcmanfm tint2 feh sakura dbus font-dejavu yad mesa-dri-gallium which eudev eudev-libs && "
+                "tar -czf /out/test_desktop_arm64.tar.gz /lib /usr /etc/xdg /etc/X11 /etc/fonts /etc/gtk-3.0 /etc/pango /var/lib/dbus 2>/dev/null || true'")
+        except Exception as e:
+            print(f"[!] Warning: Docker ARM64 non disponibile o binfmt mancante ({e}). Continuo con base rootfs.")
     
     print("[i] Iniezione binari Xorg, Openbox, Tint2, PCManFM e librerie di sistema in apkovl ARM64...")
     run(f"tar -xzf '{desktop_bundle}' -C '{apkovl_dir}' 2>/dev/null || true")
@@ -4153,7 +4160,7 @@ endif
     cmd_xorriso = (
         f"xorriso -as mkisofs -r -J "
         f"-V 'OSify-2050-ARM64-Ultimate' "
-        f"-eltorito-alt-boot -e '/boot/grub/efi.img' -no-emul-boot -isohybrid-gpt-basdat "
+        f"-eltorito-alt-boot -e 'boot/grub/efi.img' -no-emul-boot -isohybrid-gpt-basdat "
         f"-o '{DEST_ARM64_ISO}' '{iso_root}'"
     )
     run(cmd_xorriso)

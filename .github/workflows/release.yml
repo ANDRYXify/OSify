@@ -33,11 +33,14 @@ jobs:
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "title=OSify $TAG — Hardware Resurrection & Universal OS" >> $GITHUB_OUTPUT
 
+      - name: Set up QEMU for Multi-Arch Container Emulation
+        uses: docker/setup-qemu-action@v3
+
       - name: Install Build Dependencies
         run: |
           sudo dpkg --add-architecture i386 || true
           sudo apt-get update -qq
-          sudo apt-get install -y -qq p7zip-full xorriso isolinux syslinux-common syslinux-utils genisoimage python3-pil cpio bash-static:i386 || true
+          sudo apt-get install -y -qq p7zip-full xorriso isolinux syslinux-common syslinux-utils genisoimage python3-pil cpio bash-static:i386 gcc-multilib clang lld || true
 
       - name: Package Windows Installer & Assets
         run: |
@@ -48,7 +51,11 @@ jobs:
         run: |
           python3 tools/branding/generate-osify-wallpapers.py
 
-      - name: Remaster Hybrid ISOs (32-bit Vintage + 64-bit Modern)
+      - name: Build Bare-Metal ISO (Native Naked-Skin Kernel)
+        run: |
+          python3 build/build-baremetal-iso.py
+
+      - name: Remaster Hybrid ISOs (32-bit Vintage + 64-bit Modern + ARM64)
         run: |
           sudo python3 build/remaster-live-iso.py --all
 
@@ -62,8 +69,10 @@ jobs:
           make_latest: true
           generate_release_notes: true
           files: |
-            build/out/release/OSify-NoUSB-Windows-Installer.zip
-            build/out/release/OSify-Windows-Installer.zip
+            build/out/release/OSify-*-BareMetal.iso
             build/out/release/OSify-x86_64-v3.iso
             build/out/release/OSify-Vintage-i686.iso
+            build/out/release/OSify-ARM64.iso
+            build/out/release/OSify-NoUSB-Windows-Installer.zip
+            build/out/release/OSify-Windows-Installer.zip
             build/out/release/SHA256SUMS.txt

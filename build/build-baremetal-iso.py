@@ -28,6 +28,11 @@ def ensure_dirs():
 
 def build_kernel():
     log("Compilazione del Kernel Nativo ELF OSify bare-metal...")
+    ld_bin = "/opt/homebrew/bin/i686-elf-ld"
+    if not os.path.exists(ld_bin):
+        ld_bin = shutil.which("ld.lld") or shutil.which("i686-linux-gnu-ld") or shutil.which("ld") or "ld"
+    log(f"Utilizzo linker: {ld_bin}")
+
     compile_cmd = (
         "clang -target i386-unknown-none-elf -c boot/boot.S -o boot/boot.elf.o && "
         "for f in core/osify_skin_core.c core/osify_memory.c core/osify_level0_security.c "
@@ -42,7 +47,7 @@ def build_kernel():
         "         loaders/osify_binary_loader.c; do "
         "    clang -target i386-unknown-none-elf -ffreestanding -fno-pie -fno-stack-protector -mno-red-zone -mno-sse -mno-sse2 -mno-mmx -Wall -Wextra -O2 -Iinclude -c \"$f\" -o \"${f%.c}.elf.o\" || exit 1; "
         "done && "
-        "/opt/homebrew/bin/i686-elf-ld -T boot/kernel.ld -m elf_i386 -nostdlib -static "
+        f"{ld_bin} -T boot/kernel.ld -m elf_i386 -nostdlib -static "
         "    boot/boot.elf.o "
         "    core/*.elf.o security/*.elf.o drivers/*.elf.o compat/*.elf.o loaders/*.elf.o "
         "    -o osify_kernel.elf"
