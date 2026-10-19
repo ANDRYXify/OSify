@@ -22,7 +22,7 @@ REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 OUT_DIR = os.path.join(REPO_ROOT, "build/out")
 os.makedirs(OUT_DIR, exist_ok=True)
 
-UNIVERSAL_ISO = os.path.join(REPO_ROOT, "build/out/release/OSify-A.0-Universal.iso")
+UNIVERSAL_ISO = os.path.join(REPO_ROOT, "build/out/release/OSify-A.1-Universal.iso")
 OVMF_BIOS = "/opt/homebrew/Cellar/qemu/11.0.0/share/qemu/edk2-x86_64-code.fd"
 QEMU_BIN = "/opt/homebrew/bin/qemu-system-x86_64"
 TELNET_PORT = 4555
@@ -57,12 +57,12 @@ def convert_ppm_to_png(ppm_path, png_path):
             os.remove(ppm_path)
             return True
         except Exception as e:
-            print(f"[!] Errore conversione PPM -> PNG: {e}")
+            print(f"[ERRORE] Conversione PPM -> PNG: {e}")
     return False
 
 def run_real_uefi_test():
     print("\n=============================================================================")
-    print(" [1/2] COLLAUDO REALE UEFI: OSify-A.0-Universal.iso (Firmware EDK II)       ")
+    print(" [1/2] COLLAUDO REALE UEFI: OSify-A.1-Universal.iso (Firmware EDK II)       ")
     print("=============================================================================")
     assert os.path.isfile(UNIVERSAL_ISO), f"ISO non trovata: {UNIVERSAL_ISO}"
     assert os.path.isfile(OVMF_BIOS), f"OVMF non trovato: {OVMF_BIOS}"
@@ -79,7 +79,7 @@ def run_real_uefi_test():
         "-name", "OSify-UEFI-RealTest",
         "-m", "2048M",
         "-smp", "2",
-        "-bios", OVMF_BIOS,
+        "-drive", f"if=pflash,format=raw,readonly=on,file={OVMF_BIOS}",
         "-cdrom", UNIVERSAL_ISO,
         "-boot", "d",
         "-vga", "virtio",
@@ -131,7 +131,7 @@ def run_real_uefi_test():
 
 def run_real_bios_test():
     print("\n=============================================================================")
-    print(" [2/2] COLLAUDO REALE BIOS LEGACY: OSify-A.0-Universal.iso                   ")
+    print(" [2/2] COLLAUDO REALE BIOS LEGACY: OSify-A.1-Universal.iso                   ")
     print("=============================================================================")
     assert os.path.isfile(UNIVERSAL_ISO), f"ISO non trovata: {UNIVERSAL_ISO}"
 
@@ -189,7 +189,7 @@ if __name__ == "__main__":
     t1 = run_real_uefi_test()
     t2 = run_real_bios_test()
     print("\n=============================================================================")
-    print("[] COLLAUDO REALE COMPLETATO CON SUCCESSO SU ENTRAMBI I TARGET HARDWARE!")
+    print("[SUCCESSO] COLLAUDO REALE COMPLETATO SU ENTRAMBI I TARGET HARDWARE!")
     print(f"   UEFI Desktop Snapshot: {t1}")
     print(f"   BIOS Desktop Snapshot: {t2}")
     print("=============================================================================")

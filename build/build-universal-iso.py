@@ -72,7 +72,7 @@ def create_boot_splash(dest_path):
     log(f"Bootsplash solo-logo generato con successo: {dest_path}")
 
 def build_universal_iso():
-    log("Costruzione della ISO Unica Universale OSify A.0 (Cover Nuda)...")
+    log(f"Costruzione della ISO Unica Universale OSify {OSIFY_VERSION} (Cover Nuda)...")
     os.makedirs(OUT_DIR, exist_ok=True)
     shutil.rmtree(WORK_DIR, ignore_errors=True)
     os.makedirs(WORK_DIR, exist_ok=True)
@@ -103,13 +103,90 @@ def build_universal_iso():
         if os.path.exists(src_item):
             shutil.copy2(src_item, os.path.join(iso_root, "boot", item))
 
-    # 2. Inserimento del Kernel Nativo OSify Bare-Metal (Micro-Core No-libc)
-    kernel_native = os.path.join(REPO_ROOT, "sistema/nucleo/kernel/libosify_kernel.a")
-    if os.path.exists(kernel_native):
+    # 2. Inserimento del Kernel Nativo OSify Bare-Metal (osify_kernel.elf)
+    kernel_src = os.path.join(REPO_ROOT, "sistema/nucleo/kernel/osify_kernel.elf")
+    if not os.path.exists(kernel_src):
+        log("Compilazione preventiva del Kernel Nativo Bare-Metal...")
+        run("python3 build/build-baremetal-iso.py", cwd=REPO_ROOT)
+    
+    if os.path.exists(kernel_src):
+        shutil.copy2(kernel_src, os.path.join(iso_root, "boot/osify-kernel.elf"))
         os.makedirs(os.path.join(iso_root, "boot/osify-core"), exist_ok=True)
-        shutil.copy2(kernel_native, os.path.join(iso_root, "boot/osify-core/osify_kernel.bin"))
+        shutil.copy2(kernel_src, os.path.join(iso_root, "boot/osify-core/osify_kernel.elf"))
+        log("  -> Kernel nativo bare-metal integrato in /boot/osify-kernel.elf")
 
-    # 3. Bootsplash universale solo-logo (senza testi)
+    # 3. Integrazione dell'intero userspace nativo OSify (/Sistema, /Applicazioni, /UEM, /Desktop, /Strumenti)
+    log("Integrazione dell'albero userspace completo e binari UEM...")
+    dirs_to_package = [
+        ("sistema", "Sistema"),
+        ("system", "System"),
+        ("applicazioni", "Applicazioni"),
+        ("uem", "UEM"),
+        ("desktop", "Desktop"),
+        ("tools", "Strumenti"),
+        ("security", "Sicurezza"),
+        ("network", "Rete"),
+        ("docs", "Documenti"),
+        ("services", "Servizi"),
+        ("audio", "Audio"),
+        ("emulation", "Emulazione"),
+        ("blocks", "Blocchi"),
+        ("streaming", "Streaming")
+    ]
+
+    def ignore_patterns(path, names):
+        ignored = []
+        for n in names:
+            if n.endswith(".o") and not n.endswith(".elf.o"):
+                ignored.append(n)
+            elif n in [".git", ".DS_Store", "__pycache__", ".pytest_cache"]:
+                ignored.append(n)
+        return set(ignored)
+
+    for src_rel, dst_rel in dirs_to_package:
+        src_path = os.path.join(REPO_ROOT, src_rel)
+        dst_path = os.path.join(iso_root, dst_rel)
+        if os.path.exists(src_path):
+            shutil.copytree(src_path, dst_path, ignore=ignore_patterns, dirs_exist_ok=True)
+
+    # Inclusione Programmi Reali Multi-Piattaforma (Windows PE, Linux ELF, macOS Mach-O)
+    real_bin_dir = os.path.join(REPO_ROOT, "uem", "binari_reali")
+    if os.path.exists(real_bin_dir):
+        win_dir = os.path.join(iso_root, "UEM", "Windows")
+        linux_dir = os.path.join(iso_root, "UEM", "Linux")
+        mac_dir = os.path.join(iso_root, "UEM", "macOS")
+        os.makedirs(win_dir, exist_ok=True)
+        os.makedirs(linux_dir, exist_ok=True)
+        os.makedirs(mac_dir, exist_ok=True)
+        for f in ["compat_win.exe", "compat_win64.exe", "putty.exe", "7z.exe", "syslinux.exe"]:
+            src = os.path.join(real_bin_dir, f)
+            if os.path.exists(src):
+                shutil.copy2(src, os.path.join(win_dir, f))
+                if f == "compat_win.exe":
+                    shutil.copy2(src, os.path.join(iso_root, "UEM", f))
+        for f in ["server.elf"]:
+            src = os.path.join(real_bin_dir, f)
+            if os.path.exists(src):
+                shutil.copy2(src, os.path.join(linux_dir, f))
+                shutil.copy2(src, os.path.join(iso_root, "UEM", f))
+        for f in ["darwin_tool.macho"]:
+            src = os.path.join(real_bin_dir, f)
+            if os.path.exists(src):
+                shutil.copy2(src, os.path.join(mac_dir, f))
+                shutil.copy2(src, os.path.join(iso_root, "UEM", f))
+
+    # Identita e Manifesto Autonomo
+    with open(os.path.join(iso_root, "OSify-Identity.txt"), "w") as f:
+        f.write("OSify Versione A.1 Universal Cover Nuda\n")
+        f.write("Sistema Operativo Universale per Qualsiasi Architettura e Firmware\n")
+        f.write("Ingegnerizzato con orgoglio da Andrea Taliento (ANDRYXify)\n")
+        f.write("Supporto Ibrido: UEFI x86_64, BIOS Legacy, Vintage 32-bit, Bare-Metal Multiboot.\n")
+
+    manifesto_path = os.path.join(REPO_ROOT, "desktop", "manifesto.json")
+    if os.path.exists(manifesto_path):
+        shutil.copy2(manifesto_path, os.path.join(iso_root, "manifesto.json"))
+
+    # 4. Bootsplash universale solo-logo (senza testi)
     splash_src = os.path.join(tmp_vintage, "boot/isolinux/splash.jpg")
     for s_dst in ["boot/syslinux/splash.jpg", "boot/isolinux/splash.jpg", "isolinux/splash.jpg", "splash.jpg"]:
         d_p = os.path.join(iso_root, s_dst)
@@ -119,7 +196,7 @@ def build_universal_iso():
         else:
             create_boot_splash(d_p)
 
-    # 4. Moduli Syslinux di auto-rilevamento silicio da toolchain coerente (build/syslinux_alpine)
+    # 5. Moduli Syslinux di auto-rilevamento silicio da toolchain coerente (build/syslinux_alpine)
     syslinux_alpine_dir = os.path.join(REPO_ROOT, "build/syslinux_alpine")
     syslinux_dst_dir = os.path.join(iso_root, "boot/syslinux")
     os.makedirs(syslinux_dst_dir, exist_ok=True)
@@ -128,62 +205,57 @@ def build_universal_iso():
         if os.path.exists(mod_src):
             shutil.copy2(mod_src, os.path.join(syslinux_dst_dir, mod))
 
-    # 5. Configurazione Syslinux / Isolinux per BIOS Legacy con Auto-Detect CPU
+    # 6. Configurazione Syslinux / Isolinux per BIOS Legacy con Auto-Detect CPU
     isolinux_cfg = """DEFAULT autodetect
 UI vesamenu.c32
 PROMPT 0
-TIMEOUT 20
+TIMEOUT 40
 ONTIMEOUT autodetect
-MENU HIDDEN
 
-MENU TITLE
+MENU TITLE OSify vA.1 Universal Sovrano (Cover Nuda)
 MENU BACKGROUND splash.jpg
 MENU WIDTH 78
 MENU MARGIN 6
-MENU ROWS 0
-MENU VSHIFT 0
-MENU NOTIMEOUTROW
-MENU TABMSG
-
-MENU COLOR border       *   #00000000 #00000000 none
-MENU COLOR title        *   #00000000 #00000000 none
-MENU COLOR sel          0   #00000000 #00000000 none
-MENU COLOR unsel        0   #00000000 #00000000 none
-MENU COLOR help         *   #00000000 #00000000 none
-MENU COLOR timeout      *   #00000000 #00000000 none
-MENU COLOR timeout_msg  *   #00000000 #00000000 none
+MENU ROWS 8
+MENU VSHIFT 12
+MENU TABMSG Premi TAB per modificare i parametri di avvio
 
 LABEL autodetect
-    MENU LABEL OSify A.0 (Cover Nuda - Auto-Rilevamento Silicio)
+    MENU LABEL OSify vA.1 (Auto-Rilevamento Silicio 32/64-bit) [PREDEFINITO]
     COM32 ifcpu64.c32
     APPEND osify64 -- osify32
 
 LABEL osify64
-    MENU LABEL OSify A.0 (64-bit Estremo / Gaming & Desktop)
+    MENU LABEL OSify vA.1 (Live Desktop & Gaming x86_64)
     KERNEL /boot/vmlinuz-lts
     INITRD /boot/initramfs-lts
     APPEND modules=loop,squashfs,sd-mod,usb-storage keep_apk_new=yes quiet splash loglevel=0 console=tty3 vt.global_cursor_default=0 logo.nologo rw autologin
 
 LABEL osify32
-    MENU LABEL OSify A.0 (Vintage 32-bit / Netbook & Leggeri)
+    MENU LABEL OSify vA.1 (Vintage 32-bit / Netbook & Macchine Storiche)
     KERNEL /boot/bzImage
     INITRD /boot/rootfs4.gz
     APPEND root=/dev/null video=-32 tmpram=0 autologin lang=it_IT kmap=it rw quiet splash loglevel=0 console=tty3 vt.global_cursor_default=0 logo.nologo
 
 LABEL install
-    MENU LABEL Installa OSify su Disco Fisso Permanente (GPT / UEFI)
+    MENU LABEL Installa OSify su Disco Fisso Permanente (GPT / UEFI / BIOS)
     KERNEL /boot/vmlinuz-lts
     INITRD /boot/initramfs-lts
     APPEND modules=loop,squashfs,sd-mod,usb-storage keep_apk_new=yes osify.install=1 quiet splash loglevel=0 console=tty3 vt.global_cursor_default=0 logo.nologo rw autologin
 
+LABEL baremetal
+    MENU LABEL OSify vA.1 (Kernel Nativo Bare-Metal / Micro-Core No-libc)
+    KERNEL mboot.c32
+    APPEND /boot/osify-kernel.elf
+
 LABEL safe
-    MENU LABEL OSify A.0 (Modalita Compatibile / Safe Graphics VESA)
+    MENU LABEL OSify vA.1 (Modalita Compatibile / Safe Graphics VESA)
     KERNEL /boot/vmlinuz-lts
     INITRD /boot/initramfs-lts
     APPEND modules=loop,squashfs,sd-mod,usb-storage keep_apk_new=yes nomodeset vga=788 quiet loglevel=1 vt.global_cursor_default=0 logo.nologo console=tty1 rw autologin
 
 LABEL memtest
-    MENU LABEL Diagnostica Hardware Memoria RAM
+    MENU LABEL Diagnostica Hardware Memoria RAM (Memtest86+)
     KERNEL /boot/memtest.exe
 """
     with open(os.path.join(syslinux_dst_dir, "isolinux.cfg"), "w") as f:
@@ -191,23 +263,28 @@ LABEL memtest
     with open(os.path.join(syslinux_dst_dir, "syslinux.cfg"), "w") as f:
         f.write(isolinux_cfg)
 
-    # 6. Configurazione GRUB per UEFI 64-bit
-    grub_cfg = """set timeout=0
+    # 7. Configurazione GRUB per UEFI 64-bit
+    grub_cfg = """set timeout=5
 set default=0
 
-menuentry "OSify A.0 Universal (64-bit Cover Nuda)" {
+menuentry "OSify vA.1 Universal Live (Desktop & Gaming 64-bit)" {
     linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage keep_apk_new=yes quiet splash loglevel=0 console=tty1 console=ttyS0 vt.global_cursor_default=0 logo.nologo rd.systemd.show_status=false rd.udev.log_priority=0 udev.log_priority=0 rw autologin
     initrd /boot/initramfs-lts
 }
 
-menuentry "OSify A.0 Modalita Compatibile (Safe Graphics VESA)" {
+menuentry "OSify vA.1 Installa su Disco Fisso Permanente (GPT / UEFI)" {
+    linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage keep_apk_new=yes osify.install=1 quiet splash loglevel=0 console=tty1 console=ttyS0 vt.global_cursor_default=0 logo.nologo rw autologin
+    initrd /boot/initramfs-lts
+}
+
+menuentry "OSify vA.1 Modalita Compatibile (Safe Graphics VESA / nomodeset)" {
     linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage keep_apk_new=yes nomodeset vga=788 quiet loglevel=1 vt.global_cursor_default=0 logo.nologo console=tty1 rw autologin
     initrd /boot/initramfs-lts
 }
 
-menuentry "OSify A.0 Installa su Disco Fisso" {
-    linux /boot/vmlinuz-lts modules=loop,squashfs,sd-mod,usb-storage keep_apk_new=yes osify.install=1 quiet splash loglevel=0 console=tty1 console=ttyS0 vt.global_cursor_default=0 logo.nologo rw autologin
-    initrd /boot/initramfs-lts
+menuentry "OSify vA.1 Bare-Metal Nativo (Micro-Core Diretto Multiboot)" {
+    multiboot /boot/osify-kernel.elf
+    boot
 }
 """
     for g_dir in ["boot/grub", "efi/boot", "EFI/BOOT"]:
@@ -216,10 +293,10 @@ menuentry "OSify A.0 Installa su Disco Fisso" {
         with open(os.path.join(gd, "grub.cfg"), "w") as f:
             f.write(grub_cfg)
 
-    # 7. Script di avvio automatico EDK II / UEFI Shell (startup.nsh)
+    # 8. Script di avvio automatico EDK II / UEFI Shell (startup.nsh)
     startup_nsh = """@echo -off
 cls
-echo Avvio OSify A.0 Universal in corso...
+echo Avvio OSify vA.1 Universal in corso...
 fs0:
 if exist \\EFI\\BOOT\\BOOTX64.EFI then
     \\EFI\\BOOT\\BOOTX64.EFI
@@ -247,7 +324,7 @@ endif
             f.write(startup_nsh)
 
     with open(os.path.join(iso_root, "OSify-Version.txt"), "w") as f:
-        f.write("OSify A.0 Universal Cover Nuda (Single Hybrid ISO: UEFI x86_64, BIOS Legacy, Vintage 32-bit)\n")
+        f.write("OSify vA.1 Universal Cover Nuda (Single Hybrid ISO: UEFI x86_64, BIOS Legacy, Vintage 32-bit, Bare-Metal)\n")
 
     # Pulizia preventiva del vecchio catalogo e di cartelle o file spuri
     for spuria in [
@@ -285,8 +362,11 @@ endif
 
     if os.path.exists(built_iso):
         shutil.copy2(built_iso, DEST_UNIVERSAL_ISO)
+        out_root_iso = os.path.join(REPO_ROOT, "build/out", f"OSify-{OSIFY_VERSION}-Universal.iso")
+        shutil.copy2(built_iso, out_root_iso)
         iso_size = os.path.getsize(DEST_UNIVERSAL_ISO) / (1024 * 1024)
         log(f"ISO Unica Universale creata con successo: {DEST_UNIVERSAL_ISO} ({iso_size:.1f} MB)")
+        log(f"Copia parallela creata in: {out_root_iso}")
     else:
         log("ERRORE: ISO non trovata.")
         sys.exit(1)
