@@ -16,8 +16,8 @@
     <img src="https://img.shields.io/badge/OSify_Universal_All--In--One-vA.0_Cover_Nuda-F59E0B?style=for-the-badge&logo=disc&logoColor=white" alt="OSify Universal All-In-One vA.0"/>
   </a>
   &nbsp;
-  <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-A.0-BareMetal.iso">
-    <img src="https://img.shields.io/badge/OSify_Bare--Metal-vA.0_Micro--Core-06B6D4?style=for-the-badge&logo=target&logoColor=white" alt="OSify Bare-Metal vA.0"/>
+  <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-A.1-BareMetal.iso">
+    <img src="https://img.shields.io/badge/OSify_Bare--Metal-vA.1_Micro--Core-06B6D4?style=for-the-badge&logo=target&logoColor=white" alt="OSify Bare-Metal vA.1"/>
   </a>
   &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-x86_64-v3.iso">
@@ -29,7 +29,7 @@
   </a>
   &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-ARM64.iso">
-    <img src="https://img.shields.io/badge/OSify_ARM64-Apple_Silicon_%26_ARM_(vA.0)-EC4899?style=for-the-badge&logo=apple&logoColor=white" alt="OSify ARM64"/>
+    <img src="https://img.shields.io/badge/OSify_ARM64-Apple_Silicon_%26_ARM_(vA.1)-EC4899?style=for-the-badge&logo=apple&logoColor=white" alt="OSify ARM64"/>
   </a>
   &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/releases/latest/download/OSify-NoUSB-Windows-Installer.zip">
@@ -47,7 +47,7 @@
   </a>
   &nbsp;
   <a href="https://github.com/ANDRYXify/OSify/actions">
-    <img src="https://img.shields.io/badge/Tests-298%2F298_Passed-059669?style=flat-square&logo=githubactions&logoColor=white" alt="Test Suite"/>
+    <img src="https://img.shields.io/badge/Tests-500%2F500_Passed-059669?style=flat-square&logo=githubactions&logoColor=white" alt="Test Suite"/>
   </a>
   &nbsp;
   <a href="#architettura-dei-due-target">
