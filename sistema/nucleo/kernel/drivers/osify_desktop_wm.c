@@ -612,7 +612,8 @@ static void arcade_tick(int arena_w, int arena_h) {
 static int s_fs_current_dir = 0; /* 0: Root (/), 1: /Sistema, 2: /Applicazioni, 3: /UEM, 4: /Utenti */
 
 /* Buffer Editor di Testo Note Compagno */
-static char s_editor_note[512] = "OSify A.1 e un sistema operativo sovrano al 100%.\nNessuna base da altri OS nel funzionamento nativo.\nPonte di Compatibilita Universale UEM (.ify, .exe, .elf, .macho).\nScheda di Acquisizione Integrata a 60 FPS senza hardware esterno.\n";
+static char s_editor_note[1024] = "OSify A.1 e un sistema operativo sovrano al 100%.\nNessuna base da altri OS nel funzionamento nativo.\nPonte di Compatibilita Universale UEM (.ify, .exe, .elf, .macho).\nScheda di Acquisizione Integrata a 60 FPS senza hardware esterno.\n";
+static bool s_editor_saved = true;
 
 static void bring_window_to_front(size_t index) {
     if (index >= g_window_count) return;
@@ -3109,6 +3110,44 @@ void osify_desktop_handle_key(osify_framebuffer_t *fb, char key) {
             } else if (key == 27) { /* ESC: Chiudi gioco e restituisci focus al Terminale */
                 g_windows[i].is_visible = false;
                 open_or_focus_window("OSify Terminale Nativo", 100, 38, 620, 340);
+                osify_desktop_render_all(fb);
+                return;
+            }
+        }
+    }
+
+    /* Controllo se la finestra Editor di Testo (Note) e attiva per digitazione diretta */
+    for (size_t i = 0; i < g_window_count; i++) {
+        if (g_windows[i].is_visible && g_windows[i].is_focused &&
+            osify_strcmp(g_windows[i].title, "Editor di Testo (Note)") == 0) {
+            if (key == '\b') {
+                size_t len = osify_strlen(s_editor_note);
+                if (len > 0) {
+                    s_editor_note[len - 1] = '\0';
+                    s_editor_saved = false;
+                }
+                osify_desktop_render_all(fb);
+                return;
+            } else if (key == '\n' || key == '\r') {
+                size_t len = osify_strlen(s_editor_note);
+                if (len < sizeof(s_editor_note) - 2) {
+                    s_editor_note[len] = '\n';
+                    s_editor_note[len + 1] = '\0';
+                    s_editor_saved = false;
+                }
+                osify_desktop_render_all(fb);
+                return;
+            } else if (key == 27) { /* ESC: restituisce focus al Terminale */
+                open_or_focus_window("OSify Terminale Nativo", 100, 38, 620, 340);
+                osify_desktop_render_all(fb);
+                return;
+            } else if (key >= 32 && key <= 126) {
+                size_t len = osify_strlen(s_editor_note);
+                if (len < sizeof(s_editor_note) - 2) {
+                    s_editor_note[len] = key;
+                    s_editor_note[len + 1] = '\0';
+                    s_editor_saved = false;
+                }
                 osify_desktop_render_all(fb);
                 return;
             }
